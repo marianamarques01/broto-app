@@ -1,7 +1,16 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SlidersHorizontal, RotateCcw, X } from 'lucide-react-native';
+import {
+    SlidersHorizontal,
+    RotateCcw,
+    X,
+    Search,
+    BookOpen,
+    Sparkles,
+    ChevronRight,
+    AlertCircle,
+} from 'lucide-react-native';
 import {
     useQuestionsFilters,
     LANGUAGE_OPTIONS,
@@ -10,7 +19,7 @@ import { QuestionPlayer } from '@/components/questions/QuestionPlayer';
 import { submitAnswer } from '@/lib/api/answer-question';
 import type { Question } from '@/lib/types/questions';
 import { getQuestionId } from '@/lib/types/questions';
-import { colors } from '@/theme/tokens';
+import { colors, fonts } from '@/theme/tokens';
 
 function FilterPicker({
     label,
@@ -28,7 +37,16 @@ function FilterPicker({
     const safeOptions = Array.isArray(options) ? options : [];
     return (
         <View className="mb-3">
-            <Text className="mb-1 text-xs font-semibold text-muted-foreground">
+            <Text
+                style={{
+                    fontSize: 11,
+                    fontFamily: fonts.sansSemiBold,
+                    color: colors.text.muted,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    marginBottom: 6,
+                }}
+            >
                 {label}
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -40,20 +58,23 @@ function FilterPicker({
                                 key={opt.value || '_all'}
                                 onPress={() => onSelect(opt.value)}
                                 disabled={disabled}
-                                className="rounded-lg px-3 py-2"
+                                className="rounded-lg px-3.5 py-2"
                                 style={{
                                     backgroundColor: isSelected
                                         ? colors.green[600]
-                                        : colors.bg.surface,
+                                        : colors.bg.elevated,
                                     opacity: disabled ? 0.5 : 1,
+                                    borderWidth: 1,
+                                    borderColor: isSelected
+                                        ? colors.green[500]
+                                        : colors.border.subtle,
                                 }}
                             >
                                 <Text
-                                    className="text-xs font-semibold"
                                     style={{
-                                        color: isSelected
-                                            ? '#fff'
-                                            : colors.text.secondary,
+                                        fontSize: 12,
+                                        fontFamily: fonts.sansSemiBold,
+                                        color: isSelected ? '#fff' : colors.text.secondary,
                                     }}
                                 >
                                     {opt.label}
@@ -122,30 +143,54 @@ export default function QuestionsScreen() {
 
     const hasActiveFilters = !!(selectedArea || selectedYear || selectedTopico);
 
+    // ——— Active question player ———
     if (activeQuestion) {
         return (
-            <SafeAreaView className="flex-1 bg-background">
+            <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bg.void }}>
                 <View
-                    className="flex-row items-center justify-between border-b px-4 py-3"
-                    style={{
-                        borderBottomColor: colors.border.default,
-                        backgroundColor: colors.bg.deep,
-                    }}
+                    className="flex-row items-center justify-between px-5 py-3"
+                    style={{ backgroundColor: colors.bg.deep }}
                 >
                     <Pressable
                         onPress={() => setActiveQuestion(null)}
-                        className="flex-row items-center gap-1.5"
+                        className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
+                        style={{
+                            backgroundColor: colors.bg.card,
+                            borderWidth: 1,
+                            borderColor: colors.border.subtle,
+                        }}
                     >
-                        <X size={18} color={colors.text.muted} />
-                        <Text className="text-sm text-muted-foreground">
+                        <X size={14} color={colors.text.muted} />
+                        <Text
+                            style={{
+                                fontSize: 12,
+                                fontFamily: fonts.sansSemiBold,
+                                color: colors.text.secondary,
+                            }}
+                        >
                             Encerrar
                         </Text>
                     </Pressable>
-                    <Text className="text-sm font-semibold text-foreground">
-                        {scores.correct}/{scores.total} corretas
-                    </Text>
+                    <View
+                        className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
+                        style={{
+                            backgroundColor: colors.green.glow,
+                            borderWidth: 1,
+                            borderColor: 'rgba(16,185,129,0.15)',
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 12,
+                                fontFamily: fonts.sansBold,
+                                color: colors.green[400],
+                            }}
+                        >
+                            {scores.correct}/{scores.total} corretas
+                        </Text>
+                    </View>
                 </View>
-                <ScrollView>
+                <ScrollView showsVerticalScrollIndicator={false}>
                     <QuestionPlayer
                         question={activeQuestion}
                         questionNumber={questionIdx + 1}
@@ -162,26 +207,37 @@ export default function QuestionsScreen() {
         );
     }
 
+    // ——— Main list view ———
     return (
-        <SafeAreaView className="flex-1 bg-background">
+        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bg.void }}>
             {/* Header */}
             <View
-                className="flex-row items-center justify-between border-b px-4 py-3"
-                style={{
-                    borderBottomColor: colors.border.default,
-                    backgroundColor: colors.bg.deep,
-                }}
+                className="flex-row items-center justify-between px-5 py-3"
+                style={{ backgroundColor: colors.bg.deep }}
             >
-                <Text className="text-base font-bold text-foreground">
-                    Questoes ENEM
-                </Text>
+                <View className="flex-row items-center gap-2">
+                    <BookOpen size={18} color={colors.green[500]} />
+                    <Text
+                        style={{
+                            fontSize: 17,
+                            fontFamily: fonts.sansBold,
+                            color: colors.text.primary,
+                        }}
+                    >
+                        Questoes ENEM
+                    </Text>
+                </View>
                 <Pressable
                     onPress={() => setShowFilters(v => !v)}
                     className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
                     style={{
                         backgroundColor: hasActiveFilters
                             ? colors.green[600]
-                            : colors.bg.surface,
+                            : colors.bg.card,
+                        borderWidth: 1,
+                        borderColor: hasActiveFilters
+                            ? colors.green[500]
+                            : colors.border.subtle,
                     }}
                 >
                     <SlidersHorizontal
@@ -189,11 +245,10 @@ export default function QuestionsScreen() {
                         color={hasActiveFilters ? '#fff' : colors.text.muted}
                     />
                     <Text
-                        className="text-xs font-semibold"
                         style={{
-                            color: hasActiveFilters
-                                ? '#fff'
-                                : colors.text.muted,
+                            fontSize: 12,
+                            fontFamily: fonts.sansSemiBold,
+                            color: hasActiveFilters ? '#fff' : colors.text.secondary,
                         }}
                     >
                         Filtros
@@ -201,13 +256,14 @@ export default function QuestionsScreen() {
                 </Pressable>
             </View>
 
-            {/* Filters */}
+            {/* Filters panel */}
             {showFilters && (
                 <View
-                    className="border-b px-4 py-4"
+                    className="px-4 py-4"
                     style={{
-                        borderBottomColor: colors.border.default,
                         backgroundColor: colors.bg.card,
+                        borderBottomWidth: 1,
+                        borderBottomColor: colors.border.subtle,
                     }}
                 >
                     <FilterPicker
@@ -271,10 +327,16 @@ export default function QuestionsScreen() {
                                 setSelectedTopico('');
                                 setSelectedLanguage('');
                             }}
-                            className="flex-row items-center gap-1.5"
+                            className="flex-row items-center gap-1.5 mt-1"
                         >
                             <RotateCcw size={12} color={colors.text.muted} />
-                            <Text className="text-xs text-muted-foreground">
+                            <Text
+                                style={{
+                                    fontSize: 12,
+                                    fontFamily: fonts.sans,
+                                    color: colors.text.muted,
+                                }}
+                            >
                                 Limpar filtros
                             </Text>
                         </Pressable>
@@ -282,115 +344,188 @@ export default function QuestionsScreen() {
                 </View>
             )}
 
-            <ScrollView className="flex-1 px-4 py-5">
+            <ScrollView
+                className="flex-1"
+                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 32 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Error */}
                 {error && (
                     <View
                         className="mb-4 flex-row items-center justify-between gap-3 rounded-xl px-4 py-3"
                         style={{
                             backgroundColor: colors.red.glow,
                             borderWidth: 1,
-                            borderColor: 'rgba(239,68,68,0.2)',
+                            borderColor: 'rgba(239,68,68,0.15)',
                         }}
                     >
-                        <Text className="text-sm text-danger">{error}</Text>
+                        <View className="flex-row items-center gap-2 flex-1">
+                            <AlertCircle size={16} color={colors.red[500]} />
+                            <Text
+                                style={{
+                                    fontSize: 13,
+                                    fontFamily: fonts.sans,
+                                    color: colors.red[400],
+                                    flex: 1,
+                                }}
+                            >
+                                {error}
+                            </Text>
+                        </View>
                         <Pressable onPress={retry}>
-                            <Text className="text-xs font-medium text-danger underline">
+                            <Text
+                                style={{
+                                    fontSize: 12,
+                                    fontFamily: fonts.sansSemiBold,
+                                    color: colors.red[400],
+                                    textDecorationLine: 'underline',
+                                }}
+                            >
                                 Tentar novamente
                             </Text>
                         </Pressable>
                     </View>
                 )}
 
+                {/* Loading */}
                 {loading && (
                     <View className="items-center py-20">
-                        <ActivityIndicator
-                            size="large"
-                            color={colors.green[500]}
-                        />
+                        <ActivityIndicator size="large" color={colors.green[500]} />
                     </View>
                 )}
 
+                {/* Empty — no area selected */}
                 {!loading && !selectedArea && (
-                    <View className="items-center py-20">
+                    <View className="items-center py-16">
                         <View
-                            className="h-20 w-20 items-center justify-center rounded-2xl"
+                            className="h-20 w-20 items-center justify-center rounded-3xl"
                             style={{
                                 backgroundColor: colors.green.glow,
                                 borderWidth: 1,
                                 borderColor: colors.border.default,
                             }}
                         >
-                            <Text className="text-4xl">🎯</Text>
+                            <Search size={36} color={colors.green[500]} />
                         </View>
-                        <Text className="mt-5 text-base font-bold text-foreground">
+                        <Text
+                            style={{
+                                fontSize: 16,
+                                fontFamily: fonts.sansBold,
+                                color: colors.text.primary,
+                                marginTop: 20,
+                            }}
+                        >
                             Escolha uma materia
                         </Text>
-                        <Text className="mt-1.5 text-center text-sm text-muted-foreground">
-                            Use os filtros para buscar questoes do banco ENEM
-                            2009-2023.
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                fontFamily: fonts.sans,
+                                color: colors.text.muted,
+                                marginTop: 6,
+                                textAlign: 'center',
+                                lineHeight: 20,
+                                maxWidth: 260,
+                            }}
+                        >
+                            Use os filtros para buscar questoes do banco ENEM 2009-2023.
                         </Text>
                         <Pressable
                             onPress={() => setShowFilters(true)}
-                            className="mt-5 rounded-xl px-5 py-2.5"
+                            className="mt-5 flex-row items-center gap-2 rounded-xl px-5 py-2.5"
                             style={{ backgroundColor: colors.green[600] }}
                         >
-                            <Text className="text-sm font-bold text-white">
+                            <SlidersHorizontal size={14} color="#fff" />
+                            <Text
+                                style={{
+                                    fontSize: 14,
+                                    fontFamily: fonts.sansBold,
+                                    color: '#fff',
+                                }}
+                            >
                                 Abrir filtros
                             </Text>
                         </Pressable>
                     </View>
                 )}
 
+                {/* Loading questions */}
                 {!loading && selectedArea && loadingQuestions && (
                     <View className="items-center py-20">
-                        <ActivityIndicator
-                            size="large"
-                            color={colors.green[500]}
-                        />
+                        <ActivityIndicator size="large" color={colors.green[500]} />
                     </View>
                 )}
 
-                {!loading &&
-                    selectedArea &&
-                    !loadingQuestions &&
-                    questions.length === 0 && (
-                        <View className="items-center py-20">
-                            <View
-                                className="h-20 w-20 items-center justify-center rounded-2xl"
-                                style={{
-                                    backgroundColor: colors.green.glow,
-                                    borderWidth: 1,
-                                    borderColor: colors.border.default,
-                                }}
-                            >
-                                <Text className="text-4xl">🔍</Text>
-                            </View>
-                            <Text className="mt-5 text-base font-bold text-foreground">
-                                Nenhuma questao encontrada
-                            </Text>
-                            <Text className="mt-1.5 text-sm text-muted-foreground">
-                                Tente ajustar os filtros.
-                            </Text>
+                {/* No results */}
+                {!loading && selectedArea && !loadingQuestions && questions.length === 0 && (
+                    <View className="items-center py-16">
+                        <View
+                            className="h-20 w-20 items-center justify-center rounded-3xl"
+                            style={{
+                                backgroundColor: colors.bg.card,
+                                borderWidth: 1,
+                                borderColor: colors.border.default,
+                            }}
+                        >
+                            <Search size={36} color={colors.text.muted} />
                         </View>
-                    )}
+                        <Text
+                            style={{
+                                fontSize: 16,
+                                fontFamily: fonts.sansBold,
+                                color: colors.text.primary,
+                                marginTop: 20,
+                            }}
+                        >
+                            Nenhuma questao encontrada
+                        </Text>
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                fontFamily: fonts.sans,
+                                color: colors.text.muted,
+                                marginTop: 6,
+                            }}
+                        >
+                            Tente ajustar os filtros.
+                        </Text>
+                    </View>
+                )}
 
+                {/* Question list */}
                 {!loading && !loadingQuestions && questions.length > 0 && (
                     <View>
                         <View className="mb-4 flex-row items-center justify-between">
-                            <Text className="text-sm text-muted-foreground">
-                                <Text className="font-semibold text-foreground">
+                            <Text
+                                style={{
+                                    fontSize: 13,
+                                    fontFamily: fonts.sans,
+                                    color: colors.text.muted,
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontFamily: fonts.sansBold,
+                                        color: colors.text.primary,
+                                    }}
+                                >
                                     {questions.length}
                                 </Text>{' '}
                                 questoes encontradas
                             </Text>
                             <Pressable
                                 onPress={startSession}
-                                className="rounded-xl px-4 py-2"
-                                style={{
-                                    backgroundColor: colors.green[600],
-                                }}
+                                className="flex-row items-center gap-1.5 rounded-xl px-4 py-2"
+                                style={{ backgroundColor: colors.green[600] }}
                             >
-                                <Text className="text-sm font-bold text-white">
+                                <Sparkles size={14} color="#fff" />
+                                <Text
+                                    style={{
+                                        fontSize: 13,
+                                        fontFamily: fonts.sansBold,
+                                        color: '#fff',
+                                    }}
+                                >
                                     Iniciar treino
                                 </Text>
                             </Pressable>
@@ -405,23 +540,37 @@ export default function QuestionsScreen() {
                                         setQuestionIdx(idx);
                                         setScores({ correct: 0, total: 0 });
                                     }}
-                                    className="rounded-2xl border p-4"
+                                    className="flex-row items-center gap-3 rounded-2xl p-4"
                                     style={{
-                                        borderColor: colors.border.default,
                                         backgroundColor: colors.bg.card,
+                                        borderWidth: 1,
+                                        borderColor: colors.border.subtle,
                                     }}
                                 >
-                                    <Text
-                                        className="text-sm font-medium text-foreground"
-                                        numberOfLines={2}
-                                    >
-                                        {q.title}
-                                    </Text>
-                                    <Text className="mt-1.5 text-xs text-muted-foreground">
-                                        ENEM {q.year} · Questao {q.index}
-                                        {q.discipline &&
-                                            ` · ${q.discipline}`}
-                                    </Text>
+                                    <View className="flex-1">
+                                        <Text
+                                            numberOfLines={2}
+                                            style={{
+                                                fontSize: 14,
+                                                fontFamily: fonts.sansMedium,
+                                                color: colors.text.primary,
+                                            }}
+                                        >
+                                            {q.title}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                fontSize: 12,
+                                                fontFamily: fonts.sans,
+                                                color: colors.text.muted,
+                                                marginTop: 4,
+                                            }}
+                                        >
+                                            ENEM {q.year} · Questao {q.index}
+                                            {q.discipline && ` · ${q.discipline}`}
+                                        </Text>
+                                    </View>
+                                    <ChevronRight size={16} color={colors.text.muted} />
                                 </Pressable>
                             ))}
                         </View>
