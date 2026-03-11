@@ -41,13 +41,13 @@ export const spacing = {
 
 export const colors = {
     bg: {
-        void: '#070b07',
-        deep: '#0b110b',
-        surface: '#101810',
-        card: '#152015',
-        elevated: '#1a2a1a',
-        overlay: 'rgba(7, 11, 7, 0.88)',
-        glass: 'rgba(21, 32, 21, 0.6)',
+        void: '#070c09',       // preto profundo, verde só como aura (um pouco mais claro)
+        deep: '#0b130f',       // escuro denso
+        surface: '#0e1914',    // floresta noturna
+        card: '#111e18',       // cards — escuro com alma verde
+        elevated: '#162a20',   // elevado — perceptível
+        overlay: 'rgba(7, 12, 9, 0.93)',
+        glass: 'rgba(11, 19, 15, 0.72)',
     },
     green: {
         900: '#052e16',
@@ -58,8 +58,8 @@ export const colors = {
         400: '#34d399',
         300: '#6ee7b7',
         200: '#a7f3d0',
-        glow: 'rgba(16, 185, 129, 0.2)',
-        glowStrong: 'rgba(16, 185, 129, 0.4)',
+        glow: 'rgba(16, 185, 129, 0.15)',
+        glowStrong: 'rgba(16, 185, 129, 0.30)',
     },
     gold: {
         700: '#b45309',
@@ -68,44 +68,55 @@ export const colors = {
         400: '#fbbf24',
         300: '#fcd34d',
         200: '#fde68a',
-        glow: 'rgba(251, 191, 36, 0.2)',
-        glowStrong: 'rgba(251, 191, 36, 0.4)',
+        glow: 'rgba(251, 191, 36, 0.12)',
+        glowStrong: 'rgba(251, 191, 36, 0.28)',
     },
     blue: {
-        600: '#1e40af',
-        500: '#3b82f6',
-        400: '#60a5fa',
-        glow: 'rgba(59, 130, 246, 0.2)',
+        600: '#1a6d8a',        // teal profundo
+        500: '#2ba4b8',        // teal principal
+        400: '#4ec4d4',        // teal claro
+        glow: 'rgba(43, 164, 184, 0.15)',
     },
     red: {
-        500: '#ef4444',
-        400: '#f87171',
-        glow: 'rgba(239, 68, 68, 0.25)',
+        500: '#e05252',        // coral quente
+        400: '#f08080',        // coral claro
+        glow: 'rgba(224, 82, 82, 0.15)',
+    },
+    violet: {
+        600: '#7c4daa',        // roxo quente
+        500: '#9b6dcc',        // roxo principal
+        400: '#b794e0',        // roxo claro
+        glow: 'rgba(155, 109, 204, 0.15)',
+    },
+    amber: {
+        600: '#c47a10',
+        500: '#e5960e',        // âmbar orgânico
+        400: '#f5b642',
+        glow: 'rgba(229, 150, 14, 0.15)',
     },
     text: {
-        primary: '#e8f0e8',
-        secondary: '#9cb89c',
-        muted: '#5a7a5a',
-        /** placeholder: muted-foreground/40 (desktop) */
-        muted40: 'rgba(90, 122, 90, 0.4)',
-        inverse: '#070b07',
+        primary: '#e5ece5',    // branco suave com toque verde
+        secondary: '#a0b8a0',  // verde-cinza médio
+        muted: '#6b876b',      // legível em bg.card
+        muted40: 'rgba(107, 135, 107, 0.4)',
+        inverse: '#040705',
     },
     border: {
-        subtle: 'rgba(16, 185, 129, 0.08)',
-        default: 'rgba(16, 185, 129, 0.15)',
-        strong: 'rgba(16, 185, 129, 0.3)',
+        subtle: 'rgba(16, 185, 129, 0.06)',
+        default: 'rgba(16, 185, 129, 0.12)',
+        strong: 'rgba(16, 185, 129, 0.22)',
     },
     semantic: {
-        background: '#070b07',
-        foreground: '#e8f0e8',
-        card: '#152015',
-        muted: '#101810',
-        mutedForeground: '#5a7a5a',
+        background: '#070c09',
+        foreground: '#e5ece5',
+        card: '#111e18',
+        muted: '#0e1914',
+        mutedForeground: '#6b876b',
         primary: '#10b981',
-        primaryForeground: '#070b07',
+        primaryForeground: '#040705',
         success: '#10b981',
-        danger: '#ef4444',
+        danger: '#e05252',
         accent: '#fbbf24',
-        accentSecondary: '#3b82f6',
+        accentSecondary: '#2ba4b8',
     },
 } as const;

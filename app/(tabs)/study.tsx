@@ -18,6 +18,7 @@ import {
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/use-pet';
 import { useProgress, type AreaStat } from '@/hooks/use-progress';
 import { colors, fonts } from '@/theme/tokens';
+import { FadeInSection, StaggerItem, AnimatedBar, ScaleIn } from '@/components/AnimatedEntry';
 
 const FASE_MSG: Record<string, string> = {
     semente: 'Cada questao faz seu Broto crescer. Comece agora!',
@@ -35,10 +36,10 @@ const AREA_ICONS: Record<string, React.ComponentType<{ size?: number; color?: st
 };
 
 const AREA_COLORS: Record<string, { solid: string; bg: string; text: string }> = {
-    linguagens: { solid: '#3b82f6', bg: 'rgba(59,130,246,0.10)', text: '#60a5fa' },
-    'ciencias-humanas': { solid: '#f59e0b', bg: 'rgba(245,158,11,0.10)', text: '#fbbf24' },
-    'ciencias-natureza': { solid: '#22c55e', bg: 'rgba(34,197,94,0.10)', text: '#34d399' },
-    matematica: { solid: '#a855f7', bg: 'rgba(168,85,247,0.10)', text: '#c084fc' },
+    linguagens: { solid: colors.blue[500], bg: 'rgba(43,164,184,0.08)', text: colors.blue[400] },
+    'ciencias-humanas': { solid: colors.amber[500], bg: 'rgba(229,150,14,0.08)', text: colors.amber[400] },
+    'ciencias-natureza': { solid: colors.green[500], bg: 'rgba(16,185,129,0.08)', text: colors.green[400] },
+    matematica: { solid: colors.violet[500], bg: 'rgba(155,109,204,0.08)', text: colors.violet[400] },
 };
 
 function FocusCard({ area }: { area: AreaStat }) {
@@ -130,7 +131,7 @@ export default function StudyScreen() {
                     style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 28 }}
                 >
                     {/* Header row */}
-                    <View className="flex-row items-center gap-2 mb-6">
+                    <FadeInSection delay={0}><View className="flex-row items-center gap-2 mb-6">
                         <Sprout size={18} color={colors.green[500]} />
                         <Text
                             style={{
@@ -141,10 +142,10 @@ export default function StudyScreen() {
                         >
                             Seu Broto
                         </Text>
-                    </View>
+                    </View></FadeInSection>
 
                     {/* Broto avatar */}
-                    <View className="items-center">
+                    <ScaleIn delay={100}><View className="items-center">
                         <View
                             className="h-28 w-28 items-center justify-center rounded-3xl mb-4"
                             style={{
@@ -188,18 +189,13 @@ export default function StudyScreen() {
 
                         {/* XP bar */}
                         <View className="mt-4 w-full" style={{ maxWidth: 260 }}>
-                            <View
-                                className="h-2.5 overflow-hidden rounded-full"
-                                style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
-                            >
-                                <View
-                                    className="h-full rounded-full"
-                                    style={{
-                                        width: loadingPet ? '0%' : `${xpProgress}%`,
-                                        backgroundColor: colors.green[500],
-                                    }}
-                                />
-                            </View>
+                            <AnimatedBar
+                                progress={loadingPet ? 0 : xpProgress}
+                                color={colors.green[500]}
+                                bgColor="rgba(0,0,0,0.25)"
+                                height={10}
+                                delay={500}
+                            />
                             <Text
                                 style={{
                                     fontSize: 11,
@@ -228,12 +224,12 @@ export default function StudyScreen() {
                                 {FASE_MSG[fase]}
                             </Text>
                         )}
-                    </View>
+                    </View></ScaleIn>
                 </LinearGradient>
 
                 <View style={{ paddingHorizontal: 16, gap: 20, paddingBottom: 32 }}>
                     {/* Stats */}
-                    <View className="flex-row gap-3">
+                    <FadeInSection delay={200}><View className="flex-row gap-3">
                         {[
                             {
                                 icon: Flame,
@@ -297,10 +293,10 @@ export default function StudyScreen() {
                                 </Text>
                             </View>
                         ))}
-                    </View>
+                    </View></FadeInSection>
 
                     {/* CTA */}
-                    <Link href="/(tabs)/questions" asChild>
+                    <FadeInSection delay={280}><Link href="/(tabs)/questions" asChild>
                         <Pressable
                             className="w-full flex-row items-center justify-center gap-2 rounded-2xl py-4"
                             style={{ backgroundColor: colors.green[600] }}
@@ -317,11 +313,11 @@ export default function StudyScreen() {
                             </Text>
                             <ArrowRight size={18} color="#fff" />
                         </Pressable>
-                    </Link>
+                    </Link></FadeInSection>
 
                     {/* Focus areas */}
                     {(mostrarFoco || mostrarIniciar) && (
-                        <View>
+                        <FadeInSection delay={360}><View>
                             <View className="flex-row items-center gap-2 mb-3">
                                 <View
                                     style={{
@@ -342,11 +338,13 @@ export default function StudyScreen() {
                                 </Text>
                             </View>
                             <View className="gap-2">
-                                {(mostrarFoco ? areasParaFocar : areasNaoIniciadas).map(a => (
-                                    <FocusCard key={a.value} area={a} />
+                                {(mostrarFoco ? areasParaFocar : areasNaoIniciadas).map((a, i) => (
+                                    <StaggerItem key={a.value} index={i} baseDelay={420} stagger={60}>
+                                        <FocusCard area={a} />
+                                    </StaggerItem>
                                 ))}
                             </View>
-                        </View>
+                        </View></FadeInSection>
                     )}
                 </View>
             </ScrollView>

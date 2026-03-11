@@ -40,7 +40,7 @@ export default function TabsLayout() {
                 headerShown: false,
                 tabBarShowLabel: false,
                 tabBarStyle: {
-                    backgroundColor: colors.bg.overlay,
+                    backgroundColor: colors.bg.void,
                     borderTopColor: colors.border.subtle,
                     borderTopWidth: 1,
                     paddingTop: 14,
@@ -74,7 +74,7 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="questions"
                 options={{
-                    title: 'Questoes',
+                    title: 'Questões',
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} Icon={Brain} />
                     ),

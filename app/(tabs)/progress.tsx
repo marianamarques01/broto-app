@@ -22,6 +22,7 @@ import {
     type TopicoStat,
 } from '@/hooks/use-progress';
 import { colors, fonts } from '@/theme/tokens';
+import { FadeInSection, StaggerItem, AnimatedBar } from '@/components/AnimatedEntry';
 
 const AREA_ICONS: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
     linguagens: FileText,
@@ -35,32 +36,32 @@ const AREA_STYLE: Record<
     { bg: string; bar: string; textColor: string; gradientFrom: string; gradientTo: string }
 > = {
     linguagens: {
-        bg: 'rgba(59,130,246,0.06)',
-        bar: '#3b82f6',
-        textColor: '#60a5fa',
-        gradientFrom: 'rgba(59,130,246,0.14)',
-        gradientTo: 'rgba(59,130,246,0.02)',
+        bg: 'rgba(43,164,184,0.06)',
+        bar: colors.blue[500],
+        textColor: colors.blue[400],
+        gradientFrom: 'rgba(43,164,184,0.06)',
+        gradientTo: 'rgba(43,164,184,0.01)',
     },
     'ciencias-humanas': {
-        bg: 'rgba(245,158,11,0.06)',
-        bar: '#f59e0b',
-        textColor: '#fbbf24',
-        gradientFrom: 'rgba(245,158,11,0.14)',
-        gradientTo: 'rgba(245,158,11,0.02)',
+        bg: 'rgba(229,150,14,0.06)',
+        bar: colors.amber[500],
+        textColor: colors.amber[400],
+        gradientFrom: 'rgba(229,150,14,0.06)',
+        gradientTo: 'rgba(229,150,14,0.01)',
     },
     'ciencias-natureza': {
-        bg: 'rgba(34,197,94,0.06)',
-        bar: '#22c55e',
-        textColor: '#34d399',
-        gradientFrom: 'rgba(34,197,94,0.14)',
-        gradientTo: 'rgba(34,197,94,0.02)',
+        bg: 'rgba(16,185,129,0.06)',
+        bar: colors.green[500],
+        textColor: colors.green[400],
+        gradientFrom: 'rgba(16,185,129,0.06)',
+        gradientTo: 'rgba(16,185,129,0.01)',
     },
     matematica: {
-        bg: 'rgba(168,85,247,0.06)',
-        bar: '#a855f7',
-        textColor: '#c084fc',
-        gradientFrom: 'rgba(168,85,247,0.14)',
-        gradientTo: 'rgba(168,85,247,0.02)',
+        bg: 'rgba(155,109,204,0.06)',
+        bar: colors.violet[500],
+        textColor: colors.violet[400],
+        gradientFrom: 'rgba(155,109,204,0.06)',
+        gradientTo: 'rgba(155,109,204,0.01)',
     },
 };
 
@@ -123,18 +124,13 @@ function AreaCard({ area, loading }: { area: AreaStat; loading: boolean }) {
                         </Text>
                     )}
                 </View>
-                <View
-                    className="h-2.5 w-full overflow-hidden rounded-full"
-                    style={{ backgroundColor: colors.bg.deep }}
-                >
-                    <View
-                        className="h-full rounded-full"
-                        style={{
-                            width: loading ? '0%' : `${area.accuracyPct}%`,
-                            backgroundColor: style.bar,
-                        }}
-                    />
-                </View>
+                <AnimatedBar
+                    progress={loading ? 0 : area.accuracyPct}
+                    color={style.bar}
+                    bgColor={colors.bg.deep}
+                    height={10}
+                    delay={400}
+                />
                 {!loading && area.totalAnswered > 0 && (
                     <Text
                         style={{
@@ -165,12 +161,12 @@ function TopicoChip({
             className="flex-row items-center justify-between rounded-xl px-3.5 py-3"
             style={{
                 backgroundColor: isForte
-                    ? 'rgba(34,197,94,0.06)'
+                    ? 'rgba(16,185,129,0.06)'
                     : colors.red.glow,
                 borderWidth: 1,
                 borderColor: isForte
-                    ? 'rgba(34,197,94,0.12)'
-                    : 'rgba(239,68,68,0.12)',
+                    ? 'rgba(16,185,129,0.12)'
+                    : 'rgba(224,82,82,0.12)',
             }}
         >
             <View className="flex-1">
@@ -266,12 +262,12 @@ export default function ProgressScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 {/* Summary stats */}
-                <View className="flex-row gap-3">
+                <FadeInSection delay={0}><View className="flex-row gap-3">
                     {[
                         {
                             icon: PenLine,
                             value: loading ? null : (progress?.totalAnswered ?? 0),
-                            label: 'questoes',
+                            label: 'questões',
                             iconColor: colors.green[500],
                             bgColor: colors.green.glow,
                         },
@@ -337,10 +333,10 @@ export default function ProgressScreen() {
                             </Text>
                         </View>
                     ))}
-                </View>
+                </View></FadeInSection>
 
                 {/* Areas */}
-                <View>
+                <FadeInSection delay={80}><View>
                     <View className="flex-row items-center gap-2 mb-3">
                         <View
                             style={{
@@ -361,23 +357,24 @@ export default function ProgressScreen() {
                         </Text>
                     </View>
                     <View className="gap-3">
-                        {(progress?.areas ?? DEFAULT_AREAS).map(area => (
-                            <AreaCard
-                                key={area.value}
-                                area={area}
-                                loading={loading}
-                            />
+                        {(progress?.areas ?? DEFAULT_AREAS).map((area, i) => (
+                            <StaggerItem key={area.value} index={i} baseDelay={160} stagger={80}>
+                                <AreaCard
+                                    area={area}
+                                    loading={loading}
+                                />
+                            </StaggerItem>
                         ))}
                     </View>
-                </View>
+                </View></FadeInSection>
 
                 {/* Fortes */}
                 {hasData && fortes.length > 0 && (
-                    <View>
+                    <FadeInSection delay={500}><View>
                         <View className="flex-row items-center gap-2 mb-3">
                             <View
                                 className="h-6 w-6 items-center justify-center rounded-md"
-                                style={{ backgroundColor: 'rgba(34,197,94,0.12)' }}
+                                style={{ backgroundColor: 'rgba(16,185,129,0.12)' }}
                             >
                                 <TrendingUp size={14} color={colors.green[500]} />
                             </View>
@@ -392,16 +389,18 @@ export default function ProgressScreen() {
                             </Text>
                         </View>
                         <View className="gap-2">
-                            {fortes.map(t => (
-                                <TopicoChip key={t.value} t={t} variant="forte" />
+                            {fortes.map((t, i) => (
+                                <StaggerItem key={t.value} index={i} baseDelay={560} stagger={60}>
+                                    <TopicoChip t={t} variant="forte" />
+                                </StaggerItem>
                             ))}
                         </View>
-                    </View>
+                    </View></FadeInSection>
                 )}
 
                 {/* Fracos */}
                 {hasData && fracos.length > 0 && (
-                    <View>
+                    <FadeInSection delay={700}><View>
                         <View className="flex-row items-center gap-2 mb-3">
                             <View
                                 className="h-6 w-6 items-center justify-center rounded-md"
@@ -420,16 +419,18 @@ export default function ProgressScreen() {
                             </Text>
                         </View>
                         <View className="gap-2">
-                            {fracos.map(t => (
-                                <TopicoChip key={t.value} t={t} variant="fraco" />
+                            {fracos.map((t, i) => (
+                                <StaggerItem key={t.value} index={i} baseDelay={760} stagger={60}>
+                                    <TopicoChip t={t} variant="fraco" />
+                                </StaggerItem>
                             ))}
                         </View>
-                    </View>
+                    </View></FadeInSection>
                 )}
 
                 {/* Empty state */}
                 {isEmpty && (
-                    <View
+                    <FadeInSection delay={200}><View
                         className="items-center rounded-3xl p-8"
                         style={{
                             backgroundColor: colors.bg.card,
@@ -481,12 +482,12 @@ export default function ProgressScreen() {
                                         color: '#fff',
                                     }}
                                 >
-                                    Praticar questoes
+                                    Praticar questões
                                 </Text>
                                 <ArrowRight size={16} color="#fff" />
                             </Pressable>
                         </Link>
-                    </View>
+                    </View></FadeInSection>
                 )}
             </ScrollView>
         </SafeAreaView>

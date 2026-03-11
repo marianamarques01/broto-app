@@ -20,6 +20,7 @@ import {
 import { useUser } from '@/hooks/use-user';
 import { useProgress, type AreaStat } from '@/hooks/use-progress';
 import { colors, fonts } from '@/theme/tokens';
+import { FadeInSection, StaggerItem, AnimatedBar } from '@/components/AnimatedEntry';
 
 type AreaMeta = {
     Icon: React.ComponentType<{ size?: number; color?: string }>;
@@ -33,35 +34,35 @@ type AreaMeta = {
 const AREA_META: Record<string, AreaMeta> = {
     linguagens: {
         Icon: FileText,
-        solid: '#3b82f6',
-        bg: 'rgba(59,130,246,0.10)',
-        textColor: '#60a5fa',
-        gradientFrom: 'rgba(59,130,246,0.18)',
-        gradientTo: 'rgba(59,130,246,0.03)',
+        solid: colors.blue[500],
+        bg: 'rgba(43,164,184,0.08)',
+        textColor: colors.blue[400],
+        gradientFrom: 'rgba(43,164,184,0.12)',
+        gradientTo: 'rgba(43,164,184,0.01)',
     },
     'ciencias-humanas': {
         Icon: Globe,
-        solid: '#f59e0b',
-        bg: 'rgba(245,158,11,0.10)',
-        textColor: '#fbbf24',
-        gradientFrom: 'rgba(245,158,11,0.18)',
-        gradientTo: 'rgba(245,158,11,0.03)',
+        solid: colors.amber[500],
+        bg: 'rgba(229,150,14,0.08)',
+        textColor: colors.amber[400],
+        gradientFrom: 'rgba(229,150,14,0.12)',
+        gradientTo: 'rgba(229,150,14,0.01)',
     },
     'ciencias-natureza': {
         Icon: FlaskConical,
-        solid: '#22c55e',
-        bg: 'rgba(34,197,94,0.10)',
-        textColor: '#34d399',
-        gradientFrom: 'rgba(34,197,94,0.18)',
-        gradientTo: 'rgba(34,197,94,0.03)',
+        solid: colors.green[500],
+        bg: 'rgba(16,185,129,0.08)',
+        textColor: colors.green[400],
+        gradientFrom: 'rgba(16,185,129,0.12)',
+        gradientTo: 'rgba(16,185,129,0.01)',
     },
     matematica: {
         Icon: Calculator,
-        solid: '#a855f7',
-        bg: 'rgba(168,85,247,0.10)',
-        textColor: '#c084fc',
-        gradientFrom: 'rgba(168,85,247,0.18)',
-        gradientTo: 'rgba(168,85,247,0.03)',
+        solid: colors.violet[500],
+        bg: 'rgba(155,109,204,0.08)',
+        textColor: colors.violet[400],
+        gradientFrom: 'rgba(155,109,204,0.12)',
+        gradientTo: 'rgba(155,109,204,0.01)',
     },
 };
 
@@ -402,18 +403,13 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
                                 {area.accuracyPct}%
                             </Text>
                         </View>
-                        <View
-                            className="h-2 rounded-full overflow-hidden"
-                            style={{ backgroundColor: colors.bg.deep }}
-                        >
-                            <View
-                                className="h-full rounded-full"
-                                style={{
-                                    width: `${area.accuracyPct}%`,
-                                    backgroundColor: meta.solid,
-                                }}
-                            />
-                        </View>
+                        <AnimatedBar
+                            progress={area.accuracyPct}
+                            color={meta.solid}
+                            bgColor={colors.bg.deep}
+                            height={8}
+                            delay={300}
+                        />
                     </View>
                 )}
 
@@ -679,11 +675,11 @@ export default function RoutineScreen() {
                         style={{ height: 80, backgroundColor: colors.bg.surface }}
                     />
                 ) : (
-                    <WeekCalendar rotina={rotina} />
+                    <FadeInSection delay={0}><WeekCalendar rotina={rotina} /></FadeInSection>
                 )}
 
                 {/* Section: Hoje */}
-                <View className="mt-6">
+                <FadeInSection delay={100}><View className="mt-6">
                     <View className="flex-row items-center gap-2 mb-3">
                         <View
                             style={{
@@ -706,11 +702,11 @@ export default function RoutineScreen() {
                         </Text>
                     </View>
                     {loading ? <SkeletonHero /> : diaHoje ? <CardHoje dia={diaHoje} /> : null}
-                </View>
+                </View></FadeInSection>
 
                 {/* Section: Próximos dias */}
                 {!loading && proximosDias.length > 0 && (
-                    <View className="mt-7">
+                    <FadeInSection delay={250}><View className="mt-7">
                         <View className="flex-row items-center gap-2 mb-3">
                             <View
                                 style={{
@@ -742,14 +738,15 @@ export default function RoutineScreen() {
                             }}
                         >
                             {proximosDias.map((dia, i) => (
-                                <LinhaProximoDia
-                                    key={dia.idx}
-                                    dia={dia}
-                                    isLast={i === proximosDias.length - 1}
-                                />
+                                <StaggerItem key={dia.idx} index={i} baseDelay={300} stagger={50}>
+                                    <LinhaProximoDia
+                                        dia={dia}
+                                        isLast={i === proximosDias.length - 1}
+                                    />
+                                </StaggerItem>
                             ))}
                         </View>
-                    </View>
+                    </View></FadeInSection>
                 )}
 
                 {loading && (
@@ -766,7 +763,7 @@ export default function RoutineScreen() {
 
                 {/* Meta card */}
                 {!loading && (
-                    <View
+                    <FadeInSection delay={400}><View
                         className="mt-7 rounded-2xl overflow-hidden"
                         style={{
                             borderWidth: 1,
@@ -818,7 +815,7 @@ export default function RoutineScreen() {
                                 </Pressable>
                             </Link>
                         </LinearGradient>
-                    </View>
+                    </View></FadeInSection>
                 )}
             </ScrollView>
         </SafeAreaView>

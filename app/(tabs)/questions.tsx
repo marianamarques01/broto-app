@@ -1,15 +1,27 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-    SlidersHorizontal,
-    RotateCcw,
+    View,
+    Text,
+    ScrollView,
+    Pressable,
+    ActivityIndicator,
+    Modal,
+    FlatList,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown, Easing } from 'react-native-reanimated';
+import {
     X,
-    Search,
-    BookOpen,
     Sparkles,
     ChevronRight,
+    ChevronLeft,
+    ChevronDown,
     AlertCircle,
+    BookOpen,
+    Calculator,
+    FlaskConical,
+    Globe2,
 } from 'lucide-react-native';
 import {
     useQuestionsFilters,
@@ -20,8 +32,44 @@ import { submitAnswer } from '@/lib/api/answer-question';
 import type { Question } from '@/lib/types/questions';
 import { getQuestionId } from '@/lib/types/questions';
 import { colors, fonts } from '@/theme/tokens';
+import { FadeInSection, StaggerItem } from '@/components/AnimatedEntry';
 
-function FilterPicker({
+// ─── Config por matéria (igual à Home — identidade visual) ─────────────────
+const AREA_CONFIG: Record<
+    string,
+    { label: string; short: string; color: string; glow: string; Icon: any }
+> = {
+    linguagens: {
+        label: 'Linguagens',
+        short: 'LCT',
+        color: colors.blue[500],
+        glow: colors.blue.glow,
+        Icon: BookOpen,
+    },
+    'ciencias-humanas': {
+        label: 'Ciências Humanas',
+        short: 'HUM',
+        color: colors.amber[500],
+        glow: colors.amber.glow,
+        Icon: Globe2,
+    },
+    'ciencias-natureza': {
+        label: 'Ciências da Natureza',
+        short: 'NAT',
+        color: colors.green[500],
+        glow: colors.green.glow,
+        Icon: FlaskConical,
+    },
+    matematica: {
+        label: 'Matemática',
+        short: 'MAT',
+        color: colors.violet[500],
+        glow: colors.violet.glow,
+        Icon: Calculator,
+    },
+};
+
+function FilterDropdown({
     label,
     value,
     options,
@@ -34,56 +82,175 @@ function FilterPicker({
     onSelect: (v: string) => void;
     disabled?: boolean;
 }) {
+    const [visible, setVisible] = useState(false);
     const safeOptions = Array.isArray(options) ? options : [];
+    const selectedOption = safeOptions.find(opt => opt.value === value);
+    const displayLabel = selectedOption?.label ?? 'Todos';
+
     return (
-        <View className="mb-3">
+        <View style={{ marginBottom: 16 }}>
             <Text
                 style={{
                     fontSize: 11,
                     fontFamily: fonts.sansSemiBold,
                     color: colors.text.muted,
                     textTransform: 'uppercase',
-                    letterSpacing: 1,
-                    marginBottom: 6,
+                    letterSpacing: 1.2,
+                    marginBottom: 8,
                 }}
             >
                 {label}
             </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View className="flex-row gap-2">
-                    {safeOptions.map(opt => {
-                        const isSelected = opt.value === value;
-                        return (
-                            <Pressable
-                                key={opt.value || '_all'}
-                                onPress={() => onSelect(opt.value)}
-                                disabled={disabled}
-                                className="rounded-lg px-3.5 py-2"
-                                style={{
-                                    backgroundColor: isSelected
-                                        ? colors.green[600]
-                                        : colors.bg.elevated,
-                                    opacity: disabled ? 0.5 : 1,
-                                    borderWidth: 1,
-                                    borderColor: isSelected
-                                        ? colors.green[500]
-                                        : colors.border.subtle,
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        fontSize: 12,
-                                        fontFamily: fonts.sansSemiBold,
-                                        color: isSelected ? '#fff' : colors.text.secondary,
-                                    }}
-                                >
-                                    {opt.label}
-                                </Text>
-                            </Pressable>
-                        );
-                    })}
-                </View>
-            </ScrollView>
+            <Pressable
+                onPress={() => !disabled && setVisible(true)}
+                disabled={disabled}
+                style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    borderRadius: 14,
+                    backgroundColor: colors.bg.card,
+                    borderWidth: 1,
+                    borderColor: colors.border.default,
+                    opacity: disabled ? 0.5 : pressed ? 0.9 : 1,
+                })}
+            >
+                <Text
+                    style={{
+                        fontSize: 15,
+                        fontFamily: fonts.sansMedium,
+                        color: colors.text.primary,
+                    }}
+                    numberOfLines={1}
+                >
+                    {displayLabel}
+                </Text>
+                <ChevronDown size={20} color={colors.text.muted} />
+            </Pressable>
+
+            <Modal
+                visible={visible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setVisible(false)}
+            >
+                <Pressable
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        justifyContent: 'flex-end',
+                    }}
+                    onPress={() => setVisible(false)}
+                >
+                    <Pressable
+                        style={{
+                            backgroundColor: colors.bg.deep,
+                            borderTopLeftRadius: 24,
+                            borderTopRightRadius: 24,
+                            paddingTop: 12,
+                            paddingBottom: 32,
+                            maxHeight: '70%',
+                        }}
+                        onPress={e => e.stopPropagation()}
+                    >
+                        <View
+                            style={{
+                                width: 40,
+                                height: 4,
+                                borderRadius: 2,
+                                backgroundColor: colors.border.default,
+                                alignSelf: 'center',
+                                marginBottom: 16,
+                            }}
+                        />
+                        <Text
+                            style={{
+                                fontSize: 11,
+                                fontFamily: fonts.sansSemiBold,
+                                color: colors.text.muted,
+                                textTransform: 'uppercase',
+                                letterSpacing: 1.2,
+                                paddingHorizontal: 20,
+                                marginBottom: 12,
+                            }}
+                        >
+                            {label}
+                        </Text>
+                        <FlatList
+                            data={safeOptions}
+                            keyExtractor={item => item.value || '_all'}
+                            style={{ maxHeight: 320 }}
+                            contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }}
+                            renderItem={({ item }) => {
+                                const isSelected = item.value === value;
+                                return (
+                                    <Pressable
+                                        onPress={() => {
+                                            onSelect(item.value);
+                                            setVisible(false);
+                                        }}
+                                        style={({ pressed }) => ({
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            paddingVertical: 14,
+                                            paddingHorizontal: 12,
+                                            borderRadius: 12,
+                                            backgroundColor: isSelected
+                                                ? colors.green.glow
+                                                : pressed
+                                                  ? colors.bg.elevated
+                                                  : 'transparent',
+                                            borderWidth: 1,
+                                            borderColor: isSelected
+                                                ? colors.green[500]
+                                                : 'transparent',
+                                        })}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 15,
+                                                fontFamily: isSelected
+                                                    ? fonts.sansSemiBold
+                                                    : fonts.sans,
+                                                color: isSelected
+                                                    ? colors.green[400]
+                                                    : colors.text.primary,
+                                            }}
+                                        >
+                                            {item.label}
+                                        </Text>
+                                        {isSelected && (
+                                            <View
+                                                style={{
+                                                    width: 24,
+                                                    height: 24,
+                                                    borderRadius: 12,
+                                                    backgroundColor: colors.green[600],
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                }}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        fontSize: 12,
+                                                        fontFamily: fonts.sansBold,
+                                                        color: '#fff',
+                                                    }}
+                                                >
+                                                    ✓
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </Pressable>
+                                );
+                            }}
+                        />
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </View>
     );
 }
@@ -113,7 +280,7 @@ export default function QuestionsScreen() {
     const [activeQuestion, setActiveQuestion] = useState<Question | null>(null);
     const [questionIdx, setQuestionIdx] = useState(0);
     const [scores, setScores] = useState({ correct: 0, total: 0 });
-    const [showFilters, setShowFilters] = useState(false);
+    const [showList, setShowList] = useState(false);
 
     function startSession() {
         if (questions.length === 0) return;
@@ -141,29 +308,40 @@ export default function QuestionsScreen() {
         }
     }
 
-    const hasActiveFilters = !!(selectedArea || selectedYear || selectedTopico);
+    const areaConfig = selectedArea ? AREA_CONFIG[selectedArea] : null;
+    const AreaIcon = areaConfig?.Icon;
 
-    // ——— Active question player ———
+    // ─── Modo: jogando questão ─────────────────────────────────────────────
     if (activeQuestion) {
         return (
-            <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bg.void }}>
+            <SafeAreaView
+                className="flex-1"
+                style={{ backgroundColor: colors.bg.void }}
+                edges={['top']}
+            >
                 <View
                     className="flex-row items-center justify-between px-5 py-3"
                     style={{ backgroundColor: colors.bg.deep }}
                 >
                     <Pressable
                         onPress={() => setActiveQuestion(null)}
-                        className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
-                        style={{
+                        style={({ pressed }) => ({
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 6,
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 999,
                             backgroundColor: colors.bg.card,
                             borderWidth: 1,
                             borderColor: colors.border.subtle,
-                        }}
+                            opacity: pressed ? 0.85 : 1,
+                        })}
                     >
-                        <X size={14} color={colors.text.muted} />
+                        <X size={16} color={colors.text.muted} />
                         <Text
                             style={{
-                                fontSize: 12,
+                                fontSize: 13,
                                 fontFamily: fonts.sansSemiBold,
                                 color: colors.text.secondary,
                             }}
@@ -172,16 +350,21 @@ export default function QuestionsScreen() {
                         </Text>
                     </Pressable>
                     <View
-                        className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
                         style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 6,
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 999,
                             backgroundColor: colors.green.glow,
                             borderWidth: 1,
-                            borderColor: 'rgba(16,185,129,0.15)',
+                            borderColor: 'rgba(16,185,129,0.2)',
                         }}
                     >
                         <Text
                             style={{
-                                fontSize: 12,
+                                fontSize: 13,
                                 fontFamily: fonts.sansBold,
                                 color: colors.green[400],
                             }}
@@ -190,7 +373,11 @@ export default function QuestionsScreen() {
                         </Text>
                     </View>
                 </View>
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ paddingBottom: 32 }}
+                    showsVerticalScrollIndicator={false}
+                >
                     <QuestionPlayer
                         question={activeQuestion}
                         questionNumber={questionIdx + 1}
@@ -207,15 +394,19 @@ export default function QuestionsScreen() {
         );
     }
 
-    // ——— Main list view ———
-    return (
-        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bg.void }}>
-            {/* Header */}
-            <View
-                className="flex-row items-center justify-between px-5 py-3"
-                style={{ backgroundColor: colors.bg.deep }}
+    // ─── Step 1: Escolher matéria (cards grandes, como na Home) ─────────────
+    if (!selectedArea) {
+        return (
+            <SafeAreaView
+                className="flex-1"
+                style={{ backgroundColor: colors.bg.void }}
+                edges={['top']}
             >
-                <View className="flex-row items-center gap-2">
+                {/* Header padronizado (igual Rotina / Progresso) */}
+                <View
+                    className="flex-row items-center gap-2 px-5 py-3"
+                    style={{ backgroundColor: colors.bg.deep }}
+                >
                     <BookOpen size={18} color={colors.green[500]} />
                     <Text
                         style={{
@@ -224,143 +415,28 @@ export default function QuestionsScreen() {
                             color: colors.text.primary,
                         }}
                     >
-                        Questoes ENEM
+                        Questões
                     </Text>
                 </View>
-                <Pressable
-                    onPress={() => setShowFilters(v => !v)}
-                    className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
-                    style={{
-                        backgroundColor: hasActiveFilters
-                            ? colors.green[600]
-                            : colors.bg.card,
-                        borderWidth: 1,
-                        borderColor: hasActiveFilters
-                            ? colors.green[500]
-                            : colors.border.subtle,
-                    }}
-                >
-                    <SlidersHorizontal
-                        size={14}
-                        color={hasActiveFilters ? '#fff' : colors.text.muted}
-                    />
-                    <Text
-                        style={{
-                            fontSize: 12,
-                            fontFamily: fonts.sansSemiBold,
-                            color: hasActiveFilters ? '#fff' : colors.text.secondary,
-                        }}
-                    >
-                        Filtros
-                    </Text>
-                </Pressable>
-            </View>
 
-            {/* Filters panel */}
-            {showFilters && (
-                <View
-                    className="px-4 py-4"
-                    style={{
-                        backgroundColor: colors.bg.card,
-                        borderBottomWidth: 1,
-                        borderBottomColor: colors.border.subtle,
-                    }}
-                >
-                    <FilterPicker
-                        label="Materia"
-                        value={selectedArea}
-                        options={[
-                            { value: '', label: 'Todas' },
-                            ...(Array.isArray(areas) ? areas : []).map(a => ({
-                                value: a.value,
-                                label: a.label,
-                            })),
-                        ]}
-                        onSelect={setSelectedArea}
-                        disabled={loading}
-                    />
-                    <FilterPicker
-                        label="Ano"
-                        value={selectedYear}
-                        options={[
-                            { value: '', label: 'Todos' },
-                            ...(Array.isArray(exams) ? exams : []).map(e => ({
-                                value: String(e.year),
-                                label: String(e.year),
-                            })),
-                        ]}
-                        onSelect={setSelectedYear}
-                        disabled={loading}
-                    />
-                    {selectedArea && (
-                        <FilterPicker
-                            label="Topico"
-                            value={selectedTopico}
-                            options={[
-                                { value: '', label: 'Todos' },
-                                ...(Array.isArray(topicos) ? topicos : []).map(t => ({
-                                    value: t.id,
-                                    label: t.label,
-                                })),
-                            ]}
-                            onSelect={setSelectedTopico}
-                            disabled={loading}
-                        />
-                    )}
-                    {isLinguagensArea && (
-                        <FilterPicker
-                            label="Idioma"
-                            value={selectedLanguage}
-                            options={LANGUAGE_OPTIONS.map(o => ({
-                                value: o.value,
-                                label: o.label,
-                            }))}
-                            onSelect={setSelectedLanguage}
-                            disabled={!isLanguageFilterEnabled || loading}
-                        />
-                    )}
-                    {hasActiveFilters && (
-                        <Pressable
-                            onPress={() => {
-                                setSelectedArea('');
-                                setSelectedYear('');
-                                setSelectedTopico('');
-                                setSelectedLanguage('');
-                            }}
-                            className="flex-row items-center gap-1.5 mt-1"
-                        >
-                            <RotateCcw size={12} color={colors.text.muted} />
-                            <Text
-                                style={{
-                                    fontSize: 12,
-                                    fontFamily: fonts.sans,
-                                    color: colors.text.muted,
-                                }}
-                            >
-                                Limpar filtros
-                            </Text>
-                        </Pressable>
-                    )}
-                </View>
-            )}
-
-            <ScrollView
-                className="flex-1"
-                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 32 }}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* Error */}
                 {error && (
                     <View
-                        className="mb-4 flex-row items-center justify-between gap-3 rounded-xl px-4 py-3"
                         style={{
+                            marginHorizontal: 16,
+                            marginTop: 16,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            padding: 16,
+                            borderRadius: 16,
                             backgroundColor: colors.red.glow,
                             borderWidth: 1,
-                            borderColor: 'rgba(239,68,68,0.15)',
+                            borderColor: 'rgba(224,82,82,0.2)',
                         }}
                     >
-                        <View className="flex-row items-center gap-2 flex-1">
-                            <AlertCircle size={16} color={colors.red[500]} />
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                            <AlertCircle size={18} color={colors.red[500]} />
                             <Text
                                 style={{
                                     fontSize: 13,
@@ -381,200 +457,456 @@ export default function QuestionsScreen() {
                                     textDecorationLine: 'underline',
                                 }}
                             >
-                                Tentar novamente
+                                Tentar de novo
                             </Text>
                         </Pressable>
                     </View>
                 )}
 
-                {/* Loading */}
-                {loading && (
-                    <View className="items-center py-20">
+                {loading ? (
+                    <View style={{ alignItems: 'center', paddingVertical: 48 }}>
                         <ActivityIndicator size="large" color={colors.green[500]} />
                     </View>
+                ) : (
+                    <ScrollView
+                        style={{ flex: 1 }}
+                        contentContainerStyle={{
+                            paddingHorizontal: 16,
+                            paddingTop: 8,
+                            paddingBottom: 120,
+                            gap: 12,
+                        }}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {(Array.isArray(areas) ? areas : []).map((area, idx) => {
+                            const config = AREA_CONFIG[area.value] ?? AREA_CONFIG.matematica;
+                            const { label, color, glow, Icon } = config;
+                            return (
+                                <Animated.View
+                                    key={area.value}
+                                    entering={FadeInDown.delay(80 + idx * 60)
+                                        .duration(380)
+                                        .easing(Easing.out(Easing.quad))}
+                                >
+                                    <Pressable
+                                        onPress={() => setSelectedArea(area.value)}
+                                        style={({ pressed }) => ({
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            gap: 16,
+                                            padding: 18,
+                                            borderRadius: 20,
+                                            borderWidth: 1,
+                                            borderColor: colors.border.default,
+                                            backgroundColor: colors.bg.card,
+                                            opacity: pressed ? 0.92 : 1,
+                                        })}
+                                    >
+                                        <View
+                                            style={{
+                                                width: 52,
+                                                height: 52,
+                                                borderRadius: 14,
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                backgroundColor: glow,
+                                                borderWidth: 1,
+                                                borderColor: `${color}40`,
+                                            }}
+                                        >
+                                            <Icon size={24} color={color} />
+                                        </View>
+                                        <View style={{ flex: 1, minWidth: 0 }}>
+                                            <Text
+                                                style={{
+                                                    fontSize: 16,
+                                                    fontFamily: fonts.sansBold,
+                                                    color: colors.text.primary,
+                                                }}
+                                            >
+                                                {label}
+                                            </Text>
+                                            <Text
+                                                style={{
+                                                    fontSize: 13,
+                                                    fontFamily: fonts.sans,
+                                                    color: colors.text.muted,
+                                                    marginTop: 2,
+                                                }}
+                                            >
+                                                ENEM 2015–2023 · por ano e tópico
+                                            </Text>
+                                        </View>
+                                        <ChevronRight size={20} color={colors.text.muted} />
+                                    </Pressable>
+                                </Animated.View>
+                            );
+                        })}
+                    </ScrollView>
                 )}
+            </SafeAreaView>
+        );
+    }
 
-                {/* Empty — no area selected */}
-                {!loading && !selectedArea && (
-                    <View className="items-center py-16">
-                        <View
-                            className="h-20 w-20 items-center justify-center rounded-3xl"
-                            style={{
-                                backgroundColor: colors.green.glow,
-                                borderWidth: 1,
-                                borderColor: colors.border.default,
-                            }}
-                        >
-                            <Search size={36} color={colors.green[500]} />
-                        </View>
-                        <Text
-                            style={{
-                                fontSize: 16,
-                                fontFamily: fonts.sansBold,
-                                color: colors.text.primary,
-                                marginTop: 20,
-                            }}
-                        >
-                            Escolha uma materia
-                        </Text>
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                fontFamily: fonts.sans,
-                                color: colors.text.muted,
-                                marginTop: 6,
-                                textAlign: 'center',
-                                lineHeight: 20,
-                                maxWidth: 260,
-                            }}
-                        >
-                            Use os filtros para buscar questoes do banco ENEM 2009-2023.
-                        </Text>
+    // ─── Step 2: Matéria escolhida — refinamento + CTA + lista ──────────────
+    return (
+        <SafeAreaView
+            className="flex-1"
+            style={{ backgroundColor: colors.bg.void }}
+            edges={['top']}
+        >
+            {/* Header padronizado (igual Rotina / Progresso) com voltar + chip da matéria */}
+            <View
+                className="px-5 pt-2 pb-4"
+                style={{ backgroundColor: colors.bg.deep }}
+            >
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-2">
                         <Pressable
-                            onPress={() => setShowFilters(true)}
-                            className="mt-5 flex-row items-center gap-2 rounded-xl px-5 py-2.5"
-                            style={{ backgroundColor: colors.green[600] }}
-                        >
-                            <SlidersHorizontal size={14} color="#fff" />
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    fontFamily: fonts.sansBold,
-                                    color: '#fff',
-                                }}
-                            >
-                                Abrir filtros
-                            </Text>
-                        </Pressable>
-                    </View>
-                )}
-
-                {/* Loading questions */}
-                {!loading && selectedArea && loadingQuestions && (
-                    <View className="items-center py-20">
-                        <ActivityIndicator size="large" color={colors.green[500]} />
-                    </View>
-                )}
-
-                {/* No results */}
-                {!loading && selectedArea && !loadingQuestions && questions.length === 0 && (
-                    <View className="items-center py-16">
-                        <View
-                            className="h-20 w-20 items-center justify-center rounded-3xl"
-                            style={{
+                            onPress={() => {
+                                setSelectedArea('');
+                                setShowList(false);
+                            }}
+                            style={({ pressed }) => ({
+                                width: 36,
+                                height: 36,
+                                borderRadius: 10,
+                                alignItems: 'center',
+                                justifyContent: 'center',
                                 backgroundColor: colors.bg.card,
                                 borderWidth: 1,
-                                borderColor: colors.border.default,
-                            }}
+                                borderColor: colors.border.subtle,
+                                opacity: pressed ? 0.85 : 1,
+                            })}
                         >
-                            <Search size={36} color={colors.text.muted} />
-                        </View>
+                            <ChevronLeft size={18} color={colors.text.secondary} />
+                        </Pressable>
+                        <BookOpen size={18} color={colors.green[500]} />
                         <Text
                             style={{
-                                fontSize: 16,
+                                fontSize: 17,
                                 fontFamily: fonts.sansBold,
                                 color: colors.text.primary,
-                                marginTop: 20,
                             }}
                         >
-                            Nenhuma questao encontrada
-                        </Text>
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                fontFamily: fonts.sans,
-                                color: colors.text.muted,
-                                marginTop: 6,
-                            }}
-                        >
-                            Tente ajustar os filtros.
+                            Questões
                         </Text>
                     </View>
-                )}
+                    <View
+                        className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
+                        style={{
+                            backgroundColor: colors.bg.card,
+                            borderWidth: 1,
+                            borderColor: colors.border.subtle,
+                        }}
+                    >
+                        {AreaIcon && (
+                            <AreaIcon size={14} color={areaConfig!.color} />
+                        )}
+                        <Text
+                            style={{
+                                fontSize: 11,
+                                fontFamily: fonts.sansSemiBold,
+                                color: colors.text.secondary,
+                            }}
+                            numberOfLines={1}
+                        >
+                            {areaConfig?.label ?? selectedArea}
+                        </Text>
+                    </View>
+                </View>
+            </View>
 
-                {/* Question list */}
-                {!loading && !loadingQuestions && questions.length > 0 && (
-                    <View>
-                        <View className="mb-4 flex-row items-center justify-between">
-                            <Text
-                                style={{
-                                    fontSize: 13,
-                                    fontFamily: fonts.sans,
-                                    color: colors.text.muted,
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        fontFamily: fonts.sansBold,
-                                        color: colors.text.primary,
-                                    }}
-                                >
-                                    {questions.length}
-                                </Text>{' '}
-                                questoes encontradas
-                            </Text>
-                            <Pressable
-                                onPress={startSession}
-                                className="flex-row items-center gap-1.5 rounded-xl px-4 py-2"
-                                style={{ backgroundColor: colors.green[600] }}
-                            >
-                                <Sparkles size={14} color="#fff" />
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                    paddingHorizontal: 16,
+                    paddingTop: 20,
+                    paddingBottom: 120,
+                }}
+                showsVerticalScrollIndicator={false}
+            >
+                {error && (
+                    <FadeInSection delay={0}>
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 12,
+                                padding: 16,
+                                borderRadius: 16,
+                                backgroundColor: colors.red.glow,
+                                borderWidth: 1,
+                                borderColor: 'rgba(224,82,82,0.2)',
+                                marginBottom: 20,
+                            }}
+                        >
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                <AlertCircle size={18} color={colors.red[500]} />
                                 <Text
                                     style={{
                                         fontSize: 13,
-                                        fontFamily: fonts.sansBold,
-                                        color: '#fff',
+                                        fontFamily: fonts.sans,
+                                        color: colors.red[400],
+                                        flex: 1,
                                     }}
                                 >
-                                    Iniciar treino
+                                    {error}
+                                </Text>
+                            </View>
+                            <Pressable onPress={retry}>
+                                <Text
+                                    style={{
+                                        fontSize: 12,
+                                        fontFamily: fonts.sansSemiBold,
+                                        color: colors.red[400],
+                                        textDecorationLine: 'underline',
+                                    }}
+                                >
+                                    Tentar de novo
                                 </Text>
                             </Pressable>
                         </View>
+                    </FadeInSection>
+                )}
 
-                        <View className="gap-2.5">
-                            {(Array.isArray(questions) ? questions : []).map((q, idx) => (
-                                <Pressable
-                                    key={`${q.year}-${q.index}`}
-                                    onPress={() => {
-                                        setActiveQuestion(q);
-                                        setQuestionIdx(idx);
-                                        setScores({ correct: 0, total: 0 });
-                                    }}
-                                    className="flex-row items-center gap-3 rounded-2xl p-4"
+                <FilterDropdown
+                    label="Ano"
+                    value={selectedYear}
+                    options={[
+                        { value: '', label: 'Todos' },
+                        ...(Array.isArray(exams) ? exams : []).map(e => ({
+                            value: String(e.year),
+                            label: String(e.year),
+                        })),
+                    ]}
+                    onSelect={setSelectedYear}
+                    disabled={loading}
+                />
+                <FilterDropdown
+                    label="Tópico"
+                    value={selectedTopico}
+                    options={[
+                        { value: '', label: 'Todos' },
+                        ...(Array.isArray(topicos) ? topicos : []).map(t => ({
+                            value: t.id,
+                            label: t.label,
+                        })),
+                    ]}
+                    onSelect={setSelectedTopico}
+                    disabled={loading}
+                />
+                {isLinguagensArea && (
+                    <FilterDropdown
+                        label="Idioma"
+                        value={selectedLanguage}
+                        options={LANGUAGE_OPTIONS.map(o => ({
+                            value: o.value,
+                            label: o.label,
+                        }))}
+                        onSelect={setSelectedLanguage}
+                        disabled={!isLanguageFilterEnabled || loading}
+                    />
+                )}
+                {(selectedYear || selectedTopico || selectedLanguage) && (
+                    <Pressable
+                        onPress={() => {
+                            setSelectedYear('');
+                            setSelectedTopico('');
+                            setSelectedLanguage('');
+                        }}
+                        style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 12,
+                                fontFamily: fonts.sans,
+                                color: colors.text.muted,
+                            }}
+                        >
+                            Limpar filtros
+                        </Text>
+                    </Pressable>
+                )}
+
+                {/* CTA principal + contador */}
+                {loadingQuestions ? (
+                    <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+                        <ActivityIndicator size="large" color={colors.green[500]} />
+                    </View>
+                ) : questions.length === 0 ? (
+                    <FadeInSection delay={0}>
+                        <View
+                            style={{
+                                alignItems: 'center',
+                                paddingVertical: 40,
+                                paddingHorizontal: 24,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 15,
+                                    fontFamily: fonts.sans,
+                                    color: colors.text.muted,
+                                    textAlign: 'center',
+                                }}
+                            >
+                                Nenhuma questão encontrada com esses filtros. Ajuste ano ou tópico.
+                            </Text>
+                        </View>
+                    </FadeInSection>
+                ) : (
+                    <>
+                        <FadeInSection delay={0}>
+                            <View
+                                style={{
+                                    marginBottom: 20,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    flexWrap: 'wrap',
+                                    gap: 12,
+                                }}
+                            >
+                                <Text
                                     style={{
-                                        backgroundColor: colors.bg.card,
-                                        borderWidth: 1,
-                                        borderColor: colors.border.subtle,
+                                        fontSize: 13,
+                                        fontFamily: fonts.sans,
+                                        color: colors.text.muted,
                                     }}
                                 >
-                                    <View className="flex-1">
+                                    <Text
+                                        style={{
+                                            fontFamily: fonts.sansBold,
+                                            color: colors.text.primary,
+                                        }}
+                                    >
+                                        {questions.length}
+                                    </Text>{' '}
+                                    questões
+                                </Text>
+                                <Pressable
+                                    onPress={startSession}
+                                    style={({ pressed }) => ({
+                                        opacity: pressed ? 0.9 : 1,
+                                    })}
+                                >
+                                    <LinearGradient
+                                        colors={[colors.green[600], '#047857']}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: 8,
+                                            paddingVertical: 14,
+                                            paddingHorizontal: 24,
+                                            borderRadius: 16,
+                                            borderWidth: 1,
+                                            borderColor: 'rgba(16,185,129,0.35)',
+                                            minWidth: 180,
+                                        }}
+                                    >
+                                        <Sparkles size={18} color="#fff" />
                                         <Text
-                                            numberOfLines={2}
                                             style={{
-                                                fontSize: 14,
-                                                fontFamily: fonts.sansMedium,
-                                                color: colors.text.primary,
+                                                fontSize: 15,
+                                                fontFamily: fonts.sansBold,
+                                                color: '#fff',
                                             }}
                                         >
-                                            {q.title}
+                                            Iniciar treino
                                         </Text>
-                                        <Text
-                                            style={{
-                                                fontSize: 12,
-                                                fontFamily: fonts.sans,
-                                                color: colors.text.muted,
-                                                marginTop: 4,
-                                            }}
-                                        >
-                                            ENEM {q.year} · Questao {q.index}
-                                            {q.discipline && ` · ${q.discipline}`}
-                                        </Text>
-                                    </View>
-                                    <ChevronRight size={16} color={colors.text.muted} />
+                                    </LinearGradient>
                                 </Pressable>
-                            ))}
-                        </View>
-                    </View>
+                            </View>
+                        </FadeInSection>
+
+                        {/* Lista (expandível ou sempre visível) */}
+                        <Pressable
+                            onPress={() => setShowList(v => !v)}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                paddingVertical: 10,
+                                marginBottom: 8,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 12,
+                                    fontFamily: fonts.sansSemiBold,
+                                    color: colors.text.muted,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: 1,
+                                }}
+                            >
+                                {showList ? 'Ocultar lista' : 'Ver lista de questões'}
+                            </Text>
+                            <View style={{ transform: [{ rotate: showList ? '90deg' : '0deg' }] }}>
+                                <ChevronRight size={16} color={colors.text.muted} />
+                            </View>
+                        </Pressable>
+                        {showList && (
+                            <View style={{ gap: 10 }}>
+                                {(Array.isArray(questions) ? questions : []).map((q, idx) => (
+                                    <StaggerItem
+                                        key={`${q.year}-${q.index}`}
+                                        index={idx}
+                                        baseDelay={0}
+                                        stagger={40}
+                                    >
+                                        <Pressable
+                                            onPress={() => {
+                                                setActiveQuestion(q);
+                                                setQuestionIdx(idx);
+                                                setScores({ correct: 0, total: 0 });
+                                            }}
+                                            style={({ pressed }) => ({
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                gap: 12,
+                                                padding: 16,
+                                                borderRadius: 16,
+                                                backgroundColor: colors.bg.card,
+                                                borderWidth: 1,
+                                                borderColor: colors.border.subtle,
+                                                opacity: pressed ? 0.9 : 1,
+                                            })}
+                                        >
+                                            <View style={{ flex: 1, minWidth: 0 }}>
+                                                <Text
+                                                    numberOfLines={2}
+                                                    style={{
+                                                        fontSize: 14,
+                                                        fontFamily: fonts.sansMedium,
+                                                        color: colors.text.primary,
+                                                    }}
+                                                >
+                                                    {q.title}
+                                                </Text>
+                                                <Text
+                                                    style={{
+                                                        fontSize: 12,
+                                                        fontFamily: fonts.sans,
+                                                        color: colors.text.muted,
+                                                        marginTop: 4,
+                                                    }}
+                                                >
+                                                    ENEM {q.year} · Questão {q.index}
+                                                    {q.discipline ? ` · ${q.discipline}` : ''}
+                                                </Text>
+                                            </View>
+                                            <ChevronRight size={18} color={colors.text.muted} />
+                                        </Pressable>
+                                    </StaggerItem>
+                                ))}
+                            </View>
+                        )}
+                    </>
                 )}
             </ScrollView>
         </SafeAreaView>
