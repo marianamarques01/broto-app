@@ -1,4 +1,4 @@
-/** Fontes — iguais ao web (DM Sans + Fraunces) */
+/** Fontes — iguais ao web (DM Sans + Fraunces); logo em Outfit (sans-serif) */
 export const fonts = {
     sans: 'DMSans_400Regular',
     sansMedium: 'DMSans_500Medium',
@@ -7,6 +7,8 @@ export const fonts = {
     display: 'Fraunces_900Black',
     displayBold: 'Fraunces_700Bold',
     displaySemiBold: 'Fraunces_600SemiBold',
+    /** Fonte da logo "broto" e rótulos de fase (Semente, Muda, etc.) — sans-serif */
+    logo: 'Outfit_600SemiBold',
 } as const;
 
 /** Escala de tamanhos de fonte — igual ao Tailwind/desktop (px) */

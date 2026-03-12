@@ -34,8 +34,8 @@ export function BrotoLogo({ size = 'header' }: { size?: Size }) {
                     textAnchor="middle"
                     fill={`url(#brotoLogoGrad-${size})`}
                     fontSize={fontSize['5xl']}
-                    fontWeight="900"
-                    fontFamily={fonts.display}
+                    fontWeight="600"
+                    fontFamily={fonts.logo}
                     letterSpacing={-0.5}
                 >
                     broto

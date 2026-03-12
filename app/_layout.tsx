@@ -31,6 +31,7 @@ import {
     Fraunces_700Bold,
     Fraunces_900Black,
 } from '@expo-google-fonts/fraunces';
+import { Outfit_600SemiBold } from '@expo-google-fonts/outfit';
 import '@/global.css';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -124,8 +125,8 @@ function SplashGradientWordmark() {
                     textAnchor="middle"
                     fill="url(#splashWordmarkGrad)"
                     fontSize={fontSize['5xl']}
-                    fontWeight="900"
-                    fontFamily={fonts.display}
+                    fontWeight="600"
+                    fontFamily={fonts.logo}
                     letterSpacing={-0.5}
                 >
                     broto
@@ -312,6 +313,7 @@ export default function RootLayout() {
         Fraunces_600SemiBold,
         Fraunces_700Bold,
         Fraunces_900Black,
+        Outfit_600SemiBold,
     });
 
     // Hide native splash immediately — we show our animated one instead

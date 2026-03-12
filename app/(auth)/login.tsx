@@ -178,8 +178,8 @@ function GradientWordmark() {
                     textAnchor="middle"
                     fill="url(#wordmarkGrad)"
                     fontSize={fontSize['5xl']}
-                    fontWeight="900"
-                    fontFamily={fonts.display}
+                    fontWeight="600"
+                    fontFamily={fonts.logo}
                     letterSpacing={-0.5}
                 >
                     broto

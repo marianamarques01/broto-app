@@ -36,7 +36,11 @@ export function FadeInSection({
         transform: [{ translateY: translateY.value }],
     }));
 
-    return <Animated.View style={style}>{children}</Animated.View>;
+    return (
+        <Animated.View style={[style, { width: '100%', alignSelf: 'stretch' }]}>
+            {children}
+        </Animated.View>
+    );
 }
 
 /** Fade in — for headers */

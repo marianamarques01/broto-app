@@ -172,84 +172,95 @@ function MissionCard({ mission, index }: { mission: Mission; index: number }) {
     }));
 
     return (
-        <Animated.View style={animStyle}>
+        <Animated.View style={[animStyle, { width: '100%', alignSelf: 'stretch' }]}>
             <Pressable
                 onPress={() => router.push('/(tabs)/questions')}
                 style={({ pressed }) => ({
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 14,
-                    padding: 14,
-                    borderRadius: 16,
-                    borderWidth: 1,
-                    borderColor: mission.done
-                        ? 'rgba(16,185,129,0.22)'
-                        : mission.locked
-                          ? colors.border.subtle
-                          : colors.border.default,
-                    backgroundColor: mission.done
-                        ? 'rgba(16,185,129,0.06)'
-                        : colors.bg.card,
                     opacity: mission.locked ? 0.72 : pressed ? 0.85 : 1,
                 })}
             >
-                {/* Area icon */}
                 <View
                     style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 12,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: mission.locked
-                            ? colors.bg.elevated
-                            : area.glow,
+                        width: '100%',
+                        padding: 14,
+                        borderRadius: 16,
                         borderWidth: 1,
-                        borderColor: mission.locked
-                            ? colors.border.subtle
-                            : `${area.color}33`,
+                        borderColor: mission.done
+                            ? 'rgba(16,185,129,0.22)'
+                            : mission.locked
+                              ? colors.border.subtle
+                              : colors.border.default,
+                        backgroundColor: mission.done
+                            ? 'rgba(16,185,129,0.06)'
+                            : colors.bg.card,
+                        flexDirection: 'row',
+                        alignItems: 'center',
                     }}
                 >
-                    {mission.locked ? (
-                        <Lock size={18} color={colors.text.muted} />
-                    ) : mission.done ? (
-                        <CheckCircle2 size={18} color={colors.green[500]} />
-                    ) : (
-                        <Icon size={18} color={area.color} />
+                    {/* Area icon */}
+                    <View
+                        style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: 14,
+                            backgroundColor: mission.locked
+                                ? colors.bg.elevated
+                                : area.glow,
+                            borderWidth: 1,
+                            borderColor: mission.locked
+                                ? colors.border.subtle
+                                : `${area.color}33`,
+                        }}
+                    >
+                        {mission.locked ? (
+                            <Lock size={18} color={colors.text.muted} />
+                        ) : mission.done ? (
+                            <CheckCircle2 size={18} color={colors.green[500]} />
+                        ) : (
+                            <Icon size={18} color={area.color} />
+                        )}
+                    </View>
+
+                    {/* Content */}
+                    <View style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}>
+                        <Text
+                            numberOfLines={2}
+                            ellipsizeMode="tail"
+                            style={{
+                                fontSize: 14,
+                                lineHeight: 20,
+                                fontFamily: fonts.sansSemiBold,
+                                color: mission.locked ? colors.text.muted : colors.text.primary,
+                                textDecorationLine: mission.done ? 'line-through' : 'none',
+                                flexShrink: 1,
+                            }}
+                        >
+                            {mission.title}
+                        </Text>
+                        <Text
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            style={{
+                                fontSize: 12,
+                                lineHeight: 16,
+                                fontFamily: fonts.sans,
+                                color: colors.text.muted,
+                                marginTop: 2,
+                            }}
+                        >
+                            {mission.locked ? 'Complete a missão anterior' : mission.subtitle}
+                        </Text>
+                    </View>
+
+                    {!mission.done && !mission.locked && (
+                        <View style={{ marginLeft: 8 }}>
+                            <ChevronRight size={16} color={colors.text.muted} />
+                        </View>
                     )}
                 </View>
-
-                {/* Content — minWidth 0 + flex 1 para não cortar texto no device */}
-                <View style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}>
-                    <Text
-                        numberOfLines={2}
-                        ellipsizeMode="tail"
-                        style={{
-                            fontSize: 14,
-                            fontFamily: fonts.sansSemiBold,
-                            color: mission.locked ? colors.text.muted : colors.text.primary,
-                            textDecorationLine: mission.done ? 'line-through' : 'none',
-                        }}
-                    >
-                        {mission.title}
-                    </Text>
-                    <Text
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                        style={{
-                            fontSize: 12,
-                            fontFamily: fonts.sans,
-                            color: colors.text.muted,
-                            marginTop: 2,
-                        }}
-                    >
-                        {mission.locked ? 'Complete a missão anterior' : mission.subtitle}
-                    </Text>
-                </View>
-
-                {!mission.done && !mission.locked && (
-                    <ChevronRight size={16} color={colors.text.muted} />
-                )}
             </Pressable>
         </Animated.View>
     );
@@ -345,13 +356,13 @@ export default function HomeScreen() {
                 }}
             >
                 <BrotoLogo size="header" />
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     {streak > 0 && (
                         <View
                             style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                gap: 5,
+                                marginRight: 10,
                                 borderRadius: 999,
                                 paddingHorizontal: 10,
                                 paddingVertical: 4,
@@ -360,7 +371,9 @@ export default function HomeScreen() {
                                 borderColor: 'rgba(251,191,36,0.18)',
                             }}
                         >
+                            <View style={{ marginRight: 5 }}>
                             <Flame size={12} color={colors.gold[400]} />
+                                        </View>
                             <Text
                                 style={{
                                     fontSize: 13,
@@ -382,11 +395,11 @@ export default function HomeScreen() {
                     paddingHorizontal: 16,
                     paddingTop: 20,
                     paddingBottom: 70 + insets.bottom + 16,
-                    gap: 20,
                 }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* ── Saudação acima do card do broto ── */}
+                <View style={{ width: '100%', marginBottom: 20 }}>
                 <FadeInSection delay={0}>
                     <View style={{ marginBottom: -8 }}>
                         <Text
@@ -410,11 +423,14 @@ export default function HomeScreen() {
                         </Text>
                     </View>
                 </FadeInSection>
+                </View>
 
                 {/* ── Pet hero card ── */}
+                <View style={{ width: '100%', marginBottom: 20 }}>
                 <FadeInSection delay={0}>
                     <View
                         style={{
+                            width: '100%',
                             borderRadius: 28,
                             overflow: 'hidden',
                             borderWidth: 1,
@@ -467,12 +483,11 @@ export default function HomeScreen() {
                                 style={{
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    gap: 20,
                                 }}
                             >
                                 {/* Glow + emoji */}
                                 <View
-                                    style={{ alignItems: 'center', justifyContent: 'center' }}
+                                    style={{ alignItems: 'center', justifyContent: 'center', marginRight: 20 }}
                                 >
                                     <View
                                         style={{
@@ -572,7 +587,7 @@ export default function HomeScreen() {
                                         <Text
                                             style={{
                                                 fontSize: 22,
-                                                fontFamily: fonts.display,
+                                                fontFamily: fonts.logo,
                                                 color: colors.text.primary,
                                                 marginBottom: 2,
                                             }}
@@ -608,7 +623,6 @@ export default function HomeScreen() {
                             <View
                                 style={{
                                     flexDirection: 'row',
-                                    gap: 8,
                                     marginTop: 18,
                                     paddingTop: 16,
                                     borderTopWidth: 1,
@@ -643,10 +657,11 @@ export default function HomeScreen() {
                                         style={{
                                             flex: 1,
                                             alignItems: 'center',
-                                            gap: 2,
                                         }}
                                     >
-                                        <Icon size={18} color={iconColor} />
+                                        <View style={{ marginBottom: 2 }}>
+                                            <Icon size={18} color={iconColor} />
+                                        </View>
                                         <Text
                                             style={{
                                                 fontSize: 14,
@@ -671,10 +686,12 @@ export default function HomeScreen() {
                         </View>
                     </View>
                 </FadeInSection>
+                </View>
 
                 {/* ── Missões do dia ── */}
+                <View style={{ width: '100%', marginBottom: 20 }}>
                 <FadeInSection delay={200}>
-                    <View>
+                    <View style={{ width: '100%' }}>
                         {/* Section header */}
                         <View
                             style={{
@@ -685,13 +702,14 @@ export default function HomeScreen() {
                             }}
                         >
                             <View
-                                style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                                style={{ flexDirection: 'row', alignItems: 'center' }}
                             >
                                 <Text
                                     style={{
                                         fontSize: 15,
                                         fontFamily: fonts.sansBold,
                                         color: colors.text.primary,
+                                        marginRight: 8,
                                     }}
                                 >
                                     Missões de hoje
@@ -702,7 +720,6 @@ export default function HomeScreen() {
                                 style={{
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    gap: 5,
                                     borderRadius: 999,
                                     paddingHorizontal: 10,
                                     paddingVertical: 4,
@@ -718,7 +735,9 @@ export default function HomeScreen() {
                                 }}
                             >
                                 {doneMissions === 3 && (
-                                    <Sparkles size={11} color={colors.green[400]} />
+                                    <View style={{ marginRight: 5 }}>
+                                        <Sparkles size={11} color={colors.green[400]} />
+                                    </View>
                                 )}
                                 <Text
                                     style={{
@@ -746,20 +765,23 @@ export default function HomeScreen() {
                             />
                         </View>
 
-                        {/* Mission cards */}
-                        <View style={{ gap: 10 }}>
+                        {/* Mission cards — width 100% para render igual no mobile e web */}
+                        <View style={{ width: '100%' }}>
                             {missions.map((mission, i) => (
-                                <MissionCard
-                                    key={`mission-${i}-${mission.areaKey}-${mission.locked}`}
-                                    mission={mission}
-                                    index={i}
-                                />
+                                <View key={`mission-${i}-${mission.areaKey}-${mission.locked}`} style={{ width: '100%', marginBottom: i < missions.length - 1 ? 10 : 0 }}>
+                                    <MissionCard
+                                        mission={mission}
+                                        index={i}
+                                    />
+                                </View>
                             ))}
                         </View>
                     </View>
                 </FadeInSection>
+                </View>
 
                 {/* ── Dica do dia (pet speech bubble) ── */}
+                <View style={{ width: '100%', marginBottom: 20 }}>
                 <FadeInSection delay={520}>
                     <View
                         style={{
@@ -779,21 +801,23 @@ export default function HomeScreen() {
                                 style={{
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    gap: 8,
                                     marginBottom: 8,
                                 }}
                             >
-                                <Text style={{ fontSize: 18 }}>
-                                    {FASE_EMOJI[fase]}
-                                </Text>
+                                <View style={{ marginRight: 8 }}>
+                                    <Text style={{ fontSize: 18 }}>
+                                        {FASE_EMOJI[fase]}
+                                    </Text>
+                                </View>
                                 <View
                                     style={{
                                         flexDirection: 'row',
                                         alignItems: 'center',
-                                        gap: 5,
                                     }}
                                 >
-                                    <Lightbulb size={12} color={colors.green[500]} />
+                                    <View style={{ marginRight: 5 }}>
+                                        <Lightbulb size={12} color={colors.green[500]} />
+                                    </View>
                                     <Text
                                         style={{
                                             fontSize: 11,
@@ -820,17 +844,17 @@ export default function HomeScreen() {
                         </LinearGradient>
                     </View>
                 </FadeInSection>
+                </View>
 
                 {/* ── CTA ── */}
                 <FadeInSection delay={640}>
                     <Pressable
                         onPress={() => router.push('/(tabs)/questions')}
                         style={({ pressed }) => ({
-                            borderRadius: 18,
-                            overflow: 'hidden',
                             opacity: pressed ? 0.82 : 1,
                         })}
                     >
+                        <View style={{ borderRadius: 18, overflow: 'hidden' }}>
                         <LinearGradient
                             colors={[colors.green[600], colors.green[700]]}
                             start={{ x: 0, y: 0 }}
@@ -839,11 +863,12 @@ export default function HomeScreen() {
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: 8,
                                 paddingVertical: 16,
                             }}
                         >
-                            <Sparkles size={16} color="#fff" />
+                            <View style={{ marginRight: 8 }}>
+                                <Sparkles size={16} color="#fff" />
+                            </View>
                             <Text
                                 style={{
                                     fontSize: 15,
@@ -856,6 +881,7 @@ export default function HomeScreen() {
                                     : 'Começar missões'}
                             </Text>
                         </LinearGradient>
+                        </View>
                     </Pressable>
                 </FadeInSection>
             </ScrollView>
