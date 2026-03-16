@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,80 +6,41 @@ import { LinearGradient } from 'expo-linear-gradient';
 import {
     ArrowRight,
     Moon,
-    FileText,
-    Globe,
-    FlaskConical,
-    Calculator,
-    BookOpen,
     CalendarDays,
     Settings2,
-    Sparkles,
     Clock,
     ChevronRight,
 } from 'lucide-react-native';
 import { useUser } from '@/hooks/use-user';
 import { useProgress, type AreaStat } from '@/hooks/use-progress';
+import { getAreaConfig } from '@/theme/area-config';
 import { colors, fonts } from '@/theme/tokens';
 import { FadeInSection, StaggerItem, AnimatedBar } from '@/components/AnimatedEntry';
 
+// ─── Area config (using shared config) ───────────────────────────────────────
 type AreaMeta = {
     Icon: React.ComponentType<{ size?: number; color?: string }>;
     solid: string;
-    bg: string;
     textColor: string;
     gradientFrom: string;
     gradientTo: string;
 };
 
-const AREA_META: Record<string, AreaMeta> = {
-    linguagens: {
-        Icon: FileText,
-        solid: colors.blue[500],
-        bg: 'rgba(43,164,184,0.08)',
-        textColor: colors.blue[400],
-        gradientFrom: 'rgba(43,164,184,0.12)',
-        gradientTo: 'rgba(43,164,184,0.01)',
-    },
-    'ciencias-humanas': {
-        Icon: Globe,
-        solid: colors.amber[500],
-        bg: 'rgba(229,150,14,0.08)',
-        textColor: colors.amber[400],
-        gradientFrom: 'rgba(229,150,14,0.12)',
-        gradientTo: 'rgba(229,150,14,0.01)',
-    },
-    'ciencias-natureza': {
-        Icon: FlaskConical,
-        solid: colors.green[500],
-        bg: 'rgba(16,185,129,0.08)',
-        textColor: colors.green[400],
-        gradientFrom: 'rgba(16,185,129,0.12)',
-        gradientTo: 'rgba(16,185,129,0.01)',
-    },
-    matematica: {
-        Icon: Calculator,
-        solid: colors.violet[500],
-        bg: 'rgba(155,109,204,0.08)',
-        textColor: colors.violet[400],
-        gradientFrom: 'rgba(155,109,204,0.12)',
-        gradientTo: 'rgba(155,109,204,0.01)',
-    },
-};
+function getAreaMeta(key: string): AreaMeta {
+    const cfg = getAreaConfig(key);
+    return {
+        Icon: cfg.AltIcon,
+        solid: cfg.color,
+        textColor: cfg.textColor,
+        gradientFrom: cfg.gradientFrom,
+        gradientTo: cfg.gradientTo,
+    };
+}
 
-const DESCANSO_COLOR = '#6b7280';
+// DEFAULT_AREA_META no longer needed — getAreaMeta handles fallback
 
-const DEFAULT_AREA_META: AreaMeta = {
-    Icon: BookOpen,
-    solid: colors.text.muted,
-    bg: colors.bg.card,
-    textColor: colors.text.primary,
-    gradientFrom: colors.bg.card,
-    gradientTo: colors.bg.surface,
-};
-
-const LABELS_DIA = [
-    'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo',
-];
+// ─── Date helpers ────────────────────────────────────────────────────────────
+const LABELS_DIA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const LABELS_DIA_CURTO = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 const MESES = [
     'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
@@ -117,6 +78,7 @@ function formatarSemana(segunda: Date): string {
     return `${dIni} – ${dFim} de ${mes}`;
 }
 
+// ─── Routine generation ──────────────────────────────────────────────────────
 interface DiaRotina {
     idx: number;
     label: string;
@@ -149,11 +111,7 @@ function gerarRotina(areas: AreaStat[], horasPorDia: number): DiaRotina[] {
                   .filter(t => t.totalAnswered > 0)
                   .sort((a, b) => a.accuracyPct - b.accuracyPct)
                   .slice(0, 3)
-                  .map(t => ({
-                      value: t.value,
-                      label: t.label,
-                      accuracyPct: t.accuracyPct,
-                  }))
+                  .map(t => ({ value: t.value, label: t.label, accuracyPct: t.accuracyPct }))
             : [];
 
         return {
@@ -171,68 +129,68 @@ function gerarRotina(areas: AreaStat[], horasPorDia: number): DiaRotina[] {
 }
 
 function getDotColor(dia: DiaRotina): string {
-    if (dia.ehDescanso) return DESCANSO_COLOR;
+    if (dia.ehDescanso) return '#6b7280';
     const area = dia.area;
-    if (!area) return DESCANSO_COLOR;
-    return AREA_META[area.value]?.solid ?? DESCANSO_COLOR;
+    if (!area) return '#6b7280';
+    return getAreaMeta(area.value).solid;
 }
 
-// ——— Skeleton ———
-function SkeletonPulse({ style, className }: { style?: import('react-native').StyleProp<import('react-native').ViewStyle>; className?: string }) {
-    return (
-        <View
-            className={className}
-            style={[{ backgroundColor: colors.bg.elevated }, style]}
-        />
-    );
+// ─── Skeleton ────────────────────────────────────────────────────────────────
+function SkeletonPulse({ style }: { style?: import('react-native').StyleProp<import('react-native').ViewStyle> }) {
+    return <View style={[{ backgroundColor: 'rgba(0, 0, 0, 0.25)', borderRadius: 8 }, style]} />;
 }
 
 function SkeletonHero() {
     return (
         <View
-            className="rounded-3xl overflow-hidden p-6"
-            style={{ backgroundColor: colors.bg.surface }}
+            style={{
+                borderRadius: 24,
+                overflow: 'hidden',
+                padding: 24,
+                backgroundColor: 'rgba(0, 0, 0, 0.10)',
+            }}
         >
-            <View className="flex-row items-center gap-4 mb-4">
-                <SkeletonPulse className="h-14 w-14 rounded-2xl" />
-                <View className="flex-1 gap-2">
-                    <SkeletonPulse className="h-5 w-28 rounded" />
-                    <SkeletonPulse className="h-4 w-20 rounded" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+                <SkeletonPulse style={{ height: 48, width: 48, borderRadius: 24 }} />
+                <View style={{ flex: 1, gap: 8 }}>
+                    <SkeletonPulse style={{ height: 20, width: 120 }} />
+                    <SkeletonPulse style={{ height: 14, width: 80 }} />
                 </View>
             </View>
-            <SkeletonPulse className="h-2.5 rounded-full" />
-            <View className="flex-row gap-2 mt-4">
+            <SkeletonPulse style={{ height: 8, borderRadius: 999 }} />
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
                 {[1, 2, 3].map(i => (
-                    <SkeletonPulse key={i} className="h-8 w-20 rounded-full" />
+                    <SkeletonPulse key={i} style={{ height: 32, width: 80, borderRadius: 999 }} />
                 ))}
             </View>
-            <SkeletonPulse className="h-14 rounded-2xl mt-4" />
+            <SkeletonPulse style={{ height: 52, borderRadius: 20, marginTop: 16 }} />
         </View>
     );
 }
 
-// ——— Week calendar strip ———
+// ─── Week calendar strip ─────────────────────────────────────────────────────
 function WeekCalendar({ rotina }: { rotina: DiaRotina[] }) {
     const segunda = getSegundaDaSemana(new Date());
     const datas = datasDaSemana(segunda);
 
     return (
         <View
-            className="rounded-2xl overflow-hidden"
             style={{
-                backgroundColor: colors.bg.card,
+                borderRadius: 20,
+                overflow: 'hidden',
+                backgroundColor: 'rgba(0, 0, 0, 0.10)',
                 borderWidth: 1,
-                borderColor: colors.border.subtle,
+                borderColor: 'rgba(255,255,255,0.06)',
             }}
         >
-            <View className="flex-row justify-between px-3 pt-3 pb-2">
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12, paddingTop: 12, paddingBottom: 8 }}>
                 {rotina.map((dia, i) => {
                     const isToday = dia.ehHoje;
                     const dotColor = getDotColor(dia);
                     const dayNum = datas[i].getDate();
 
                     return (
-                        <View key={dia.idx} className="flex-1 items-center">
+                        <View key={dia.idx} style={{ flex: 1, alignItems: 'center' }}>
                             <Text
                                 style={{
                                     fontSize: 11,
@@ -244,11 +202,14 @@ function WeekCalendar({ rotina }: { rotina: DiaRotina[] }) {
                                 {dia.labelCurto}
                             </Text>
                             <View
-                                className="items-center justify-center mt-2 mb-1.5"
                                 style={{
                                     width: 36,
                                     height: 36,
                                     borderRadius: 18,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginTop: 8,
+                                    marginBottom: 6,
                                     backgroundColor: isToday ? colors.green[600] : 'transparent',
                                 }}
                             >
@@ -282,36 +243,50 @@ function WeekCalendar({ rotina }: { rotina: DiaRotina[] }) {
     );
 }
 
-// ——— Card Hoje (hero) ———
+// ─── Card Hoje (hero) ────────────────────────────────────────────────────────
 function CardHoje({ dia }: { dia: DiaRotina }) {
     if (dia.ehDescanso) {
         return (
             <View
-                className="rounded-3xl overflow-hidden"
                 style={{
+                    borderRadius: 24,
+                    overflow: 'hidden',
                     backgroundColor: 'rgba(107, 114, 128, 0.08)',
                     borderWidth: 1,
                     borderColor: 'rgba(107, 114, 128, 0.15)',
                 }}
             >
-                <View className="items-center py-8 px-6">
+                <View style={{ alignItems: 'center', paddingVertical: 32, paddingHorizontal: 24 }}>
                     <View
-                        className="h-16 w-16 items-center justify-center rounded-full mb-4"
-                        style={{ backgroundColor: 'rgba(107, 114, 128, 0.12)' }}
+                        style={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: 32,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(107, 114, 128, 0.12)',
+                            marginBottom: 16,
+                        }}
                     >
                         <Moon size={28} color={colors.text.muted} />
                     </View>
                     <Text
-                        className="text-lg text-center"
-                        style={{ color: colors.text.primary, fontFamily: fonts.sansBold }}
+                        style={{
+                            fontSize: 18,
+                            fontFamily: fonts.sansBold,
+                            color: colors.text.primary,
+                            textAlign: 'center',
+                        }}
                     >
                         Dia de descanso
                     </Text>
                     <Text
-                        className="text-sm text-center mt-2"
                         style={{
-                            color: colors.text.muted,
+                            fontSize: 13,
                             fontFamily: fonts.sans,
+                            color: colors.text.muted,
+                            textAlign: 'center',
+                            marginTop: 8,
                             maxWidth: 240,
                             lineHeight: 20,
                         }}
@@ -323,8 +298,9 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
         );
     }
 
-    const area = dia.area!;
-    const meta = AREA_META[area.value] ?? DEFAULT_AREA_META;
+    const area = dia.area;
+    if (!area) return null;
+    const meta = getAreaMeta(area.value);
     const horas = Math.floor(dia.duracaoMin / 60);
     const min = dia.duracaoMin % 60;
     const duracaoLabel = min > 0 ? `${horas}h ${min}min` : `${horas}h`;
@@ -332,28 +308,34 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
 
     return (
         <View
-            className="rounded-3xl overflow-hidden"
             style={{
+                borderRadius: 24,
+                overflow: 'hidden',
                 borderWidth: 1,
-                borderColor: meta.textColor + '20',
+                borderColor: 'rgba(255,255,255,0.06)',
             }}
         >
-            {/* Gradient bg layer */}
             <LinearGradient
-                colors={[meta.gradientFrom, meta.gradientTo, colors.bg.card]}
+                colors={['rgba(34,197,94,0.08)', 'rgba(0,0,0,0.10)']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{ padding: 20 }}
             >
                 {/* Area header */}
-                <View className="flex-row items-center gap-3.5 mb-4">
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 }}>
                     <View
-                        className="h-12 w-12 items-center justify-center rounded-xl"
-                        style={{ backgroundColor: meta.solid + '20' }}
+                        style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 16,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: meta.solid + '20',
+                        }}
                     >
                         <meta.Icon size={24} color={meta.solid} />
                     </View>
-                    <View className="flex-1">
+                    <View style={{ flex: 1 }}>
                         <Text
                             style={{
                                 fontSize: 17,
@@ -363,7 +345,7 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
                         >
                             {area.label}
                         </Text>
-                        <View className="flex-row items-center gap-2 mt-1">
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                             <Clock size={12} color={colors.text.muted} />
                             <Text
                                 style={{
@@ -380,8 +362,8 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
 
                 {/* Accuracy bar */}
                 {temDados && (
-                    <View className="mb-4">
-                        <View className="flex-row items-center justify-between mb-1.5">
+                    <View style={{ marginBottom: 16 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <Text
                                 style={{
                                     fontSize: 11,
@@ -406,7 +388,7 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
                         <AnimatedBar
                             progress={area.accuracyPct}
                             color={meta.solid}
-                            bgColor={colors.bg.deep}
+                            bgColor="rgba(0,0,0,0.3)"
                             height={8}
                             delay={300}
                         />
@@ -415,7 +397,7 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
 
                 {/* Topics */}
                 {dia.topicosDestaque.length > 0 && (
-                    <View className="mb-4">
+                    <View style={{ marginBottom: 16 }}>
                         <Text
                             style={{
                                 fontSize: 11,
@@ -428,17 +410,24 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
                         >
                             Foco de hoje
                         </Text>
-                        <View className="gap-1.5">
+                        <View style={{ gap: 6 }}>
                             {dia.topicosDestaque.map(t => (
                                 <View
                                     key={t.value}
-                                    className="flex-row items-center justify-between rounded-xl px-3 py-2.5"
-                                    style={{ backgroundColor: colors.bg.deep + 'CC' }}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        borderRadius: 12,
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 10,
+                                        backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                                    }}
                                 >
                                     <Text
-                                        className="flex-1"
                                         numberOfLines={1}
                                         style={{
+                                            flex: 1,
                                             fontSize: 13,
                                             fontFamily: fonts.sans,
                                             color: colors.text.secondary,
@@ -464,35 +453,54 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
 
                 {!temDados && (
                     <Text
-                        className="mb-4"
                         style={{
                             fontSize: 13,
                             fontFamily: fonts.sans,
                             color: colors.text.muted,
                             lineHeight: 20,
+                            marginBottom: 16,
                         }}
                     >
                         Nenhuma questão desta área ainda. Comece agora!
                     </Text>
                 )}
 
-                {/* CTA */}
+                {/* CTA - mesmo estilo do botão principal de estudo */}
                 <Link href="/(tabs)/questions" asChild>
                     <Pressable
-                        className="flex-row items-center justify-center gap-2 rounded-xl py-4"
-                        style={{ backgroundColor: colors.green[600] }}
+                        style={({ pressed }) => ({
+                            width: '100%',
+                            alignSelf: 'stretch',
+                            opacity: pressed ? 0.9 : 1,
+                        })}
                     >
-                        <Sparkles size={16} color="#fff" />
-                        <Text
+                        <View
                             style={{
-                                fontSize: 15,
-                                fontFamily: fonts.sansBold,
-                                color: '#fff',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: 20,
+                                paddingVertical: 14,
+                                paddingHorizontal: 20,
+                                backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                                borderWidth: 1,
+                                borderColor: 'rgba(248, 250, 252, 0.16)',
                             }}
                         >
-                            Estudar agora
-                        </Text>
-                        <ArrowRight size={18} color="#fff" />
+                            <Text
+                                style={{
+                                    fontSize: 14,
+                                    fontFamily: fonts.sansMedium,
+                                    color: '#FFFFFF',
+                                    letterSpacing: 0.8,
+                                }}
+                            >
+                                ESTUDAR PARA CRESCER
+                            </Text>
+                            <View style={{ marginLeft: 8 }}>
+                                <ArrowRight size={18} color="#FACC15" />
+                            </View>
+                        </View>
                     </Pressable>
                 </Link>
             </LinearGradient>
@@ -500,24 +508,34 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
     );
 }
 
-// ——— Linha próximo dia ———
+// ─── Linha próximo dia ───────────────────────────────────────────────────────
 function LinhaProximoDia({ dia, isLast }: { dia: DiaRotina; isLast: boolean }) {
     if (dia.ehDescanso) {
         return (
             <View
-                className="flex-row items-center gap-3 py-3.5 px-1"
-                style={isLast ? undefined : {
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.border.subtle,
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    paddingVertical: 14,
+                    paddingHorizontal: 4,
+                    borderBottomWidth: isLast ? 0 : 1,
+                    borderBottomColor: 'rgba(255,255,255,0.04)',
                 }}
             >
                 <View
-                    className="h-10 w-10 items-center justify-center rounded-xl"
-                    style={{ backgroundColor: 'rgba(107, 114, 128, 0.10)' }}
+                    style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'rgba(107, 114, 128, 0.10)',
+                    }}
                 >
                     <Moon size={18} color={colors.text.muted} />
                 </View>
-                <View className="flex-1">
+                <View style={{ flex: 1 }}>
                     <Text
                         style={{
                             fontSize: 14,
@@ -532,6 +550,7 @@ function LinhaProximoDia({ dia, isLast }: { dia: DiaRotina; isLast: boolean }) {
                             fontSize: 12,
                             fontFamily: fonts.sans,
                             color: colors.text.muted,
+                            marginTop: 1,
                         }}
                     >
                         Descanso
@@ -541,27 +560,38 @@ function LinhaProximoDia({ dia, isLast }: { dia: DiaRotina; isLast: boolean }) {
         );
     }
 
-    const area = dia.area!;
-    const meta = AREA_META[area.value] ?? DEFAULT_AREA_META;
+    const area = dia.area;
+    if (!area) return null;
+    const meta = getAreaMeta(area.value);
     const horas = Math.floor(dia.duracaoMin / 60);
     const min = dia.duracaoMin % 60;
     const duracaoLabel = min > 0 ? `${horas}h ${min}min` : `${horas}h`;
 
     return (
         <View
-            className="flex-row items-center gap-3 py-3.5 px-1"
-            style={isLast ? undefined : {
-                borderBottomWidth: 1,
-                borderBottomColor: colors.border.subtle,
+            style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                paddingVertical: 14,
+                paddingHorizontal: 4,
+                borderBottomWidth: isLast ? 0 : 1,
+                borderBottomColor: 'rgba(255,255,255,0.04)',
             }}
         >
             <View
-                className="h-10 w-10 items-center justify-center rounded-xl"
-                style={{ backgroundColor: meta.bg }}
+                style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: `${meta.solid}22`,
+                }}
             >
                 <meta.Icon size={18} color={meta.textColor} />
             </View>
-            <View className="flex-1">
+            <View style={{ flex: 1 }}>
                 <Text
                     style={{
                         fontSize: 14,
@@ -576,13 +606,14 @@ function LinhaProximoDia({ dia, isLast }: { dia: DiaRotina; isLast: boolean }) {
                         fontSize: 12,
                         fontFamily: fonts.sans,
                         color: colors.text.muted,
+                        marginTop: 1,
                     }}
                 >
                     {area.label} · {duracaoLabel}
                 </Text>
             </View>
             {area.totalAnswered > 0 && (
-                <View className="flex-row items-center gap-1.5">
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text
                         style={{
                             fontSize: 13,
@@ -599,6 +630,7 @@ function LinhaProximoDia({ dia, isLast }: { dia: DiaRotina; isLast: boolean }) {
     );
 }
 
+// ─── Main screen ─────────────────────────────────────────────────────────────
 export default function RoutineScreen() {
     const scrollRef = useRef<ScrollView>(null);
     const { user, loading: loadingUser } = useUser();
@@ -608,12 +640,17 @@ export default function RoutineScreen() {
     const horasPorDia = user?.horasDisponiveisPorDia ?? 2;
     const areas = progress?.areas ?? [];
 
-    const rotina = !loading ? gerarRotina(areas, horasPorDia) : [];
-    const diaHoje = rotina.find(d => d.ehHoje);
-    const proximosDias = rotina.filter(d => !d.ehHoje && !d.ehPassado);
+    const rotina = useMemo(
+        () => !loading ? gerarRotina(areas, horasPorDia) : [],
+        [loading, areas, horasPorDia],
+    );
+    const diaHoje = useMemo(() => rotina.find(d => d.ehHoje), [rotina]);
+    const proximosDias = useMemo(() => rotina.filter(d => !d.ehHoje && !d.ehPassado), [rotina]);
 
-    const segundaAtual = getSegundaDaSemana(new Date());
-    const semanaLabel = formatarSemana(segundaAtual);
+    const semanaLabel = useMemo(
+        () => formatarSemana(getSegundaDaSemana(new Date())),
+        [],
+    );
 
     useEffect(() => {
         if (!loading && scrollRef.current) {
@@ -622,200 +659,300 @@ export default function RoutineScreen() {
     }, [loading]);
 
     return (
-        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bg.void }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#02140D' }}>
             {/* Header */}
             <View
-                className="px-5 pt-2 pb-4"
-                style={{ backgroundColor: colors.bg.deep }}
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingHorizontal: 20,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: '#031A11',
+                }}
             >
-                <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-2">
-                        <CalendarDays size={18} color={colors.green[500]} />
-                        <Text
-                            style={{
-                                fontSize: 17,
-                                fontFamily: fonts.sansBold,
-                                color: colors.text.primary,
-                            }}
-                        >
-                            Rotina
-                        </Text>
-                    </View>
-                    <View
-                        className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <CalendarDays size={18} color={colors.green[500]} />
+                    <Text
                         style={{
-                            backgroundColor: colors.bg.card,
-                            borderWidth: 1,
-                            borderColor: colors.border.subtle,
+                            fontSize: 17,
+                            fontFamily: fonts.sansBold,
+                            color: colors.text.primary,
                         }}
                     >
-                        <Text
-                            style={{
-                                fontSize: 11,
-                                fontFamily: fonts.sansSemiBold,
-                                color: colors.text.secondary,
-                            }}
-                        >
-                            {loading ? '...' : semanaLabel}
-                        </Text>
-                    </View>
+                        Rotina
+                    </Text>
+                </View>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        borderRadius: 999,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.06)',
+                    }}
+                >
+                    <Text
+                        style={{
+                            fontSize: 11,
+                            fontFamily: fonts.sansSemiBold,
+                            color: '#BBBBBB',
+                        }}
+                    >
+                        {loading ? '...' : semanaLabel}
+                    </Text>
                 </View>
             </View>
 
             <ScrollView
                 ref={scrollRef}
-                className="flex-1"
-                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 }}
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Week calendar */}
                 {loading ? (
-                    <SkeletonPulse
-                        className="rounded-2xl"
-                        style={{ height: 80, backgroundColor: colors.bg.surface }}
-                    />
+                    <SkeletonPulse style={{ height: 80, borderRadius: 20 }} />
                 ) : (
-                    <FadeInSection delay={0}><WeekCalendar rotina={rotina} /></FadeInSection>
+                    <FadeInSection delay={0}>
+                        <WeekCalendar rotina={rotina} />
+                    </FadeInSection>
                 )}
 
                 {/* Section: Hoje */}
-                <FadeInSection delay={100}><View className="mt-6">
-                    <View className="flex-row items-center gap-2 mb-3">
+                <View style={{ marginTop: 24 }}>
+                    <FadeInSection delay={100}>
                         <View
                             style={{
-                                width: 3,
-                                height: 14,
-                                borderRadius: 1.5,
-                                backgroundColor: colors.green[500],
-                            }}
-                        />
-                        <Text
-                            style={{
-                                fontSize: 12,
-                                fontFamily: fonts.sansBold,
-                                color: colors.text.muted,
-                                textTransform: 'uppercase',
-                                letterSpacing: 1.5,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 8,
+                                marginBottom: 12,
                             }}
                         >
-                            Hoje
-                        </Text>
-                    </View>
-                    {loading ? <SkeletonHero /> : diaHoje ? <CardHoje dia={diaHoje} /> : null}
-                </View></FadeInSection>
-
-                {/* Section: Próximos dias */}
-                {!loading && proximosDias.length > 0 && (
-                    <FadeInSection delay={250}><View className="mt-7">
-                        <View className="flex-row items-center gap-2 mb-3">
                             <View
                                 style={{
-                                    width: 3,
-                                    height: 14,
-                                    borderRadius: 1.5,
-                                    backgroundColor: colors.text.muted,
-                                    opacity: 0.5,
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: 3,
+                                backgroundColor: colors.gold[500],
                                 }}
                             />
                             <Text
                                 style={{
-                                    fontSize: 12,
-                                    fontFamily: fonts.sansBold,
-                                    color: colors.text.muted,
+                                    fontSize: 14,
+                                    fontFamily: fonts.sans,
+                                    color: '#BBBBBB',
+                                    letterSpacing: 0.2,
                                     textTransform: 'uppercase',
-                                    letterSpacing: 1.5,
                                 }}
                             >
-                                Próximos dias
+                                Hoje
                             </Text>
                         </View>
-                        <View
-                            className="rounded-2xl px-4 overflow-hidden"
-                            style={{
-                                backgroundColor: colors.bg.card,
-                                borderWidth: 1,
-                                borderColor: colors.border.subtle,
-                            }}
-                        >
-                            {proximosDias.map((dia, i) => (
-                                <StaggerItem key={dia.idx} index={i} baseDelay={300} stagger={50}>
-                                    <LinhaProximoDia
-                                        dia={dia}
-                                        isLast={i === proximosDias.length - 1}
-                                    />
-                                </StaggerItem>
-                            ))}
-                        </View>
-                    </View></FadeInSection>
+                        {loading ? <SkeletonHero /> : diaHoje ? <CardHoje dia={diaHoje} /> : null}
+                    </FadeInSection>
+                </View>
+
+                {/* Section: Próximos dias */}
+                {!loading && proximosDias.length > 0 && (
+                    <View style={{ marginTop: 24 }}>
+                        <FadeInSection delay={250}>
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    marginBottom: 12,
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        width: 6,
+                                        height: 6,
+                                        borderRadius: 3,
+                                        backgroundColor: colors.text.muted,
+                                    }}
+                                />
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontFamily: fonts.sans,
+                                        color: '#BBBBBB',
+                                        letterSpacing: 0.2,
+                                        textTransform: 'uppercase',
+                                    }}
+                                >
+                                    Próximos dias
+                                </Text>
+                            </View>
+                            <View
+                                style={{
+                                    borderRadius: 20,
+                                    paddingHorizontal: 16,
+                                    overflow: 'hidden',
+                                    backgroundColor: 'rgba(0, 0, 0, 0.10)',
+                                    borderWidth: 1,
+                                    borderColor: 'rgba(255,255,255,0.06)',
+                                }}
+                            >
+                                {proximosDias.map((dia, i) => (
+                                    <StaggerItem key={dia.idx} index={i} baseDelay={300} stagger={50}>
+                                        <LinhaProximoDia
+                                            dia={dia}
+                                            isLast={i === proximosDias.length - 1}
+                                        />
+                                    </StaggerItem>
+                                ))}
+                            </View>
+                        </FadeInSection>
+                    </View>
                 )}
 
                 {loading && (
-                    <View className="mt-7 gap-2">
+                    <View style={{ marginTop: 28, gap: 8 }}>
                         {[1, 2, 3].map(i => (
-                            <SkeletonPulse
-                                key={i}
-                                className="rounded-xl"
-                                style={{ height: 56, backgroundColor: colors.bg.surface }}
-                            />
+                            <SkeletonPulse key={i} style={{ height: 56, borderRadius: 20 }} />
                         ))}
                     </View>
                 )}
 
                 {/* Meta card */}
                 {!loading && (
-                    <FadeInSection delay={400}><View
-                        className="mt-7 rounded-2xl overflow-hidden"
-                        style={{
-                            borderWidth: 1,
-                            borderColor: colors.border.subtle,
-                        }}
-                    >
-                        <LinearGradient
-                            colors={['rgba(16,185,129,0.2)', 'rgba(16,185,129,0)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ padding: 16 }}
-                        >
-                            <View className="flex-row items-center gap-2 mb-2">
-                                <Settings2 size={14} color={colors.green[500]} />
-                                <Text
-                                    style={{
-                                        fontSize: 11,
-                                        fontFamily: fonts.sansBold,
-                                        color: colors.green[500],
-                                        textTransform: 'uppercase',
-                                        letterSpacing: 1,
-                                    }}
-                                >
-                                    Sua meta
-                                </Text>
-                            </View>
-                            <Text
+                    <View style={{ marginTop: 24 }}>
+                        <FadeInSection delay={400}>
+                            <View
                                 style={{
-                                    fontSize: 14,
-                                    fontFamily: fonts.sans,
-                                    color: colors.text.primary,
-                                    lineHeight: 20,
+                                    borderRadius: 20,
+                                    overflow: 'hidden',
+                                    borderWidth: 1,
+                                    borderColor: 'rgba(255,255,255,0.06)',
                                 }}
                             >
-                                {horasPorDia}h por dia · rotina prioriza áreas mais fracas
-                            </Text>
-                            <Link href="/onboarding" asChild>
-                                <Pressable className="mt-3 flex-row items-center gap-1.5">
+                                <LinearGradient
+                                    colors={['rgba(34,197,94,0.08)', 'rgba(0,0,0,0.10)']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={{ padding: 20 }}
+                                >
+                                    {/* Header row */}
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                            <View
+                                                style={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    borderRadius: 10,
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    backgroundColor: 'rgba(34,197,94,0.12)',
+                                                }}
+                                            >
+                                                <Settings2 size={16} color={colors.green[400]} />
+                                            </View>
+                                            <Text
+                                                style={{
+                                                    fontSize: 11,
+                                                    fontFamily: fonts.sansSemiBold,
+                                                    color: colors.text.muted,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: 1,
+                                                }}
+                                            >
+                                                Sua meta
+                                            </Text>
+                                        </View>
+                                        <Link href="/onboarding" asChild>
+                                            <Pressable
+                                                style={({ pressed }) => ({
+                                                    paddingHorizontal: 4,
+                                                    paddingVertical: 2,
+                                                    borderRadius: 999,
+                                                    opacity: pressed ? 0.7 : 1,
+                                                })}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        fontSize: 11,
+                                                        fontFamily: fonts.sansSemiBold,
+                                                        color: colors.green[400],
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: 0.6,
+                                                    }}
+                                                    numberOfLines={1}
+                                                >
+                                                    Ajustar
+                                                </Text>
+                                            </Pressable>
+                                        </Link>
+                                    </View>
+
+                                    {/* Content */}
+                                    <View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+                                        <Text
+                                            style={{
+                                                fontSize: 28,
+                                                fontFamily: fonts.sansBold,
+                                                color: colors.text.primary,
+                                            }}
+                                        >
+                                            {horasPorDia}h
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                fontSize: 14,
+                                                fontFamily: fonts.sans,
+                                                color: colors.text.secondary,
+                                            }}
+                                        >
+                                            por dia
+                                        </Text>
+                                    </View>
                                     <Text
                                         style={{
                                             fontSize: 13,
-                                            fontFamily: fonts.sansSemiBold,
-                                            color: colors.green[400],
+                                            fontFamily: fonts.sans,
+                                            color: colors.text.muted,
+                                            marginTop: 4,
+                                            lineHeight: 18,
                                         }}
                                     >
-                                        Ajustar meta
+                                        A rotina prioriza automaticamente suas áreas mais fracas
                                     </Text>
-                                    <ArrowRight size={14} color={colors.green[400]} />
-                                </Pressable>
-                            </Link>
-                        </LinearGradient>
-                    </View></FadeInSection>
+
+                                    {/* Visual bar: 7 day slots */}
+                                    <View style={{ flexDirection: 'row', gap: 4, marginTop: 16 }}>
+                                        {rotina.map((dia) => (
+                                            <View
+                                                key={dia.idx}
+                                                style={{
+                                                    flex: 1,
+                                                    height: 4,
+                                                    borderRadius: 2,
+                                                    backgroundColor: dia.ehDescanso
+                                                        ? 'rgba(255,255,255,0.06)'
+                                                        : getDotColor(dia) + '60',
+                                                }}
+                                            />
+                                        ))}
+                                    </View>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+                                        <Text style={{ fontSize: 10, fontFamily: fonts.sans, color: colors.text.muted }}>
+                                            Seg
+                                        </Text>
+                                        <Text style={{ fontSize: 10, fontFamily: fonts.sans, color: colors.text.muted }}>
+                                            Dom
+                                        </Text>
+                                    </View>
+                                </LinearGradient>
+                            </View>
+                        </FadeInSection>
+                    </View>
                 )}
             </ScrollView>
         </SafeAreaView>

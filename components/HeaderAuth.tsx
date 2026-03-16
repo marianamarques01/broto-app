@@ -1,44 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LogOut } from 'lucide-react-native';
+import { useAuth } from '@/hooks/use-auth';
 import { createClient } from '@/lib/supabase/client';
-import { colors } from '@/theme/tokens';
+import { colors, fonts } from '@/theme/tokens';
 
 export function HeaderAuth() {
     const router = useRouter();
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+    const { status } = useAuth();
 
-    useEffect(() => {
-        const supabase = createClient();
-        supabase.auth.getUser().then(({ data: { user } }) => {
-            setIsLoggedIn(!!user);
-        });
-
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            setIsLoggedIn(!!session?.user);
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
-
-    async function handleSignOut() {
+    const handleSignOut = useCallback(async () => {
         const supabase = createClient();
         await supabase.auth.signOut();
         router.replace('/(auth)/login');
-    }
+    }, [router]);
 
-    if (isLoggedIn !== true) return null;
+    if (status !== 'authenticated') return null;
 
     return (
         <Pressable
             onPress={handleSignOut}
-            className="flex-row items-center gap-2 rounded-lg px-3 py-2"
+            style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderRadius: 8,
+                minHeight: 44,
+                minWidth: 44,
+            }}
         >
             <LogOut size={16} color={colors.text.muted} />
-            <Text className="text-sm text-muted-foreground">Sair</Text>
+            <Text style={{ fontSize: 14, fontFamily: fonts.sans, color: colors.text.muted }}>Sair</Text>
         </Pressable>
     );
 }

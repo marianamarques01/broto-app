@@ -1,17 +1,12 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect } from 'react';
+import { useMemo, useCallback, memo } from 'react';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
-    withRepeat,
-    withTiming,
-    withSequence,
-    withDelay,
     withSpring,
-    Easing,
 } from 'react-native-reanimated';
 import {
     Flame,
@@ -19,128 +14,44 @@ import {
     CheckCircle2,
     Sparkles,
     BookOpen,
-    Calculator,
-    FlaskConical,
-    Globe2,
     Zap,
-    Star,
-    ChevronRight,
-    Lightbulb,
     Target,
+    ArrowUpRight,
 } from 'lucide-react-native';
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/use-pet';
 import { useProgress } from '@/hooks/use-progress';
 import { HeaderAuth } from '@/components/HeaderAuth';
 import { BrotoLogo } from '@/components/BrotoLogo';
-import { colors, fonts } from '@/theme/tokens';
+import { AREA_CONFIG, getAreaConfig } from '@/theme/area-config';
+import { colors, fonts, radii } from '@/theme/tokens';
 import { AnimatedBar, FadeInSection } from '@/components/AnimatedEntry';
-
-// ─── Area config ──────────────────────────────────────────────────────────────
-const AREA_CONFIG: Record<
-    string,
-    { label: string; short: string; color: string; glow: string; Icon: any }
-> = {
-    linguagens: {
-        label: 'Linguagens',
-        short: 'LCT',
-        color: colors.blue[500],
-        glow: colors.blue.glow,
-        Icon: BookOpen,
-    },
-    'ciencias-humanas': {
-        label: 'Ciências Humanas',
-        short: 'HUM',
-        color: colors.amber[500],
-        glow: colors.amber.glow,
-        Icon: Globe2,
-    },
-    'ciencias-natureza': {
-        label: 'Ciências da Natureza',
-        short: 'NAT',
-        color: colors.green[500],
-        glow: colors.green.glow,
-        Icon: FlaskConical,
-    },
-    matematica: {
-        label: 'Matemática',
-        short: 'MAT',
-        color: colors.violet[500],
-        glow: colors.violet.glow,
-        Icon: Calculator,
-    },
-};
 
 const DEFAULT_AREAS = ['matematica', 'linguagens', 'ciencias-humanas'];
 
-// ─── Fireflies (small glowing dots floating in the card) ─────────────────────
-const CARD_FIREFLIES = [
-    { x: 8, y: 18, s: 2.5, delay: 0, dur: 3.8, gold: false },
-    { x: 85, y: 25, s: 3, delay: 1.2, dur: 4.5, gold: true },
-    { x: 72, y: 68, s: 2, delay: 0.5, dur: 3.2, gold: false },
-    { x: 25, y: 80, s: 3, delay: 2.0, dur: 5.0, gold: true },
-    { x: 92, y: 52, s: 2.5, delay: 1.8, dur: 4.0, gold: false },
-    { x: 50, y: 10, s: 2, delay: 0.8, dur: 3.5, gold: true },
-];
+// ─── Static constants (outside component to avoid re-creation) ───────────────
+const HERO_GRADIENT = ['#0D5B33', '#10261B'] as const;
+const HERO_LOCATIONS = [0, 0.8] as const;
+const DIVIDER_GRADIENT = [
+    'rgba(255, 255, 255, 0)',
+    'rgba(204, 204, 204, 0.4)',
+    'rgba(153, 153, 153, 0)',
+] as const;
+const DIVIDER_LOCATIONS = [0, 0.5, 1] as const;
+const DIVIDER_START: [number, number] = [0, 0.5];
+const DIVIDER_END: [number, number] = [1, 0.5];
+const dividerStyle = {
+    width: '100%' as const,
+    height: 1,
+    borderRadius: 10,
+    marginBottom: 16,
+};
 
-function Firefly({ x, y, s, delay: d, dur, gold }: (typeof CARD_FIREFLIES)[0]) {
-    const opacity = useSharedValue(0);
-    const translateX = useSharedValue(0);
-    const translateY = useSharedValue(0);
-
-    useEffect(() => {
-        // Fade in/out
-        opacity.value = withRepeat(
-            withSequence(
-                withTiming(0, { duration: d * 1000 }),
-                withTiming(1, { duration: (dur / 2) * 1000, easing: Easing.inOut(Easing.sin) }),
-                withTiming(0, { duration: (dur / 2) * 1000, easing: Easing.inOut(Easing.sin) }),
-            ),
-            -1,
-        );
-        // Drift horizontally — more visible movement
-        translateX.value = withRepeat(
-            withSequence(
-                withTiming(12, { duration: dur * 1000, easing: Easing.inOut(Easing.sin) }),
-                withTiming(-12, { duration: dur * 1000, easing: Easing.inOut(Easing.sin) }),
-            ),
-            -1,
-        );
-        // Drift vertically (slower, offset)
-        translateY.value = withRepeat(
-            withSequence(
-                withTiming(-8, { duration: (dur + 1) * 1000, easing: Easing.inOut(Easing.sin) }),
-                withTiming(8, { duration: (dur + 1) * 1000, easing: Easing.inOut(Easing.sin) }),
-            ),
-            -1,
-        );
-    }, []);
-
-    const style = useAnimatedStyle(() => ({
-        opacity: opacity.value,
-        transform: [{ translateX: translateX.value }, { translateY: translateY.value }],
-    }));
-
-    return (
-        <Animated.View
-            style={[
-                {
-                    position: 'absolute',
-                    left: `${x}%`,
-                    top: `${y}%`,
-                    width: s,
-                    height: s,
-                    borderRadius: s / 2,
-                    backgroundColor: gold ? '#fbbf24' : '#4ade80',
-                    shadowColor: gold ? '#fbbf24' : '#4ade80',
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.7,
-                    shadowRadius: s * 3,
-                },
-                style,
-            ]}
-        />
-    );
-}
+// ─── Stats pill config (stable reference) ────────────────────────────────────
+const STAT_ICONS = [
+    { key: 'streak', Icon: Flame, iconColor: colors.gold[400] },
+    { key: 'hoje', Icon: BookOpen, iconColor: colors.blue[400] },
+    { key: 'acerto', Icon: Target, iconColor: colors.green[400] },
+] as const;
 
 // ─── Mission card ─────────────────────────────────────────────────────────────
 interface Mission {
@@ -152,117 +63,246 @@ interface Mission {
     locked: boolean;
 }
 
-function MissionCard({ mission, index }: { mission: Mission; index: number }) {
-    const router = useRouter();
-    const area = AREA_CONFIG[mission.areaKey] ?? AREA_CONFIG.matematica;
+const MissionCard = memo(function MissionCard({
+    mission,
+    onPress,
+}: {
+    mission: Mission;
+    onPress: () => void;
+}) {
+    const area = getAreaConfig(mission.areaKey);
     const { Icon } = area;
-    const opacity = useSharedValue(0);
-    const translateY = useSharedValue(12);
-
-    useEffect(() => {
-        const delay = 280 + index * 80;
-        const easing = Easing.out(Easing.quad);
-        opacity.value = withDelay(delay, withTiming(1, { duration: 380, easing }));
-        translateY.value = withDelay(delay, withTiming(0, { duration: 380, easing }));
-    }, []);
-
-    const animStyle = useAnimatedStyle(() => ({
-        opacity: opacity.value,
-        transform: [{ translateY: translateY.value }],
-    }));
 
     return (
-        <Animated.View style={[animStyle, { width: '100%', alignSelf: 'stretch' }]}>
-            <Pressable
-                onPress={() => router.push('/(tabs)/questions')}
-                style={({ pressed }) => ({
-                    opacity: mission.locked ? 0.72 : pressed ? 0.85 : 1,
-                })}
+        <Pressable
+            onPress={() => !mission.locked && onPress()}
+            style={({ pressed }) => ({
+                opacity: mission.locked ? 0.55 : pressed ? 0.85 : 1,
+            })}
+        >
+            <View
+                style={{
+                    width: '100%',
+                    padding: 16,
+                    borderRadius: 24,
+                    borderWidth: 1,
+                    borderColor: mission.locked
+                        ? 'rgba(255, 255, 255, 0.03)'
+                        : 'rgba(255, 255, 255, 0.06)',
+                    backgroundColor: mission.locked ? '#0B1F15' : '#122B1E',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    overflow: 'hidden',
+                }}
             >
+                {/* Area icon */}
                 <View
                     style={{
-                        width: '100%',
-                        padding: 14,
-                        borderRadius: 16,
-                        borderWidth: 1,
-                        borderColor: mission.done
-                            ? 'rgba(16,185,129,0.22)'
-                            : mission.locked
-                              ? colors.border.subtle
-                              : colors.border.default,
-                        backgroundColor: mission.done
-                            ? 'rgba(16,185,129,0.06)'
-                            : colors.bg.card,
-                        flexDirection: 'row',
+                        width: 40,
+                        height: 40,
+                        borderRadius: 999,
                         alignItems: 'center',
+                        justifyContent: 'center',
+                        borderWidth: 1,
+                        marginRight: 12,
+                        backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                        borderColor: mission.done
+                            ? 'rgba(34,197,94,0.5)'
+                            : mission.locked
+                                ? 'rgba(148,163,184,0.45)'
+                                : 'rgba(248,250,252,0.14)',
                     }}
                 >
-                    {/* Area icon */}
-                    <View
-                        style={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 12,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginRight: 14,
-                            backgroundColor: mission.locked
-                                ? colors.bg.elevated
-                                : area.glow,
-                            borderWidth: 1,
-                            borderColor: mission.locked
-                                ? colors.border.subtle
-                                : `${area.color}33`,
-                        }}
-                    >
-                        {mission.locked ? (
-                            <Lock size={18} color={colors.text.muted} />
-                        ) : mission.done ? (
-                            <CheckCircle2 size={18} color={colors.green[500]} />
-                        ) : (
-                            <Icon size={18} color={area.color} />
-                        )}
-                    </View>
-
-                    {/* Content */}
-                    <View style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}>
-                        <Text
-                            numberOfLines={2}
-                            ellipsizeMode="tail"
-                            style={{
-                                fontSize: 14,
-                                lineHeight: 20,
-                                fontFamily: fonts.sansSemiBold,
-                                color: mission.locked ? colors.text.muted : colors.text.primary,
-                                textDecorationLine: mission.done ? 'line-through' : 'none',
-                                flexShrink: 1,
-                            }}
-                        >
-                            {mission.title}
-                        </Text>
-                        <Text
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                            style={{
-                                fontSize: 12,
-                                lineHeight: 16,
-                                fontFamily: fonts.sans,
-                                color: colors.text.muted,
-                                marginTop: 2,
-                            }}
-                        >
-                            {mission.locked ? 'Complete a missão anterior' : mission.subtitle}
-                        </Text>
-                    </View>
-
-                    {!mission.done && !mission.locked && (
-                        <View style={{ marginLeft: 8 }}>
-                            <ChevronRight size={16} color={colors.text.muted} />
-                        </View>
+                    {mission.locked ? (
+                        <Lock size={16} color="rgba(255,255,255,0.65)" />
+                    ) : mission.done ? (
+                        <CheckCircle2 size={16} color={colors.green[400]} />
+                    ) : (
+                        <Icon size={16} color="rgba(255,255,255,0.88)" />
                     )}
                 </View>
+
+                {/* Content */}
+                <View style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}>
+                    <Text
+                        numberOfLines={2}
+                        ellipsizeMode="tail"
+                        style={{
+                            fontSize: 14,
+                            lineHeight: 21,
+                            fontFamily: fonts.sansSemiBold,
+                            color: mission.locked
+                                ? 'rgba(255,255,255,0.72)'
+                                : mission.done
+                                  ? 'rgba(255,255,255,0.9)'
+                                  : '#ffffff',
+                            textDecorationLine: mission.done ? 'line-through' : 'none',
+                            flexShrink: 1,
+                        }}
+                    >
+                        {mission.title}
+                    </Text>
+                    <Text
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        style={{
+                            fontSize: 12,
+                            lineHeight: 16,
+                            fontFamily: fonts.sans,
+                            color: mission.locked
+                                ? 'rgba(255,255,255,0.58)'
+                                : 'rgba(255,255,255,0.68)',
+                            marginTop: 4,
+                        }}
+                    >
+                        {mission.locked ? 'Complete a missão anterior' : mission.subtitle}
+                    </Text>
+                </View>
+
+                {/* XP badge (active) */}
+                {!mission.done && !mission.locked && (
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginLeft: 12,
+                            backgroundColor: 'rgba(223,204,0,0.15)',
+                            borderRadius: 8,
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            borderWidth: 1,
+                            borderColor: 'rgba(223,204,0,0.4)',
+                        }}
+                    >
+                        <Zap size={11} color="#DFCC00" />
+                        <Text
+                            style={{
+                                fontSize: 12,
+                                fontFamily: fonts.sansBold,
+                                color: '#DFCC00',
+                                marginLeft: 3,
+                            }}
+                        >
+                            +{mission.xp}
+                        </Text>
+                    </View>
+                )}
+
+                {/* XP earned (done) */}
+                {mission.done && (
+                    <View
+                        style={{
+                            marginLeft: 12,
+                            backgroundColor: 'rgba(34,197,94,0.2)',
+                            borderRadius: 8,
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            borderWidth: 1,
+                            borderColor: 'rgba(34,197,94,0.3)',
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 11,
+                                fontFamily: fonts.sansSemiBold,
+                                color: colors.green[400],
+                            }}
+                        >
+                            +{mission.xp} XP
+                        </Text>
+                    </View>
+                )}
+            </View>
+        </Pressable>
+    );
+});
+
+// ─── CTA Começar missões ─────────────────────────────────────────────────────
+function StartMissionsButton({
+    label,
+    onPress,
+    delay = 0,
+}: {
+    label: string;
+    onPress: () => void;
+    delay?: number;
+    done?: boolean;
+}) {
+    const scale = useSharedValue(1);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+    }));
+
+    const onPressIn = () => {
+        scale.value = withSpring(0.97, { damping: 14, stiffness: 380 });
+    };
+    const onPressOut = () => {
+        scale.value = withSpring(1, { damping: 14, stiffness: 380 });
+    };
+
+    return (
+        <FadeInSection delay={delay}>
+            <Pressable
+                onPress={onPress}
+                onPressIn={onPressIn}
+                onPressOut={onPressOut}
+                style={({ pressed }) => ({
+                    width: '100%',
+                    alignSelf: 'stretch',
+                    opacity: pressed ? 0.9 : 1,
+                })}
+            >
+                <Animated.View
+                    style={[
+                        animatedStyle,
+                        {
+                            borderRadius: 24,
+                            borderWidth: 0,
+                            borderColor: 'transparent',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            paddingVertical: 16,
+                            paddingHorizontal: 4,
+                            overflow: 'hidden',
+                            gap: 12,
+                            backgroundColor: 'transparent',
+                        },
+                    ]}
+                >
+                    <View
+                        style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: 20,
+                            paddingVertical: 16,
+                            paddingHorizontal: 20,
+                            backgroundColor: 'rgba(21, 21, 21, 0.9)',
+                            borderWidth: 1,
+                            borderColor: 'rgba(248, 250, 252, 0.08)',
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                fontFamily: fonts.sansMedium,
+                                color: '#F9FAFB',
+                                letterSpacing: 1,
+                                textAlign: 'center',
+                            }}
+                        >
+                            {label}
+                        </Text>
+                        <View style={{ marginLeft: 8 }}>
+                            <ArrowUpRight size={18} color="#FACC15" />
+                        </View>
+                    </View>
+                </Animated.View>
             </Pressable>
-        </Animated.View>
+        </FadeInSection>
     );
 }
 
@@ -280,69 +320,73 @@ export default function HomeScreen() {
     const streak = pet?.streak ?? 0;
     const questoesHoje = pet?.questoesHoje ?? 0;
     const acertosHoje = pet?.acertosHoje ?? 0;
-    const humor = pet?.humor ?? 50;
     const accuracyPct =
         questoesHoje > 0 ? Math.round((acertosHoje / questoesHoje) * 100) : 0;
 
-    // Derive missions from progress (worst areas first)
-    const sortedAreas = progress?.areas
-        ? [...progress.areas]
-              .filter((a) => a.totalAnswered >= 1)
-              .sort((a, b) => a.accuracyPct - b.accuracyPct)
-              .map((a) => a.value)
-        : [];
-    const missionAreas = [
-        sortedAreas[0] ?? DEFAULT_AREAS[0],
-        sortedAreas[1] ?? DEFAULT_AREAS[1],
-        sortedAreas[2] ?? DEFAULT_AREAS[2],
-    ];
+    // Derive missions from progress (worst areas first) — memoized
+    const missions = useMemo(() => {
+        const sortedAreas = progress?.areas
+            ? [...progress.areas]
+                  .filter((a) => a.totalAnswered >= 1)
+                  .sort((a, b) => a.accuracyPct - b.accuracyPct)
+                  .map((a) => a.value)
+            : [];
+        const missionAreas = [
+            sortedAreas[0] ?? DEFAULT_AREAS[0],
+            sortedAreas[1] ?? DEFAULT_AREAS[1],
+            sortedAreas[2] ?? DEFAULT_AREAS[2],
+        ];
 
-    const areaLabel = (key: string) =>
-        AREA_CONFIG[key]?.label ?? 'Questões';
+        const areaLabel = (key: string) =>
+            AREA_CONFIG[key]?.label ?? 'Questões';
 
-    const missions: Mission[] = [
-        {
-            title: `3 questões de ${areaLabel(missionAreas[0])}`,
-            subtitle: 'Área com maior oportunidade',
-            xp: 30,
-            areaKey: missionAreas[0],
-            done: questoesHoje >= 3,
-            locked: false,
-        },
-        {
-            title: `2 questões de ${areaLabel(missionAreas[1])}`,
-            subtitle: 'Continue progredindo',
-            xp: 20,
-            areaKey: missionAreas[1],
-            done: questoesHoje >= 5,
-            locked: questoesHoje < 3,
-        },
-        {
-            title: 'Atingir 70% de acerto',
-            subtitle: `Acerto atual: ${questoesHoje > 0 ? accuracyPct + '%' : '—'}`,
-            xp: 50,
-            areaKey: missionAreas[2],
-            done: questoesHoje >= 5 && accuracyPct >= 70,
-            locked: questoesHoje < 5,
-        },
-    ];
+        return [
+            {
+                title: `3 questões de ${areaLabel(missionAreas[0])}`,
+                subtitle: 'Area com maior oportunidade',
+                xp: 30,
+                areaKey: missionAreas[0],
+                done: questoesHoje >= 3,
+                locked: false,
+            },
+            {
+                title: `2 questões de ${areaLabel(missionAreas[1])}`,
+                subtitle: 'Continue progredindo',
+                xp: 20,
+                areaKey: missionAreas[1],
+                done: questoesHoje >= 5,
+                locked: questoesHoje < 3,
+            },
+            {
+                title: 'Atingir 70% de acerto',
+                subtitle: `Acerto atual: ${questoesHoje > 0 ? accuracyPct + '%' : '\u2014'}`,
+                xp: 50,
+                areaKey: missionAreas[2],
+                done: questoesHoje >= 5 && accuracyPct >= 70,
+                locked: questoesHoje < 5,
+            },
+        ] satisfies Mission[];
+    }, [progress?.areas, questoesHoje, accuracyPct]);
 
-    const doneMissions = missions.filter((m) => m.done).length;
+    const doneMissions = useMemo(
+        () => missions.filter((m) => m.done).length,
+        [missions],
+    );
 
-    // Daily tip by day-of-week
-    const TIPS = [
-        'Leia cada alternativa com calma — o distrator principal parece certo à primeira vista.',
-        'Em textos de Linguagens, o contexto sempre supera o significado isolado das palavras.',
-        'Em Matemática, eliminar alternativas absurdas salva tempo quando travar.',
-        'Revise os tópicos em que você erra 2+ vezes — são os que mais caem na prova.',
-        'Faça pelo menos 3 questões por dia para manter seu Broto saudável e crescendo.',
-        'Use a regra de três sempre que possível — ela resolve ~40% das questões de Natureza.',
-        'Nos textos do ENEM, a resposta certa geralmente NÃO julga personagens — interprete.',
-    ];
-    const tip = TIPS[new Date().getDay()];
+    const goToQuestions = useCallback(
+        () => router.push('/(tabs)/questions'),
+        [router],
+    );
+
+    // Stats values — memoized
+    const statsValues = useMemo(() => [
+        { label: 'Sequencia', value: loading ? '\u2014' : `${streak} dias` },
+        { label: 'Hoje', value: loading ? '\u2014' : `${questoesHoje} quest.` },
+        { label: 'Acerto', value: loading || questoesHoje === 0 ? '\u2014' : `${accuracyPct}%` },
+    ], [loading, streak, questoesHoje, accuracyPct]);
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.void }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#02140D' }}>
             {/* Header */}
             <View
                 style={{
@@ -350,9 +394,9 @@ export default function HomeScreen() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     paddingHorizontal: 20,
-                    paddingBottom: 12,
+                    paddingBottom: 8,
                     paddingTop: 8,
-                    backgroundColor: colors.bg.deep,
+                    backgroundColor: '#031A11',
                 }}
             >
                 <BrotoLogo size="header" />
@@ -362,7 +406,7 @@ export default function HomeScreen() {
                             style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                marginRight: 10,
+                                marginRight: 12,
                                 borderRadius: 999,
                                 paddingHorizontal: 10,
                                 paddingVertical: 4,
@@ -371,12 +415,12 @@ export default function HomeScreen() {
                                 borderColor: 'rgba(251,191,36,0.18)',
                             }}
                         >
-                            <View style={{ marginRight: 5 }}>
-                            <Flame size={12} color={colors.gold[400]} />
-                                        </View>
+                            <View style={{ marginRight: 4 }}>
+                                <Flame size={12} color={colors.gold[400]} />
+                            </View>
                             <Text
                                 style={{
-                                    fontSize: 13,
+                                    fontSize: 12,
                                     fontFamily: fonts.sansBold,
                                     color: colors.gold[300],
                                 }}
@@ -392,498 +436,344 @@ export default function HomeScreen() {
             <ScrollView
                 style={{ flex: 1 }}
                 contentContainerStyle={{
-                    paddingHorizontal: 16,
-                    paddingTop: 20,
-                    paddingBottom: 70 + insets.bottom + 16,
+                    paddingHorizontal: 20,
+                    paddingTop: 16,
+                    paddingBottom: 40 + insets.bottom,
                 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* ── Saudação acima do card do broto ── */}
-                <View style={{ width: '100%', marginBottom: 20 }}>
-                <FadeInSection delay={0}>
-                    <View style={{ marginBottom: -8 }}>
+                {/* ── Greeting ── */}
+                <View style={{ width: '100%', marginBottom: 16 }}>
+                    <FadeInSection delay={0}>
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontFamily: fonts.sans,
                                 color: colors.text.secondary,
+                                letterSpacing: 0.3,
                             }}
                         >
                             Bem-vindo de volta
                         </Text>
                         <Text
                             style={{
-                                fontSize: 22,
-                                fontFamily: fonts.sansBold,
+                                fontSize: 24,
+                                fontFamily: fonts.sansMedium,
                                 color: colors.text.primary,
-                                marginTop: 2,
+                                marginTop: 4,
                             }}
                         >
-                            Bora estudar? 🌱
+                            Bora estudar?
                         </Text>
-                    </View>
-                </FadeInSection>
+                    </FadeInSection>
                 </View>
 
                 {/* ── Pet hero card ── */}
-                <View style={{ width: '100%', marginBottom: 20 }}>
-                <FadeInSection delay={0}>
-                    <View
-                        style={{
-                            width: '100%',
-                            borderRadius: 28,
-                            overflow: 'hidden',
-                            borderWidth: 1,
-                            borderColor: 'rgba(16, 185, 129, 0.38)',
-                        }}
-                    >
-                        {/* Camada de fundo em todo o quadro (não corta embaixo) */}
+                <View style={{ width: '100%', marginBottom: 24 }}>
+                    <FadeInSection delay={100}>
                         <View
                             style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
+                                width: '100%',
+                                borderRadius: radii.lg,
+                                overflow: 'hidden',
+                                borderWidth: 1,
+                                borderColor: 'rgba(16, 185, 129, 0.18)',
                             }}
-                            pointerEvents="none"
                         >
                             <LinearGradient
-                                colors={[colors.green[800], '#0b1f16', '#0f211a']}
-                                locations={[0, 0.5, 1]}
-                                start={{ x: 0.2, y: 0 }}
-                                end={{ x: 0.8, y: 1 }}
-                                style={{ flex: 1 }}
-                            />
-                            {/* Degradê amarelo leve (igual ao desktop) — cobre todo o quadro */}
-                            <LinearGradient
-                                colors={[colors.gold.glow, 'rgba(251, 191, 36, 0.04)', 'transparent']}
-                                locations={[0, 0.45, 1]}
-                                start={{ x: 1, y: 0 }}
-                                end={{ x: 0, y: 1 }}
+                                colors={HERO_GRADIENT}
+                                locations={HERO_LOCATIONS}
                                 style={{
                                     position: 'absolute',
                                     top: 0,
                                     left: 0,
                                     right: 0,
                                     bottom: 0,
+                                    borderRadius: radii.lg,
                                 }}
+                                pointerEvents="none"
                             />
-                        </View>
-                        <View style={{ padding: 24, paddingBottom: 20 }}>
-                            {/* Fireflies */}
-                            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                                {CARD_FIREFLIES.map((f, i) => (
-                                    <Firefly key={i} {...f} />
-                                ))}
-                            </View>
 
-                            {/* Pet + info */}
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                }}
-                            >
-                                {/* Glow + emoji */}
-                                <View
-                                    style={{ alignItems: 'center', justifyContent: 'center', marginRight: 20 }}
-                                >
-                                    <View
-                                        style={{
-                                            width: 90,
-                                            height: 90,
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        <View
-                                            style={{
-                                                width: 74,
-                                                height: 74,
-                                                borderRadius: 20,
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                overflow: 'hidden',
-                                                borderWidth: 1,
-                                                borderColor: 'rgba(16, 185, 129, 0.55)',
-                                                backgroundColor: 'rgba(16, 185, 129, 0.18)',
-                                                zIndex: 1,
-                                            }}
-                                        >
-                                            <LinearGradient
-                                                colors={[
-                                                    'rgba(52, 211, 153, 0.35)',
-                                                    'rgba(16, 185, 129, 0.08)',
-                                                    'transparent',
-                                                ]}
-                                                locations={[0, 0.4, 1]}
-                                                start={{ x: 0.5, y: 0 }}
-                                                end={{ x: 0.5, y: 1 }}
+                            <View style={{ padding: 24 }}>
+                                {/* Pet + info */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    {/* Emoji avatar (circular) */}
+                                    <View style={{ alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                            <View
                                                 style={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    bottom: 0,
+                                                    width: 80,
+                                                    height: 80,
+                                                    borderRadius: 40,
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                                                    borderWidth: 1,
+                                                    borderColor: 'rgba(255, 255, 255, 0.06)',
+                                                    zIndex: 1,
                                                 }}
-                                                pointerEvents="none"
-                                            />
-                                            <Text style={{ fontSize: 44 }}>
+                                            >
+                                            <Text style={{ fontSize: 40 }}>
                                                 {FASE_EMOJI[fase]}
                                             </Text>
-                                        </View>
-                                    </View>
-                                    {/* Level badge */}
-                                    <Animated.View
-                                        style={{
-                                            marginTop: -18,
-                                            zIndex: 2,
-                                            borderRadius: 999,
-                                            paddingHorizontal: 10,
-                                            paddingVertical: 3,
-                                            backgroundColor: colors.gold.glow,
-                                            borderWidth: 1,
-                                            borderColor: 'rgba(251,191,36,0.22)',
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                fontSize: 11,
-                                                fontFamily: fonts.sansBold,
-                                                color: colors.gold[300],
-                                            }}
-                                        >
-                                            Nv. {nivel}
-                                        </Text>
-                                    </Animated.View>
-                                </View>
+                                            </View>
 
-                                {/* Phase + XP */}
-                                <View style={{ flex: 1 }}>
-                                    <Text
-                                        style={{
-                                            fontSize: 11,
-                                            fontFamily: fonts.sansSemiBold,
-                                            color: colors.text.muted,
-                                            textTransform: 'uppercase',
-                                            letterSpacing: 1.5,
-                                            marginBottom: 4,
-                                        }}
-                                    >
-                                        Seu Broto
-                                    </Text>
-                                    {loading ? (
+                                        {/* Level badge — floats below emoji */}
                                         <View
                                             style={{
-                                                height: 20,
-                                                width: 110,
-                                                borderRadius: 6,
-                                                backgroundColor: colors.bg.elevated,
-                                                marginBottom: 4,
-                                            }}
-                                        />
-                                    ) : (
-                                        <Text
-                                            style={{
-                                                fontSize: 22,
-                                                fontFamily: fonts.logo,
-                                                color: colors.text.primary,
-                                                marginBottom: 2,
+                                                marginTop: -14,
+                                                zIndex: 2,
+                                                borderRadius: 24,
+                                                paddingHorizontal: 12,
+                                                paddingVertical: 4,
+                                                backgroundColor: 'rgba(160, 148, 15, 0.12)',
+                                                borderWidth: 1,
+                                                borderColor: 'rgba(223, 204, 0, 0.5)',
                                             }}
                                         >
-                                            {FASE_LABEL[fase]}
-                                        </Text>
-                                    )}
-
-                                    <View style={{ marginTop: 10 }}>
-                                        <AnimatedBar
-                                            progress={loading ? 0 : (xpInLevel / 100) * 100}
-                                            color={colors.green[500]}
-                                            bgColor="rgba(0,0,0,0.3)"
-                                            height={8}
-                                            delay={500}
-                                        />
-                                        <View style={{ marginTop: 5 }}>
                                             <Text
                                                 style={{
                                                     fontSize: 11,
-                                                    fontFamily: fonts.sans,
-                                                    color: colors.text.muted,
+                                                    fontFamily: fonts.sansBold,
+                                                    color: 'rgba(223, 204, 0, 0.9)',
                                                 }}
                                             >
-                                                {loading ? '…' : `${xpInLevel} / 100 XP`}
+                                                Nv. {nivel}
                                             </Text>
                                         </View>
                                     </View>
+
+                                    {/* Phase + XP */}
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={{
+                                                fontSize: 11,
+                                                fontFamily: fonts.sans,
+                                                color: '#BBBBBB',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: 0,
+                                                marginBottom: 4,
+                                            }}
+                                        >
+                                            Seu Broto
+                                        </Text>
+                                        {loading ? (
+                                            <View
+                                                style={{
+                                                    height: 24,
+                                                    width: 110,
+                                                    borderRadius: 6,
+                                                    backgroundColor: colors.bg.elevated,
+                                                    marginBottom: 4,
+                                                }}
+                                            />
+                                        ) : (
+                                            <Text
+                                                style={{
+                                                    fontSize: 26,
+                                                    fontFamily: fonts.sansMedium,
+                                                    color: colors.text.primary,
+                                                    marginBottom: 4,
+                                                }}
+                                            >
+                                                {FASE_LABEL[fase]}
+                                            </Text>
+                                        )}
+
+                                        <View style={{ marginTop: 8 }}>
+                                            <View
+                                                style={{
+                                                    shadowColor: colors.green[500],
+                                                    shadowOffset: { width: 0, height: 0 },
+                                                    shadowOpacity: 0.4,
+                                                    shadowRadius: 6,
+                                                }}
+                                            >
+                                                <AnimatedBar
+                                                    progress={loading ? 0 : (xpInLevel / 100) * 100}
+                                                    color="#DFCC00"
+                                                    bgColor="rgba(0,0,0,0.3)"
+                                                    height={10}
+                                                    delay={500}
+                                                />
+                                            </View>
+                                            <View style={{ marginTop: 6 }}>
+                                                <Text
+                                                    style={{
+                                                        fontSize: 11,
+                                                        fontFamily: fonts.sans,
+                                                        color: '#BBBBBB',
+                                                    }}
+                                                >
+                                                    {loading ? '\u2026' : `${xpInLevel} / 100 XP`}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                </View>
+
+                                {/* Stats strip */}
+                                <View style={{ marginTop: 20 }}>
+                                    <LinearGradient
+                                        colors={DIVIDER_GRADIENT}
+                                        locations={DIVIDER_LOCATIONS}
+                                        start={DIVIDER_START}
+                                        end={DIVIDER_END}
+                                        style={dividerStyle}
+                                    />
+                                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                                    {STAT_ICONS.map(({ key, Icon, iconColor }, i) => (
+                                        <View
+                                            key={key}
+                                            style={{
+                                                flex: 1,
+                                                alignItems: 'center',
+                                                paddingVertical: 8,
+                                                borderRadius: radii.sm,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.15)',
+                                            }}
+                                        >
+                                            <View style={{ marginBottom: 4 }}>
+                                                <Icon size={16} color={iconColor} />
+                                            </View>
+                                            <Text
+                                                style={{
+                                                    fontSize: statsValues[i].label === 'Sequencia' ? 14 : 15,
+                                                    fontFamily: fonts.sansMedium,
+                                                    color: colors.text.primary,
+                                                }}
+                                            >
+                                                {statsValues[i].value}
+                                            </Text>
+                                            <Text
+                                                style={{
+                                                    fontSize: statsValues[i].label === 'Sequencia' ? 10 : 11,
+                                                    fontFamily: fonts.sansMedium,
+                                                    color: colors.text.muted,
+                                                    marginTop: 2,
+                                                }}
+                                            >
+                                                {statsValues[i].label}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                    </View>
                                 </View>
                             </View>
+                        </View>
+                    </FadeInSection>
+                </View>
 
-                            {/* Stats strip inside card */}
+                {/* ── Missions ── */}
+                <View style={{ width: '100%', marginBottom: 4 }}>
+                    <FadeInSection delay={250}>
+                        <View style={{ width: '100%' }}>
+                            {/* Section header */}
                             <View
                                 style={{
                                     flexDirection: 'row',
-                                    marginTop: 18,
-                                    paddingTop: 16,
-                                    borderTopWidth: 1,
-                                    borderTopColor: colors.border.subtle,
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    marginBottom: 12,
                                 }}
                             >
-                                {[
-                                    {
-                                        label: 'Sequência',
-                                        value: loading ? '—' : `${streak} dias`,
-                                        Icon: Flame,
-                                        iconColor: colors.gold[400],
-                                    },
-                                    {
-                                        label: 'Hoje',
-                                        value: loading ? '—' : `${questoesHoje} quest.`,
-                                        Icon: BookOpen,
-                                        iconColor: colors.blue[400],
-                                    },
-                                    {
-                                        label: 'Acerto',
-                                        value:
-                                            loading || questoesHoje === 0
-                                                ? '—'
-                                                : `${accuracyPct}%`,
-                                        Icon: Target,
-                                        iconColor: colors.green[400],
-                                    },
-                                ].map(({ label, value, Icon, iconColor }) => (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                                     <View
-                                        key={label}
                                         style={{
-                                            flex: 1,
-                                            alignItems: 'center',
+                                            width: 6,
+                                            height: 6,
+                                            borderRadius: 3,
+                                            backgroundColor: '#DFCC00',
+                                        }}
+                                    />
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            fontFamily: fonts.sans,
+                                            color: '#BBBBBB',
+                                            letterSpacing: 0.2,
+                                            textTransform: 'uppercase',
                                         }}
                                     >
-                                        <View style={{ marginBottom: 2 }}>
-                                            <Icon size={18} color={iconColor} />
-                                        </View>
-                                        <Text
-                                            style={{
-                                                fontSize: 14,
-                                                fontFamily: fonts.sansBold,
-                                                color: colors.text.primary,
-                                            }}
-                                        >
-                                            {value}
-                                        </Text>
-                                        <Text
-                                            style={{
-                                                fontSize: 10,
-                                                fontFamily: fonts.sans,
-                                                color: colors.text.muted,
-                                            }}
-                                        >
-                                            {label}
-                                        </Text>
-                                    </View>
-                                ))}
-                            </View>
-                        </View>
-                    </View>
-                </FadeInSection>
-                </View>
-
-                {/* ── Missões do dia ── */}
-                <View style={{ width: '100%', marginBottom: 20 }}>
-                <FadeInSection delay={200}>
-                    <View style={{ width: '100%' }}>
-                        {/* Section header */}
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                marginBottom: 12,
-                            }}
-                        >
-                            <View
-                                style={{ flexDirection: 'row', alignItems: 'center' }}
-                            >
-                                <Text
-                                    style={{
-                                        fontSize: 15,
-                                        fontFamily: fonts.sansBold,
-                                        color: colors.text.primary,
-                                        marginRight: 8,
-                                    }}
-                                >
-                                    Missões de hoje
-                                </Text>
-                            </View>
-                            {/* Progress counter */}
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    borderRadius: 999,
-                                    paddingHorizontal: 10,
-                                    paddingVertical: 4,
-                                    backgroundColor:
-                                        doneMissions === 3
-                                            ? 'rgba(16,185,129,0.15)'
-                                            : colors.bg.elevated,
-                                    borderWidth: 1,
-                                    borderColor:
-                                        doneMissions === 3
-                                            ? colors.border.strong
-                                            : colors.border.subtle,
-                                }}
-                            >
-                                {doneMissions === 3 && (
-                                    <View style={{ marginRight: 5 }}>
-                                        <Sparkles size={11} color={colors.green[400]} />
-                                    </View>
-                                )}
-                                <Text
-                                    style={{
-                                        fontSize: 12,
-                                        fontFamily: fonts.sansBold,
-                                        color:
-                                            doneMissions === 3
-                                                ? colors.green[400]
-                                                : colors.text.muted,
-                                    }}
-                                >
-                                    {doneMissions}/3 completas
-                                </Text>
-                            </View>
-                        </View>
-
-                        {/* Mission progress bar — altura fixa para render igual no device */}
-                        <View style={{ height: 5, marginBottom: 14, justifyContent: 'center' }}>
-                            <AnimatedBar
-                                progress={(doneMissions / 3) * 100}
-                                color={colors.gold[500]}
-                                bgColor={colors.bg.elevated}
-                                height={5}
-                                delay={400}
-                            />
-                        </View>
-
-                        {/* Mission cards — width 100% para render igual no mobile e web */}
-                        <View style={{ width: '100%' }}>
-                            {missions.map((mission, i) => (
-                                <View key={`mission-${i}-${mission.areaKey}-${mission.locked}`} style={{ width: '100%', marginBottom: i < missions.length - 1 ? 10 : 0 }}>
-                                    <MissionCard
-                                        mission={mission}
-                                        index={i}
-                                    />
-                                </View>
-                            ))}
-                        </View>
-                    </View>
-                </FadeInSection>
-                </View>
-
-                {/* ── Dica do dia (pet speech bubble) ── */}
-                <View style={{ width: '100%', marginBottom: 20 }}>
-                <FadeInSection delay={520}>
-                    <View
-                        style={{
-                            borderRadius: 20,
-                            overflow: 'hidden',
-                            borderWidth: 1,
-                            borderColor: colors.border.subtle,
-                        }}
-                    >
-                        <LinearGradient
-                            colors={['rgba(16,185,129,0.12)', 'rgba(16,185,129,0.03)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ padding: 16 }}
-                        >
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    marginBottom: 8,
-                                }}
-                            >
-                                <View style={{ marginRight: 8 }}>
-                                    <Text style={{ fontSize: 18 }}>
-                                        {FASE_EMOJI[fase]}
+                                        Missões de hoje
                                     </Text>
                                 </View>
+                                {/* Progress counter */}
                                 <View
                                     style={{
                                         flexDirection: 'row',
                                         alignItems: 'center',
+                                        borderRadius: 999,
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 4,
+                                        backgroundColor:
+                                            doneMissions === 3
+                                                ? 'rgba(16,185,129,0.15)'
+                                                : colors.bg.elevated,
+                                        borderWidth: 1,
+                                        borderColor:
+                                            doneMissions === 3
+                                                ? colors.border.strong
+                                                : colors.border.subtle,
                                     }}
                                 >
-                                    <View style={{ marginRight: 5 }}>
-                                        <Lightbulb size={12} color={colors.green[500]} />
-                                    </View>
+                                    {doneMissions === 3 && (
+                                        <View style={{ marginRight: 4 }}>
+                                            <Sparkles size={11} color={colors.green[400]} />
+                                        </View>
+                                    )}
                                     <Text
                                         style={{
-                                            fontSize: 11,
-                                            fontFamily: fonts.sansBold,
-                                            color: colors.green[500],
-                                            textTransform: 'uppercase',
-                                            letterSpacing: 1,
+                                            fontSize: 12,
+                                            fontFamily: fonts.sans,
+                                            color:
+                                                doneMissions === 3
+                                                    ? colors.green[400]
+                                                    : colors.text.muted,
                                         }}
                                     >
-                                        Dica do Broto
+                                        {doneMissions}/3 completas
                                     </Text>
                                 </View>
                             </View>
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    fontFamily: fonts.sans,
-                                    color: colors.text.primary,
-                                    lineHeight: 21,
-                                }}
-                            >
-                                {tip}
-                            </Text>
-                        </LinearGradient>
-                    </View>
-                </FadeInSection>
+
+                            {/* Mission progress bar */}
+                            <View style={{ height: 4, marginBottom: 12, justifyContent: 'center' }}>
+                                <AnimatedBar
+                                    progress={(doneMissions / 3) * 100}
+                                    color={colors.gold[500]}
+                                    bgColor={colors.bg.elevated}
+                                    height={4}
+                                    delay={400}
+                                />
+                            </View>
+
+                            {/* Mission cards — stable keys */}
+                            <View style={{ width: '100%', gap: 8 }}>
+                                {missions.map((mission, i) => (
+                                    <MissionCard
+                                        key={`mission-${i}`}
+                                        mission={mission}
+                                        onPress={goToQuestions}
+                                    />
+                                ))}
+                            </View>
+                        </View>
+                    </FadeInSection>
                 </View>
 
-                {/* ── CTA ── */}
-                <FadeInSection delay={640}>
-                    <Pressable
-                        onPress={() => router.push('/(tabs)/questions')}
-                        style={({ pressed }) => ({
-                            opacity: pressed ? 0.82 : 1,
-                        })}
-                    >
-                        <View style={{ borderRadius: 18, overflow: 'hidden' }}>
-                        <LinearGradient
-                            colors={[colors.green[600], colors.green[700]]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                paddingVertical: 16,
-                            }}
-                        >
-                            <View style={{ marginRight: 8 }}>
-                                <Sparkles size={16} color="#fff" />
-                            </View>
-                            <Text
-                                style={{
-                                    fontSize: 15,
-                                    fontFamily: fonts.sansBold,
-                                    color: '#fff',
-                                }}
-                            >
-                                {doneMissions === 3
-                                    ? 'Missões completas! Continuar treinando'
-                                    : 'Começar missões'}
-                            </Text>
-                        </LinearGradient>
-                        </View>
-                    </Pressable>
-                </FadeInSection>
+                {/* ── CTA Começar missões ── */}
+                <View style={{ marginTop: 0 }}>
+                    <StartMissionsButton
+                        label={
+                            doneMissions === 3
+                                ? 'Missões completas! Continuar'
+                                : 'COMEÇAR MISSÕES'
+                        }
+                        onPress={goToQuestions}
+                        delay={500}
+                        done={doneMissions === 3}
+                    />
+                </View>
             </ScrollView>
         </SafeAreaView>
     );

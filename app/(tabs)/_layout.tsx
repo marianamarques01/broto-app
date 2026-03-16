@@ -9,28 +9,22 @@ import {
     CalendarCheck,
 } from 'phosphor-react-native';
 import { colors } from '@/theme/tokens';
-import { api } from '@/lib/api-client';
-import { TabIcon } from './TabIcon';
-
-interface UserMe {
-    onboardingDone: boolean;
-}
+import { useUser } from '@/hooks/use-user';
+import { TabIcon } from '@/components/TabIcon';
 
 export default function TabsLayout() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const { user, loading } = useUser();
     const [checked, setChecked] = useState(false);
 
     useEffect(() => {
-        api.get<UserMe>('/api/user/me')
-            .then(user => {
-                if (!user.onboardingDone) {
-                    router.replace('/onboarding');
-                }
-            })
-            .catch(() => {})
-            .finally(() => setChecked(true));
-    }, [router]);
+        if (loading) return;
+        if (user && !user.onboardingDone) {
+            router.replace('/onboarding');
+        }
+        setChecked(true);
+    }, [loading, user, router]);
 
     if (!checked) return null;
 
@@ -40,16 +34,15 @@ export default function TabsLayout() {
                 headerShown: false,
                 tabBarShowLabel: false,
                 tabBarStyle: {
-                    backgroundColor: colors.bg.void,
-                    borderTopColor: colors.border.subtle,
-                    borderTopWidth: 1,
+                    backgroundColor: '#031A11',
+                    borderTopWidth: 0,
                     paddingTop: 14,
                     paddingBottom: insets.bottom,
                     height: 70 + insets.bottom,
                     elevation: 0,
                     shadowOpacity: 0,
                 },
-                tabBarActiveTintColor: colors.green[500],
+                tabBarActiveTintColor: '#DFCC00',
                 tabBarInactiveTintColor: colors.text.muted,
             }}
         >

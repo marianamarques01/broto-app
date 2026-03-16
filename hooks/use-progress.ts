@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { api } from '@/lib/api-client';
+import { createCachedHook } from './create-cached-hook';
 
 export interface TopicoStat {
     value: string;
@@ -25,21 +25,13 @@ export interface ProgressData {
     areas: AreaStat[];
 }
 
-interface UseProgressReturn {
-    progress: ProgressData | null;
-    loading: boolean;
-}
+const { useHook, refresh } = createCachedHook<ProgressData>(
+    () => api.get<ProgressData>('/api/user/progress'),
+);
 
-export function useProgress(): UseProgressReturn {
-    const [progress, setProgress] = useState<ProgressData | null>(null);
-    const [loading, setLoading] = useState(true);
+export const refreshProgress = refresh;
 
-    useEffect(() => {
-        api.get<ProgressData>('/api/user/progress')
-            .then(data => setProgress(data))
-            .catch(() => setProgress(null))
-            .finally(() => setLoading(false));
-    }, []);
-
-    return { progress, loading };
+export function useProgress() {
+    const { data, loading, refresh: r } = useHook();
+    return { progress: data, loading, refresh: r };
 }

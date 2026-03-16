@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
     View,
     Text,
@@ -19,11 +19,8 @@ import {
     ChevronDown,
     AlertCircle,
     BookOpen,
-    Calculator,
-    FlaskConical,
-    Globe2,
     Filter,
-    Play,
+    ArrowUpRight,
     RotateCcw,
 } from 'lucide-react-native';
 import {
@@ -34,43 +31,9 @@ import { QuestionPlayer } from '@/components/questions/QuestionPlayer';
 import { submitAnswer } from '@/lib/api/answer-question';
 import type { Question } from '@/lib/types/questions';
 import { getQuestionId } from '@/lib/types/questions';
+import { AREA_CONFIG, getAreaConfig } from '@/theme/area-config';
 import { colors, fonts } from '@/theme/tokens';
 import { FadeInSection, StaggerItem } from '@/components/AnimatedEntry';
-
-// ─── Config por matéria (igual à Home — identidade visual) ─────────────────
-const AREA_CONFIG: Record<
-    string,
-    { label: string; short: string; color: string; glow: string; Icon: any }
-> = {
-    linguagens: {
-        label: 'Linguagens',
-        short: 'LCT',
-        color: colors.blue[500],
-        glow: colors.blue.glow,
-        Icon: BookOpen,
-    },
-    'ciencias-humanas': {
-        label: 'Ciências Humanas',
-        short: 'HUM',
-        color: colors.amber[500],
-        glow: colors.amber.glow,
-        Icon: Globe2,
-    },
-    'ciencias-natureza': {
-        label: 'Ciências da Natureza',
-        short: 'NAT',
-        color: colors.green[500],
-        glow: colors.green.glow,
-        Icon: FlaskConical,
-    },
-    matematica: {
-        label: 'Matemática',
-        short: 'MAT',
-        color: colors.violet[500],
-        glow: colors.violet.glow,
-        Icon: Calculator,
-    },
-};
 
 function FilterDropdown({
     label,
@@ -298,16 +261,16 @@ export default function QuestionsScreen() {
         setScores({ correct: 0, total: 0 });
     }
 
-    function handleAnswer(_answer: string, isCorrect: boolean) {
+    const handleAnswer = useCallback((_answer: string, isCorrect: boolean) => {
         setScores(s => ({
             correct: s.correct + (isCorrect ? 1 : 0),
             total: s.total + 1,
         }));
         const questionId = getQuestionId(activeQuestion!);
         submitAnswer({ questionId, isCorrect }).catch(() => {});
-    }
+    }, [activeQuestion]);
 
-    function handleNext() {
+    const handleNext = useCallback(() => {
         const nextIdx = questionIdx + 1;
         if (nextIdx < questions.length) {
             setActiveQuestion(questions[nextIdx]);
@@ -315,7 +278,7 @@ export default function QuestionsScreen() {
         } else {
             setActiveQuestion(null);
         }
-    }
+    }, [questionIdx, questions]);
 
     const areaConfig = selectedArea ? AREA_CONFIG[selectedArea] : null;
     const AreaIcon = areaConfig?.Icon;
@@ -325,12 +288,12 @@ export default function QuestionsScreen() {
         return (
             <SafeAreaView
                 className="flex-1"
-                style={{ backgroundColor: colors.bg.void }}
+                style={{ backgroundColor: '#02140D' }}
                 edges={['top']}
             >
                 <View
                     className="flex-row items-center justify-between px-5 py-3"
-                    style={{ backgroundColor: colors.bg.deep }}
+                    style={{ backgroundColor: '#031A11' }}
                 >
                     <Pressable
                         onPress={() => setActiveQuestion(null)}
@@ -413,13 +376,13 @@ export default function QuestionsScreen() {
         return (
             <SafeAreaView
                 className="flex-1"
-                style={{ backgroundColor: colors.bg.void }}
+                style={{ backgroundColor: '#02140D' }}
                 edges={['top']}
             >
                 {/* Header padronizado (igual Rotina / Progresso) */}
                 <View
                     className="flex-row items-center gap-2 px-5 py-3"
-                    style={{ backgroundColor: colors.bg.deep }}
+                    style={{ backgroundColor: '#031A11' }}
                 >
                     <BookOpen size={18} color={colors.green[500]} />
                     <Text
@@ -485,7 +448,7 @@ export default function QuestionsScreen() {
                     <ScrollView
                         style={{ flex: 1 }}
                         contentContainerStyle={{
-                            paddingHorizontal: 16,
+                            paddingHorizontal: 20,
                             paddingTop: 16,
                             paddingBottom: 120,
                             gap: 12,
@@ -513,43 +476,42 @@ export default function QuestionsScreen() {
                                                 flexDirection: 'row',
                                                 alignItems: 'center',
                                                 gap: 16,
-                                                padding: 18,
+                                                paddingVertical: 14,
+                                                paddingHorizontal: 16,
                                                 borderRadius: 20,
                                                 borderWidth: 1,
-                                                borderColor: colors.border.default,
-                                                backgroundColor: colors.bg.card,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.10)',
+                                                borderColor: 'rgba(255,255,255,0.06)',
                                             }}
                                         >
-                                            <View
-                                                style={{
-                                                    width: 52,
-                                                    height: 52,
-                                                    borderRadius: 14,
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    backgroundColor: glow,
-                                                    borderWidth: 1,
-                                                    borderColor: `${color}40`,
-                                                }}
-                                            >
-                                                <Icon size={24} color={color} />
-                                            </View>
-                                            <View style={{ flex: 1, minWidth: 0 }}>
-                                                <Text
+                                                <View
                                                     style={{
-                                                        fontSize: 16,
-                                                        fontFamily: fonts.sansBold,
-                                                        color: colors.text.primary,
+                                                        width: 40,
+                                                        height: 40,
+                                                        borderRadius: 20,
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: `${color}22`,
                                                     }}
                                                 >
+                                                    <Icon size={18} color={color} />
+                                                </View>
+                                            <View style={{ flex: 1, minWidth: 0 }}>
+                                                    <Text
+                                                        style={{
+                                                            fontSize: 15,
+                                                            fontFamily: fonts.sansSemiBold,
+                                                            color: colors.text.primary,
+                                                        }}
+                                                    >
                                                     {label}
                                                 </Text>
                                                 <Text
                                                     style={{
                                                         fontSize: 13,
                                                         fontFamily: fonts.sans,
-                                                        color: colors.text.muted,
-                                                        marginTop: 2,
+                                                            color: colors.text.muted,
+                                                            marginTop: 2,
                                                     }}
                                                 >
                                                     ENEM 2015–2023 · por ano e tópico
@@ -575,11 +537,11 @@ export default function QuestionsScreen() {
     return (
         <SafeAreaView
             className="flex-1"
-            style={{ backgroundColor: colors.bg.void }}
+            style={{ backgroundColor: '#02140D' }}
             edges={['top']}
         >
             {/* Header */}
-            <View style={{ backgroundColor: colors.bg.deep, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}>
+            <View style={{ backgroundColor: '#031A11', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                         <Pressable
@@ -850,24 +812,32 @@ export default function QuestionsScreen() {
                                 onPress={startSession}
                                 style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
                             >
-                                <View style={{ borderRadius: 18, overflow: 'hidden' }}>
-                                    <LinearGradient
-                                        colors={[colors.green[600], colors.green[700]]}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 0 }}
+                                <View
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderRadius: 20,
+                                        paddingVertical: 16,
+                                        paddingHorizontal: 20,
+                                        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(248, 250, 252, 0.16)',
+                                    }}
+                                >
+                                    <Text
                                         style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: 10,
-                                            paddingVertical: 16,
+                                            fontSize: 14,
+                                            fontFamily: fonts.sansMedium,
+                                            color: '#FFFFFF',
+                                            letterSpacing: 0.8,
                                         }}
                                     >
-                                        <Play size={18} color="#fff" fill="#fff" />
-                                        <Text style={{ fontSize: 15, fontFamily: fonts.sansBold, color: '#fff' }}>
-                                            Iniciar treino
-                                        </Text>
-                                    </LinearGradient>
+                                        INICIAR TREINO
+                                    </Text>
+                                    <View style={{ marginLeft: 8 }}>
+                                        <ArrowUpRight size={18} color="#FACC15" />
+                                    </View>
                                 </View>
                             </Pressable>
 

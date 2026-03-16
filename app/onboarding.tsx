@@ -114,8 +114,8 @@ export default function OnboardingScreen() {
                         </Text>
                         <Pressable
                             onPress={() => setShowDatePicker(true)}
-                            className="w-full rounded-xl border bg-background px-4 py-3"
-                            style={{ borderColor: colors.border.default }}
+                            className="w-full rounded-xl border px-4 py-3"
+                            style={{ backgroundColor: colors.bg.deep, borderColor: colors.border.default }}
                         >
                             <Text className="font-sans text-sm text-foreground">
                                 {dataEnem
@@ -163,8 +163,8 @@ export default function OnboardingScreen() {
                                 thumbTintColor={colors.green[500]}
                             />
                             <View
-                                className="w-16 items-center rounded-xl border bg-background py-2"
-                                style={{ borderColor: colors.border.default }}
+                                className="w-16 items-center rounded-xl border py-2"
+                                style={{ backgroundColor: colors.bg.deep, borderColor: colors.border.default }}
                             >
                                 <Text className="font-sans-bold text-sm text-foreground">
                                     {horas}h/dia
@@ -191,7 +191,7 @@ export default function OnboardingScreen() {
                         disabled={loading || skipLoading}
                         className="w-full items-center rounded-xl py-3.5"
                         style={{
-                            backgroundColor: colors.green[600],
+                            backgroundColor: colors.semantic.primary,
                             opacity: loading ? 0.5 : 1,
                         }}
                     >

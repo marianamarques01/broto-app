@@ -1,149 +1,118 @@
+import { useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
-import { Link } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Link } from 'expo-router';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-    ArrowRight,
-    TrendingUp,
-    TrendingDown,
     BarChart3,
-    FileText,
-    Globe,
-    FlaskConical,
-    Calculator,
-    BookOpen,
     PenLine,
     Target,
     CheckCircle2,
+    ArrowUpRight,
+    TrendingUp,
+    TrendingDown,
 } from 'lucide-react-native';
-import {
-    useProgress,
-    type AreaStat,
-    type TopicoStat,
-} from '@/hooks/use-progress';
-import { colors, fonts } from '@/theme/tokens';
+import { useProgress, type AreaStat, type TopicoStat } from '@/hooks/use-progress';
+import { getAreaConfig } from '@/theme/area-config';
+import { colors, fonts, radii } from '@/theme/tokens';
 import { FadeInSection, StaggerItem, AnimatedBar } from '@/components/AnimatedEntry';
 
-const AREA_ICONS: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
-    linguagens: FileText,
-    'ciencias-humanas': Globe,
-    'ciencias-natureza': FlaskConical,
-    matematica: Calculator,
-};
-
-const AREA_STYLE: Record<
-    string,
-    { bg: string; bar: string; textColor: string; gradientFrom: string; gradientTo: string }
-> = {
-    linguagens: {
-        bg: 'rgba(43,164,184,0.06)',
-        bar: colors.blue[500],
-        textColor: colors.blue[400],
-        gradientFrom: 'rgba(43,164,184,0.06)',
-        gradientTo: 'rgba(43,164,184,0.01)',
-    },
-    'ciencias-humanas': {
-        bg: 'rgba(229,150,14,0.06)',
-        bar: colors.amber[500],
-        textColor: colors.amber[400],
-        gradientFrom: 'rgba(229,150,14,0.06)',
-        gradientTo: 'rgba(229,150,14,0.01)',
-    },
-    'ciencias-natureza': {
-        bg: 'rgba(16,185,129,0.06)',
-        bar: colors.green[500],
-        textColor: colors.green[400],
-        gradientFrom: 'rgba(16,185,129,0.06)',
-        gradientTo: 'rgba(16,185,129,0.01)',
-    },
-    matematica: {
-        bg: 'rgba(155,109,204,0.06)',
-        bar: colors.violet[500],
-        textColor: colors.violet[400],
-        gradientFrom: 'rgba(155,109,204,0.06)',
-        gradientTo: 'rgba(155,109,204,0.01)',
-    },
-};
-
 function AreaCard({ area, loading }: { area: AreaStat; loading: boolean }) {
-    const style = AREA_STYLE[area.value] ?? {
-        bg: colors.bg.card,
-        bar: colors.green[500],
-        textColor: colors.green[400],
-        gradientFrom: colors.green.glow,
-        gradientTo: 'rgba(16,185,129,0)',
-    };
-    const Icon = AREA_ICONS[area.value] ?? BookOpen;
+    const cfg = getAreaConfig(area.value);
+    const style = { bar: cfg.color, textColor: cfg.textColor };
+    const Icon = cfg.AltIcon;
 
     return (
         <View
-            className="rounded-2xl overflow-hidden"
             style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 16,
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                borderRadius: 20,
                 borderWidth: 1,
-                borderColor: style.bar + '15',
+                backgroundColor: 'rgba(0, 0, 0, 0.10)',
+                borderColor: 'rgba(255,255,255,0.06)',
             }}
         >
-            <LinearGradient
-                colors={[style.gradientFrom, style.gradientTo]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{ padding: 16 }}
+            <View
+                style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: `${style.bar}22`,
+                }}
             >
-                <View className="flex-row items-center justify-between mb-3">
-                    <View className="flex-row items-center gap-2.5">
-                        <View
-                            className="h-8 w-8 items-center justify-center rounded-lg"
-                            style={{ backgroundColor: style.bar + '20' }}
-                        >
-                            <Icon size={16} color={style.textColor} />
-                        </View>
-                        <Text
-                            style={{
-                                fontSize: 14,
-                                fontFamily: fonts.sansSemiBold,
-                                color: colors.text.primary,
-                            }}
-                        >
-                            {area.label}
-                        </Text>
-                    </View>
-                    {loading ? (
-                        <View
-                            className="h-4 w-10 rounded"
-                            style={{ backgroundColor: colors.bg.elevated }}
-                        />
-                    ) : (
-                        <Text
-                            style={{
-                                fontSize: 15,
-                                fontFamily: fonts.sansBold,
-                                color: style.textColor,
-                            }}
-                        >
-                            {area.totalAnswered > 0 ? `${area.accuracyPct}%` : '—'}
-                        </Text>
-                    )}
-                </View>
-                <AnimatedBar
-                    progress={loading ? 0 : area.accuracyPct}
-                    color={style.bar}
-                    bgColor={colors.bg.deep}
-                    height={10}
-                    delay={400}
-                />
-                {!loading && area.totalAnswered > 0 && (
+                <Icon size={18} color={style.bar} />
+            </View>
+
+            <View style={{ flex: 1, minWidth: 0 }}>
+                <Text
+                    style={{
+                        fontSize: 15,
+                        fontFamily: fonts.sansSemiBold,
+                        color: colors.text.primary,
+                    }}
+                >
+                    {area.label}
+                </Text>
+                {!loading && area.totalAnswered > 0 ? (
                     <Text
                         style={{
-                            fontSize: 11,
+                            fontSize: 13,
                             fontFamily: fonts.sans,
                             color: colors.text.muted,
-                            marginTop: 8,
+                            marginTop: 2,
                         }}
                     >
-                        {area.totalAnswered} questoes · {area.totalCorrect} acertos
+                        {area.totalAnswered} questões · {area.totalCorrect} acertos
+                    </Text>
+                ) : (
+                    <Text
+                        style={{
+                            fontSize: 13,
+                            fontFamily: fonts.sans,
+                            color: colors.text.muted,
+                            marginTop: 2,
+                        }}
+                    >
+                        Sem dados ainda
                     </Text>
                 )}
-            </LinearGradient>
+                <View style={{ marginTop: 8 }}>
+                    <AnimatedBar
+                        progress={loading ? 0 : area.accuracyPct}
+                        color={style.bar}
+                        bgColor="rgba(0,0,0,0.3)"
+                        height={6}
+                        delay={400}
+                    />
+                </View>
+            </View>
+
+            {loading ? (
+                <View
+                    style={{
+                        width: 40,
+                        height: 20,
+                        borderRadius: 8,
+                        backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                    }}
+                />
+            ) : (
+                <Text
+                    style={{
+                        fontSize: 16,
+                        fontFamily: fonts.sansBold,
+                        color: style.textColor,
+                    }}
+                >
+                    {area.totalAnswered > 0 ? `${area.accuracyPct}%` : '—'}
+                </Text>
+            )}
         </View>
     );
 }
@@ -156,20 +125,40 @@ function TopicoChip({
     variant: 'forte' | 'fraco';
 }) {
     const isForte = variant === 'forte';
+    const TrendIcon = isForte ? TrendingUp : TrendingDown;
+    const accentColor = isForte ? colors.green[400] : colors.red[400];
+
     return (
         <View
-            className="flex-row items-center justify-between rounded-xl px-3.5 py-3"
             style={{
-                backgroundColor: isForte
-                    ? 'rgba(16,185,129,0.06)'
-                    : colors.red.glow,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                paddingVertical: 12,
+                paddingHorizontal: 14,
+                borderRadius: 20,
+                backgroundColor: 'rgba(0, 0, 0, 0.10)',
                 borderWidth: 1,
-                borderColor: isForte
-                    ? 'rgba(16,185,129,0.12)'
-                    : 'rgba(224,82,82,0.12)',
+                borderColor: 'rgba(255,255,255,0.06)',
             }}
         >
-            <View className="flex-1">
+            {/* Trend icon */}
+            <View
+                style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: isForte
+                        ? 'rgba(16,185,129,0.15)'
+                        : 'rgba(239,68,68,0.15)',
+                }}
+            >
+                <TrendIcon size={14} color={accentColor} />
+            </View>
+
+            <View style={{ flex: 1, minWidth: 0 }}>
                 <Text
                     numberOfLines={1}
                     style={{
@@ -185,17 +174,18 @@ function TopicoChip({
                         fontSize: 11,
                         fontFamily: fonts.sans,
                         color: colors.text.muted,
+                        marginTop: 1,
                     }}
                 >
-                    {t.totalAnswered} questoes
+                    {t.totalAnswered} questões
                 </Text>
             </View>
+
             <Text
                 style={{
-                    fontSize: 14,
+                    fontSize: 15,
                     fontFamily: fonts.sansBold,
-                    color: isForte ? colors.green[500] : colors.red[500],
-                    marginLeft: 12,
+                    color: accentColor,
                 }}
             >
                 {t.accuracyPct}%
@@ -229,265 +219,430 @@ const DEFAULT_AREAS: AreaStat[] = [
 
 export default function ProgressScreen() {
     const { progress, loading } = useProgress();
+    const insets = useSafeAreaInsets();
 
     const hasData = !loading && progress !== null && progress.totalAnswered > 0;
     const isEmpty =
         !loading && (progress === null || progress.totalAnswered === 0);
 
-    const fortes = hasData ? topFortes(progress!.areas) : [];
-    const fracos = hasData ? topFracos(progress!.areas) : [];
+    const fortes = useMemo(
+        () => hasData ? topFortes(progress!.areas) : [],
+        [hasData, progress?.areas],
+    );
+    const fracos = useMemo(
+        () => hasData ? topFracos(progress!.areas) : [],
+        [hasData, progress?.areas],
+    );
+
+    const accuracyPct = progress?.totalAnswered
+        ? progress.accuracyPct
+        : 0;
 
     return (
-        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bg.void }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#02140D' }}>
             {/* Header */}
             <View
-                className="flex-row items-center gap-2 px-5 py-3"
-                style={{ backgroundColor: colors.bg.deep }}
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingHorizontal: 20,
+                    paddingBottom: 8,
+                    paddingTop: 8,
+                    backgroundColor: '#031A11',
+                }}
             >
-                <BarChart3 size={18} color={colors.green[500]} />
-                <Text
-                    style={{
-                        fontSize: 17,
-                        fontFamily: fonts.sansBold,
-                        color: colors.text.primary,
-                    }}
-                >
-                    Progresso
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <BarChart3 size={18} color={colors.green[500]} />
+                    <Text
+                        style={{
+                            fontSize: 17,
+                            fontFamily: fonts.sansBold,
+                            color: colors.text.primary,
+                        }}
+                    >
+                        Progresso
+                    </Text>
+                </View>
             </View>
 
             <ScrollView
-                className="flex-1"
-                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 32, gap: 20 }}
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                    paddingHorizontal: 20,
+                    paddingTop: 16,
+                    paddingBottom: 40 + insets.bottom,
+                }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Summary stats */}
-                <FadeInSection delay={0}><View className="flex-row gap-3">
-                    {[
-                        {
-                            icon: PenLine,
-                            value: loading ? null : (progress?.totalAnswered ?? 0),
-                            label: 'questões',
-                            iconColor: colors.green[500],
-                            bgColor: colors.green.glow,
-                        },
-                        {
-                            icon: CheckCircle2,
-                            value: loading ? null : (progress?.totalCorrect ?? 0),
-                            label: 'acertos',
-                            iconColor: colors.green[500],
-                            bgColor: colors.green.glow,
-                        },
-                        {
-                            icon: Target,
-                            value: loading
-                                ? null
-                                : progress?.totalAnswered
-                                  ? `${progress.accuracyPct}%`
-                                  : '—',
-                            label: 'de acerto',
-                            iconColor: colors.green[500],
-                            bgColor: colors.green.glow,
-                        },
-                    ].map(({ icon: Icon, value, label, iconColor, bgColor }) => (
+                {/* ── Hero summary card ── */}
+                <View style={{ marginBottom: 24 }}>
+                    <FadeInSection delay={0}>
                         <View
-                            key={label}
-                            className="flex-1 items-center rounded-2xl p-3.5"
                             style={{
-                                backgroundColor: colors.bg.card,
+                                borderRadius: radii.lg,
+                                overflow: 'hidden',
                                 borderWidth: 1,
-                                borderColor: colors.border.subtle,
+                                borderColor: 'rgba(16, 185, 129, 0.18)',
                             }}
                         >
-                            <View
-                                className="h-7 w-7 items-center justify-center rounded-lg mb-1.5"
-                                style={{ backgroundColor: bgColor }}
-                            >
-                                <Icon size={14} color={iconColor} />
-                            </View>
-                            {loading ? (
-                                <View
-                                    className="h-6 w-10 rounded"
-                                    style={{ backgroundColor: colors.bg.elevated }}
-                                />
-                            ) : (
-                                <Text
+                            <LinearGradient
+                                colors={['#0D5B33', '#10261B']}
+                                locations={[0, 0.8]}
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    borderRadius: radii.lg,
+                                }}
+                                pointerEvents="none"
+                            />
+                            <View style={{ padding: 24 }}>
+                                {/* Focal point — big accuracy number */}
+                                <View style={{ alignItems: 'center', marginBottom: 4 }}>
+                                    <Text
+                                        style={{
+                                            fontSize: 11,
+                                            fontFamily: fonts.sans,
+                                            color: '#BBBBBB',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: 0.5,
+                                            marginBottom: 4,
+                                        }}
+                                    >
+                                        Taxa de acerto geral
+                                    </Text>
+                                    {loading ? (
+                                        <View
+                                            style={{
+                                                height: 48,
+                                                width: 80,
+                                                borderRadius: 8,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                                            }}
+                                        />
+                                    ) : (
+                                        <Text
+                                            style={{
+                                                fontSize: 44,
+                                                fontFamily: fonts.sansBold,
+                                                color: colors.text.primary,
+                                                lineHeight: 52,
+                                            }}
+                                        >
+                                            {progress?.totalAnswered ? `${accuracyPct}%` : '—'}
+                                        </Text>
+                                    )}
+                                </View>
+
+                                {/* Gradient divider — matches home hero */}
+                                <LinearGradient
+                                    colors={[
+                                        'rgba(255, 255, 255, 0)',
+                                        'rgba(204, 204, 204, 0.4)',
+                                        'rgba(153, 153, 153, 0)',
+                                    ]}
+                                    locations={[0, 0.5, 1]}
+                                    start={[0, 0.5]}
+                                    end={[1, 0.5]}
                                     style={{
-                                        fontSize: 20,
-                                        fontFamily: fonts.sansBold,
-                                        color: colors.text.primary,
+                                        width: '100%',
+                                        height: 1,
+                                        borderRadius: 10,
+                                        marginTop: 16,
+                                        marginBottom: 16,
                                     }}
-                                >
-                                    {value}
-                                </Text>
-                            )}
-                            <Text
-                                style={{
-                                    fontSize: 10,
-                                    fontFamily: fonts.sans,
-                                    color: colors.text.muted,
-                                    marginTop: 2,
-                                }}
-                            >
-                                {label}
-                            </Text>
-                        </View>
-                    ))}
-                </View></FadeInSection>
-
-                {/* Areas */}
-                <FadeInSection delay={80}><View>
-                    <View className="flex-row items-center gap-2 mb-3">
-                        <View
-                            style={{
-                                width: 3,
-                                height: 14,
-                                borderRadius: 1.5,
-                                backgroundColor: colors.green[500],
-                            }}
-                        />
-                        <Text
-                            style={{
-                                fontSize: 14,
-                                fontFamily: fonts.sansBold,
-                                color: colors.text.primary,
-                            }}
-                        >
-                            Desempenho por area
-                        </Text>
-                    </View>
-                    <View className="gap-3">
-                        {(progress?.areas ?? DEFAULT_AREAS).map((area, i) => (
-                            <StaggerItem key={area.value} index={i} baseDelay={160} stagger={80}>
-                                <AreaCard
-                                    area={area}
-                                    loading={loading}
                                 />
-                            </StaggerItem>
-                        ))}
-                    </View>
-                </View></FadeInSection>
 
-                {/* Fortes */}
-                {hasData && fortes.length > 0 && (
-                    <FadeInSection delay={500}><View>
-                        <View className="flex-row items-center gap-2 mb-3">
-                            <View
-                                className="h-6 w-6 items-center justify-center rounded-md"
-                                style={{ backgroundColor: 'rgba(16,185,129,0.12)' }}
-                            >
-                                <TrendingUp size={14} color={colors.green[500]} />
+                                {/* Stat pills */}
+                                <View style={{ flexDirection: 'row', gap: 8 }}>
+                                    {[
+                                        {
+                                            icon: PenLine,
+                                            value: loading ? null : (progress?.totalAnswered ?? 0),
+                                            label: 'Questões',
+                                            iconColor: colors.blue[400],
+                                        },
+                                        {
+                                            icon: CheckCircle2,
+                                            value: loading ? null : (progress?.totalCorrect ?? 0),
+                                            label: 'Acertos',
+                                            iconColor: colors.green[400],
+                                        },
+                                        {
+                                            icon: Target,
+                                            value: loading
+                                                ? null
+                                                : progress?.totalAnswered
+                                                  ? `${progress.totalAnswered - (progress.totalCorrect ?? 0)}`
+                                                  : '—',
+                                            label: 'Erros',
+                                            iconColor: colors.gold[400],
+                                        },
+                                    ].map(({ icon: Icon, value, label, iconColor }) => (
+                                        <View
+                                            key={label}
+                                            style={{
+                                                flex: 1,
+                                                alignItems: 'center',
+                                                paddingVertical: 8,
+                                                borderRadius: radii.sm,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.15)',
+                                            }}
+                                        >
+                                            <View style={{ marginBottom: 4 }}>
+                                                <Icon size={16} color={iconColor} />
+                                            </View>
+                                            {loading ? (
+                                                <View
+                                                    style={{
+                                                        height: 24,
+                                                        width: 40,
+                                                        borderRadius: 6,
+                                                        backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                                                    }}
+                                                />
+                                            ) : (
+                                                <Text
+                                                    style={{
+                                                        fontSize: 15,
+                                                        fontFamily: fonts.sansMedium,
+                                                        color: colors.text.primary,
+                                                    }}
+                                                >
+                                                    {value}
+                                                </Text>
+                                            )}
+                                            <Text
+                                                style={{
+                                                    fontSize: 11,
+                                                    fontFamily: fonts.sansMedium,
+                                                    color: '#BBBBBB',
+                                                    marginTop: 2,
+                                                }}
+                                            >
+                                                {label}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
                             </View>
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    fontFamily: fonts.sansBold,
-                                    color: colors.text.primary,
-                                }}
-                            >
-                                Pontos fortes
-                            </Text>
                         </View>
-                        <View className="gap-2">
-                            {fortes.map((t, i) => (
-                                <StaggerItem key={t.value} index={i} baseDelay={560} stagger={60}>
-                                    <TopicoChip t={t} variant="forte" />
-                                </StaggerItem>
-                            ))}
-                        </View>
-                    </View></FadeInSection>
-                )}
+                    </FadeInSection>
+                </View>
 
-                {/* Fracos */}
-                {hasData && fracos.length > 0 && (
-                    <FadeInSection delay={700}><View>
-                        <View className="flex-row items-center gap-2 mb-3">
-                            <View
-                                className="h-6 w-6 items-center justify-center rounded-md"
-                                style={{ backgroundColor: colors.red.glow }}
-                            >
-                                <TrendingDown size={14} color={colors.red[500]} />
-                            </View>
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    fontFamily: fonts.sansBold,
-                                    color: colors.text.primary,
-                                }}
-                            >
-                                Pontos a melhorar
-                            </Text>
-                        </View>
-                        <View className="gap-2">
-                            {fracos.map((t, i) => (
-                                <StaggerItem key={t.value} index={i} baseDelay={760} stagger={60}>
-                                    <TopicoChip t={t} variant="fraco" />
-                                </StaggerItem>
-                            ))}
-                        </View>
-                    </View></FadeInSection>
-                )}
-
-                {/* Empty state */}
-                {isEmpty && (
-                    <FadeInSection delay={200}><View
-                        className="items-center rounded-3xl p-8"
-                        style={{
-                            backgroundColor: colors.bg.card,
-                            borderWidth: 1,
-                            borderColor: colors.border.subtle,
-                        }}
-                    >
+                {/* ── Areas ── */}
+                <View style={{ marginBottom: 24 }}>
+                    <FadeInSection delay={80}>
                         <View
-                            className="h-16 w-16 items-center justify-center rounded-2xl"
                             style={{
-                                backgroundColor: colors.green.glow,
-                                borderWidth: 1,
-                                borderColor: colors.border.default,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginBottom: 12,
                             }}
                         >
-                            <BarChart3 size={32} color={colors.green[500]} />
-                        </View>
-                        <Text
-                            style={{
-                                fontSize: 15,
-                                fontFamily: fonts.sansBold,
-                                color: colors.text.primary,
-                                marginTop: 16,
-                            }}
-                        >
-                            Responda questoes para ver seu progresso!
-                        </Text>
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                fontFamily: fonts.sans,
-                                color: colors.text.muted,
-                                marginTop: 4,
-                                textAlign: 'center',
-                                lineHeight: 20,
-                            }}
-                        >
-                            Seus dados de desempenho por area aparecerao aqui.
-                        </Text>
-                        <Link href="/(tabs)/questions" asChild>
-                            <Pressable
-                                className="mt-5 flex-row items-center gap-2 rounded-xl px-5 py-2.5"
-                                style={{ backgroundColor: colors.green[600] }}
-                            >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                <View
+                                    style={{
+                                        width: 6,
+                                        height: 6,
+                                        borderRadius: 3,
+                                        backgroundColor: '#DFCC00',
+                                    }}
+                                />
                                 <Text
                                     style={{
                                         fontSize: 14,
-                                        fontFamily: fonts.sansBold,
-                                        color: '#fff',
+                                        fontFamily: fonts.sans,
+                                        color: '#BBBBBB',
+                                        letterSpacing: 0.2,
+                                        textTransform: 'uppercase',
                                     }}
                                 >
-                                    Praticar questões
+                                    Desempenho por area
                                 </Text>
-                                <ArrowRight size={16} color="#fff" />
-                            </Pressable>
-                        </Link>
-                    </View></FadeInSection>
+                            </View>
+                        </View>
+                        <View style={{ gap: 8 }}>
+                            {(progress?.areas ?? DEFAULT_AREAS).map((area, i) => (
+                                <StaggerItem key={area.value} index={i} baseDelay={160} stagger={80}>
+                                    <AreaCard area={area} loading={loading} />
+                                </StaggerItem>
+                            ))}
+                        </View>
+                    </FadeInSection>
+                </View>
+
+                {/* ── Fortes ── */}
+                {hasData && fortes.length > 0 && (
+                    <View style={{ marginBottom: 24 }}>
+                        <FadeInSection delay={500}>
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    marginBottom: 12,
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        width: 6,
+                                        height: 6,
+                                        borderRadius: 3,
+                                        backgroundColor: colors.green[500],
+                                    }}
+                                />
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontFamily: fonts.sans,
+                                        color: '#BBBBBB',
+                                        letterSpacing: 0.2,
+                                        textTransform: 'uppercase',
+                                    }}
+                                >
+                                    Pontos fortes
+                                </Text>
+                            </View>
+                            <View style={{ gap: 8 }}>
+                                {fortes.map((t, i) => (
+                                    <StaggerItem key={t.value} index={i} baseDelay={560} stagger={60}>
+                                        <TopicoChip t={t} variant="forte" />
+                                    </StaggerItem>
+                                ))}
+                            </View>
+                        </FadeInSection>
+                    </View>
+                )}
+
+                {/* ── Fracos ── */}
+                {hasData && fracos.length > 0 && (
+                    <View style={{ marginBottom: 24 }}>
+                        <FadeInSection delay={700}>
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    marginBottom: 12,
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        width: 6,
+                                        height: 6,
+                                        borderRadius: 3,
+                                        backgroundColor: colors.red[500],
+                                    }}
+                                />
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontFamily: fonts.sans,
+                                        color: '#BBBBBB',
+                                        letterSpacing: 0.2,
+                                        textTransform: 'uppercase',
+                                    }}
+                                >
+                                    Pontos a melhorar
+                                </Text>
+                            </View>
+                            <View style={{ gap: 8 }}>
+                                {fracos.map((t, i) => (
+                                    <StaggerItem key={t.value} index={i} baseDelay={760} stagger={60}>
+                                        <TopicoChip t={t} variant="fraco" />
+                                    </StaggerItem>
+                                ))}
+                            </View>
+                        </FadeInSection>
+                    </View>
+                )}
+
+                {/* ── Empty state ── */}
+                {isEmpty && (
+                    <FadeInSection delay={200}>
+                        <View
+                            style={{
+                                alignItems: 'center',
+                                borderRadius: 24,
+                                padding: 32,
+                                backgroundColor: 'rgba(0, 0, 0, 0.10)',
+                                borderWidth: 1,
+                                borderColor: 'rgba(255, 255, 255, 0.06)',
+                            }}
+                        >
+                            <View
+                                style={{
+                                    width: 64,
+                                    height: 64,
+                                    borderRadius: 32,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                                    borderWidth: 1,
+                                    borderColor: 'rgba(248, 250, 252, 0.14)',
+                                }}
+                            >
+                                <BarChart3 size={28} color={colors.green[500]} />
+                            </View>
+                            <Text
+                                style={{
+                                    fontSize: 16,
+                                    fontFamily: fonts.sansSemiBold,
+                                    color: colors.text.primary,
+                                    marginTop: 20,
+                                    textAlign: 'center',
+                                }}
+                            >
+                                Seu progresso aparece aqui
+                            </Text>
+                            <Text
+                                style={{
+                                    fontSize: 13,
+                                    fontFamily: fonts.sans,
+                                    color: colors.text.muted,
+                                    marginTop: 6,
+                                    textAlign: 'center',
+                                    lineHeight: 20,
+                                    maxWidth: 260,
+                                }}
+                            >
+                                Responda questões para ver seu desempenho por area e topico.
+                            </Text>
+                            <Link href="/(tabs)/questions" asChild>
+                                <Pressable
+                                    style={{
+                                        marginTop: 24,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: 8,
+                                        borderRadius: 20,
+                                        paddingHorizontal: 24,
+                                        paddingVertical: 14,
+                                        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(248, 250, 252, 0.16)',
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            fontFamily: fonts.sansMedium,
+                                            color: '#F9FAFB',
+                                            letterSpacing: 1,
+                                        }}
+                                    >
+                                        PRATICAR QUESTÕES
+                                    </Text>
+                                    <ArrowUpRight size={18} color="#FACC15" />
+                                </Pressable>
+                            </Link>
+                        </View>
+                    </FadeInSection>
                 )}
             </ScrollView>
         </SafeAreaView>

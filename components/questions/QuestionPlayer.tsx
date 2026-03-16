@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, Pressable, useWindowDimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { CheckCircle, XCircle, ChevronRight } from 'lucide-react-native';
@@ -30,7 +30,7 @@ export function QuestionPlayer({
         setAnswered(false);
     }, [question.year, question.index]);
 
-    function handleSelect(letter: string) {
+    const handleSelect = useCallback((letter: string) => {
         if (answered) return;
         const isCorrect =
             question.alternatives.find(a => a.letter === letter)?.isCorrect ??
@@ -38,7 +38,7 @@ export function QuestionPlayer({
         setSelected(letter);
         setAnswered(true);
         onAnswer(letter, isCorrect);
-    }
+    }, [answered, question.alternatives, onAnswer]);
 
     function getState(letter: string): OptionState {
         if (!answered) return 'idle';
@@ -56,14 +56,25 @@ export function QuestionPlayer({
             false);
     const correctLetter = question.alternatives.find(a => a.isCorrect)?.letter;
 
-    const contextHtml = question.context
-        ? question.context
-              .replace(
-                  /!\[([^\]]*)\]\(([^)]+)\)/g,
-                  '<img src="$2" alt="$1" />',
-              )
-              .replace(/\n/g, '<br />')
-        : null;
+    const contextHtml = useMemo(() => {
+        if (!question.context) return null;
+        return question.context
+            .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
+            .replace(/\n/g, '<br />');
+    }, [question.context]);
+
+    const htmlSource = useMemo(
+        () => contextHtml ? { html: contextHtml } : { html: '' },
+        [contextHtml],
+    );
+    const renderHtmlBaseStyle = useMemo(() => ({
+        color: colors.text.primary,
+        fontSize: 14,
+        lineHeight: 22,
+    }), []);
+    const renderHtmlTagsStyles = useMemo(() => ({
+        img: { marginVertical: 8, borderRadius: 8 },
+    }), []);
 
     return (
         <View className="gap-4 p-4 pb-8">
@@ -111,18 +122,9 @@ export function QuestionPlayer({
                     <View className="mt-3">
                         <RenderHtml
                             contentWidth={width - 64}
-                            source={{ html: contextHtml }}
-                            baseStyle={{
-                                color: colors.text.primary,
-                                fontSize: 14,
-                                lineHeight: 22,
-                            }}
-                            tagsStyles={{
-                                img: {
-                                    marginVertical: 8,
-                                    borderRadius: 8,
-                                },
-                            }}
+                            source={htmlSource}
+                            baseStyle={renderHtmlBaseStyle}
+                            tagsStyles={renderHtmlTagsStyles}
                         />
                     </View>
                 )}
@@ -205,7 +207,7 @@ export function QuestionPlayer({
                     style={{ backgroundColor: colors.green[600] }}
                 >
                     <Text className="text-sm font-bold text-white">
-                        Proxima questao
+                        Próxima questão
                     </Text>
                     <ChevronRight size={18} color="#fff" />
                 </Pressable>

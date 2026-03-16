@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { api } from '@/lib/api-client';
+import { createCachedHook } from './create-cached-hook';
 
 export interface PetData {
     nivel: number;
@@ -12,20 +12,15 @@ export interface PetData {
     acertosHoje: number;
 }
 
-interface UsePetReturn {
-    pet: PetData | null;
-    loading: boolean;
-}
-
-const FASE_EMOJI: Record<PetData['fase'], string> = {
-    semente: '🌱',
-    muda: '🌿',
-    planta: '🪴',
-    flor: '🌸',
-    especial: '🌳',
+export const FASE_EMOJI: Record<PetData['fase'], string> = {
+    semente: '\u{1F331}',
+    muda: '\u{1F33F}',
+    planta: '\u{1FAB4}',
+    flor: '\u{1F338}',
+    especial: '\u{1F333}',
 };
 
-const FASE_LABEL: Record<PetData['fase'], string> = {
+export const FASE_LABEL: Record<PetData['fase'], string> = {
     semente: 'Semente',
     muda: 'Muda',
     planta: 'Planta',
@@ -33,18 +28,13 @@ const FASE_LABEL: Record<PetData['fase'], string> = {
     especial: 'Especial',
 };
 
-export { FASE_EMOJI, FASE_LABEL };
+const { useHook, refresh } = createCachedHook<PetData>(
+    () => api.get<PetData>('/api/pet/me'),
+);
 
-export function usePet(): UsePetReturn {
-    const [pet, setPet] = useState<PetData | null>(null);
-    const [loading, setLoading] = useState(true);
+export const refreshPet = refresh;
 
-    useEffect(() => {
-        api.get<PetData>('/api/pet/me')
-            .then(data => setPet(data))
-            .catch(() => setPet(null))
-            .finally(() => setLoading(false));
-    }, []);
-
-    return { pet, loading };
+export function usePet() {
+    const { data, loading, refresh: r } = useHook();
+    return { pet: data, loading, refresh: r };
 }

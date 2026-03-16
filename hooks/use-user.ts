@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { api } from '@/lib/api-client';
+import { createCachedHook } from './create-cached-hook';
 
 export interface UserProfile {
     id: string;
@@ -11,21 +11,13 @@ export interface UserProfile {
     horasDisponiveisPorDia: number;
 }
 
-interface UseUserReturn {
-    user: UserProfile | null;
-    loading: boolean;
-}
+const { useHook, refresh } = createCachedHook<UserProfile>(
+    () => api.get<UserProfile>('/api/user/me'),
+);
 
-export function useUser(): UseUserReturn {
-    const [user, setUser] = useState<UserProfile | null>(null);
-    const [loading, setLoading] = useState(true);
+export const refreshUser = refresh;
 
-    useEffect(() => {
-        api.get<UserProfile>('/api/user/me')
-            .then(data => setUser(data))
-            .catch(() => setUser(null))
-            .finally(() => setLoading(false));
-    }, []);
-
-    return { user, loading };
+export function useUser() {
+    const { data, loading, refresh: r } = useHook();
+    return { user: data, loading, refresh: r };
 }

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,52 +7,36 @@ import {
     ArrowRight,
     Flame,
     Sprout,
-    Sparkles,
     Target,
     PenLine,
     ChevronRight,
-    FileText,
-    Globe,
-    FlaskConical,
-    Calculator,
 } from 'lucide-react-native';
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/use-pet';
 import { useProgress, type AreaStat } from '@/hooks/use-progress';
+import { getAreaConfig } from '@/theme/area-config';
 import { colors, fonts } from '@/theme/tokens';
 import { FadeInSection, StaggerItem, AnimatedBar, ScaleIn } from '@/components/AnimatedEntry';
 
 const FASE_MSG: Record<string, string> = {
-    semente: 'Cada questao faz seu Broto crescer. Comece agora!',
+    semente: 'Cada questão faz seu Broto crescer. Comece agora!',
     muda: 'Seu Broto esta brotando! Continue para chegar na proxima fase.',
     planta: 'Que planta linda! Voce esta progredindo muito bem.',
     flor: 'Incrivel — seu Broto esta florindo! Continue assim.',
     especial: 'Lendario! Voce alcancou o nivel especial.',
 };
 
-const AREA_ICONS: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
-    linguagens: FileText,
-    'ciencias-humanas': Globe,
-    'ciencias-natureza': FlaskConical,
-    matematica: Calculator,
-};
-
-const AREA_COLORS: Record<string, { solid: string; bg: string; text: string }> = {
-    linguagens: { solid: colors.blue[500], bg: 'rgba(43,164,184,0.08)', text: colors.blue[400] },
-    'ciencias-humanas': { solid: colors.amber[500], bg: 'rgba(229,150,14,0.08)', text: colors.amber[400] },
-    'ciencias-natureza': { solid: colors.green[500], bg: 'rgba(16,185,129,0.08)', text: colors.green[400] },
-    matematica: { solid: colors.violet[500], bg: 'rgba(155,109,204,0.08)', text: colors.violet[400] },
-};
-
 function FocusCard({ area }: { area: AreaStat }) {
-    const Icon = AREA_ICONS[area.value] ?? Sprout;
-    const areaColor = AREA_COLORS[area.value] ?? { solid: colors.green[500], bg: colors.green.glow, text: colors.green[400] };
+    const cfg = getAreaConfig(area.value);
+    const Icon = cfg.AltIcon;
+    const areaColor = { solid: cfg.color, bg: cfg.glow, text: cfg.textColor };
 
     return (
         <Link href="/(tabs)/questions" asChild>
             <Pressable
                 className="flex-row items-center gap-3 rounded-xl px-4 py-3.5"
                 style={{
-                    backgroundColor: areaColor.bg,
+                    // um pouco mais claro que os cards escuros padrão
+                    backgroundColor: 'rgba(0, 0, 0, 0.10)',
                     borderWidth: 1,
                     borderColor: areaColor.solid + '15',
                 }}
@@ -102,14 +87,20 @@ export default function StudyScreen() {
     const questoesHoje = pet?.questoesHoje ?? 0;
     const acertosHoje = pet?.acertosHoje ?? 0;
 
-    const areasParaFocar = (progress?.areas ?? [])
-        .filter(a => a.totalAnswered > 0)
-        .sort((a, b) => a.accuracyPct - b.accuracyPct)
-        .slice(0, 2);
+    const areasParaFocar = useMemo(
+        () => (progress?.areas ?? [])
+            .filter(a => a.totalAnswered > 0)
+            .sort((a, b) => a.accuracyPct - b.accuracyPct)
+            .slice(0, 2),
+        [progress?.areas],
+    );
 
-    const areasNaoIniciadas = (progress?.areas ?? [])
-        .filter(a => a.totalAnswered === 0)
-        .slice(0, 2);
+    const areasNaoIniciadas = useMemo(
+        () => (progress?.areas ?? [])
+            .filter(a => a.totalAnswered === 0)
+            .slice(0, 2),
+        [progress?.areas],
+    );
 
     const mostrarFoco = !loadingProgress && areasParaFocar.length > 0;
     const mostrarIniciar =
@@ -118,14 +109,14 @@ export default function StudyScreen() {
         areasNaoIniciadas.length > 0;
 
     return (
-        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bg.void }}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: '#02140D' }}>
             <ScrollView
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
             >
                 {/* Hero */}
                 <LinearGradient
-                    colors={[colors.green[900], colors.bg.deep, colors.bg.void]}
+                    colors={['#0D5B33', '#10261B', '#02140D']}
                     start={{ x: 0.5, y: 0 }}
                     end={{ x: 0.5, y: 1 }}
                     style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 28 }}
@@ -227,7 +218,7 @@ export default function StudyScreen() {
                     </View></ScaleIn>
                 </LinearGradient>
 
-                <View style={{ paddingHorizontal: 16, gap: 20, paddingBottom: 32 }}>
+                <View style={{ paddingHorizontal: 20, gap: 20, paddingBottom: 32 }}>
                     {/* Stats */}
                     <FadeInSection delay={200}><View className="flex-row gap-3">
                         {[
@@ -259,11 +250,12 @@ export default function StudyScreen() {
                         ].map(({ icon: Icon, value, label, iconColor, bgColor }) => (
                             <View
                                 key={label}
-                                className="flex-1 items-center rounded-2xl p-3"
+                                className="flex-1 items-center p-3"
                                 style={{
-                                    backgroundColor: colors.bg.card,
+                                    borderRadius: 16,
+                                    backgroundColor: 'rgba(0, 0, 0, 0.15)',
                                     borderWidth: 1,
-                                    borderColor: colors.border.subtle,
+                                    borderColor: 'rgba(255,255,255,0.06)',
                                 }}
                             >
                                 <View
@@ -274,8 +266,8 @@ export default function StudyScreen() {
                                 </View>
                                 <Text
                                     style={{
-                                        fontSize: 18,
-                                        fontFamily: fonts.sansBold,
+                                        fontSize: 15,
+                                        fontFamily: fonts.sansMedium,
                                         color: colors.text.primary,
                                     }}
                                 >
@@ -283,10 +275,11 @@ export default function StudyScreen() {
                                 </Text>
                                 <Text
                                     style={{
-                                        fontSize: 10,
-                                        fontFamily: fonts.sans,
+                                        fontSize: 11,
+                                        fontFamily: fonts.sansMedium,
                                         color: colors.text.muted,
-                                        marginTop: 1,
+                                        marginTop: 2,
+                                        textTransform: 'capitalize',
                                     }}
                                 >
                                     {label}
@@ -295,23 +288,51 @@ export default function StudyScreen() {
                         ))}
                     </View></FadeInSection>
 
-                    {/* CTA */}
+                    {/* CTA - alinhado ao botão da home */}
                     <FadeInSection delay={280}><Link href="/(tabs)/questions" asChild>
                         <Pressable
-                            className="w-full flex-row items-center justify-center gap-2 rounded-2xl py-4"
-                            style={{ backgroundColor: colors.green[600] }}
+                            style={{
+                                width: '100%',
+                                alignSelf: 'stretch',
+                            }}
                         >
-                            <Sparkles size={16} color="#fff" />
-                            <Text
+                            <View
                                 style={{
-                                    fontSize: 15,
-                                    fontFamily: fonts.sansBold,
-                                    color: '#fff',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: 20,
+                                    paddingVertical: 14,
+                                    paddingHorizontal: 20,
+                                    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                                    borderWidth: 1,
+                                    borderColor: 'rgba(248, 250, 252, 0.16)',
                                 }}
                             >
-                                Estudar para crescer
-                            </Text>
-                            <ArrowRight size={18} color="#fff" />
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontFamily: fonts.sansMedium,
+                                        color: '#FFFFFF',
+                                        letterSpacing: 0.8,
+                                        marginLeft: 8,
+                                    }}
+                                >
+                                    ESTUDAR PARA CRESCER
+                                </Text>
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontFamily: fonts.sansMedium,
+                                        color: '#FFFFFF',
+                                        letterSpacing: 0.8,
+                                        marginLeft: 8,
+                                    }}
+                                />
+                                <View style={{ marginLeft: 8 }}>
+                                    <ArrowRight size={18} color="#FACC15" />
+                                </View>
+                            </View>
                         </Pressable>
                     </Link></FadeInSection>
 
@@ -324,17 +345,17 @@ export default function StudyScreen() {
                                         width: 3,
                                         height: 14,
                                         borderRadius: 1.5,
-                                        backgroundColor: mostrarFoco ? colors.green[500] : colors.text.muted,
+                                        backgroundColor: '#DFCC00',
                                     }}
                                 />
                                 <Text
                                     style={{
                                         fontSize: 14,
-                                        fontFamily: fonts.sansBold,
+                                        fontFamily: fonts.sansMedium,
                                         color: colors.text.primary,
                                     }}
                                 >
-                                    {mostrarFoco ? 'Onde focar agora' : 'Por onde comecar?'}
+                                    {mostrarFoco ? 'Onde focar agora' : 'Por onde começar?'}
                                 </Text>
                             </View>
                             <View className="gap-2">
