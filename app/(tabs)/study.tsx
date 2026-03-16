@@ -1,8 +1,17 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withDelay,
+    withRepeat,
+    withSequence,
+    withTiming,
+    interpolate,
+} from 'react-native-reanimated';
 import {
     ArrowRight,
     Flame,
@@ -24,6 +33,73 @@ const FASE_MSG: Record<string, string> = {
     flor: 'Incrivel — seu Broto esta florindo! Continue assim.',
     especial: 'Lendario! Voce alcancou o nivel especial.',
 };
+
+// Fireflies ao redor do Broto (mesma lógica da splash)
+const STUDY_FIREFLIES = [
+    { x: 14, y: 12, s: 2.4, d: 0.3, t: 4.2, gold: false },
+    { x: 78, y: 10, s: 3, d: 1.1, t: 5.1, gold: true },
+    { x: 24, y: 32, s: 2, d: 0.7, t: 3.8, gold: false },
+    { x: 86, y: 38, s: 2.6, d: 2.0, t: 4.7, gold: false },
+    { x: 10, y: 46, s: 2.2, d: 1.6, t: 3.4, gold: true },
+    { x: 60, y: 18, s: 2.4, d: 0.9, t: 5.3, gold: false },
+    { x: 48, y: 54, s: 2.8, d: 2.7, t: 4.0, gold: true },
+];
+
+const FIREFLY_KEYFRAMES = {
+    progress: [0, 0.12, 0.45, 0.7, 0.9, 1],
+    opacity: [0, 0.9, 0.3, 0.85, 0.15, 0],
+    x: [0, 2, 8, -3, 5, 0],
+    y: [0, -4, -14, -20, -8, 0],
+    scale: [0.6, 1, 0.8, 1.1, 0.7, 0.6],
+};
+
+function StudyFirefly({ x, y, s, d, t, gold }: (typeof STUDY_FIREFLIES)[0]) {
+    const progress = useSharedValue(0);
+
+    React.useEffect(() => {
+        progress.value = withDelay(
+            d * 1000,
+            withRepeat(
+                withSequence(
+                    withTiming(1, { duration: t * 1000 }),
+                    withTiming(0, { duration: 0 }),
+                ),
+                -1,
+            ),
+        );
+    }, []);
+
+    const style = useAnimatedStyle(() => ({
+        opacity: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.opacity),
+        transform: [
+            { translateX: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.x) },
+            { translateY: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.y) },
+            { scale: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.scale) },
+        ],
+    }));
+
+    return (
+        <Animated.View
+            style={[
+                {
+                    position: 'absolute',
+                    left: `${x}%`,
+                    top: `${y}%`,
+                    width: s,
+                    height: s,
+                    borderRadius: s / 2,
+                    backgroundColor: gold ? '#fbbf24' : '#4ade80',
+                    shadowColor: gold ? '#fbbf24' : '#4ade80',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: s * 3,
+                    elevation: 4,
+                },
+                style,
+            ]}
+        />
+    );
+}
 
 function FocusCard({ area }: { area: AreaStat }) {
     const cfg = getAreaConfig(area.value);
@@ -135,8 +211,22 @@ export default function StudyScreen() {
                         </Text>
                     </View></FadeInSection>
 
-                    {/* Broto avatar */}
-                    <ScaleIn delay={100}><View className="items-center">
+                    {/* Broto avatar + fireflies */}
+                    <ScaleIn delay={100}><View style={{ alignItems: 'center', position: 'relative' }}>
+                        <View
+                            pointerEvents="none"
+                            style={{
+                                position: 'absolute',
+                                left: 0,
+                                right: 0,
+                                top: 0,
+                                bottom: 0,
+                            }}
+                        >
+                            {STUDY_FIREFLIES.map((f, i) => (
+                                <StudyFirefly key={i} {...f} />
+                            ))}
+                        </View>
                         <View
                             className="h-28 w-28 items-center justify-center rounded-3xl mb-4"
                             style={{
@@ -182,8 +272,8 @@ export default function StudyScreen() {
                         <View className="mt-4 w-full" style={{ maxWidth: 260 }}>
                             <AnimatedBar
                                 progress={loadingPet ? 0 : xpProgress}
-                                color={colors.green[500]}
-                                bgColor="rgba(0,0,0,0.25)"
+                                color="#DFCC00"
+                                bgColor="rgba(0,0,0,0.3)"
                                 height={10}
                                 delay={500}
                             />

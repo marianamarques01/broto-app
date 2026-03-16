@@ -125,12 +125,12 @@ const MissionCard = memo(function MissionCard({
                 {/* Content */}
                 <View style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}>
                     <Text
-                        numberOfLines={2}
+                        numberOfLines={1}
                         ellipsizeMode="tail"
                         style={{
-                            fontSize: 14,
-                            lineHeight: 21,
-                            fontFamily: fonts.sansSemiBold,
+                            fontSize: 13,
+                            lineHeight: 18,
+                            fontFamily: fonts.sansMedium,
                             color: mission.locked
                                 ? 'rgba(255,255,255,0.72)'
                                 : mission.done
@@ -280,7 +280,7 @@ function StartMissionsButton({
                             borderRadius: 20,
                             paddingVertical: 16,
                             paddingHorizontal: 20,
-                            backgroundColor: 'rgba(21, 21, 21, 0.9)',
+                            backgroundColor: '#0F0F0F',
                             borderWidth: 1,
                             borderColor: 'rgba(248, 250, 252, 0.08)',
                         }}
