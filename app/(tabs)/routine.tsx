@@ -1,5 +1,5 @@
-import { useRef, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { useRef, useEffect, useMemo, useCallback, useState } from 'react';
+import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -469,13 +469,13 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
                 <Link href="/(tabs)/questions" asChild>
                     <Pressable
                         style={({ pressed }) => ({
-                            width: '100%',
-                            alignSelf: 'stretch',
                             opacity: pressed ? 0.9 : 1,
                         })}
                     >
                         <View
                             style={{
+                                width: '100%',
+                                alignSelf: 'stretch',
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -633,8 +633,9 @@ function LinhaProximoDia({ dia, isLast }: { dia: DiaRotina; isLast: boolean }) {
 // ─── Main screen ─────────────────────────────────────────────────────────────
 export default function RoutineScreen() {
     const scrollRef = useRef<ScrollView>(null);
-    const { user, loading: loadingUser } = useUser();
-    const { progress, loading: loadingProgress } = useProgress();
+    const { user, loading: loadingUser, refresh: refreshUser } = useUser();
+    const { progress, loading: loadingProgress, refresh: refreshProgress } = useProgress();
+    const [refreshing, setRefreshing] = useState(false);
 
     const loading = loadingUser || loadingProgress;
     const horasPorDia = user?.horasDisponiveisPorDia ?? 2;
@@ -657,6 +658,14 @@ export default function RoutineScreen() {
             scrollRef.current.scrollTo({ y: 0, animated: false });
         }
     }, [loading]);
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        refreshUser();
+        refreshProgress();
+        const t = setTimeout(() => setRefreshing(false), 800);
+        return () => clearTimeout(t);
+    }, [refreshUser, refreshProgress]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#02140D' }}>
@@ -712,6 +721,15 @@ export default function RoutineScreen() {
             <ScrollView
                 ref={scrollRef}
                 style={{ flex: 1 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={colors.green[500]}
+                        colors={[colors.green[500]]}
+                        progressBackgroundColor="#031A11"
+                    />
+                }
                 contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
             >
@@ -870,9 +888,6 @@ export default function RoutineScreen() {
                                         <Link href="/onboarding" asChild>
                                             <Pressable
                                                 style={({ pressed }) => ({
-                                                    paddingHorizontal: 4,
-                                                    paddingVertical: 2,
-                                                    borderRadius: 999,
                                                     opacity: pressed ? 0.7 : 1,
                                                 })}
                                             >
@@ -883,6 +898,9 @@ export default function RoutineScreen() {
                                                         color: colors.green[400],
                                                         textTransform: 'uppercase',
                                                         letterSpacing: 0.6,
+                                                        paddingHorizontal: 4,
+                                                        paddingVertical: 2,
+                                                        borderRadius: 999,
                                                     }}
                                                     numberOfLines={1}
                                                 >

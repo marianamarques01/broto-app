@@ -99,16 +99,22 @@ Os JSONs (`areas.json`, `exams.json`, `topics/*.json`, questões por ano) estão
 
 `usePet`, `useProgress`, `useUser` fazem fetch uma única vez no mount. Após responder questões ou completar onboarding, os dados ficam stale. Falta:
 
-- Refetch ao voltar para a tela (`useFocusEffect`)
-- Ou um mecanismo de invalidation (callback de refetch exportado)
+- ✅ Refetch ao voltar para a tela (`useFocusEffect`) em `usePet`, `useProgress`, `useUser`
+- ✅ Invalidation (callbacks `refreshPet`, `refreshProgress`, `refreshUser`) acionados após mutações (responder questão, salvar onboarding, atualizar avatar)
 
 #### C. Missões diárias não persistem estado real
 
 As missões na Home são derivadas de `questoesHoje` (total global), mas não há lógica de "3 questões DE Matemática" vs "2 DE Linguagens". A missão 1 se completa com quaisquer 3 questões. **Falta vincular missão → área.**
 
+✅ Implementado vínculo missão → área com persistência diária local (AsyncStorage):
+- Cada resposta registra progresso do dia por `areaKey`
+- Home passa a completar as missões por contagem/acerto **da área específica**
+
 #### D. Sem tratamento de token expirado
 
 O `api-client.ts` injeta Bearer token, mas não trata 401 (redirect to login). Se o token expirar durante uso, as chamadas falham silenciosamente.
+
+✅ Tratamento de 401 implementado no `api-client.ts`: ao receber `401`, faz `signOut()` e redireciona para `/(auth)/login` (com proteção contra múltiplos redirects).
 
 ---
 
@@ -118,13 +124,17 @@ O `api-client.ts` injeta Bearer token, mas não trata 401 (redirect to login). S
 
 Já corrigido na Home e Questions, mas falta auditar: `study.tsx`, `progress.tsx`, `routine.tsx`, `login.tsx`, `signup.tsx`. Qualquer `Pressable` com `style={({ pressed }) => ({...})}` que tenha `borderRadius`/`backgroundColor`/`flexDirection` vai quebrar no device.
 
+✅ Auditoria concluída:
+- `routine.tsx`: removido `borderRadius/padding/width` do `style` function (ficou só `opacity`)
+- `login.tsx` e `signup.tsx`: `ShimmerButton` não usa mais `style` function (usa `onPressIn/onPressOut` + `style` estático)
+
 #### F. Signup.tsx é o maior arquivo (1283 linhas)
 
 Mistura lógica de formulário, animações, upload de imagem, validação. Deveria ser quebrado em componentes menores.
 
 #### G. Sem pull-to-refresh
 
-Nenhuma ScrollView tem `refreshControl`. O usuário não tem como atualizar dados manualmente.
+✅ Implementado `refreshControl` (pull-to-refresh) nas tabs principais: Home, Study, Progress, Routine.
 
 #### H. Sem loading skeleton na Home
 

@@ -1,8 +1,8 @@
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useMemo, useCallback, memo } from 'react';
+import { useMemo, useCallback, memo, useState, useEffect } from 'react';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -25,6 +25,7 @@ import { BrotoLogo } from '@/components/BrotoLogo';
 import { AREA_CONFIG, getAreaConfig } from '@/theme/area-config';
 import { colors, fonts, radii } from '@/theme/tokens';
 import { AnimatedBar, FadeInSection } from '@/components/AnimatedEntry';
+import { getDailyMissionsState, type DailyMissionsState } from '@/lib/missions/daily-missions';
 
 const DEFAULT_AREAS = ['matematica', 'linguagens', 'ciencias-humanas'];
 
@@ -310,8 +311,10 @@ function StartMissionsButton({
 export default function HomeScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
-    const { pet, loading } = usePet();
-    const { progress } = useProgress();
+    const { pet, loading, refresh: refreshPet } = usePet();
+    const { progress, refresh: refreshProgress } = useProgress();
+    const [refreshing, setRefreshing] = useState(false);
+    const [daily, setDaily] = useState<DailyMissionsState | null>(null);
 
     const xp = pet?.xp ?? 0;
     const xpInLevel = xp % 100;
@@ -322,6 +325,18 @@ export default function HomeScreen() {
     const acertosHoje = pet?.acertosHoje ?? 0;
     const accuracyPct =
         questoesHoje > 0 ? Math.round((acertosHoje / questoesHoje) * 100) : 0;
+
+    useEffect(() => {
+        let alive = true;
+        getDailyMissionsState()
+            .then(state => {
+                if (alive) setDaily(state);
+            })
+            .catch(() => {});
+        return () => {
+            alive = false;
+        };
+    }, [pet?.questoesHoje, pet?.acertosHoje]);
 
     // Derive missions from progress (worst areas first) — memoized
     const missions = useMemo(() => {
@@ -340,13 +355,21 @@ export default function HomeScreen() {
         const areaLabel = (key: string) =>
             AREA_CONFIG[key]?.label ?? 'Questões';
 
+        const areaAnswered = (key: string) => daily?.byArea?.[key]?.answered ?? 0;
+        const areaCorrect = (key: string) => daily?.byArea?.[key]?.correct ?? 0;
+        const areaAccuracy = (key: string) => {
+            const a = areaAnswered(key);
+            if (a === 0) return null;
+            return Math.round((areaCorrect(key) / a) * 100);
+        };
+
         return [
             {
                 title: `3 questões de ${areaLabel(missionAreas[0])}`,
                 subtitle: 'Area com maior oportunidade',
                 xp: 30,
                 areaKey: missionAreas[0],
-                done: questoesHoje >= 3,
+                done: areaAnswered(missionAreas[0]) >= 3,
                 locked: false,
             },
             {
@@ -354,19 +377,21 @@ export default function HomeScreen() {
                 subtitle: 'Continue progredindo',
                 xp: 20,
                 areaKey: missionAreas[1],
-                done: questoesHoje >= 5,
-                locked: questoesHoje < 3,
+                done: areaAnswered(missionAreas[1]) >= 2,
+                locked: areaAnswered(missionAreas[0]) < 3,
             },
             {
                 title: 'Atingir 70% de acerto',
-                subtitle: `Acerto atual: ${questoesHoje > 0 ? accuracyPct + '%' : '\u2014'}`,
+                subtitle: `Acerto atual: ${areaAccuracy(missionAreas[2]) !== null ? areaAccuracy(missionAreas[2]) + '%' : '\u2014'}`,
                 xp: 50,
                 areaKey: missionAreas[2],
-                done: questoesHoje >= 5 && accuracyPct >= 70,
-                locked: questoesHoje < 5,
+                done:
+                    (areaAnswered(missionAreas[2]) >= 5) &&
+                    (areaAccuracy(missionAreas[2]) ?? 0) >= 70,
+                locked: areaAnswered(missionAreas[2]) < 5,
             },
         ] satisfies Mission[];
-    }, [progress?.areas, questoesHoje, accuracyPct]);
+    }, [progress?.areas, daily]);
 
     const doneMissions = useMemo(
         () => missions.filter((m) => m.done).length,
@@ -377,6 +402,15 @@ export default function HomeScreen() {
         () => router.push('/(tabs)/questions'),
         [router],
     );
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        refreshPet();
+        refreshProgress();
+        getDailyMissionsState().then(setDaily).catch(() => {});
+        const t = setTimeout(() => setRefreshing(false), 800);
+        return () => clearTimeout(t);
+    }, [refreshPet, refreshProgress]);
 
     // Stats values — memoized
     const statsValues = useMemo(() => [
@@ -435,6 +469,15 @@ export default function HomeScreen() {
 
             <ScrollView
                 style={{ flex: 1 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={colors.green[500]}
+                        colors={[colors.green[500]]}
+                        progressBackgroundColor="#031A11"
+                    />
+                }
                 contentContainerStyle={{
                     paddingHorizontal: 20,
                     paddingTop: 16,

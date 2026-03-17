@@ -411,6 +411,7 @@ function ShimmerButton({
     loading: boolean;
     label: string;
 }) {
+    const [isPressed, setIsPressed] = useState(false);
     const shimmerX = useSharedValue(-1);
 
     useEffect(() => {
@@ -439,9 +440,11 @@ function ShimmerButton({
         <Pressable
             onPress={onPress}
             disabled={loading}
-            style={({ pressed }) => [
+            onPressIn={() => setIsPressed(true)}
+            onPressOut={() => setIsPressed(false)}
+            style={[
                 styles.submitBtn,
-                pressed && styles.submitBtnPressed,
+                isPressed && styles.submitBtnPressed,
                 loading && styles.submitBtnDisabled,
             ]}
         >

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client';
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import { router } from 'expo-router';
 
 export class ApiError extends Error {
     status: number;
@@ -19,6 +20,22 @@ function pathToFunctionName(path: string): string {
 }
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT';
+
+let handlingUnauthorized = false;
+
+async function handleUnauthorizedOnce() {
+    if (handlingUnauthorized) return;
+    handlingUnauthorized = true;
+    try {
+        const supabase = createClient();
+        await supabase.auth.signOut().catch(() => {});
+        router.replace('/(auth)/login');
+    } finally {
+        setTimeout(() => {
+            handlingUnauthorized = false;
+        }, 2000);
+    }
+}
 
 async function invoke<T>(
     path: string,
@@ -70,6 +87,9 @@ async function invoke<T>(
                 (body as { error?: string })?.error ??
                 (body as { message?: string })?.message ??
                 e.message;
+            if (res.status === 401) {
+                handleUnauthorizedOnce().catch(() => {});
+            }
             throw new ApiError(msg, res.status, body);
         }
         if (e instanceof ApiError) throw e;

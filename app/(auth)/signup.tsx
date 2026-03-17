@@ -32,6 +32,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { createClient } from '@/lib/supabase/client';
 import { api } from '@/lib/api-client';
+import { refreshUser } from '@/hooks/use-user';
 import { colors, fonts, fontSize, spacing } from '@/theme/tokens';
 import { HeroGlowSvg } from '@/components/HeroGlowSvg';
 
@@ -525,6 +526,7 @@ function ShimmerButton({
     loading: boolean;
     label: string;
 }) {
+    const [isPressed, setIsPressed] = useState(false);
     const shimmerX = useSharedValue(-1);
 
     useEffect(() => {
@@ -553,9 +555,11 @@ function ShimmerButton({
         <Pressable
             onPress={onPress}
             disabled={loading}
-            style={({ pressed }) => [
+            onPressIn={() => setIsPressed(true)}
+            onPressOut={() => setIsPressed(false)}
+            style={[
                 styles.submitBtn,
-                pressed && styles.submitBtnPressed,
+                isPressed && styles.submitBtnPressed,
                 loading && styles.submitBtnDisabled,
             ]}
         >
@@ -720,6 +724,7 @@ export default function SignupScreen() {
                     const imageUrl = await uploadAvatar(result.userId);
                     if (imageUrl) {
                         await api.patch('/api/user/profile', { imageUrl });
+                        refreshUser();
                     }
                 } catch {}
             }

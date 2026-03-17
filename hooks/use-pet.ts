@@ -1,5 +1,7 @@
 import { api } from '@/lib/api-client';
 import { createCachedHook } from './create-cached-hook';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 
 export interface PetData {
     nivel: number;
@@ -36,5 +38,10 @@ export const refreshPet = refresh;
 
 export function usePet() {
     const { data, loading, refresh: r } = useHook();
+    useFocusEffect(
+        useCallback(() => {
+            if (data !== null) r();
+        }, [data, r]),
+    );
     return { pet: data, loading, refresh: r };
 }

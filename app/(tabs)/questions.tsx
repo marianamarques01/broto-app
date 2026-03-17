@@ -267,8 +267,8 @@ export default function QuestionsScreen() {
             total: s.total + 1,
         }));
         const questionId = getQuestionId(activeQuestion!);
-        submitAnswer({ questionId, isCorrect }).catch(() => {});
-    }, [activeQuestion]);
+        submitAnswer({ questionId, isCorrect, areaKey: selectedArea }).catch(() => {});
+    }, [activeQuestion, selectedArea]);
 
     const handleNext = useCallback(() => {
         const nextIdx = questionIdx + 1;

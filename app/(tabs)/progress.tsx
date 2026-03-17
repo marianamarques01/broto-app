@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { useMemo, useCallback, useState } from 'react';
+import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -218,8 +218,9 @@ const DEFAULT_AREAS: AreaStat[] = [
 ];
 
 export default function ProgressScreen() {
-    const { progress, loading } = useProgress();
+    const { progress, loading, refresh: refreshProgress } = useProgress();
     const insets = useSafeAreaInsets();
+    const [refreshing, setRefreshing] = useState(false);
 
     const hasData = !loading && progress !== null && progress.totalAnswered > 0;
     const isEmpty =
@@ -237,6 +238,13 @@ export default function ProgressScreen() {
     const accuracyPct = progress?.totalAnswered
         ? progress.accuracyPct
         : 0;
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        refreshProgress();
+        const t = setTimeout(() => setRefreshing(false), 800);
+        return () => clearTimeout(t);
+    }, [refreshProgress]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#02140D' }}>
@@ -268,6 +276,15 @@ export default function ProgressScreen() {
 
             <ScrollView
                 style={{ flex: 1 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={colors.green[500]}
+                        colors={[colors.green[500]]}
+                        progressBackgroundColor="#031A11"
+                    />
+                }
                 contentContainerStyle={{
                     paddingHorizontal: 20,
                     paddingTop: 16,

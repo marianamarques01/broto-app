@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import React, { useMemo, useCallback, useState } from 'react';
+import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -152,8 +152,9 @@ function FocusCard({ area }: { area: AreaStat }) {
 }
 
 export default function StudyScreen() {
-    const { pet, loading: loadingPet } = usePet();
-    const { progress, loading: loadingProgress } = useProgress();
+    const { pet, loading: loadingPet, refresh: refreshPet } = usePet();
+    const { progress, loading: loadingProgress, refresh: refreshProgress } = useProgress();
+    const [refreshing, setRefreshing] = useState(false);
 
     const fase = pet?.fase ?? 'semente';
     const nivel = pet?.nivel ?? 1;
@@ -184,11 +185,28 @@ export default function StudyScreen() {
         areasParaFocar.length === 0 &&
         areasNaoIniciadas.length > 0;
 
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        refreshPet();
+        refreshProgress();
+        const t = setTimeout(() => setRefreshing(false), 800);
+        return () => clearTimeout(t);
+    }, [refreshPet, refreshProgress]);
+
     return (
         <SafeAreaView className="flex-1" style={{ backgroundColor: '#02140D' }}>
             <ScrollView
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={colors.green[500]}
+                        colors={[colors.green[500]]}
+                        progressBackgroundColor="#031A11"
+                    />
+                }
             >
                 {/* Hero */}
                 <LinearGradient

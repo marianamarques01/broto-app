@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
 import { api, ApiError } from '@/lib/api-client';
+import { refreshUser } from '@/hooks/use-user';
 import { colors } from '@/theme/tokens';
 
 export default function OnboardingScreen() {
@@ -25,6 +26,7 @@ export default function OnboardingScreen() {
 
     async function saveProfile(body: Record<string, unknown>) {
         await api.patch('/api/user/profile', body);
+        refreshUser();
         router.replace('/(tabs)');
     }
 
