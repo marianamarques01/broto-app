@@ -1,0 +1,28 @@
+### Expo / React Native (managed)
+.expo/
+.expo-shared/
+web-build/
+
+### Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+### Builds / artifacts
+dist/
+coverage/
+
+### Env files
+.env
+.env.*.local
+
+### iOS (ignore on managed workflow)
+ios/
+
+### Android (ignore on managed workflow)
+android/
+
+### macOS
+.DS_Store
