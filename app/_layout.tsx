@@ -18,6 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/hooks/use-auth';
+import { TenantProvider } from '@/contexts/TenantContext';
 import { colors, fonts, fontSize, spacing } from '@/theme/tokens';
 import { CentralGlowSvg } from '@/components/HeroGlowSvg';
 import {
@@ -340,7 +341,7 @@ export default function RootLayout() {
     }, [status, segments, router, splashVisible]);
 
     return (
-        <>
+        <TenantProvider>
             <Head>
                 <title>{'broto \u2014 estude & flores\u00e7a'}</title>
             </Head>
@@ -351,6 +352,6 @@ export default function RootLayout() {
                 <Stack.Screen name="onboarding" />
             </Stack>
             <AnimatedSplash visible={splashVisible} />
-        </>
+        </TenantProvider>
     );
 }

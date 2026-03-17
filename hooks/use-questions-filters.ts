@@ -6,6 +6,7 @@ import type {
     Question,
     QuestionsResponse,
 } from '@/lib/types/questions';
+import { useTenant } from '@/hooks/use-tenant';
 
 const QUESTIONS_LIMIT = 10;
 const IDIOMAS_QUESTIONS_LIMIT = 5;
@@ -28,12 +29,22 @@ const IDIOMAS_TOPIC: Topico = {
     label: 'Idiomas',
 };
 
-// Igual ao desktop PWA: se tiver URL do app (PWA), busca os JSONs de lá (public/). Senão, usa Supabase Storage.
-const BASE_URL = process.env.EXPO_PUBLIC_QUESTIONS_BASE_URL
-    ? process.env.EXPO_PUBLIC_QUESTIONS_BASE_URL.replace(/\/$/, '')
-    : process.env.EXPO_PUBLIC_SUPABASE_URL
-      ? `${process.env.EXPO_PUBLIC_SUPABASE_URL}/storage/v1/object/public/static`
-      : '';
+function getBaseUrl(tenantSlug?: string | null): string {
+    // 1) Se tiver URL do app (PWA), busca os JSONs de lá (public/) — pode ser multi-tenant via path.
+    if (process.env.EXPO_PUBLIC_QUESTIONS_BASE_URL) {
+        const base = process.env.EXPO_PUBLIC_QUESTIONS_BASE_URL.replace(/\/$/, '');
+        return tenantSlug ? `${base}/${tenantSlug}` : base;
+    }
+
+    // 2) Fallback: Supabase Storage bucket `static` (recomendado no mobile).
+    // Estrutura esperada para multi-tenant: `static/<tenant-slug>/...`
+    if (process.env.EXPO_PUBLIC_SUPABASE_URL) {
+        const supabaseBase = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/storage/v1/object/public/static`;
+        return tenantSlug ? `${supabaseBase}/${tenantSlug}` : supabaseBase;
+    }
+
+    return '';
+}
 
 /** Mensagem amigável para erros de rede (NetworkError, fetch failed, etc.). */
 function normalizeNetworkErrorMessage(err: unknown, defaultMsg: string): string {
@@ -44,7 +55,6 @@ function normalizeNetworkErrorMessage(err: unknown, defaultMsg: string): string 
     if (!isNetworkError) return raw || defaultMsg;
 
     const isLocalhost =
-        /localhost|127\.0\.0\.1/i.test(BASE_URL || '') ||
         /localhost|127\.0\.0\.1/i.test(process.env.EXPO_PUBLIC_QUESTIONS_BASE_URL || '');
     if (isLocalhost) {
         return 'Não foi possível conectar ao servidor. No simulador ou dispositivo, use o IP da sua máquina (ex: http://192.168.x.x:3000) no .env em vez de localhost.';
@@ -63,38 +73,41 @@ interface ExamDetails {
     }>;
 }
 
-let topicMappingCache: Record<string, string> | null = null;
+const topicMappingCache = new Map<string, Record<string, string>>();
 
-async function loadTopicMapping(): Promise<Record<string, string>> {
-    if (topicMappingCache) return topicMappingCache;
-    const res = await fetch(`${BASE_URL}/data/question-topic-mapping.json`);
+async function loadTopicMapping(baseUrl: string): Promise<Record<string, string>> {
+    if (topicMappingCache.has(baseUrl)) return topicMappingCache.get(baseUrl)!;
+    const res = await fetch(`${baseUrl}/data/question-topic-mapping.json`);
     if (!res.ok) return {};
     const data = (await res.json()) as { mapping?: Record<string, string> };
-    topicMappingCache = data?.mapping && typeof data.mapping === 'object' ? data.mapping : {};
-    return topicMappingCache;
+    const mapping =
+        data?.mapping && typeof data.mapping === 'object' ? data.mapping : {};
+    topicMappingCache.set(baseUrl, mapping);
+    return mapping;
 }
 
-const examDetailsCache = new Map<number, ExamDetails>();
+const examDetailsCache = new Map<string, ExamDetails>();
 
-async function loadExamDetails(year: number): Promise<ExamDetails | null> {
-    if (examDetailsCache.has(year)) return examDetailsCache.get(year)!;
-    const res = await fetch(`${BASE_URL}/${year}/details.json`);
+async function loadExamDetails(baseUrl: string, year: number): Promise<ExamDetails | null> {
+    const key = `${baseUrl}::${year}`;
+    if (examDetailsCache.has(key)) return examDetailsCache.get(key)!;
+    const res = await fetch(`${baseUrl}/${year}/details.json`);
     if (!res.ok) return null;
     const data = (await res.json()) as ExamDetails;
     if (!data || !Array.isArray(data.questions)) return null;
-    examDetailsCache.set(year, data);
+    examDetailsCache.set(key, data);
     return data;
 }
 
-async function fetchAreas(): Promise<Area[]> {
-    const res = await fetch(`${BASE_URL}/areas.json`);
+async function fetchAreas(baseUrl: string): Promise<Area[]> {
+    const res = await fetch(`${baseUrl}/areas.json`);
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : [];
 }
 
-async function fetchExams(): Promise<Exam[]> {
-    const res = await fetch(`${BASE_URL}/exams.json`);
+async function fetchExams(baseUrl: string): Promise<Exam[]> {
+    const res = await fetch(`${baseUrl}/exams.json`);
     if (!res.ok) return [];
     const data = await res.json();
     if (!Array.isArray(data)) return [];
@@ -106,24 +119,25 @@ async function fetchExams(): Promise<Exam[]> {
         .filter(e => e.year >= EXAM_YEAR_MIN && e.year <= EXAM_YEAR_MAX);
 }
 
-async function fetchTopics(areaValue: string): Promise<Topico[]> {
-    const res = await fetch(`${BASE_URL}/topics/${areaValue}.json`);
+async function fetchTopics(baseUrl: string, areaValue: string): Promise<Topico[]> {
+    const res = await fetch(`${baseUrl}/topics/${areaValue}.json`);
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : [];
 }
 
 async function fetchQuestionDetail(
+    baseUrl: string,
     year: number,
     index: number,
     language?: string | null,
 ): Promise<Question | null> {
     const paths = language
         ? [
-              `${BASE_URL}/${year}/questions/${index}-${language}/details.json`,
-              `${BASE_URL}/${year}/questions/${index}/details.json`,
+              `${baseUrl}/${year}/questions/${index}-${language}/details.json`,
+              `${baseUrl}/${year}/questions/${index}/details.json`,
           ]
-        : [`${BASE_URL}/${year}/questions/${index}/details.json`];
+        : [`${baseUrl}/${year}/questions/${index}/details.json`];
 
     for (const path of paths) {
         const res = await fetch(path);
@@ -154,6 +168,7 @@ async function fetchQuestionDetail(
 }
 
 interface SearchParams {
+    baseUrl: string;
     area: string;
     year?: string;
     topicoId?: string;
@@ -165,12 +180,12 @@ interface SearchParams {
 async function searchQuestions(
     params: SearchParams,
 ): Promise<QuestionsResponse> {
-    const { area, year, topicoId, language, limit = QUESTIONS_LIMIT } = params;
+    const { baseUrl, area, year, topicoId, language, limit = QUESTIONS_LIMIT } = params;
 
     const [exams, topicMapping] = await Promise.all([
-        fetchExams(),
+        fetchExams(baseUrl),
         topicoId && topicoId !== IDIOMAS_TOPIC_ID
-            ? loadTopicMapping()
+            ? loadTopicMapping(baseUrl)
             : Promise.resolve(null),
     ]);
 
@@ -194,7 +209,7 @@ async function searchQuestions(
     const allRefs: QuestionRef[] = [];
 
     for (const y of yearsToSearch) {
-        const examDetails = await loadExamDetails(y);
+        const examDetails = await loadExamDetails(baseUrl, y);
         if (!examDetails) continue;
 
         for (const q of examDetails.questions) {
@@ -227,7 +242,7 @@ async function searchQuestions(
 
     const questions = await Promise.all(
         slice.map(ref =>
-            fetchQuestionDetail(ref.year, ref.index, ref.language),
+            fetchQuestionDetail(baseUrl, ref.year, ref.index, ref.language),
         ),
     );
 
@@ -263,6 +278,8 @@ interface QuestionsFiltersActions {
 
 export function useQuestionsFilters(): QuestionsFiltersState &
     QuestionsFiltersActions {
+    const { tenant } = useTenant();
+    const baseUrl = getBaseUrl(tenant?.slug ?? null);
     const [areas, setAreas] = useState<Area[]>([]);
     const [topicos, setTopicos] = useState<Topico[]>([]);
     const [exams, setExams] = useState<Exam[]>([]);
@@ -283,8 +300,8 @@ export function useQuestionsFilters(): QuestionsFiltersState &
         setError(null);
         try {
             const [areasData, examsData] = await Promise.all([
-                fetchAreas(),
-                fetchExams(),
+                fetchAreas(baseUrl),
+                fetchExams(baseUrl),
             ]);
             setAreas(areasData);
             setExams(examsData);
@@ -293,7 +310,7 @@ export function useQuestionsFilters(): QuestionsFiltersState &
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [baseUrl]);
 
     useEffect(() => {
         loadInitialData();
@@ -307,7 +324,7 @@ export function useQuestionsFilters(): QuestionsFiltersState &
             setSelectedLanguage('');
             return;
         }
-        fetchTopics(selectedArea)
+        fetchTopics(baseUrl, selectedArea)
             .then(data => {
                 const list =
                     selectedArea === LINGUAGENS_AREA_VALUE
@@ -322,7 +339,7 @@ export function useQuestionsFilters(): QuestionsFiltersState &
             });
         setSelectedTopico('');
         setSelectedLanguage('');
-    }, [selectedArea]);
+    }, [selectedArea, baseUrl]);
 
     const isIdiomasTopicSelected = selectedTopico === IDIOMAS_TOPIC_ID;
 
@@ -348,6 +365,7 @@ export function useQuestionsFilters(): QuestionsFiltersState &
                 const results = await Promise.all(
                     langs.map(lang =>
                         searchQuestions({
+                            baseUrl,
                             area: selectedArea,
                             year: selectedYear || undefined,
                             language: lang,
@@ -360,6 +378,7 @@ export function useQuestionsFilters(): QuestionsFiltersState &
                 setQuestions(merged);
             } else {
                 const result = await searchQuestions({
+                    baseUrl,
                     area: selectedArea,
                     year: selectedYear || undefined,
                     topicoId: selectedTopico || undefined,
@@ -379,6 +398,7 @@ export function useQuestionsFilters(): QuestionsFiltersState &
             })
             .finally(() => setLoadingQuestions(false));
     }, [
+        baseUrl,
         selectedArea,
         selectedYear,
         selectedTopico,
@@ -403,6 +423,7 @@ export function useQuestionsFilters(): QuestionsFiltersState &
                           : ['ingles', 'espanhol']
                       ).map(lang =>
                           searchQuestions({
+                              baseUrl,
                               area: selectedArea,
                               year: selectedYear || undefined,
                               language: lang,
@@ -413,6 +434,7 @@ export function useQuestionsFilters(): QuestionsFiltersState &
                       setQuestions(results.flatMap(r => r.questions)),
                   )
                 : searchQuestions({
+                      baseUrl,
                       area: selectedArea,
                       year: selectedYear || undefined,
                       topicoId: selectedTopico || undefined,
@@ -428,6 +450,7 @@ export function useQuestionsFilters(): QuestionsFiltersState &
             }).finally(() => setLoadingQuestions(false));
         }
     }, [
+        baseUrl,
         areas.length,
         loadInitialData,
         selectedArea,
