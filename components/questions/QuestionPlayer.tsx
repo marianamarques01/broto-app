@@ -82,10 +82,10 @@ export function QuestionPlayer({
             {totalQuestions != null && questionNumber != null && (
                 <View className="gap-2">
                     <View className="flex-row items-center justify-between">
-                        <Text className="text-xs text-muted-foreground">
+                        <Text className="text-xs" style={{ color: colors.text.muted }}>
                             Questao {questionNumber} de {totalQuestions}
                         </Text>
-                        <Text className="text-xs text-muted-foreground">
+                        <Text className="text-xs" style={{ color: colors.text.muted }}>
                             {question.discipline
                                 ? `${question.discipline} · `
                                 : ''}
@@ -115,7 +115,10 @@ export function QuestionPlayer({
                     backgroundColor: colors.bg.card,
                 }}
             >
-                <Text className="text-sm font-semibold leading-relaxed text-foreground">
+                <Text
+                    className="text-sm font-semibold leading-relaxed"
+                    style={{ color: colors.text.primary }}
+                >
                     {question.title}
                 </Text>
                 {contextHtml && (
@@ -184,7 +187,10 @@ export function QuestionPlayer({
                                 : 'Resposta incorreta'}
                         </Text>
                         {!isCorrect && correctLetter && (
-                            <Text className="mt-0.5 text-xs text-muted-foreground">
+                            <Text
+                                className="mt-0.5 text-xs"
+                                style={{ color: colors.text.muted }}
+                            >
                                 A alternativa correta e a{' '}
                                 <Text
                                     className="font-bold"
@@ -221,10 +227,16 @@ export function QuestionPlayer({
                         backgroundColor: colors.green.glow,
                     }}
                 >
-                    <Text className="text-center text-sm font-semibold text-foreground">
+                    <Text
+                        className="text-center text-sm font-semibold"
+                        style={{ color: colors.text.primary }}
+                    >
                         Sessao concluida! 🌱
                     </Text>
-                    <Text className="mt-1 text-center text-xs text-muted-foreground">
+                    <Text
+                        className="mt-1 text-center text-xs"
+                        style={{ color: colors.text.muted }}
+                    >
                         Voce chegou ao fim das questoes filtradas.
                     </Text>
                 </View>

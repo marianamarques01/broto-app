@@ -63,7 +63,10 @@ export function OptionButton({
                 ) : state === 'wrong' ? (
                     <X size={14} strokeWidth={3} color="#fff" />
                 ) : (
-                    <Text className="text-xs font-bold text-foreground">
+                    <Text
+                        className="text-xs font-bold"
+                        style={{ color: colors.text.primary }}
+                    >
                         {letter}
                     </Text>
                 )}
