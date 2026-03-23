@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, ChevronRight } from 'lucide-react-native';
 import { OptionButton, type OptionState } from './OptionButton';
 import type { Question } from '@/lib/types/questions';
 import { colors } from '@/theme/tokens';
+import { BrotoCtaButton } from '@/components/BrotoCtaButton';
 
 interface QuestionPlayerProps {
     question: Question;
@@ -207,16 +208,12 @@ export function QuestionPlayer({
 
             {/* Next */}
             {answered && onNext && (
-                <Pressable
+                <BrotoCtaButton
+                    compact
+                    title="Próxima questão"
                     onPress={onNext}
-                    className="w-full flex-row items-center justify-center gap-2 rounded-2xl py-4"
-                    style={{ backgroundColor: colors.green[600] }}
-                >
-                    <Text className="text-sm font-bold text-white">
-                        Próxima questão
-                    </Text>
-                    <ChevronRight size={18} color="#fff" />
-                </Pressable>
+                    rightIcon={<ChevronRight size={18} color={colors.cta.text} />}
+                />
             )}
 
             {answered && !onNext && (

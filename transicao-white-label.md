@@ -14,6 +14,14 @@ O conteúdo atual (questões do ENEM) está salvo no Supabase Storage e integrad
 
 Fazer as alterações estruturais necessárias para que a codebase **não precise de refatoração profunda** quando o segundo tenant for adicionado. Não estamos construindo o painel admin white label agora — estamos apenas garantindo que a fundação suporte multi-tenancy de forma natural.
 
+Direção do produto: o alvo é white-label com multi-tenancy por organização: cada cliente (cursinho, faculdade, rede etc.) deve poder ter identidade própria (nome, cores, mascote, recursos ligados/desligados) e, no futuro, configuração adequada ao tipo de negócio (concursos, graduação, ENEM, etc.).
+
+O que existe hoje: o modelo organizations + classes é o primeiro passo funcional e serve como demonstração e ambiente de testes: simulamos uma instituição escolar com turmas para alunos estudarem para o ENEM. Isso valida fluxos reais (turma, aluno, professor, materiais) sem depender ainda da camada completa de tenants e configuração por tenant descrita em transicao-white-label.md.
+
+Documentação: não vamos “aposentar” o doc de white-label como visão — ele continua como referência da arquitetura desejada. O que está implementado é compatível em espírito (separação por organização); a evolução é formalizar tenant + config (e alinhar nomenclatura/escopo) em cima desse que já funciona.
+
+Em uma frase: hoje é institucional para validar o produto; a direção é white-label configurável; o documento de transição permanece como north star, não como descarte.
+
 ---
 
 ## Regras Absolutas (Non-Negotiable)

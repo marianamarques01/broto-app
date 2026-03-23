@@ -16,6 +16,7 @@ import { useProgress, type AreaStat } from '@/hooks/use-progress';
 import { getAreaConfig } from '@/theme/area-config';
 import { colors, fonts } from '@/theme/tokens';
 import { FadeInSection, StaggerItem, AnimatedBar } from '@/components/AnimatedEntry';
+import { BrotoCtaButton } from '@/components/BrotoCtaButton';
 
 // ─── Area config (using shared config) ───────────────────────────────────────
 type AreaMeta = {
@@ -467,41 +468,10 @@ function CardHoje({ dia }: { dia: DiaRotina }) {
 
                 {/* CTA - mesmo estilo do botão principal de estudo */}
                 <Link href="/(tabs)/questions" asChild>
-                    <Pressable
-                        style={({ pressed }) => ({
-                            opacity: pressed ? 0.9 : 1,
-                        })}
-                    >
-                        <View
-                            style={{
-                                width: '100%',
-                                alignSelf: 'stretch',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                borderRadius: 20,
-                                paddingVertical: 14,
-                                paddingHorizontal: 20,
-                                backgroundColor: 'rgba(0, 0, 0, 0.45)',
-                                borderWidth: 1,
-                                borderColor: 'rgba(248, 250, 252, 0.16)',
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    fontFamily: fonts.sansMedium,
-                                    color: '#FFFFFF',
-                                    letterSpacing: 0.8,
-                                }}
-                            >
-                                ESTUDAR PARA CRESCER
-                            </Text>
-                            <View style={{ marginLeft: 8 }}>
-                                <ArrowRight size={18} color="#FACC15" />
-                            </View>
-                        </View>
-                    </Pressable>
+                    <BrotoCtaButton
+                        title="ESTUDAR PARA CRESCER"
+                        rightIcon={<ArrowRight size={18} color={colors.cta.text} />}
+                    />
                 </Link>
             </LinearGradient>
         </View>

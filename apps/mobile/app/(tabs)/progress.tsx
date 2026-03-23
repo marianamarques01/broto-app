@@ -1,8 +1,10 @@
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
+import Animated, { useSharedValue, useAnimatedProps, withTiming, withDelay, Easing } from 'react-native-reanimated';
 import {
     BarChart3,
     PenLine,
@@ -15,19 +17,63 @@ import {
 import { useProgress, type AreaStat, type TopicoStat } from '@/hooks/use-progress';
 import { getAreaConfig } from '@/theme/area-config';
 import { colors, fonts, radii } from '@/theme/tokens';
-import { FadeInSection, StaggerItem, AnimatedBar } from '@/components/AnimatedEntry';
+import { FadeInSection, StaggerItem } from '@/components/AnimatedEntry';
+import { BrotoCtaButton } from '@/components/BrotoCtaButton';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+function ProgressRing({ pct, color, size = 48, strokeWidth = 4, delay = 400 }: {
+    pct: number; color: string; size?: number; strokeWidth?: number; delay?: number;
+}) {
+    const r = (size - strokeWidth) / 2;
+    const c = 2 * Math.PI * r;
+    const progress = useSharedValue(0);
+
+    useEffect(() => {
+        progress.value = withDelay(
+            delay,
+            withTiming(Math.min(Math.max(pct, 0), 100), { duration: 800, easing: Easing.out(Easing.cubic) }),
+        );
+    }, [pct, delay]);
+
+    const animatedProps = useAnimatedProps(() => ({
+        strokeDashoffset: c - (c * progress.value) / 100,
+    }));
+
+    return (
+        <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+            <Circle
+                cx={size / 2} cy={size / 2} r={r}
+                fill="none"
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth={strokeWidth}
+            />
+            <AnimatedCircle
+                cx={size / 2} cy={size / 2} r={r}
+                fill="none"
+                stroke={color}
+                strokeWidth={strokeWidth}
+                strokeLinecap="round"
+                strokeDasharray={c}
+                animatedProps={animatedProps}
+            />
+        </Svg>
+    );
+}
 
 function AreaCard({ area, loading }: { area: AreaStat; loading: boolean }) {
     const cfg = getAreaConfig(area.value);
-    const style = { bar: cfg.color, textColor: cfg.textColor };
+    const areaColor = cfg.color;
     const Icon = cfg.AltIcon;
+    const hasData = !loading && area.totalAnswered > 0;
+    const pct = loading ? 0 : area.accuracyPct;
 
     return (
         <View
             style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 16,
+                gap: 14,
                 paddingVertical: 14,
                 paddingHorizontal: 16,
                 borderRadius: 20,
@@ -36,83 +82,48 @@ function AreaCard({ area, loading }: { area: AreaStat; loading: boolean }) {
                 borderColor: 'rgba(255,255,255,0.06)',
             }}
         >
-            <View
-                style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
+            {/* Circular progress ring */}
+            <View style={{ width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }}>
+                <ProgressRing pct={hasData ? pct : 0} color={areaColor} />
+                <View style={{
+                    position: 'absolute',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: `${style.bar}22`,
-                }}
-            >
-                <Icon size={18} color={style.bar} />
-            </View>
-
-            <View style={{ flex: 1, minWidth: 0 }}>
-                <Text
-                    style={{
-                        fontSize: 15,
-                        fontFamily: fonts.sansSemiBold,
-                        color: colors.text.primary,
-                    }}
-                >
-                    {area.label}
-                </Text>
-                {!loading && area.totalAnswered > 0 ? (
-                    <Text
-                        style={{
-                            fontSize: 13,
-                            fontFamily: fonts.sans,
-                            color: colors.text.muted,
-                            marginTop: 2,
-                        }}
-                    >
-                        {area.totalAnswered} questões · {area.totalCorrect} acertos
+                }}>
+                    <Text style={{
+                        fontSize: 12,
+                        fontFamily: fonts.sansBold,
+                        color: hasData ? areaColor : colors.text.muted,
+                    }}>
+                        {hasData ? `${pct}` : '—'}
                     </Text>
-                ) : (
-                    <Text
-                        style={{
-                            fontSize: 13,
-                            fontFamily: fonts.sans,
-                            color: colors.text.muted,
-                            marginTop: 2,
-                        }}
-                    >
-                        Sem dados ainda
-                    </Text>
-                )}
-                <View style={{ marginTop: 8 }}>
-                    <AnimatedBar
-                        progress={loading ? 0 : area.accuracyPct}
-                        color={style.bar}
-                        bgColor="rgba(0,0,0,0.3)"
-                        height={6}
-                        delay={400}
-                    />
                 </View>
             </View>
 
-            {loading ? (
-                <View
-                    style={{
-                        width: 40,
-                        height: 20,
-                        borderRadius: 8,
-                        backgroundColor: 'rgba(0, 0, 0, 0.25)',
-                    }}
-                />
-            ) : (
+            <View style={{ flex: 1, minWidth: 0 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Icon size={14} color={areaColor} />
+                    <Text
+                        style={{
+                            fontSize: 15,
+                            fontFamily: fonts.sansSemiBold,
+                            color: colors.text.primary,
+                        }}
+                    >
+                        {area.label}
+                    </Text>
+                </View>
                 <Text
                     style={{
-                        fontSize: 16,
-                        fontFamily: fonts.sansBold,
-                        color: style.textColor,
+                        fontSize: 13,
+                        fontFamily: fonts.sans,
+                        color: colors.text.muted,
+                        marginTop: 3,
                     }}
                 >
-                    {area.totalAnswered > 0 ? `${area.accuracyPct}%` : '—'}
+                    {hasData ? `${area.totalCorrect}/${area.totalAnswered} acertos` : 'Sem dados ainda'}
                 </Text>
-            )}
+            </View>
         </View>
     );
 }
@@ -313,8 +324,8 @@ export default function ProgressScreen() {
                                     right: 0,
                                     bottom: 0,
                                     borderRadius: radii.lg,
+                                    pointerEvents: 'none',
                                 }}
-                                pointerEvents="none"
                             />
                             <View style={{ padding: 24 }}>
                                 {/* Focal point — big accuracy number */}
@@ -466,7 +477,7 @@ export default function ProgressScreen() {
                                         width: 6,
                                         height: 6,
                                         borderRadius: 3,
-                                        backgroundColor: '#DFCC00',
+                                        backgroundColor: colors.cta.gradientEnd,
                                     }}
                                 />
                                 <Text
@@ -629,35 +640,14 @@ export default function ProgressScreen() {
                             >
                                 Responda questões para ver seu desempenho por area e topico.
                             </Text>
-                            <Link href="/(tabs)/questions" asChild>
-                                <Pressable
-                                    style={{
-                                        marginTop: 24,
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: 8,
-                                        borderRadius: 20,
-                                        paddingHorizontal: 24,
-                                        paddingVertical: 14,
-                                        backgroundColor: 'rgba(0, 0, 0, 0.45)',
-                                        borderWidth: 1,
-                                        borderColor: 'rgba(248, 250, 252, 0.16)',
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            fontSize: 14,
-                                            fontFamily: fonts.sansMedium,
-                                            color: '#F9FAFB',
-                                            letterSpacing: 1,
-                                        }}
-                                    >
-                                        PRATICAR QUESTÕES
-                                    </Text>
-                                    <ArrowUpRight size={18} color="#FACC15" />
-                                </Pressable>
-                            </Link>
+                            <View style={{ marginTop: 24, width: '100%' }}>
+                                <Link href="/(tabs)/questions" asChild>
+                                    <BrotoCtaButton
+                                        title="PRATICAR QUESTÕES"
+                                        rightIcon={<ArrowUpRight size={18} color={colors.cta.text} />}
+                                    />
+                                </Link>
+                            </View>
                         </View>
                     </FadeInSection>
                 )}

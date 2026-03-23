@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     withSpring,
@@ -26,11 +26,8 @@ const indicatorBase = {
     height: 2,
     width: 32,
     borderRadius: 1,
-    backgroundColor: '#DFCC00',
-    shadowColor: '#DFCC00',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
+    backgroundColor: colors.cta.gradientEnd,
+    boxShadow: '0px 2px 8px rgba(98, 189, 105, 0.45)',
     elevation: 4,
 };
 const iconBoxBase = {
@@ -53,8 +50,8 @@ export const TabIcon = memo(function TabIcon({
             { scale: withSpring(focused ? 1.1 : 1, SPRING_CONFIG) },
         ],
         backgroundColor: withTiming(
-            focused ? 'rgba(223, 204, 0, 0.2)' : 'transparent',
-            { duration: 200, easing: Easing.out(Easing.quad) },
+            focused ? 'rgba(98, 189, 105, 0.22)' : 'transparent',
+            Platform.OS === 'web' ? { duration: 200 } : { duration: 200, easing: Easing.out(Easing.quad) },
         ),
     }));
 
@@ -69,7 +66,7 @@ export const TabIcon = memo(function TabIcon({
             <Animated.View style={[iconBoxBase, iconContainerStyle]}>
                 <Icon
                     size={24}
-                    color={focused ? '#DFCC00' : colors.text.muted}
+                    color={focused ? colors.cta.gradientEnd : colors.text.muted}
                     weight={focused ? 'fill' : 'regular'}
                 />
             </Animated.View>

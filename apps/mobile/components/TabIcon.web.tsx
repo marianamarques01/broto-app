@@ -13,11 +13,8 @@ const indicatorBase = {
     height: 2,
     width: 32,
     borderRadius: 1,
-    backgroundColor: '#DFCC00',
-    shadowColor: '#DFCC00',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
+    backgroundColor: colors.cta.gradientEnd,
+    boxShadow: '0px 2px 8px rgba(98, 189, 105, 0.45)',
     elevation: 4,
 };
 const iconBoxBase = {
@@ -47,14 +44,14 @@ export function TabIcon({
                 style={[
                     iconBoxBase,
                     {
-                        backgroundColor: focused ? 'rgba(223, 204, 0, 0.2)' : 'transparent',
+                        backgroundColor: focused ? 'rgba(98, 189, 105, 0.22)' : 'transparent',
                         transform: [{ scale: focused ? 1.1 : 1 }],
                     },
                 ]}
             >
                 <Icon
                     size={24}
-                    color={focused ? '#DFCC00' : colors.text.muted}
+                    color={focused ? colors.cta.gradientEnd : colors.text.muted}
                     weight={focused ? 'fill' : 'regular'}
                 />
             </View>

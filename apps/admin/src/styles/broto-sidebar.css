@@ -1,0 +1,157 @@
+/* Copied from apps/web/src/styles/app.css — Sidebar block (parity with web) */
+
+.broto-sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  background: linear-gradient(180deg, #0e1812 0%, #080d0a 50%, var(--bg-void) 100%);
+  border-right: 1px solid var(--border-default);
+  position: relative;
+  overflow: hidden;
+}
+
+.broto-sidebar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: radial-gradient(ellipse 100% 100% at 50% 0%, rgba(16, 185, 129, 0.08), transparent);
+  pointer-events: none;
+}
+
+.broto-sidebar__brand {
+  padding: 0 8px 4px;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.broto-sidebar__brand-name {
+  font-family: var(--font-logo);
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.broto-sidebar__brand-tag {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin: 6px 0 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.broto-sidebar__nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.broto-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background 0.18s, color 0.18s;
+}
+
+.broto-sidebar__link:hover {
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--text-primary);
+}
+
+.broto-sidebar__link--active {
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--green-400);
+  font-weight: 600;
+}
+
+.broto-sidebar__link-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.broto-sidebar__link--active .broto-sidebar__link-icon {
+  opacity: 1;
+}
+
+.broto-sidebar__footer {
+  border-top: 1px solid var(--border-default);
+  padding-top: 16px;
+  margin-top: 12px;
+}
+
+.broto-sidebar__user {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0 8px;
+  margin: 0 0 8px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.broto-sidebar__signout {
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.broto-sidebar__signout:hover {
+  background: rgba(224, 82, 82, 0.1);
+  color: var(--red-400);
+}
+
+/* Admin-only: theme toggle (same metrics as signout; positive hover) */
+.broto-sidebar__theme-toggle {
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.broto-sidebar__theme-toggle:hover {
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--text-primary);
+}
+
+/* Light theme — same overrides as apps/web/src/styles/app.css */
+:root[data-theme="light"] .broto-sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, #f6fbf8 60%, var(--bg-void) 100%);
+}

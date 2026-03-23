@@ -57,7 +57,7 @@ export const radii = {
     sm: 12,
     md: 16,
     lg: 24,
-    full: 999,
+    full: 16,
 } as const;
 
 /** Paleta v4 — preto profundo + verde como aura */
@@ -140,5 +140,14 @@ export const colors = {
         danger: '#e05252',
         accent: '#fbbf24',
         accentSecondary: '#2ba4b8',
+    },
+    /** Botão principal (pílula verde) — mesmo visual do login/cadastro */
+    cta: {
+        gradientStart: '#38703D',
+        gradientEnd: '#62BD69',
+        gradient: ['#38703D', '#62BD69'] as const,
+        /** Capsula: cantos semicirculares em qualquer altura (equivalente a border-radius muito alto na web) */
+        radius: radii.full,
+        text: '#ffffff',
     },
 } as const;

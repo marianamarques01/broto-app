@@ -30,7 +30,7 @@ export const FASE_LABEL: Record<PetData['fase'], string> = {
     especial: 'Especial',
 };
 
-const { useHook, refresh } = createCachedHook<PetData>(
+const { useHook, refresh, refreshIfStale } = createCachedHook<PetData>(
     () => api.get<PetData>('/api/pet/me'),
 );
 
@@ -40,8 +40,8 @@ export function usePet() {
     const { data, loading, refresh: r } = useHook();
     useFocusEffect(
         useCallback(() => {
-            if (data !== null) r();
-        }, [data, r]),
+            refreshIfStale();
+        }, []),
     );
     return { pet: data, loading, refresh: r };
 }

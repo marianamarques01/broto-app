@@ -7,7 +7,6 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    ActivityIndicator,
     StyleSheet,
     useWindowDimensions,
 } from 'react-native';
@@ -18,13 +17,13 @@ import Animated, {
     withRepeat,
     withSequence,
     withTiming,
-    withDelay,
     Easing,
     interpolate,
     FadeIn,
     FadeInUp,
     FadeInDown,
 } from 'react-native-reanimated';
+import FireflyBackground from '@/components/FireflyBackground';
 import Svg, {
     Defs,
     LinearGradient,
@@ -41,72 +40,7 @@ import { createClient } from '@/lib/supabase/client';
 import { api } from '@/lib/api-client';
 import { colors, fonts, fontSize, spacing } from '@/theme/tokens';
 import { HeroGlowSvg, CentralGlowSvg } from '@/components/HeroGlowSvg';
-
-const FIREFLIES = [
-    { x: 12, y: 18, s: 2.5, d: 0, t: 4.2, gold: false },
-    { x: 78, y: 12, s: 3.5, d: 1.4, t: 5.1, gold: true },
-    { x: 32, y: 62, s: 2, d: 0.6, t: 3.8, gold: false },
-    { x: 88, y: 48, s: 3, d: 2.3, t: 4.7, gold: false },
-    { x: 22, y: 42, s: 2, d: 1.9, t: 3.2, gold: true },
-    { x: 62, y: 28, s: 2.5, d: 0.9, t: 5.5, gold: false },
-    { x: 48, y: 72, s: 3, d: 3.1, t: 4.0, gold: true },
-    { x: 92, y: 35, s: 2, d: 1.6, t: 3.6, gold: false },
-    { x: 55, y: 55, s: 2.5, d: 2.8, t: 4.4, gold: false },
-    { x: 8, y: 58, s: 3, d: 0.3, t: 5.0, gold: true },
-];
-
-const FIREFLY_KEYFRAMES = {
-    progress: [0, 0.12, 0.45, 0.7, 0.9, 1],
-    opacity: [0, 0.9, 0.3, 0.85, 0.15, 0],
-    x: [0, 2, 8, -3, 5, 0],
-    y: [0, -4, -14, -20, -8, 0],
-    scale: [0.6, 1, 0.8, 1.1, 0.7, 0.6],
-};
-
-function Firefly({ x, y, s, d, t, gold }: (typeof FIREFLIES)[0]) {
-    const progress = useSharedValue(0);
-    useEffect(() => {
-        progress.value = withDelay(
-            d * 1000,
-            withRepeat(
-                withSequence(
-                    withTiming(1, { duration: t * 1000, easing: Easing.inOut(Easing.ease) }),
-                    withTiming(0, { duration: 0 }),
-                ),
-                -1,
-            ),
-        );
-    }, []);
-    const style = useAnimatedStyle(() => ({
-        opacity: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.opacity),
-        transform: [
-            { translateX: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.x) },
-            { translateY: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.y) },
-            { scale: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.scale) },
-        ],
-    }));
-    return (
-        <Animated.View
-            style={[
-                {
-                    position: 'absolute',
-                    left: `${x}%`,
-                    top: `${y}%`,
-                    width: s,
-                    height: s,
-                    borderRadius: s / 2,
-                    backgroundColor: gold ? '#fbbf24' : '#4ade80',
-                    shadowColor: gold ? '#fbbf24' : '#4ade80',
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: s * 3,
-                    elevation: 4,
-                },
-                style,
-            ]}
-        />
-    );
-}
+import { BrotoCtaShimmerButton } from '@/components/BrotoCtaShimmerButton';
 
 function FloatingEmoji() {
     const translateY = useSharedValue(0);
@@ -327,14 +261,26 @@ function AnimatedInput({
 
     const handleFocus = useCallback(() => {
         setFocused(true);
-        borderProgress.value = withTiming(1, { duration: 250, easing: Easing.out(Easing.quad) });
-        glowOpacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) });
+        borderProgress.value = withTiming(1, {
+            duration: 250,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.out(Easing.quad),
+        });
+        glowOpacity.value = withTiming(1, {
+            duration: 300,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.out(Easing.quad),
+        });
     }, []);
 
     const handleBlur = useCallback(() => {
         setFocused(false);
-        borderProgress.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.quad) });
-        glowOpacity.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.quad) });
+        borderProgress.value = withTiming(0, {
+            duration: 200,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.in(Easing.quad),
+        });
+        glowOpacity.value = withTiming(0, {
+            duration: 200,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.in(Easing.quad),
+        });
     }, []);
 
     const inputWrapperAnimatedBorder = useAnimatedStyle(() => {
@@ -355,7 +301,9 @@ function AnimatedInput({
         <View style={styles.field}>
             <Text style={styles.label}>{label}</Text>
             <View>
-                <Animated.View style={[styles.inputGlow, glowStyle]} pointerEvents="none" />
+                <Animated.View
+                    style={[styles.inputGlow, glowStyle, { pointerEvents: 'none' }]}
+                />
                 <Animated.View style={[styles.inputWrapper, inputWrapperAnimatedBorder]}>
                     <View style={styles.inputIconWrap}>
                         {icon === 'email' ? (
@@ -397,78 +345,6 @@ function AnimatedInput({
                 </Animated.View>
             </View>
         </View>
-    );
-}
-
-/* ── Shimmer on Button ────────────────────────────────── */
-
-function ShimmerButton({
-    onPress,
-    loading,
-    label,
-}: {
-    onPress: () => void;
-    loading: boolean;
-    label: string;
-}) {
-    const [isPressed, setIsPressed] = useState(false);
-    const shimmerX = useSharedValue(-1);
-
-    useEffect(() => {
-        shimmerX.value = withDelay(
-            800,
-            withRepeat(
-                withSequence(
-                    withTiming(1.5, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
-                    withDelay(2500, withTiming(-1, { duration: 0 })),
-                ),
-                -1,
-            ),
-        );
-    }, []);
-
-    const shimmerStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: shimmerX.value * 200 }],
-        opacity: interpolate(
-            shimmerX.value,
-            [-1, -0.3, 0, 0.3, 1, 1.5],
-            [0, 0.6, 0.8, 0.6, 0, 0],
-        ),
-    }));
-
-    return (
-        <Pressable
-            onPress={onPress}
-            disabled={loading}
-            onPressIn={() => setIsPressed(true)}
-            onPressOut={() => setIsPressed(false)}
-            style={[
-                styles.submitBtn,
-                isPressed && styles.submitBtnPressed,
-                loading && styles.submitBtnDisabled,
-            ]}
-        >
-            <ExpoLinearGradient
-                colors={['#0d6b3a', '#15803d', '#22c55e']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.submitGradient}
-            >
-                <Animated.View style={[styles.shimmerOverlay, shimmerStyle]} pointerEvents="none">
-                    <ExpoLinearGradient
-                        colors={['transparent', 'rgba(255,255,255,0.15)', 'transparent']}
-                        start={{ x: 0, y: 0.5 }}
-                        end={{ x: 1, y: 0.5 }}
-                        style={StyleSheet.absoluteFill}
-                    />
-                </Animated.View>
-                {loading ? (
-                    <ActivityIndicator color="#ffffff" />
-                ) : (
-                    <Text style={styles.submitText}>{label}</Text>
-                )}
-            </ExpoLinearGradient>
-        </Pressable>
     );
 }
 
@@ -549,7 +425,12 @@ export default function LoginScreen() {
 
     return (
         <View style={styles.screen}>
-            <View style={[styles.absoluteBg, { height: windowHeight }]} pointerEvents="none">
+            <View
+                style={[
+                    styles.absoluteBg,
+                    { height: windowHeight, pointerEvents: 'none' },
+                ]}
+            >
                 <ExpoLinearGradient
                     colors={[colors.bg.deep, colors.bg.void]}
                     style={StyleSheet.absoluteFill}
@@ -568,11 +449,7 @@ export default function LoginScreen() {
                     showsHorizontalScrollIndicator={false}
                 >
                     <View style={[styles.hero, { height: heroHeight }]}>
-                        <View style={styles.firefliesContainer} pointerEvents="none">
-                            {FIREFLIES.map((f, i) => (
-                                <Firefly key={i} {...f} />
-                            ))}
-                        </View>
+                        <FireflyBackground count={10} />
 
                         <Animated.View entering={FadeIn.duration(500)} style={styles.emojiContainer}>
                             <GlowPulse />
@@ -635,7 +512,7 @@ export default function LoginScreen() {
                             </Animated.View>
                         ) : null}
 
-                        <ShimmerButton
+                        <BrotoCtaShimmerButton
                             onPress={handleSubmit}
                             loading={loading}
                             label="Entrar"
@@ -681,10 +558,6 @@ const styles = StyleSheet.create({
         paddingTop: 72,
         paddingBottom: 40,
         paddingHorizontal: 24,
-        overflow: 'hidden',
-    },
-    firefliesContainer: {
-        ...StyleSheet.absoluteFillObject,
         overflow: 'hidden',
     },
     glowPulseWrap: {
@@ -856,43 +729,6 @@ const styles = StyleSheet.create({
         lineHeight: 20,
     },
 
-    /* Submit */
-    submitBtn: {
-        borderRadius: 14,
-        overflow: 'hidden',
-        shadowColor: colors.green[500],
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 28,
-        elevation: 10,
-    },
-    submitBtnPressed: {
-        opacity: 0.95,
-        transform: [{ scale: 0.98 }],
-    },
-    submitBtnDisabled: { opacity: 0.5 },
-    submitGradient: {
-        paddingVertical: 17,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 14,
-        overflow: 'hidden',
-    },
-    shimmerOverlay: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 80,
-    },
-    submitText: {
-        fontSize: fontSize.base,
-        fontWeight: '700',
-        fontFamily: fonts.sansBold,
-        color: '#ffffff',
-        letterSpacing: 0.5,
-    },
-
     /* Link row */
     linkRow: {
         marginTop: 24,
@@ -908,7 +744,7 @@ const styles = StyleSheet.create({
     linkAction: {
         fontSize: fontSize.sm,
         fontWeight: '600',
-        fontFamily: fonts.sansSemiBold,
+        fontFamily: fonts.logo,
         color: colors.green[400],
     },
 });

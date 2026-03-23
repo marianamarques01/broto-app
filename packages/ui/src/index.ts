@@ -1,1 +1,4 @@
-// Placeholder — will be populated when web/admin apps are created
+export { Button } from './Button'
+export { Card } from './Card'
+export { Badge } from './Badge'
+export { Spinner } from './Spinner'

@@ -1,69 +1,41 @@
 /**
- * Generic factory for module-level cached data hooks.
- * Deduplicates the pattern used in use-pet, use-progress, use-user.
+ * Thin React wrapper around @broto/shared's createCachedStore.
+ * Keeps React imports local to this app (avoids dual-React in monorepo).
  */
 import { useEffect, useState } from 'react';
+import { createCachedStore, type CachedStore } from '@broto/shared';
 
-interface CachedHookReturn<T> {
+export interface CachedHookReturn<T> {
     data: T | null;
     loading: boolean;
     refresh: () => void;
 }
 
-interface CacheStore<T> {
-    cached: T | null;
-    inflight: Promise<T | null> | null;
-    listeners: Set<() => void>;
-}
-
 export function createCachedHook<T>(fetcher: () => Promise<T>) {
-    const store: CacheStore<T> = {
-        cached: null,
-        inflight: null,
-        listeners: new Set(),
-    };
-
-    function notifyListeners() {
-        store.listeners.forEach(fn => fn());
-    }
-
-    function fetchData(): Promise<T | null> {
-        if (store.inflight) return store.inflight;
-        store.inflight = fetcher()
-            .then(data => { store.cached = data; return data; })
-            .catch(() => { store.cached = null; return null; })
-            .finally(() => { store.inflight = null; notifyListeners(); });
-        return store.inflight;
-    }
-
-    function refresh() {
-        store.cached = null;
-        fetchData();
-    }
+    const store: CachedStore<T> = createCachedStore(fetcher);
 
     function useHook(): CachedHookReturn<T> {
-        const [data, setData] = useState<T | null>(store.cached);
-        const [loading, setLoading] = useState(store.cached === null);
+        const [data, setData] = useState<T | null>(store.getCached());
+        const [loading, setLoading] = useState(store.getCached() === null);
 
         useEffect(() => {
-            const update = () => {
-                setData(store.cached);
+            const unsubscribe = store.subscribe(() => {
+                setData(store.getCached());
                 setLoading(false);
-            };
-            store.listeners.add(update);
+            });
 
-            if (store.cached !== null) {
-                setData(store.cached);
+            if (store.getCached() !== null) {
+                setData(store.getCached());
                 setLoading(false);
             } else {
-                fetchData();
+                store.fetchData();
             }
 
-            return () => { store.listeners.delete(update); };
+            return unsubscribe;
         }, []);
 
-        return { data, loading, refresh };
+        return { data, loading, refresh: store.refresh };
     }
 
-    return { useHook, refresh };
+    return { useHook, refresh: store.refresh, refreshIfStale: store.refreshIfStale };
 }

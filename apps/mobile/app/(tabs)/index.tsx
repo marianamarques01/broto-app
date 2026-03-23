@@ -20,10 +20,12 @@ import {
 } from 'lucide-react-native';
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/use-pet';
 import { useProgress } from '@/hooks/use-progress';
+import { useUser } from '@/hooks/use-user';
 import { HeaderAuth } from '@/components/HeaderAuth';
 import { BrotoLogo } from '@/components/BrotoLogo';
+import { BrotoCtaButton } from '@/components/BrotoCtaButton';
 import { AREA_CONFIG, getAreaConfig } from '@/theme/area-config';
-import { colors, fonts, radii } from '@/theme/tokens';
+import { colors, fonts, radii, space } from '@/theme/tokens';
 import { AnimatedBar, FadeInSection } from '@/components/AnimatedEntry';
 import { getDailyMissionsState, type DailyMissionsState } from '@/lib/missions/daily-missions';
 
@@ -175,12 +177,12 @@ const MissionCard = memo(function MissionCard({
                             borderColor: 'rgba(223,204,0,0.4)',
                         }}
                     >
-                        <Zap size={11} color="#DFCC00" />
+                        <Zap size={11} color={colors.cta.gradientEnd} />
                         <Text
                             style={{
                                 fontSize: 12,
                                 fontFamily: fonts.sansBold,
-                                color: '#DFCC00',
+                                color: colors.cta.gradientEnd,
                                 marginLeft: 3,
                             }}
                         >
@@ -244,65 +246,15 @@ function StartMissionsButton({
 
     return (
         <FadeInSection delay={delay}>
-            <Pressable
-                onPress={onPress}
-                onPressIn={onPressIn}
-                onPressOut={onPressOut}
-                style={({ pressed }) => ({
-                    width: '100%',
-                    alignSelf: 'stretch',
-                    opacity: pressed ? 0.9 : 1,
-                })}
-            >
-                <Animated.View
-                    style={[
-                        animatedStyle,
-                        {
-                            borderRadius: 24,
-                            borderWidth: 0,
-                            borderColor: 'transparent',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            paddingVertical: 16,
-                            paddingHorizontal: 4,
-                            overflow: 'hidden',
-                            gap: 12,
-                            backgroundColor: 'transparent',
-                        },
-                    ]}
-                >
-                    <View
-                        style={{
-                            flex: 1,
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: 20,
-                            paddingVertical: 16,
-                            paddingHorizontal: 20,
-                            backgroundColor: '#0F0F0F',
-                            borderWidth: 1,
-                            borderColor: 'rgba(248, 250, 252, 0.08)',
-                        }}
-                    >
-                        <Text
-                            style={{
-                                fontSize: 14,
-                                fontFamily: fonts.sansMedium,
-                                color: '#F9FAFB',
-                                letterSpacing: 1,
-                                textAlign: 'center',
-                            }}
-                        >
-                            {label}
-                        </Text>
-                        <View style={{ marginLeft: 8 }}>
-                            <ArrowUpRight size={18} color="#FACC15" />
-                        </View>
-                    </View>
-                </Animated.View>
-            </Pressable>
+            <Animated.View style={[animatedStyle, { width: '100%', alignSelf: 'stretch' }]}>
+                <BrotoCtaButton
+                    title={label}
+                    onPress={onPress}
+                    onPressIn={onPressIn}
+                    onPressOut={onPressOut}
+                    rightIcon={<ArrowUpRight size={18} color={colors.cta.text} />}
+                />
+            </Animated.View>
         </FadeInSection>
     );
 }
@@ -313,6 +265,7 @@ export default function HomeScreen() {
     const insets = useSafeAreaInsets();
     const { pet, loading, refresh: refreshPet } = usePet();
     const { progress, refresh: refreshProgress } = useProgress();
+    const { user } = useUser();
     const [refreshing, setRefreshing] = useState(false);
     const [daily, setDaily] = useState<DailyMissionsState | null>(null);
 
@@ -325,6 +278,13 @@ export default function HomeScreen() {
     const acertosHoje = pet?.acertosHoje ?? 0;
     const accuracyPct =
         questoesHoje > 0 ? Math.round((acertosHoje / questoesHoje) * 100) : 0;
+
+    const displayName = useMemo(() => {
+        const raw = user?.nome?.trim();
+        if (!raw) return null;
+        const first = raw.split(/\s+/)[0];
+        return first || raw;
+    }, [user?.nome]);
 
     useEffect(() => {
         let alive = true;
@@ -404,6 +364,7 @@ export default function HomeScreen() {
     );
 
     const onRefresh = useCallback(() => {
+        if (refreshing) return;
         setRefreshing(true);
         refreshPet();
         refreshProgress();
@@ -496,7 +457,7 @@ export default function HomeScreen() {
                                 letterSpacing: 0.3,
                             }}
                         >
-                            Bem-vindo de volta
+                            {displayName ? `Bem vindo de volta, ${displayName}` : 'Bem vindo de volta'}
                         </Text>
                         <Text
                             style={{
@@ -533,8 +494,8 @@ export default function HomeScreen() {
                                     right: 0,
                                     bottom: 0,
                                     borderRadius: radii.lg,
+                                    pointerEvents: 'none',
                                 }}
-                                pointerEvents="none"
                             />
 
                             <View style={{ padding: 24 }}>
@@ -625,15 +586,12 @@ export default function HomeScreen() {
                                         <View style={{ marginTop: 8 }}>
                                             <View
                                                 style={{
-                                                    shadowColor: colors.green[500],
-                                                    shadowOffset: { width: 0, height: 0 },
-                                                    shadowOpacity: 0.4,
-                                                    shadowRadius: 6,
+                                                    boxShadow: '0px 0px 6px rgba(16, 185, 129, 0.4)',
                                                 }}
                                             >
                                                 <AnimatedBar
                                                     progress={loading ? 0 : (xpInLevel / 100) * 100}
-                                                    color="#DFCC00"
+                                                    color={colors.cta.gradientEnd}
                                                     bgColor="rgba(0,0,0,0.3)"
                                                     height={10}
                                                     delay={500}
@@ -725,7 +683,7 @@ export default function HomeScreen() {
                                             width: 6,
                                             height: 6,
                                             borderRadius: 3,
-                                            backgroundColor: '#DFCC00',
+                                            backgroundColor: colors.cta.gradientEnd,
                                         }}
                                     />
                                     <Text
@@ -783,7 +741,7 @@ export default function HomeScreen() {
                             <View style={{ height: 4, marginBottom: 12, justifyContent: 'center' }}>
                                 <AnimatedBar
                                     progress={(doneMissions / 3) * 100}
-                                    color={colors.gold[500]}
+                                    color={colors.cta.gradientEnd}
                                     bgColor={colors.bg.elevated}
                                     height={4}
                                     delay={400}
@@ -805,7 +763,7 @@ export default function HomeScreen() {
                 </View>
 
                 {/* ── CTA Começar missões ── */}
-                <View style={{ marginTop: 0 }}>
+                <View style={{ marginTop: space[3] }}>
                     <StartMissionsButton
                         label={
                             doneMissions === 3

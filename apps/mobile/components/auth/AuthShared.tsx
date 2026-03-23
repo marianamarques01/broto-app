@@ -14,6 +14,7 @@ import type { TextInput as TextInputType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { colors, fonts } from '@/theme/tokens';
+import { ctaBorderRadius } from '@/components/BrotoCtaButton';
 
 const BROTO_ICON = require('../../assets/broto-icon.png');
 
@@ -30,10 +31,7 @@ export function BrotoAppIcon({ size = 120 }: { size?: number }) {
                     borderWidth: 1,
                     borderColor: 'rgba(34, 197, 94, 0.25)',
                     overflow: 'hidden',
-                    shadowColor: '#22c55e',
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 24,
+                    boxShadow: '0px 8px 24px rgba(34, 197, 94, 0.25)',
                     elevation: 12,
                 }}
             >
@@ -117,7 +115,7 @@ const PARTICLES = [
 
 export function FloatingParticles() {
     return (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
             {PARTICLES.map((p, i) => (
                 <View
                     key={i}
@@ -179,34 +177,38 @@ export function GradientButton({
     loading?: boolean;
     disabled?: boolean;
 }) {
+    const r = ctaBorderRadius();
     return (
         <Pressable
             onPress={onPress}
             disabled={disabled || loading}
             style={({ pressed }) => ({
-                borderRadius: 14,
+                borderRadius: r,
                 overflow: 'hidden',
                 opacity: pressed ? 0.9 : disabled || loading ? 0.6 : 1,
             })}
         >
             <LinearGradient
-                colors={['#16a34a', '#22c55e', '#4ade80']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+                colors={[colors.cta.gradientStart, colors.cta.gradientEnd]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
                 style={{
+                    borderRadius: r,
+                    overflow: 'hidden',
                     paddingVertical: 16,
                     alignItems: 'center',
                     justifyContent: 'center',
                 }}
             >
                 {loading ? (
-                    <ActivityIndicator color="#040705" />
+                    <ActivityIndicator color={colors.cta.text} />
                 ) : (
                     <Text
                         style={{
                             fontSize: 16,
-                            fontFamily: fonts.sansSemiBold,
-                            color: '#040705',
+                            fontFamily: fonts.logo,
+                            fontWeight: '700',
+                            color: colors.cta.text,
                         }}
                     >
                         {title}

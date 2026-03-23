@@ -8,7 +8,6 @@ import {
     Platform,
     ScrollView,
     Image,
-    ActivityIndicator,
     StyleSheet,
     useWindowDimensions,
 } from 'react-native';
@@ -35,6 +34,7 @@ import { api } from '@/lib/api-client';
 import { refreshUser } from '@/hooks/use-user';
 import { colors, fonts, fontSize, spacing } from '@/theme/tokens';
 import { HeroGlowSvg } from '@/components/HeroGlowSvg';
+import { BrotoCtaShimmerButton } from '@/components/BrotoCtaShimmerButton';
 
 /* ── Fireflies (mesmo sistema do login) ───────────────── */
 
@@ -88,10 +88,7 @@ function Firefly({ x, y, s, d, t, gold }: (typeof FIREFLIES)[0]) {
                     height: s,
                     borderRadius: s / 2,
                     backgroundColor: gold ? '#fbbf24' : '#4ade80',
-                    shadowColor: gold ? '#fbbf24' : '#4ade80',
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: s * 3,
+                    boxShadow: `0px 0px ${s * 3}px ${gold ? 'rgba(251, 191, 36, 0.5)' : 'rgba(74, 222, 128, 0.5)'}`,
                     elevation: 4,
                 },
                 style,
@@ -375,14 +372,26 @@ function AnimatedInput({
 
     const handleFocus = useCallback(() => {
         setFocused(true);
-        borderProgress.value = withTiming(1, { duration: 250, easing: Easing.out(Easing.quad) });
-        glowOpacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) });
+        borderProgress.value = withTiming(1, {
+            duration: 250,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.out(Easing.quad),
+        });
+        glowOpacity.value = withTiming(1, {
+            duration: 300,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.out(Easing.quad),
+        });
     }, []);
 
     const handleBlur = useCallback(() => {
         setFocused(false);
-        borderProgress.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.quad) });
-        glowOpacity.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.quad) });
+        borderProgress.value = withTiming(0, {
+            duration: 200,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.in(Easing.quad),
+        });
+        glowOpacity.value = withTiming(0, {
+            duration: 200,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.in(Easing.quad),
+        });
     }, []);
 
     const inputWrapperAnimatedBorder = useAnimatedStyle(() => {
@@ -402,7 +411,9 @@ function AnimatedInput({
         <View style={styles.field}>
             <Text style={styles.label}>{label}</Text>
             <View>
-                <Animated.View style={[styles.inputGlow, glowStyle]} pointerEvents="none" />
+                <Animated.View
+                    style={[styles.inputGlow, glowStyle, { pointerEvents: 'none' }]}
+                />
                 <Animated.View style={[styles.inputWrapper, inputWrapperAnimatedBorder]}>
                     <View style={styles.inputIconWrap}>
                         <IconComponent color={iconColor} />
@@ -470,14 +481,26 @@ function AnimatedInputSmall({
 
     const handleFocus = useCallback(() => {
         setFocused(true);
-        borderProgress.value = withTiming(1, { duration: 250, easing: Easing.out(Easing.quad) });
-        glowOpacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) });
+        borderProgress.value = withTiming(1, {
+            duration: 250,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.out(Easing.quad),
+        });
+        glowOpacity.value = withTiming(1, {
+            duration: 300,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.out(Easing.quad),
+        });
     }, []);
 
     const handleBlur = useCallback(() => {
         setFocused(false);
-        borderProgress.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.quad) });
-        glowOpacity.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.quad) });
+        borderProgress.value = withTiming(0, {
+            duration: 200,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.in(Easing.quad),
+        });
+        glowOpacity.value = withTiming(0, {
+            duration: 200,
+            easing: Platform.OS === 'web' ? Easing.linear : Easing.in(Easing.quad),
+        });
     }, []);
 
     const inputBorderStyle = useAnimatedStyle(() => {
@@ -493,7 +516,9 @@ function AnimatedInputSmall({
         <View style={styles.halfField}>
             <Text style={styles.labelSm}>{label}</Text>
             <View>
-                <Animated.View style={[styles.inputGlowSm, glowStyle]} pointerEvents="none" />
+                <Animated.View
+                    style={[styles.inputGlowSm, glowStyle, { pointerEvents: 'none' }]}
+                />
                 <Animated.View style={[styles.inputWrapperSm, inputBorderStyle]}>
                     <View style={styles.inputIconWrapSm}>{icon}</View>
                     <TextInput
@@ -512,78 +537,6 @@ function AnimatedInputSmall({
                 </Animated.View>
             </View>
         </View>
-    );
-}
-
-/* ── Shimmer Button ───────────────────────────────────── */
-
-function ShimmerButton({
-    onPress,
-    loading,
-    label,
-}: {
-    onPress: () => void;
-    loading: boolean;
-    label: string;
-}) {
-    const [isPressed, setIsPressed] = useState(false);
-    const shimmerX = useSharedValue(-1);
-
-    useEffect(() => {
-        shimmerX.value = withDelay(
-            800,
-            withRepeat(
-                withSequence(
-                    withTiming(1.5, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
-                    withDelay(2500, withTiming(-1, { duration: 0 })),
-                ),
-                -1,
-            ),
-        );
-    }, []);
-
-    const shimmerStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: shimmerX.value * 200 }],
-        opacity: interpolate(
-            shimmerX.value,
-            [-1, -0.3, 0, 0.3, 1, 1.5],
-            [0, 0.6, 0.8, 0.6, 0, 0],
-        ),
-    }));
-
-    return (
-        <Pressable
-            onPress={onPress}
-            disabled={loading}
-            onPressIn={() => setIsPressed(true)}
-            onPressOut={() => setIsPressed(false)}
-            style={[
-                styles.submitBtn,
-                isPressed && styles.submitBtnPressed,
-                loading && styles.submitBtnDisabled,
-            ]}
-        >
-            <LinearGradient
-                colors={['#0d6b3a', '#15803d', '#22c55e']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.submitGradient}
-            >
-                <Animated.View style={[styles.shimmerOverlay, shimmerStyle]} pointerEvents="none">
-                    <LinearGradient
-                        colors={['transparent', 'rgba(255,255,255,0.15)', 'transparent']}
-                        start={{ x: 0, y: 0.5 }}
-                        end={{ x: 1, y: 0.5 }}
-                        style={StyleSheet.absoluteFill}
-                    />
-                </Animated.View>
-                {loading ? (
-                    <ActivityIndicator color="#ffffff" />
-                ) : (
-                    <Text style={styles.submitText}>{label}</Text>
-                )}
-            </LinearGradient>
-        </Pressable>
     );
 }
 
@@ -743,7 +696,12 @@ export default function SignupScreen() {
 
     return (
         <View style={styles.screen}>
-            <View style={[styles.absoluteBg, { height: windowHeight }]} pointerEvents="none">
+            <View
+                style={[
+                    styles.absoluteBg,
+                    { height: windowHeight, pointerEvents: 'none' },
+                ]}
+            >
                 <LinearGradient
                     colors={[colors.bg.deep, colors.bg.void]}
                     style={StyleSheet.absoluteFill}
@@ -762,7 +720,7 @@ export default function SignupScreen() {
                     showsHorizontalScrollIndicator={false}
                 >
                     <View style={styles.hero}>
-                        <View style={styles.firefliesContainer} pointerEvents="none">
+                        <View style={[styles.firefliesContainer, { pointerEvents: 'none' }]}>
                             {FIREFLIES.map((f, i) => (
                                 <Firefly key={i} {...f} />
                             ))}
@@ -919,7 +877,7 @@ export default function SignupScreen() {
                             </Animated.View>
                         )}
 
-                        <ShimmerButton
+                        <BrotoCtaShimmerButton
                             onPress={handleSubmit}
                             loading={loading}
                             label="Criar conta"
@@ -1230,43 +1188,6 @@ const styles = StyleSheet.create({
         lineHeight: 20,
     },
 
-    /* Submit */
-    submitBtn: {
-        borderRadius: 14,
-        overflow: 'hidden',
-        shadowColor: colors.green[500],
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 28,
-        elevation: 10,
-    },
-    submitBtnPressed: {
-        opacity: 0.95,
-        transform: [{ scale: 0.98 }],
-    },
-    submitBtnDisabled: { opacity: 0.5 },
-    submitGradient: {
-        paddingVertical: 17,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 14,
-        overflow: 'hidden',
-    },
-    shimmerOverlay: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 80,
-    },
-    submitText: {
-        fontSize: fontSize.base,
-        fontWeight: '700',
-        fontFamily: fonts.sansBold,
-        color: '#ffffff',
-        letterSpacing: 0.5,
-    },
-
     /* Link row */
     linkRow: {
         marginTop: 24,
@@ -1282,7 +1203,7 @@ const styles = StyleSheet.create({
     linkAction: {
         fontSize: fontSize.sm,
         fontWeight: '600',
-        fontFamily: fonts.sansSemiBold,
+        fontFamily: fonts.logo,
         color: colors.green[400],
     },
 });

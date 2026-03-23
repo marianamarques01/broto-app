@@ -5,7 +5,6 @@ import {
     Pressable,
     ScrollView,
     Platform,
-    ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +13,7 @@ import Slider from '@react-native-community/slider';
 import { api, ApiError } from '@/lib/api-client';
 import { refreshUser } from '@/hooks/use-user';
 import { colors } from '@/theme/tokens';
+import { BrotoCtaButton } from '@/components/BrotoCtaButton';
 
 export default function OnboardingScreen() {
     const router = useRouter();
@@ -188,23 +188,12 @@ export default function OnboardingScreen() {
                         </View>
                     )}
 
-                    <Pressable
+                    <BrotoCtaButton
                         onPress={handleSubmit}
                         disabled={loading || skipLoading}
-                        className="w-full items-center rounded-xl py-3.5"
-                        style={{
-                            backgroundColor: colors.semantic.primary,
-                            opacity: loading ? 0.5 : 1,
-                        }}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color="#fff" />
-                        ) : (
-                            <Text className="font-sans-bold text-sm text-white">
-                                Comecar a estudar 🌱
-                            </Text>
-                        )}
-                    </Pressable>
+                        loading={loading}
+                        title="Comecar a estudar 🌱"
+                    />
 
                     <Pressable
                         onPress={handleSkip}

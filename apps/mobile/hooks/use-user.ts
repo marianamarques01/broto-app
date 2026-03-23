@@ -13,7 +13,7 @@ export interface UserProfile {
     horasDisponiveisPorDia: number;
 }
 
-const { useHook, refresh } = createCachedHook<UserProfile>(
+const { useHook, refresh, refreshIfStale } = createCachedHook<UserProfile>(
     () => api.get<UserProfile>('/api/user/me'),
 );
 
@@ -23,8 +23,8 @@ export function useUser() {
     const { data, loading, refresh: r } = useHook();
     useFocusEffect(
         useCallback(() => {
-            if (data !== null) r();
-        }, [data, r]),
+            refreshIfStale();
+        }, []),
     );
     return { user: data, loading, refresh: r };
 }

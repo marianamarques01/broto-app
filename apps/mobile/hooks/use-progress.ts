@@ -27,7 +27,7 @@ export interface ProgressData {
     areas: AreaStat[];
 }
 
-const { useHook, refresh } = createCachedHook<ProgressData>(
+const { useHook, refresh, refreshIfStale } = createCachedHook<ProgressData>(
     () => api.get<ProgressData>('/api/user/progress'),
 );
 
@@ -37,8 +37,8 @@ export function useProgress() {
     const { data, loading, refresh: r } = useHook();
     useFocusEffect(
         useCallback(() => {
-            if (data !== null) r();
-        }, [data, r]),
+            refreshIfStale();
+        }, []),
     );
     return { progress: data, loading, refresh: r };
 }

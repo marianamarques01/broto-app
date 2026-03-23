@@ -8,9 +8,19 @@ let supabaseInstance: SupabaseClient | null = null;
 
 export function createClient() {
     if (supabaseInstance) return supabaseInstance;
+
+    const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) {
+        throw new Error(
+            '[Supabase] Missing environment variables. ' +
+            'Ensure EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY are set.',
+        );
+    }
+
     supabaseInstance = createSupabaseClient(
-        process.env.EXPO_PUBLIC_SUPABASE_URL!,
-        process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+        url,
+        key,
         {
             auth: {
                 storage: AsyncStorage,

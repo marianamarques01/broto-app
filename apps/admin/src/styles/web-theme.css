@@ -1,0 +1,140 @@
+/* Copied from apps/web/src/styles/app.css — Broto Web theme tokens (parity with web) */
+
+:root,
+:root[data-theme="dark"] {
+  /* Typography */
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-logo: "Outfit", var(--font-sans);
+
+  /* Background */
+  --bg-void: #070c09;
+  --bg-deep: #0b130f;
+  --bg-surface: #0e1914;
+  --bg-card: #111e18;
+  --bg-elevated: #162a20;
+  --bg-overlay: rgba(7, 12, 9, 0.93);
+  --bg-glass: rgba(11, 19, 15, 0.72);
+
+  /* Green (Primary) */
+  --green-900: #052e16;
+  --green-800: #065f37;
+  --green-700: #047857;
+  --green-600: #059669;
+  --green-500: #10b981;
+  --green-400: #34d399;
+  --green-300: #6ee7b7;
+  --green-200: #a7f3d0;
+  --green-glow: rgba(16, 185, 129, 0.15);
+  --green-glow-strong: rgba(16, 185, 129, 0.3);
+
+  /* Gold (Secondary / XP) */
+  --gold-700: #b45309;
+  --gold-600: #d97706;
+  --gold-500: #f59e0b;
+  --gold-400: #fbbf24;
+  --gold-300: #fcd34d;
+  --gold-200: #fde68a;
+  --gold-accent: #dfcc00;
+  --gold-glow: rgba(251, 191, 36, 0.12);
+  --gold-glow-strong: rgba(251, 191, 36, 0.28);
+
+  /* Area Colors */
+  --area-linguagens: #2ba4b8;
+  --area-humanas: #e5960e;
+  --area-natureza: #10b981;
+  --area-matematica: #9b6dcc;
+
+  /* Text */
+  --text-primary: #e5ece5;
+  --text-secondary: #a0b8a0;
+  --text-muted: #6b876b;
+
+  /* Borders */
+  --border-subtle: rgba(16, 185, 129, 0.06);
+  --border-default: rgba(16, 185, 129, 0.12);
+  --border-strong: rgba(16, 185, 129, 0.22);
+
+  /* Red */
+  --red-500: #e05252;
+  --red-400: #f08080;
+  --red-glow: rgba(224, 82, 82, 0.15);
+
+  /* Spacing */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+
+  --sidebar-w: 240px;
+  --topbar-h: 64px;
+}
+
+:root[data-theme="light"] {
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-logo: "Outfit", var(--font-sans);
+
+  --bg-void: #f5faf7;
+  --bg-deep: #ffffff;
+  --bg-surface: #eef6f1;
+  --bg-card: #ffffff;
+  --bg-elevated: #e8f3ed;
+  --bg-overlay: rgba(241, 247, 243, 0.92);
+  --bg-glass: rgba(255, 255, 255, 0.86);
+
+  --green-900: #064e2c;
+  --green-800: #047857;
+  --green-700: #059669;
+  --green-600: #10b981;
+  --green-500: #16a34a;
+  --green-400: #15803d;
+  --green-300: #166534;
+  --green-200: #86efac;
+  --green-glow: rgba(22, 163, 74, 0.12);
+  --green-glow-strong: rgba(22, 163, 74, 0.22);
+
+  --gold-700: #92400e;
+  --gold-600: #b45309;
+  --gold-500: #d97706;
+  --gold-400: #b45309;
+  --gold-300: #92400e;
+  --gold-200: #78350f;
+  --gold-accent: #b08900;
+  --gold-glow: rgba(180, 83, 9, 0.12);
+  --gold-glow-strong: rgba(180, 83, 9, 0.2);
+
+  --area-linguagens: #0e7490;
+  --area-humanas: #b45309;
+  --area-natureza: #15803d;
+  --area-matematica: #7c3aed;
+
+  --text-primary: #1a2a21;
+  --text-secondary: #395444;
+  --text-muted: #5f786a;
+
+  --border-subtle: rgba(22, 163, 74, 0.12);
+  --border-default: rgba(22, 163, 74, 0.2);
+  --border-strong: rgba(22, 163, 74, 0.3);
+
+  --red-500: #dc2626;
+  --red-400: #b91c1c;
+  --red-glow: rgba(220, 38, 38, 0.1);
+
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 999px;
+
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.12);
+
+  --sidebar-w: 240px;
+  --topbar-h: 64px;
+}

@@ -5,6 +5,57 @@
 --   public.question_topic_mapping, public.topic_performance, public.tenants
 -- NAO tem: public.profiles, public.topics, public.questions
 
+-- 0) Extensoes e tabelas "existentes" (para ambiente local ficar funcional)
+create extension if not exists pgcrypto;
+
+create table if not exists public.users (
+  id                         uuid primary key references auth.users(id) on delete cascade,
+  nome                       text,
+  email                      text,
+  image                      text,
+  onboarding_done            boolean not null default false,
+  data_enem                  date,
+  horas_disponiveis_por_dia  integer not null default 2,
+  streak                     integer not null default 0,
+  created_at                 timestamptz default now()
+);
+
+create table if not exists public.pets (
+  user_id    uuid primary key references public.users(id) on delete cascade,
+  xp         integer not null default 0,
+  nivel      integer not null default 1,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.user_question_answers (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid references public.users(id) on delete cascade,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.question_topic_mapping (
+  id          uuid primary key default gen_random_uuid(),
+  question_id text,
+  topico_value text
+);
+
+create table if not exists public.topic_performance (
+  id            uuid primary key default gen_random_uuid(),
+  user_id        uuid references public.users(id) on delete cascade,
+  topico_value   text not null,
+  total_answered integer not null default 0,
+  total_correct  integer not null default 0,
+  accuracy_pct   numeric not null default 0,
+  updated_at     timestamptz default now()
+);
+
+create table if not exists public.tenants (
+  id         uuid primary key default gen_random_uuid(),
+  slug       text unique,
+  config     jsonb not null default '{}'::jsonb,
+  created_at timestamptz default now()
+);
+
 -- 1) Enum de roles (idempotente)
 do $$
 begin

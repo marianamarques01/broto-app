@@ -1,34 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { View } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
     House,
     BookOpenText,
-    Brain,
+    GraduationCap,
     ChartDonut,
     CalendarCheck,
 } from 'phosphor-react-native';
 import { colors } from '@/theme/tokens';
 import { useUser } from '@/hooks/use-user';
 import { TabIcon } from '@/components/TabIcon';
+import { BrotoChatFab } from '@/components/BrotoChatFab';
 
 export default function TabsLayout() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { user, loading } = useUser();
-    const [checked, setChecked] = useState(false);
 
     useEffect(() => {
         if (loading) return;
         if (user && !user.onboardingDone) {
             router.replace('/onboarding');
         }
-        setChecked(true);
     }, [loading, user, router]);
 
-    if (!checked) return null;
-
     return (
+        <View style={{ flex: 1 }}>
         <Tabs
             screenOptions={{
                 headerShown: false,
@@ -40,9 +39,9 @@ export default function TabsLayout() {
                     paddingBottom: insets.bottom,
                     height: 70 + insets.bottom,
                     elevation: 0,
-                    shadowOpacity: 0,
+                    boxShadow: 'none',
                 },
-                tabBarActiveTintColor: '#DFCC00',
+                tabBarActiveTintColor: colors.cta.gradientEnd,
                 tabBarInactiveTintColor: colors.text.muted,
             }}
         >
@@ -67,9 +66,9 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="questions"
                 options={{
-                    title: 'Questões',
+                    title: 'Área de Estudo',
                     tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} Icon={Brain} />
+                        <TabIcon focused={focused} Icon={GraduationCap} />
                     ),
                 }}
             />
@@ -92,5 +91,7 @@ export default function TabsLayout() {
                 }}
             />
         </Tabs>
+        <BrotoChatFab />
+        </View>
     );
 }

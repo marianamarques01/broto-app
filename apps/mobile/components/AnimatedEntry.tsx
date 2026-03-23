@@ -3,6 +3,7 @@
  * Uses manual useSharedValue animations — reliable on real iOS/Android devices.
  */
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -26,9 +27,10 @@ export function FadeInSection({
     const translateY = useSharedValue(14);
 
     useEffect(() => {
-        const easing = Easing.out(Easing.quad);
-        opacity.value = withDelay(delay, withTiming(1, { duration, easing }));
-        translateY.value = withDelay(delay, withTiming(0, { duration, easing }));
+        const easing = Platform.OS === 'web' ? undefined : Easing.out(Easing.quad);
+        const timingConfig = easing ? { duration, easing } : { duration };
+        opacity.value = withDelay(delay, withTiming(1, timingConfig));
+        translateY.value = withDelay(delay, withTiming(0, timingConfig));
     }, []);
 
     const style = useAnimatedStyle(() => ({
@@ -54,7 +56,9 @@ export function FadeInHeader({
     const opacity = useSharedValue(0);
 
     useEffect(() => {
-        opacity.value = withDelay(delay, withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) }));
+        const easing = Platform.OS === 'web' ? undefined : Easing.out(Easing.quad);
+        const timingConfig = easing ? { duration: 300, easing } : { duration: 300 };
+        opacity.value = withDelay(delay, withTiming(1, timingConfig));
     }, []);
 
     const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
@@ -79,9 +83,10 @@ export function StaggerItem({
     const delay = baseDelay + index * stagger;
 
     useEffect(() => {
-        const easing = Easing.out(Easing.quad);
-        opacity.value = withDelay(delay, withTiming(1, { duration: 350, easing }));
-        translateY.value = withDelay(delay, withTiming(0, { duration: 350, easing }));
+        const easing = Platform.OS === 'web' ? undefined : Easing.out(Easing.quad);
+        const timingConfig = easing ? { duration: 350, easing } : { duration: 350 };
+        opacity.value = withDelay(delay, withTiming(1, timingConfig));
+        translateY.value = withDelay(delay, withTiming(0, timingConfig));
     }, []);
 
     const style = useAnimatedStyle(() => ({
@@ -89,7 +94,11 @@ export function StaggerItem({
         transform: [{ translateY: translateY.value }],
     }));
 
-    return <Animated.View style={style}>{children}</Animated.View>;
+    return (
+        <Animated.View style={[style, { width: '100%', alignSelf: 'stretch' }]}>
+            {children}
+        </Animated.View>
+    );
 }
 
 /** Animated progress bar that fills on mount */
@@ -115,7 +124,7 @@ export function AnimatedBar({
             delay,
             withTiming(Math.min(Math.max(progress, 0), 100), {
                 duration: 700,
-                easing: Easing.out(Easing.cubic),
+                ...(Platform.OS === 'web' ? {} : { easing: Easing.out(Easing.cubic) }),
             }),
         );
     }, [progress, delay]);

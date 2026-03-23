@@ -1,25 +1,16 @@
 import { createClient } from '@/lib/supabase/client';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { router } from 'expo-router';
+import {
+    ApiError,
+    pathToFunctionName,
+    mergeParamsIntoBody,
+    extractErrorMessage,
+    type HttpMethod,
+    type InvokeOptions,
+} from '@broto/shared';
 
-export class ApiError extends Error {
-    status: number;
-    body?: unknown;
-
-    constructor(message: string, status: number, body?: unknown) {
-        super(message);
-        this.name = 'ApiError';
-        this.status = status;
-        this.body = body;
-    }
-}
-
-function pathToFunctionName(path: string): string {
-    if (!path.startsWith('/api/')) return path;
-    return path.replace(/^\/api\//, '').replace(/\//g, '-');
-}
-
-type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT';
+export { ApiError } from '@broto/shared';
 
 let handlingUnauthorized = false;
 
@@ -31,42 +22,20 @@ async function handleUnauthorizedOnce() {
         await supabase.auth.signOut().catch(() => {});
         router.replace('/(auth)/login');
     } finally {
-        setTimeout(() => {
-            handlingUnauthorized = false;
-        }, 2000);
+        // Reset after signOut + navigation completes (deterministic, not timer)
+        handlingUnauthorized = false;
     }
 }
 
-async function invoke<T>(
-    path: string,
-    options: {
-        method?: HttpMethod;
-        body?: Record<string, unknown>;
-        params?: Record<string, string | number | undefined>;
-    },
-): Promise<T> {
+async function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
     const fnName = pathToFunctionName(path);
     const supabase = createClient();
 
     const invokeOptions: { method?: HttpMethod; body?: Record<string, unknown> } = {};
     if (options.method) invokeOptions.method = options.method;
-    if (options.body !== undefined) invokeOptions.body = options.body;
 
-    if (options.params) {
-        const search = new URLSearchParams();
-        for (const [k, v] of Object.entries(options.params)) {
-            if (v !== undefined && v !== '') search.set(k, String(v));
-        }
-        const query = search.toString();
-        if (query) {
-            invokeOptions.body = {
-                ...(typeof options.body === 'object' && options.body !== null
-                    ? options.body
-                    : {}),
-                _query: query,
-            };
-        }
-    }
+    const body = mergeParamsIntoBody(options.body, options.params);
+    if (body !== undefined) invokeOptions.body = body;
 
     try {
         const { data, error } = await supabase.functions.invoke(
@@ -82,15 +51,12 @@ async function invoke<T>(
     } catch (e) {
         if (e instanceof FunctionsHttpError && e.context) {
             const res = e.context as Response;
-            const body = await res.json().catch(() => ({}));
-            const msg =
-                (body as { error?: string })?.error ??
-                (body as { message?: string })?.message ??
-                e.message;
+            const resBody = await res.json().catch(() => ({}));
+            const msg = extractErrorMessage(resBody, res.status);
             if (res.status === 401) {
                 handleUnauthorizedOnce().catch(() => {});
             }
-            throw new ApiError(msg, res.status, body);
+            throw new ApiError(msg, res.status, resBody);
         }
         if (e instanceof ApiError) throw e;
         throw new ApiError(

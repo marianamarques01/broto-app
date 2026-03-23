@@ -18,7 +18,12 @@ export function CentralGlowSvg({ subtle = false }: { subtle?: boolean }) {
     const midOpacity = subtle ? '0.08' : '0.15';
 
     return (
-        <View style={[styles.centralGlowWrap, { width: size, height: size }]} pointerEvents="none">
+        <View
+            style={[
+                styles.centralGlowWrap,
+                { width: size, height: size, pointerEvents: 'none' },
+            ]}
+        >
             <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
                 <Defs>
                     <RadialGradient id={subtle ? 'centralGlowSub' : 'centralGlow'} cx="0.5" cy="0.5" r="0.5" gradientUnits="objectBoundingBox">
@@ -49,7 +54,12 @@ export function HeroGlowSvg({ height }: { height?: number } = {}) {
     const h = height ?? SCREEN_H;
 
     return (
-        <View style={[StyleSheet.absoluteFill, { width: w, height: h }]} pointerEvents="none">
+        <View
+            style={[
+                StyleSheet.absoluteFill,
+                { width: w, height: h, pointerEvents: 'none' },
+            ]}
+        >
             <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
                 <Defs>
                     {/* Verde esquerda — 15% 45%, forte */}

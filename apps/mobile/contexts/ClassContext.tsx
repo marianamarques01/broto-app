@@ -27,27 +27,18 @@ export function ClassProvider({ children }: { children: ReactNode }) {
                 return;
             }
 
+            // Single query: get user's class + organization via join
             const { data: profile } = await supabase
                 .from('users')
-                .select('current_class_id')
+                .select('current_class_id, classes:current_class_id(*, organizations(*))')
                 .eq('id', user.id)
                 .single();
 
-            const classId = (profile as { current_class_id?: string } | null)?.current_class_id;
-            if (!classId) {
-                if (alive) setLoading(false);
-                return;
-            }
+            const classRow = (profile as Record<string, unknown> | null)?.classes as Record<string, unknown> | null;
 
-            const { data: classData } = await supabase
-                .from('classes')
-                .select('*, organizations(*)')
-                .eq('id', classId)
-                .single();
-
-            if (alive && classData) {
-                setCurrentClass(classData as unknown as Class);
-                setOrganization((classData as Record<string, unknown>).organizations as Organization ?? null);
+            if (alive && classRow) {
+                setCurrentClass(classRow as unknown as Class);
+                setOrganization(classRow.organizations as Organization ?? null);
             }
 
             if (alive) setLoading(false);

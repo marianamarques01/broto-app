@@ -40,7 +40,9 @@ function getBaseUrl(orgSlug?: string | null): string {
     // Estrutura esperada: `static/<org-slug>/...`
     if (process.env.EXPO_PUBLIC_SUPABASE_URL) {
         const supabaseBase = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/storage/v1/object/public/static`;
-        return orgSlug ? `${supabaseBase}/${orgSlug}` : supabaseBase;
+        // Observacao: na instância atual do Storage, os arquivos estao no prefixo raiz
+        // (ex.: `static/areas.json`). Por isso, nao anexamos `orgSlug` no fallback.
+        return supabaseBase;
     }
 
     return '';
@@ -208,8 +210,11 @@ async function searchQuestions(
     type QuestionRef = { year: number; index: number; language: string | null };
     const allRefs: QuestionRef[] = [];
 
-    for (const y of yearsToSearch) {
-        const examDetails = await loadExamDetails(baseUrl, y);
+    const allDetails = await Promise.all(
+        yearsToSearch.map(y => loadExamDetails(baseUrl, y).then(d => ({ y, d }))),
+    );
+
+    for (const { y, d: examDetails } of allDetails) {
         if (!examDetails) continue;
 
         for (const q of examDetails.questions) {
@@ -280,6 +285,7 @@ export function useQuestionsFilters(): QuestionsFiltersState &
     QuestionsFiltersActions {
     const { organization } = useClass();
     const baseUrl = getBaseUrl(organization?.slug ?? null);
+    const canLoadInitialData = !!baseUrl;
     const [areas, setAreas] = useState<Area[]>([]);
     const [topicos, setTopicos] = useState<Topico[]>([]);
     const [exams, setExams] = useState<Exam[]>([]);
@@ -299,22 +305,32 @@ export function useQuestionsFilters(): QuestionsFiltersState &
         setLoading(true);
         setError(null);
         try {
-            const [areasData, examsData] = await Promise.all([
-                fetchAreas(baseUrl),
-                fetchExams(baseUrl),
-            ]);
+            // Carrega `areas` primeiro: é o que destrava a UI da tela.
+            const areasData = await fetchAreas(baseUrl);
             setAreas(areasData);
-            setExams(examsData);
         } catch (err) {
+            setAreas([]);
             setError(normalizeNetworkErrorMessage(err, 'Erro ao carregar dados'));
         } finally {
             setLoading(false);
         }
+
+        // `exams` é usado apenas no dropdown de ano; carrega em background
+        // para não atrasar o render inicial.
+        fetchExams(baseUrl)
+            .then(examsData => setExams(examsData))
+            .catch(() => {
+                setExams([]);
+            });
     }, [baseUrl]);
 
     useEffect(() => {
+        if (!canLoadInitialData) {
+            setLoading(false);
+            return;
+        }
         loadInitialData();
-    }, [loadInitialData]);
+    }, [canLoadInitialData, loadInitialData]);
 
     useEffect(() => {
         if (!selectedArea) {

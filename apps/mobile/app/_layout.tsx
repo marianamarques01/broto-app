@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
 import { useFonts } from 'expo-font';
 import Animated, {
     useSharedValue,
@@ -9,7 +9,6 @@ import Animated, {
     withTiming,
     withDelay,
     Easing,
-    interpolate,
 } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Text as SvgText } from 'react-native-svg';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -21,6 +20,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { ClassProvider } from '@/contexts/ClassContext';
 import { colors, fonts, fontSize, spacing } from '@/theme/tokens';
 import { CentralGlowSvg } from '@/components/HeroGlowSvg';
+import FireflyBackground from '@/components/FireflyBackground';
 import {
     DMSans_400Regular,
     DMSans_500Medium,
@@ -38,74 +38,6 @@ import '@/global.css';
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 SplashScreen.preventAutoHideAsync();
-
-/* ── Firefly (igual a tela de login) ─────────── */
-
-const SPLASH_FIREFLIES = [
-    { x: 12, y: 18, s: 2.5, d: 0, t: 4.2, gold: false },
-    { x: 78, y: 12, s: 3.5, d: 1.4, t: 5.1, gold: true },
-    { x: 32, y: 62, s: 2, d: 0.6, t: 3.8, gold: false },
-    { x: 88, y: 48, s: 3, d: 2.3, t: 4.7, gold: false },
-    { x: 22, y: 42, s: 2, d: 1.9, t: 3.2, gold: true },
-    { x: 62, y: 28, s: 2.5, d: 0.9, t: 5.5, gold: false },
-    { x: 48, y: 72, s: 3, d: 3.1, t: 4.0, gold: true },
-    { x: 92, y: 35, s: 2, d: 1.6, t: 3.6, gold: false },
-    { x: 55, y: 55, s: 2.5, d: 2.8, t: 4.4, gold: false },
-    { x: 8, y: 58, s: 3, d: 0.3, t: 5.0, gold: true },
-];
-
-const FIREFLY_KEYFRAMES = {
-    progress: [0, 0.12, 0.45, 0.7, 0.9, 1],
-    opacity: [0, 0.9, 0.3, 0.85, 0.15, 0],
-    x: [0, 2, 8, -3, 5, 0],
-    y: [0, -4, -14, -20, -8, 0],
-    scale: [0.6, 1, 0.8, 1.1, 0.7, 0.6],
-};
-
-function SplashFirefly({ x, y, s, d, t, gold }: (typeof SPLASH_FIREFLIES)[0]) {
-    const progress = useSharedValue(0);
-    useEffect(() => {
-        progress.value = withDelay(
-            d * 1000,
-            withRepeat(
-                withSequence(
-                    withTiming(1, { duration: t * 1000, easing: Easing.inOut(Easing.ease) }),
-                    withTiming(0, { duration: 0 }),
-                ),
-                -1,
-            ),
-        );
-    }, []);
-    const style = useAnimatedStyle(() => ({
-        opacity: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.opacity),
-        transform: [
-            { translateX: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.x) },
-            { translateY: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.y) },
-            { scale: interpolate(progress.value, FIREFLY_KEYFRAMES.progress, FIREFLY_KEYFRAMES.scale) },
-        ],
-    }));
-    return (
-        <Animated.View
-            style={[
-                {
-                    position: 'absolute',
-                    left: `${x}%`,
-                    top: `${y}%`,
-                    width: s,
-                    height: s,
-                    borderRadius: s / 2,
-                    backgroundColor: gold ? '#fbbf24' : '#4ade80',
-                    shadowColor: gold ? '#fbbf24' : '#4ade80',
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: s * 3,
-                    elevation: 4,
-                },
-                style,
-            ]}
-        />
-    );
-}
 
 /* ── Wordmark em gradiente ── */
 
@@ -147,7 +79,10 @@ function AnimatedSplash({ visible }: { visible: boolean }) {
     const containerOpacity = useSharedValue(1);
 
     useEffect(() => {
-        contentOpacity.value = withDelay(100, withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }));
+        contentOpacity.value = withDelay(
+            100,
+            withTiming(1, { duration: 500, easing: Platform.OS === 'web' ? Easing.linear : Easing.out(Easing.quad) }),
+        );
 
         floatY.value = withDelay(
             400,
@@ -212,11 +147,7 @@ function AnimatedSplash({ visible }: { visible: boolean }) {
                 colors={[colors.bg.deep, colors.bg.void]}
                 style={splashStyles.container}
             >
-                <View style={splashStyles.firefliesContainer} pointerEvents="none">
-                    {SPLASH_FIREFLIES.map((f, i) => (
-                        <SplashFirefly key={i} {...f} />
-                    ))}
-                </View>
+                <FireflyBackground count={10} />
 
                 <View style={splashStyles.center}>
                     <Animated.View style={[splashStyles.glowPulseWrap, glowStyle]}>
@@ -242,10 +173,6 @@ function AnimatedSplash({ visible }: { visible: boolean }) {
 const splashStyles = StyleSheet.create({
     container: {
         flex: 1,
-        overflow: 'hidden',
-    },
-    firefliesContainer: {
-        ...StyleSheet.absoluteFillObject,
         overflow: 'hidden',
     },
     center: {
@@ -322,7 +249,7 @@ export default function RootLayout() {
     // When auth and fonts resolve, wait a beat then dismiss animated splash
     useEffect(() => {
         if (status !== 'loading' && fontsLoaded) {
-            const timer = setTimeout(() => setSplashVisible(false), 1000);
+            const timer = setTimeout(() => setSplashVisible(false), 300);
             return () => clearTimeout(timer);
         }
     }, [status, fontsLoaded]);
@@ -350,6 +277,20 @@ export default function RootLayout() {
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="onboarding" />
+                <Stack.Screen
+                    name="broto-chat"
+                    options={{
+                        presentation: 'modal',
+                        animation: 'slide_from_bottom',
+                    }}
+                />
+                <Stack.Screen
+                    name="study-area"
+                    options={{
+                        presentation: 'modal',
+                        animation: 'slide_from_bottom',
+                    }}
+                />
             </Stack>
             <AnimatedSplash visible={splashVisible} />
         </ClassProvider>
