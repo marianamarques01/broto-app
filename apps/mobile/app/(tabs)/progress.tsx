@@ -477,7 +477,7 @@ export default function ProgressScreen() {
                                         width: 6,
                                         height: 6,
                                         borderRadius: 3,
-                                        backgroundColor: colors.cta.gradientEnd,
+                                        backgroundColor: colors.gold[400],
                                     }}
                                 />
                                 <Text

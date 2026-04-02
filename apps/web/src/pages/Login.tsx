@@ -54,9 +54,6 @@ export function Login() {
 
       <div className="broto-auth__card">
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div className="broto-auth__logo" aria-hidden>
-            {'\u{1F331}'}
-          </div>
           <h1 className="broto-auth__title">broto</h1>
           <p className="broto-auth__tagline">estude & floresça</p>
         </div>

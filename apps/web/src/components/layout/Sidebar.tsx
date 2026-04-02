@@ -17,8 +17,10 @@ export function Sidebar() {
   return (
     <aside className="broto-sidebar">
       <div className="broto-sidebar__brand">
-        <h1 className="broto-sidebar__brand-name">broto</h1>
-        <p className="broto-sidebar__brand-tag">estude & floresça</p>
+        <NavLink to="/" end className="broto-sidebar__brand-link" aria-label="Broto — início">
+          <h1 className="broto-sidebar__brand-name">broto</h1>
+          <p className="broto-sidebar__brand-tag">estude & floresça</p>
+        </NavLink>
       </div>
 
       <nav className="broto-sidebar__nav">

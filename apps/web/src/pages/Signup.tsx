@@ -56,10 +56,8 @@ export function Signup() {
 
       <div className="broto-auth__card">
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div className="broto-auth__logo" aria-hidden>
-            {'\u{1F331}'}
-          </div>
-          <h1 className="broto-auth__title">Criar conta</h1>
+          <h1 className="broto-auth__title">broto</h1>
+          <p className="broto-auth__subtitle">Criar conta</p>
           <p className="broto-auth__subtitle">Comece sua jornada no Broto</p>
         </div>
 

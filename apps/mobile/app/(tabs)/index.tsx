@@ -177,12 +177,12 @@ const MissionCard = memo(function MissionCard({
                             borderColor: 'rgba(223,204,0,0.4)',
                         }}
                     >
-                        <Zap size={11} color={colors.cta.gradientEnd} />
+                        <Zap size={11} color={colors.gold[400]} />
                         <Text
                             style={{
                                 fontSize: 12,
                                 fontFamily: fonts.sansBold,
-                                color: colors.cta.gradientEnd,
+                                color: colors.gold[400],
                                 marginLeft: 3,
                             }}
                         >
@@ -683,7 +683,7 @@ export default function HomeScreen() {
                                             width: 6,
                                             height: 6,
                                             borderRadius: 3,
-                                            backgroundColor: colors.cta.gradientEnd,
+                                            backgroundColor: colors.gold[400],
                                         }}
                                     />
                                     <Text

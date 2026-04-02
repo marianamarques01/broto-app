@@ -9,7 +9,9 @@ export function TopBar({ title }: { title: string }) {
 
   return (
     <header className="broto-topbar">
-      <h2 className="broto-topbar__title">{title}</h2>
+      <div className="broto-topbar__title-row">
+        <h2 className="broto-topbar__title">{title}</h2>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button
           type="button"

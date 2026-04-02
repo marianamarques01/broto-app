@@ -18,9 +18,11 @@ export function HomeDashboardTopBar({
 
   return (
     <header className="broto-topbar broto-topbar--dashboard">
-      <div className="broto-topbar__intro">
-        <h2 className="broto-topbar__title">{greeting}</h2>
-        <p className="broto-topbar__subtitle">{plantLine}</p>
+      <div className="broto-topbar__lead">
+        <div className="broto-topbar__intro">
+          <h2 className="broto-topbar__title">{greeting}</h2>
+          <p className="broto-topbar__subtitle">{plantLine}</p>
+        </div>
       </div>
       <div className="broto-topbar__actions">
         <div className="broto-topbar__metrics" aria-label="XP e sequência">

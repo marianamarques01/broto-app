@@ -203,7 +203,7 @@ export default function StudyScreen() {
                         <View className="mt-4 w-full" style={{ maxWidth: 260 }}>
                             <AnimatedBar
                                 progress={loadingPet ? 0 : xpProgress}
-                                color={colors.cta.gradientEnd}
+                                color={colors.gold[400]}
                                 bgColor="rgba(0,0,0,0.3)"
                                 height={10}
                                 delay={500}
@@ -326,7 +326,7 @@ export default function StudyScreen() {
                                         width: 3,
                                         height: 14,
                                         borderRadius: 1.5,
-                                        backgroundColor: colors.cta.gradientEnd,
+                                        backgroundColor: colors.gold[400],
                                     }}
                                 />
                                 <Text
