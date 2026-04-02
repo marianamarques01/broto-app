@@ -1,3 +1,6 @@
+### Turborepo
+.turbo/
+
 ### Expo / React Native (managed)
 .expo/
 .expo-shared/
