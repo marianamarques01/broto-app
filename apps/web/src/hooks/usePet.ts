@@ -28,8 +28,8 @@ export const FASE_LABEL: Record<PetData['fase'], string> = {
   especial: 'Especial',
 }
 
-const { useHook, refresh, refreshIfStale } = createCachedHook<PetData>(
-  () => api.get<PetData>('/api/pet/me'),
+const { useHook, refresh, refreshIfStale } = createCachedHook<PetData>(() =>
+  api.get<PetData>('/api/pet/me'),
 )
 
 export { refreshIfStale as refreshPetIfStale }

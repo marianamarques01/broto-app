@@ -12,11 +12,7 @@ type AdminAuthContextType = {
 const AdminAuthContext = createContext<AdminAuthContextType | null>(null)
 
 async function fetchAdminProfile(userId: string): Promise<AdminProfile | null> {
-  const { data } = await supabase
-    .from('admin_profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
+  const { data } = await supabase.from('admin_profiles').select('*').eq('id', userId).single()
   return data ?? null
 }
 
@@ -27,7 +23,9 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   // 1. Escutar auth — so salva o userId, sem fazer queries dentro do callback
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUserId(session.user.id)
       } else {
@@ -44,7 +42,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!userId) return
 
-    fetchAdminProfile(userId).then(profile => {
+    fetchAdminProfile(userId).then((profile) => {
       setAdmin(profile)
       setLoading(false)
     })

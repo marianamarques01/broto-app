@@ -7,11 +7,24 @@ import { useQuestionsFilters } from '@/hooks/useQuestionsFilters'
 
 export function Study() {
   const {
-    areas, topicos, exams, questions,
-    loading, loadingQuestions, error,
-    selectedArea, selectedYear, selectedTopico, selectedLanguage,
-    setSelectedArea, setSelectedYear, setSelectedTopico, setSelectedLanguage,
-    retry, isLinguagensArea, isLanguageFilterEnabled,
+    areas,
+    topicos,
+    exams,
+    questions,
+    loading,
+    loadingQuestions,
+    error,
+    selectedArea,
+    selectedYear,
+    selectedTopico,
+    selectedLanguage,
+    setSelectedArea,
+    setSelectedYear,
+    setSelectedTopico,
+    setSelectedLanguage,
+    retry,
+    isLinguagensArea,
+    isLanguageFilterEnabled,
   } = useQuestionsFilters()
 
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -19,7 +32,7 @@ export function Study() {
 
   function handleNext() {
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex(i => i + 1)
+      setCurrentIndex((i) => i + 1)
     }
   }
 
@@ -81,7 +94,14 @@ export function Study() {
             {!loadingQuestions && selectedArea && questions.length === 0 && !error && (
               <div className="broto-empty-state">
                 <div style={{ fontSize: '1.5rem', marginBottom: 12 }}>{'\u{1F50D}'}</div>
-                <p style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 6px' }}>
+                <p
+                  style={{
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                    margin: '0 0 6px',
+                  }}
+                >
                   Selecione filtros para começar
                 </p>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
@@ -92,13 +112,15 @@ export function Study() {
 
             {!loadingQuestions && currentQuestion && (
               <div style={{ marginTop: 22 }}>
-                <div style={{
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                  marginBottom: 10,
-                  color: 'var(--text-muted)',
-                  letterSpacing: '0.05em',
-                }}>
+                <div
+                  style={{
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    marginBottom: 10,
+                    color: 'var(--text-muted)',
+                    letterSpacing: '0.05em',
+                  }}
+                >
                   Questão {currentIndex + 1} de {questions.length}
                 </div>
                 <QuestionPlayer

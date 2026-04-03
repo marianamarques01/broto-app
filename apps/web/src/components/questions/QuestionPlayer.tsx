@@ -16,7 +16,7 @@ export function QuestionPlayer({ question, areaKey, onNext }: QuestionPlayerProp
   const [answered, setAnswered] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  const correct = question.alternatives.find(a => a.isCorrect)?.letter ?? null
+  const correct = question.alternatives.find((a) => a.isCorrect)?.letter ?? null
 
   async function handleSelect(letter: string) {
     if (answered) return
@@ -46,20 +46,36 @@ export function QuestionPlayer({ question, areaKey, onNext }: QuestionPlayerProp
 
   return (
     <div className="broto-card" style={{ padding: 26 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-        <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 18,
+        }}
+      >
+        <span
+          style={{
+            fontSize: '0.72rem',
+            fontWeight: 600,
+            color: 'var(--text-muted)',
+            letterSpacing: '0.05em',
+          }}
+        >
           ENEM {question.year} · Questão {question.index}
         </span>
         {question.language && (
-          <span style={{
-            fontSize: 11,
-            padding: '3px 10px',
-            borderRadius: 'var(--radius-full)',
-            background: 'rgba(43, 164, 184, 0.12)',
-            color: 'var(--area-linguagens)',
-            border: '1px solid rgba(43, 164, 184, 0.2)',
-            fontWeight: 600,
-          }}>
+          <span
+            style={{
+              fontSize: 11,
+              padding: '3px 10px',
+              borderRadius: 'var(--radius-full)',
+              background: 'rgba(43, 164, 184, 0.12)',
+              color: 'var(--area-linguagens)',
+              border: '1px solid rgba(43, 164, 184, 0.2)',
+              fontWeight: 600,
+            }}
+          >
             {question.language}
           </span>
         )}
@@ -77,16 +93,51 @@ export function QuestionPlayer({ question, areaKey, onNext }: QuestionPlayerProp
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-subtle)',
           }}
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.context, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'span', 'img', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'sup', 'sub', 'b', 'i', 'u', 'h3', 'h4', 'div'], ALLOWED_ATTR: ['src', 'alt', 'class', 'style'] }) }}
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(question.context, {
+              ALLOWED_TAGS: [
+                'p',
+                'br',
+                'strong',
+                'em',
+                'span',
+                'img',
+                'ul',
+                'ol',
+                'li',
+                'table',
+                'tr',
+                'td',
+                'th',
+                'sup',
+                'sub',
+                'b',
+                'i',
+                'u',
+                'h3',
+                'h4',
+                'div',
+              ],
+              ALLOWED_ATTR: ['src', 'alt', 'class', 'style'],
+            }),
+          }}
         />
       )}
 
-      <p style={{ fontSize: '0.92rem', lineHeight: 1.65, color: 'var(--text-primary)', marginBottom: 22, marginTop: 0 }}>
+      <p
+        style={{
+          fontSize: '0.92rem',
+          lineHeight: 1.65,
+          color: 'var(--text-primary)',
+          marginBottom: 22,
+          marginTop: 0,
+        }}
+      >
         {question.title}
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {question.alternatives.map(alt => {
+        {question.alternatives.map((alt) => {
           let bg = 'var(--bg-deep)'
           let borderColor = 'var(--border-default)'
           let textColor = 'var(--text-primary)'
@@ -131,19 +182,29 @@ export function QuestionPlayer({ question, areaKey, onNext }: QuestionPlayerProp
                 transition: 'border-color 0.15s, background 0.15s',
               }}
             >
-              <span style={{
-                fontWeight: 700,
-                fontSize: 13,
-                minWidth: 24,
-                height: 24,
-                borderRadius: 6,
-                background: answered && alt.letter === correct ? 'var(--green-500)' : answered && alt.letter === selected ? 'var(--red-500)' : 'rgba(16, 185, 129, 0.1)',
-                color: answered && (alt.letter === correct || alt.letter === selected) ? '#fff' : 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
+              <span
+                style={{
+                  fontWeight: 700,
+                  fontSize: 13,
+                  minWidth: 24,
+                  height: 24,
+                  borderRadius: 6,
+                  background:
+                    answered && alt.letter === correct
+                      ? 'var(--green-500)'
+                      : answered && alt.letter === selected
+                        ? 'var(--red-500)'
+                        : 'rgba(16, 185, 129, 0.1)',
+                  color:
+                    answered && (alt.letter === correct || alt.letter === selected)
+                      ? '#fff'
+                      : 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
                 {alt.letter}
               </span>
               <span style={{ flex: 1 }}>{alt.text ?? ''}</span>

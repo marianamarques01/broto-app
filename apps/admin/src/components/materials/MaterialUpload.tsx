@@ -3,7 +3,11 @@ import { useState, useRef } from 'react'
 type Props = {
   classId: string
   onUploadPDF: (file: File, title: string) => Promise<{ error: string | null }>
-  onAddURL: (url: string, title: string, type: 'url' | 'youtube') => Promise<{ error: string | null }>
+  onAddURL: (
+    url: string,
+    title: string,
+    type: 'url' | 'youtube',
+  ) => Promise<{ error: string | null }>
 }
 
 type UploadTab = 'pdf' | 'url' | 'youtube'
@@ -23,23 +27,37 @@ export function MaterialUpload({ onUploadPDF, onAddURL }: Props) {
   }
 
   async function handleSubmit() {
-    if (!title.trim()) { setError('Informe um titulo'); return }
+    if (!title.trim()) {
+      setError('Informe um titulo')
+      return
+    }
     setLoading(true)
     setError(null)
 
     let result: { error: string | null }
 
     if (tab === 'pdf') {
-      if (!file) { setError('Selecione um arquivo'); setLoading(false); return }
+      if (!file) {
+        setError('Selecione um arquivo')
+        setLoading(false)
+        return
+      }
       result = await onUploadPDF(file, title.trim())
     } else {
-      if (!url.trim()) { setError('Informe uma URL'); setLoading(false); return }
+      if (!url.trim()) {
+        setError('Informe uma URL')
+        setLoading(false)
+        return
+      }
       const type = isYouTube(url) ? 'youtube' : 'url'
       result = await onAddURL(url.trim(), title.trim(), type)
     }
 
     setLoading(false)
-    if (result.error) { setError(result.error); return }
+    if (result.error) {
+      setError(result.error)
+      return
+    }
 
     setSuccess(true)
     setTitle('')
@@ -70,7 +88,14 @@ export function MaterialUpload({ onUploadPDF, onAddURL }: Props) {
   )
 
   return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 12, padding: '20px 24px' }}>
+    <div
+      style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-default)',
+        borderRadius: 12,
+        padding: '20px 24px',
+      }}
+    >
       <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Adicionar material</h3>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
@@ -81,18 +106,31 @@ export function MaterialUpload({ onUploadPDF, onAddURL }: Props) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 500, display: 'block', marginBottom: 4 }}>Titulo</label>
+          <label style={{ fontSize: 12, fontWeight: 500, display: 'block', marginBottom: 4 }}>
+            Titulo
+          </label>
           <input
             value={title}
-            onChange={e => setTitle(e.target.value)}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="Ex: Apostila de Matematica"
-            style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 13, boxSizing: 'border-box', background: 'var(--bg-deep)', color: 'var(--text-primary)' }}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 8,
+              fontSize: 13,
+              boxSizing: 'border-box',
+              background: 'var(--bg-deep)',
+              color: 'var(--text-primary)',
+            }}
           />
         </div>
 
         {tab === 'pdf' ? (
           <div>
-            <label style={{ fontSize: 12, fontWeight: 500, display: 'block', marginBottom: 4 }}>Arquivo PDF</label>
+            <label style={{ fontSize: 12, fontWeight: 500, display: 'block', marginBottom: 4 }}>
+              Arquivo PDF
+            </label>
             <div
               onClick={() => fileRef.current?.click()}
               role="presentation"
@@ -108,16 +146,18 @@ export function MaterialUpload({ onUploadPDF, onAddURL }: Props) {
               <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
                 {file ? file.name : 'Clique para selecionar um PDF'}
               </p>
-              {file && <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '4px 0 0' }}>
-                {(file.size / 1024 / 1024).toFixed(1)} MB
-              </p>}
+              {file && (
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                  {(file.size / 1024 / 1024).toFixed(1)} MB
+                </p>
+              )}
             </div>
             <input
               ref={fileRef}
               type="file"
               accept=".pdf"
               style={{ display: 'none' }}
-              onChange={e => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </div>
         ) : (
@@ -127,15 +167,26 @@ export function MaterialUpload({ onUploadPDF, onAddURL }: Props) {
             </label>
             <input
               value={url}
-              onChange={e => setUrl(e.target.value)}
+              onChange={(e) => setUrl(e.target.value)}
               placeholder={tab === 'youtube' ? 'https://youtube.com/watch?v=...' : 'https://...'}
-              style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 13, boxSizing: 'border-box', background: 'var(--bg-deep)', color: 'var(--text-primary)' }}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 8,
+                fontSize: 13,
+                boxSizing: 'border-box',
+                background: 'var(--bg-deep)',
+                color: 'var(--text-primary)',
+              }}
             />
           </div>
         )}
 
         {error && <p style={{ color: 'var(--red-400)', fontSize: 12, margin: 0 }}>{error}</p>}
-        {success && <p style={{ color: 'var(--green-600)', fontSize: 12, margin: 0 }}>Material adicionado!</p>}
+        {success && (
+          <p style={{ color: 'var(--green-600)', fontSize: 12, margin: 0 }}>Material adicionado!</p>
+        )}
 
         <button
           type="button"

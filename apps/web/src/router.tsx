@@ -15,10 +15,21 @@ import { Link } from 'react-router-dom'
 
 function NotFound() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 16,
+      }}
+    >
       <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0 }}>404</h1>
       <p style={{ color: '#666', margin: 0 }}>Pagina nao encontrada</p>
-      <Link to="/" style={{ color: '#2e7d32', fontWeight: 500 }}>Voltar ao inicio</Link>
+      <Link to="/" style={{ color: '#2e7d32', fontWeight: 500 }}>
+        Voltar ao inicio
+      </Link>
     </div>
   )
 }
@@ -28,7 +39,11 @@ export const router = createBrowserRouter([
   { path: '/signup', element: <Signup /> },
   { path: '/onboarding', element: <Onboarding /> },
   {
-    element: <ProtectedRoute><AppShell /></ProtectedRoute>,
+    element: (
+      <ProtectedRoute>
+        <AppShell />
+      </ProtectedRoute>
+    ),
     children: [
       { path: '/', element: <Home /> },
       { path: '/study/questions', element: <Study /> },

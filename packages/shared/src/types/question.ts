@@ -31,12 +31,8 @@ export interface Question {
   }>
 }
 
-export function getQuestionId(
-  q: Pick<Question, 'year' | 'index' | 'language'>,
-): string {
-  return q.language
-    ? `${q.year}-${q.index}-${q.language}`
-    : `${q.year}-${q.index}`
+export function getQuestionId(q: Pick<Question, 'year' | 'index' | 'language'>): string {
+  return q.language ? `${q.year}-${q.index}-${q.language}` : `${q.year}-${q.index}`
 }
 
 export interface QuestionsResponse {

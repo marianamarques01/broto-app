@@ -19,7 +19,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Listen for auth changes - only save userId, no queries inside callback (avoids deadlock)
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, session) => {
       if (session?.user) {
         setUserId(session.user.id)
       } else {
@@ -72,8 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signUp(email: string, password: string, nome: string) {
     const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { nome } }
+      email,
+      password,
+      options: { data: { nome } },
     })
     if (error) return { error: 'Erro ao criar conta' }
     return { error: null }
@@ -82,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signOut() {
     await supabase.auth.signOut()
     // Clear user-scoped localStorage to prevent cross-account leakage (I3, E4)
-    Object.keys(localStorage).forEach(key => {
+    Object.keys(localStorage).forEach((key) => {
       if (key.startsWith('broto:')) localStorage.removeItem(key)
     })
     setUser(null)

@@ -1,6 +1,14 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { Home, BookOpen, BarChart3, CalendarCheck, MessageCircle, LogOut, GraduationCap } from 'lucide-react'
+import {
+  Home,
+  BookOpen,
+  BarChart3,
+  CalendarCheck,
+  MessageCircle,
+  LogOut,
+  GraduationCap,
+} from 'lucide-react'
 
 const NAV_ITEMS = [
   { path: '/', label: 'Inicio', icon: Home },
@@ -24,7 +32,7 @@ export function Sidebar() {
       </div>
 
       <nav className="broto-sidebar__nav">
-        {NAV_ITEMS.map(item => (
+        {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

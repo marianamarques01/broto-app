@@ -25,8 +25,8 @@ export interface ProgressData {
   areas: AreaStat[]
 }
 
-const { useHook, refresh, refreshIfStale } = createCachedHook<ProgressData>(
-  () => api.get<ProgressData>('/api/user/progress'),
+const { useHook, refresh, refreshIfStale } = createCachedHook<ProgressData>(() =>
+  api.get<ProgressData>('/api/user/progress'),
 )
 
 export { refreshIfStale as refreshProgressIfStale }

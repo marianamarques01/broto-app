@@ -63,15 +63,26 @@ export function Signup() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div>
-            <label className="broto-label" htmlFor="signup-nome">Nome</label>
+            <label className="broto-label" htmlFor="signup-nome">
+              Nome
+            </label>
             <div style={{ position: 'relative' }}>
-              <User size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <User
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: 14,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
               <input
                 id="signup-nome"
                 className="broto-input"
                 type="text"
                 value={nome}
-                onChange={e => setNome(e.target.value)}
+                onChange={(e) => setNome(e.target.value)}
                 required
                 placeholder="Seu nome"
                 style={{ paddingLeft: 40 }}
@@ -80,15 +91,26 @@ export function Signup() {
           </div>
 
           <div>
-            <label className="broto-label" htmlFor="signup-email">E-mail</label>
+            <label className="broto-label" htmlFor="signup-email">
+              E-mail
+            </label>
             <div style={{ position: 'relative' }}>
-              <Mail size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Mail
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: 14,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
               <input
                 id="signup-email"
                 className="broto-input"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="seu@email.com"
                 style={{ paddingLeft: 40 }}
@@ -97,15 +119,26 @@ export function Signup() {
           </div>
 
           <div>
-            <label className="broto-label" htmlFor="signup-password">Senha</label>
+            <label className="broto-label" htmlFor="signup-password">
+              Senha
+            </label>
             <div style={{ position: 'relative' }}>
-              <Lock size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Lock
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: 14,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
               <input
                 id="signup-password"
                 className="broto-input"
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Minimo 6 caracteres"
                 style={{ paddingLeft: 40 }}
@@ -115,12 +148,24 @@ export function Signup() {
 
           {error && <p className="broto-text-error">{error}</p>}
 
-          <button type="submit" disabled={loading} className="broto-btn-primary" style={{ marginTop: 4 }}>
+          <button
+            type="submit"
+            disabled={loading}
+            className="broto-btn-primary"
+            style={{ marginTop: 4 }}
+          >
             {loading ? 'Criando...' : 'Criar conta'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: 24, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        <p
+          style={{
+            textAlign: 'center',
+            marginTop: 24,
+            fontSize: '0.85rem',
+            color: 'var(--text-secondary)',
+          }}
+        >
           Já tem conta?{' '}
           <Link to="/login" className="broto-link-accent">
             Entrar

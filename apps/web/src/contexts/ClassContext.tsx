@@ -21,7 +21,10 @@ export function ClassProvider({ children }: { children: ReactNode }) {
     async function load() {
       const { data: userData } = await supabase.auth.getUser()
       const user = userData?.user
-      if (!user) { if (alive) setLoading(false); return }
+      if (!user) {
+        if (alive) setLoading(false)
+        return
+      }
 
       const { data: profile } = await supabase
         .from('users')
@@ -30,7 +33,10 @@ export function ClassProvider({ children }: { children: ReactNode }) {
         .single()
 
       const classId = (profile as { current_class_id?: string } | null)?.current_class_id
-      if (!classId) { if (alive) setLoading(false); return }
+      if (!classId) {
+        if (alive) setLoading(false)
+        return
+      }
 
       const { data: classData } = await supabase
         .from('classes')
@@ -40,14 +46,20 @@ export function ClassProvider({ children }: { children: ReactNode }) {
 
       if (alive && classData) {
         setCurrentClass(classData as unknown as Class)
-        setOrganization((classData as Record<string, unknown>).organizations as Organization ?? null)
+        setOrganization(
+          ((classData as Record<string, unknown>).organizations as Organization) ?? null,
+        )
       }
 
       if (alive) setLoading(false)
     }
 
-    load().catch(() => { if (alive) setLoading(false) })
-    return () => { alive = false }
+    load().catch(() => {
+      if (alive) setLoading(false)
+    })
+    return () => {
+      alive = false
+    }
   }, [])
 
   return (

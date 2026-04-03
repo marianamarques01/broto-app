@@ -26,7 +26,13 @@ export function ClassDetail() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  const { materials, loading: materialsLoading, uploadPDF, addURL, deleteMaterial } = useMaterials(classId!)
+  const {
+    materials,
+    loading: materialsLoading,
+    uploadPDF,
+    addURL,
+    deleteMaterial,
+  } = useMaterials(classId!)
   const { indicators, loading: indicatorsLoading } = useClassIndicators(classId!)
   const { updateClass, deleteClass } = useClasses()
 
@@ -58,7 +64,11 @@ export function ClassDetail() {
       description: editDescription.trim() || undefined,
     })
     if (!error) {
-      setCls(prev => prev ? { ...prev, name: editName.trim(), description: editDescription.trim() || undefined } : prev)
+      setCls((prev) =>
+        prev
+          ? { ...prev, name: editName.trim(), description: editDescription.trim() || undefined }
+          : prev,
+      )
       setEditing(false)
     }
     setSaving(false)
@@ -89,7 +99,14 @@ export function ClassDetail() {
   })
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-void)', color: 'var(--text-primary)' }}>
+    <div
+      style={{
+        display: 'flex',
+        minHeight: '100vh',
+        background: 'var(--bg-void)',
+        color: 'var(--text-primary)',
+      }}
+    >
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Header
@@ -136,7 +153,13 @@ export function ClassDetail() {
           }
         />
 
-        <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)', paddingLeft: 32 }}>
+        <div
+          style={{
+            background: 'var(--bg-card)',
+            borderBottom: '1px solid var(--border-default)',
+            paddingLeft: 32,
+          }}
+        >
           <button style={tabStyle('materials')} onClick={() => setActiveTab('materials')}>
             Materiais
           </button>
@@ -147,17 +170,20 @@ export function ClassDetail() {
 
         <main style={{ padding: '24px 32px', flex: 1 }}>
           {activeTab === 'materials' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'start' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 360px',
+                gap: 24,
+                alignItems: 'start',
+              }}
+            >
               <MaterialsList
                 materials={materials}
                 loading={materialsLoading}
                 onDelete={deleteMaterial}
               />
-              <MaterialUpload
-                classId={classId!}
-                onUploadPDF={uploadPDF}
-                onAddURL={addURL}
-              />
+              <MaterialUpload classId={classId!} onUploadPDF={uploadPDF} onAddURL={addURL} />
             </div>
           )}
 
@@ -174,44 +200,82 @@ export function ClassDetail() {
       {editing && (
         <div
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
           }}
           onClick={() => setEditing(false)}
         >
           <div
             style={{
-              background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 12, padding: 32,
-              width: 420, maxWidth: '90vw',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-default)',
+              borderRadius: 12,
+              padding: 32,
+              width: 420,
+              maxWidth: '90vw',
             }}
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 600 }}>Editar turma</h3>
 
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6, color: 'var(--text-secondary)' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: 13,
+                fontWeight: 500,
+                marginBottom: 6,
+                color: 'var(--text-secondary)',
+              }}
+            >
               Nome
             </label>
             <input
               value={editName}
-              onChange={e => setEditName(e.target.value)}
+              onChange={(e) => setEditName(e.target.value)}
               style={{
-                width: '100%', padding: '10px 12px', border: '1px solid var(--border-strong)',
-                background: 'var(--bg-deep)', color: 'var(--text-primary)',
-                borderRadius: 8, fontSize: 14, marginBottom: 16, boxSizing: 'border-box',
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid var(--border-strong)',
+                background: 'var(--bg-deep)',
+                color: 'var(--text-primary)',
+                borderRadius: 8,
+                fontSize: 14,
+                marginBottom: 16,
+                boxSizing: 'border-box',
               }}
             />
 
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6, color: 'var(--text-secondary)' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: 13,
+                fontWeight: 500,
+                marginBottom: 6,
+                color: 'var(--text-secondary)',
+              }}
+            >
               Descricao
             </label>
             <textarea
               value={editDescription}
-              onChange={e => setEditDescription(e.target.value)}
+              onChange={(e) => setEditDescription(e.target.value)}
               rows={3}
               style={{
-                width: '100%', padding: '10px 12px', border: '1px solid var(--border-strong)',
-                borderRadius: 8, fontSize: 14, marginBottom: 20, resize: 'vertical',
-                boxSizing: 'border-box', background: 'var(--bg-deep)', color: 'var(--text-primary)',
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 8,
+                fontSize: 14,
+                marginBottom: 20,
+                resize: 'vertical',
+                boxSizing: 'border-box',
+                background: 'var(--bg-deep)',
+                color: 'var(--text-primary)',
               }}
             />
 
@@ -219,8 +283,13 @@ export function ClassDetail() {
               <button
                 onClick={() => setEditing(false)}
                 style={{
-                  background: 'var(--bg-elevated)', border: 'none', borderRadius: 8, color: 'var(--text-primary)',
-                  padding: '10px 20px', fontSize: 14, cursor: 'pointer',
+                  background: 'var(--bg-elevated)',
+                  border: 'none',
+                  borderRadius: 8,
+                  color: 'var(--text-primary)',
+                  padding: '10px 20px',
+                  fontSize: 14,
+                  cursor: 'pointer',
                 }}
               >
                 Cancelar
@@ -229,8 +298,13 @@ export function ClassDetail() {
                 onClick={handleSave}
                 disabled={saving || !editName.trim()}
                 style={{
-                  background: 'var(--green-600)', color: '#fff', border: 'none', borderRadius: 8,
-                  padding: '10px 20px', fontSize: 14, cursor: 'pointer',
+                  background: 'var(--green-600)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '10px 20px',
+                  fontSize: 14,
+                  cursor: 'pointer',
                   opacity: saving || !editName.trim() ? 0.6 : 1,
                 }}
               >
@@ -244,32 +318,55 @@ export function ClassDetail() {
       {showDeleteConfirm && (
         <div
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
           }}
           onClick={() => setShowDeleteConfirm(false)}
         >
           <div
             style={{
-              background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 12, padding: 32,
-              width: 400, maxWidth: '90vw',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-default)',
+              borderRadius: 12,
+              padding: 32,
+              width: 400,
+              maxWidth: '90vw',
             }}
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600, color: 'var(--red-400)' }}>
+            <h3
+              style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600, color: 'var(--red-400)' }}
+            >
               Excluir turma
             </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: '0 0 24px', lineHeight: 1.5 }}>
-              Tem certeza que deseja excluir <strong>{cls?.name}</strong>? Essa acao nao pode ser desfeita.
-              Todos os materiais e matriculas associados serao removidos.
+            <p
+              style={{
+                color: 'var(--text-muted)',
+                fontSize: 14,
+                margin: '0 0 24px',
+                lineHeight: 1.5,
+              }}
+            >
+              Tem certeza que deseja excluir <strong>{cls?.name}</strong>? Essa acao nao pode ser
+              desfeita. Todos os materiais e matriculas associados serao removidos.
             </p>
 
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 style={{
-                  background: 'var(--bg-elevated)', border: 'none', borderRadius: 8, color: 'var(--text-primary)',
-                  padding: '10px 20px', fontSize: 14, cursor: 'pointer',
+                  background: 'var(--bg-elevated)',
+                  border: 'none',
+                  borderRadius: 8,
+                  color: 'var(--text-primary)',
+                  padding: '10px 20px',
+                  fontSize: 14,
+                  cursor: 'pointer',
                 }}
               >
                 Cancelar
@@ -278,8 +375,13 @@ export function ClassDetail() {
                 onClick={handleDelete}
                 disabled={deleting}
                 style={{
-                  background: 'var(--red-500)', color: '#fff', border: 'none', borderRadius: 8,
-                  padding: '10px 20px', fontSize: 14, cursor: 'pointer',
+                  background: 'var(--red-500)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '10px 20px',
+                  fontSize: 14,
+                  cursor: 'pointer',
                   opacity: deleting ? 0.6 : 1,
                 }}
               >

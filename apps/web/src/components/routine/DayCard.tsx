@@ -34,15 +34,12 @@ interface Mission {
   locked: boolean
 }
 
-function buildMissions(
-  areas: AreaStat[] | undefined,
-  daily: DailyMissionsState,
-): Mission[] {
+function buildMissions(areas: AreaStat[] | undefined, daily: DailyMissionsState): Mission[] {
   const sortedKeys = areas?.length
     ? [...areas]
-        .filter(a => a.totalAnswered >= 1)
+        .filter((a) => a.totalAnswered >= 1)
         .sort((a, b) => a.accuracyPct - b.accuracyPct)
-        .map(a => a.value)
+        .map((a) => a.value)
     : []
 
   const missionAreas = [
@@ -84,9 +81,7 @@ function buildMissions(
           : 'Acerto atual: —',
       xp: 50,
       areaKey: missionAreas[2],
-      done:
-        areaAnswered(missionAreas[2]) >= 5 &&
-        (areaAccuracy(missionAreas[2]) ?? 0) >= 70,
+      done: areaAnswered(missionAreas[2]) >= 5 && (areaAccuracy(missionAreas[2]) ?? 0) >= 70,
       locked: areaAnswered(missionAreas[2]) < 5,
     },
   ]
@@ -130,7 +125,10 @@ export function DayCard({ dia }: DayCardProps) {
     return (
       <div className="broto-missions-stack">
         <MissionsExternalHead doneMissions={0} showBadge={false} />
-        <article className="broto-missions-panel broto-missions-panel--rest" aria-label="Dia de descanso">
+        <article
+          className="broto-missions-panel broto-missions-panel--rest"
+          aria-label="Dia de descanso"
+        >
           <div className="broto-missions-panel__rest-inner">
             <Coffee size={32} style={{ color: 'var(--text-muted)', marginBottom: 4 }} aria-hidden />
             <p className="broto-missions-panel__rest-title">Dia de descanso</p>
@@ -144,7 +142,7 @@ export function DayCard({ dia }: DayCardProps) {
   }
 
   const missions = buildMissions(progress?.areas, daily)
-  const doneMissions = missions.filter(m => m.done).length
+  const doneMissions = missions.filter((m) => m.done).length
   const allDone = doneMissions === 3
 
   return (
@@ -153,7 +151,11 @@ export function DayCard({ dia }: DayCardProps) {
       <article className="broto-missions-panel" aria-labelledby="broto-missions-title">
         <ul className="broto-missions-panel__list">
           {missions.map((mission, i) => {
-            const cfg = AREA_CONFIG[mission.areaKey] ?? { color: '#888', icon: BookOpen, label: 'Questões' }
+            const cfg = AREA_CONFIG[mission.areaKey] ?? {
+              color: '#888',
+              icon: BookOpen,
+              label: 'Questões',
+            }
             const Icon = cfg.icon
             const inner = (
               <>
@@ -188,8 +190,7 @@ export function DayCard({ dia }: DayCardProps) {
                 </div>
                 {!mission.done && !mission.locked && (
                   <span className="broto-mission-card__xp">
-                    <Zap size={11} strokeWidth={2.5} aria-hidden />
-                    +{mission.xp}
+                    <Zap size={11} strokeWidth={2.5} aria-hidden />+{mission.xp}
                   </span>
                 )}
                 {mission.done && (
@@ -200,9 +201,7 @@ export function DayCard({ dia }: DayCardProps) {
             return (
               <li key={`mission-${i}`} className="broto-missions-panel__item">
                 {mission.locked ? (
-                  <div className="broto-mission-card broto-mission-card--locked">
-                    {inner}
-                  </div>
+                  <div className="broto-mission-card broto-mission-card--locked">{inner}</div>
                 ) : (
                   <Link
                     to="/study"

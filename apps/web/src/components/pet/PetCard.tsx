@@ -17,9 +17,7 @@ export function PetCard() {
         <div className="broto-pet-card__body">
           <p className="broto-pet-card__eyebrow">Seu Broto</p>
           <div className="broto-pet-card__title-row">
-            <span className="broto-pet-card__phase">
-              {loading ? '...' : FASE_LABEL[fase]}
-            </span>
+            <span className="broto-pet-card__phase">{loading ? '...' : FASE_LABEL[fase]}</span>
             <span className="broto-badge-level">Nv. {nivel}</span>
           </div>
           <div className="broto-pet-card__xp-block">

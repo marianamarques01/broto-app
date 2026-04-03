@@ -14,7 +14,12 @@ export function JoinClass() {
   const [success, setSuccess] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    },
+    [],
+  )
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -30,7 +35,8 @@ export function JoinClass() {
       setSuccess(true)
       timerRef.current = setTimeout(() => navigate('/'), 1500)
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : 'Erro ao entrar na turma. Tente novamente.'
+      const msg =
+        err instanceof ApiError ? err.message : 'Erro ao entrar na turma. Tente novamente.'
       setError(msg)
     } finally {
       setLoading(false)
@@ -45,17 +51,27 @@ export function JoinClass() {
         <div className="broto-card" style={{ padding: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
             <Users size={20} style={{ color: 'var(--green-400)' }} />
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.55 }}>
+            <p
+              style={{
+                fontSize: '0.9rem',
+                color: 'var(--text-secondary)',
+                margin: 0,
+                lineHeight: 1.55,
+              }}
+            >
               Insira o código compartilhado pelo seu professor para entrar na turma.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: 'flex', flexDirection: 'column', gap: 18 }}
+          >
             <input
               className="broto-input"
               type="text"
               value={code}
-              onChange={e => setCode(e.target.value)}
+              onChange={(e) => setCode(e.target.value)}
               placeholder="Código da turma"
               required
               style={{
@@ -70,15 +86,17 @@ export function JoinClass() {
 
             {error && <p className="broto-text-error">{error}</p>}
             {success && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'rgba(16, 185, 129, 0.1)',
-                border: '1px solid rgba(16, 185, 129, 0.2)',
-              }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '10px 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                }}
+              >
                 <CheckCircle2 size={16} style={{ color: 'var(--green-400)' }} />
                 <span style={{ color: 'var(--green-400)', fontSize: '0.85rem', fontWeight: 600 }}>
                   Entrou na turma com sucesso!
