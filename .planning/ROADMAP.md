@@ -29,7 +29,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Importing `react` inside any file under `packages/shared/src/` triggers an ESLint error at lint time
   4. All Supabase edge functions reject requests from non-whitelisted origins with a 403 — no `Access-Control-Allow-Origin: *` defaults remain
   5. `packages/ui` has either been removed from the monorepo (if unused) or has a comment in its `package.json` explaining its purpose
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Git hygiene: untrack .venv, optimize SVGs, remove packages/ui (HYGN-01, HYGN-02, HYGN-03)
+- [ ] 01-02-PLAN.md — Dead code: remove re-export files, create root tsconfig.base.json (HYGN-04, TOOL-01)
+- [ ] 01-03-PLAN.md — Tooling config: fix Prettier glob, add ESLint guards (TOOL-02, TOOL-03, TOOL-05, TOOL-06)
+- [ ] 01-04-PLAN.md — Format commit + hook renaming to camelCase (TOOL-04, TOOL-07)
+- [ ] 01-05-PLAN.md — CORS extraction and hardening in edge functions (SECR-01, SECR-02)
 
 ### Phase 2: Bug Fixes & Error Propagation
 **Goal**: Known bugs are fixed and all previously silent errors are observable before any code moves to shared
@@ -72,7 +79,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Tooling, Hygiene & Security | 0/? | Not started | - |
+| 1. Tooling, Hygiene & Security | 0/5 | In progress | - |
 | 2. Bug Fixes & Error Propagation | 0/? | Not started | - |
 | 3. Code Consolidation | 0/? | Not started | - |
 | 4. Tests & Resilience | 0/? | Not started | - |
