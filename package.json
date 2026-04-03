@@ -10,8 +10,8 @@
     "build": "turbo run build",
     "lint": "eslint apps/*/src packages/*/src supabase/functions",
     "lint:fix": "eslint apps/*/src packages/*/src supabase/functions --fix",
-    "format": "prettier --write \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\" \"supabase/functions/**/*.ts\"",
-    "format:check": "prettier --check \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\" \"supabase/functions/**/*.ts\"",
+    "format": "prettier --write \"apps/*/src/**/*.{ts,tsx}\" \"apps/mobile/{app,hooks,lib,components,contexts,theme}/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\" \"supabase/functions/**/*.ts\"",
+    "format:check": "prettier --check \"apps/*/src/**/*.{ts,tsx}\" \"apps/mobile/{app,hooks,lib,components,contexts,theme}/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\" \"supabase/functions/**/*.ts\"",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
