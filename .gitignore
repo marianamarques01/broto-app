@@ -29,3 +29,9 @@ android/
 
 ### macOS
 .DS_Store
+
+### Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
