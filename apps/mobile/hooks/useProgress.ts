@@ -1,5 +1,5 @@
 import { api } from '@/lib/api-client'
-import { createCachedHook } from './create-cached-hook'
+import { createCachedHook } from './createCachedHook'
 import { useFocusEffect } from 'expo-router'
 import { useCallback } from 'react'
 

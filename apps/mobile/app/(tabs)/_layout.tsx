@@ -10,7 +10,7 @@ import {
   CalendarCheck,
 } from 'phosphor-react-native'
 import { colors } from '@/theme/tokens'
-import { useUser } from '@/hooks/use-user'
+import { useUser } from '@/hooks/useUser'
 import { TabIcon } from '@/components/TabIcon'
 import { BrotoChatFab } from '@/components/BrotoChatFab'
 

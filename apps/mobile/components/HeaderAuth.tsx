@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { LogOut } from 'lucide-react-native'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { colors, fonts } from '@/theme/tokens'
 

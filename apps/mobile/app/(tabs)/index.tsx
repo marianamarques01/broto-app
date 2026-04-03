@@ -14,9 +14,9 @@ import {
   Target,
   ArrowUpRight,
 } from 'lucide-react-native'
-import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/use-pet'
-import { useProgress } from '@/hooks/use-progress'
-import { useUser } from '@/hooks/use-user'
+import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
+import { useProgress } from '@/hooks/useProgress'
+import { useUser } from '@/hooks/useUser'
 import { HeaderAuth } from '@/components/HeaderAuth'
 import { BrotoLogo } from '@/components/BrotoLogo'
 import { BrotoCtaButton } from '@/components/BrotoCtaButton'

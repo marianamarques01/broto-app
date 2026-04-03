@@ -20,7 +20,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from 'lucide-react-native'
-import { useProgress, type AreaStat, type TopicoStat } from '@/hooks/use-progress'
+import { useProgress, type AreaStat, type TopicoStat } from '@/hooks/useProgress'
 import { getAreaConfig } from '@/theme/area-config'
 import { colors, fonts, radii } from '@/theme/tokens'
 import { FadeInSection, StaggerItem } from '@/components/AnimatedEntry'

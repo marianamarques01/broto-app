@@ -1,6 +1,6 @@
 import { api } from '@/lib/api-client'
-import { refreshPet } from '@/hooks/use-pet'
-import { refreshProgress } from '@/hooks/use-progress'
+import { refreshPet } from '@/hooks/usePet'
+import { refreshProgress } from '@/hooks/useProgress'
 import { incrementDailyAreaAnswer } from '@/lib/missions/daily-missions'
 
 export interface SubmitAnswerPayload {

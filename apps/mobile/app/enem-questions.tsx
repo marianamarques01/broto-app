@@ -15,7 +15,7 @@ import {
   ArrowUpRight,
   RotateCcw,
 } from 'lucide-react-native'
-import { useQuestionsFilters, LANGUAGE_OPTIONS } from '@/hooks/use-questions-filters'
+import { useQuestionsFilters, LANGUAGE_OPTIONS } from '@/hooks/useQuestionsFilters'
 import { QuestionPlayer } from '@/components/questions/QuestionPlayer'
 import { submitAnswer } from '@/lib/api/answer-question'
 import type { Question } from '@broto/shared'
