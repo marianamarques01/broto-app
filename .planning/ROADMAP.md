@@ -32,11 +32,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Git hygiene: untrack .venv, optimize SVGs, remove packages/ui (HYGN-01, HYGN-02, HYGN-03)
-- [ ] 01-02-PLAN.md — Dead code: remove re-export files, create root tsconfig.base.json (HYGN-04, TOOL-01)
+- [x] 01-01-PLAN.md — Git hygiene: untrack .venv, optimize SVGs, remove packages/ui (HYGN-01, HYGN-02, HYGN-03)
+- [x] 01-02-PLAN.md — Dead code: remove re-export files, create root tsconfig.base.json (HYGN-04, TOOL-01)
 - [ ] 01-03-PLAN.md — Tooling config: fix Prettier glob, add ESLint guards (TOOL-02, TOOL-03, TOOL-05, TOOL-06)
 - [ ] 01-04-PLAN.md — Format commit + hook renaming to camelCase (TOOL-04, TOOL-07)
-- [ ] 01-05-PLAN.md — CORS extraction and hardening in edge functions (SECR-01, SECR-02)
+- [x] 01-05-PLAN.md — CORS extraction and hardening in edge functions (SECR-01, SECR-02)
 
 ### Phase 2: Bug Fixes & Error Propagation
 **Goal**: Known bugs are fixed and all previously silent errors are observable before any code moves to shared
