@@ -8,6 +8,17 @@ Broto is an EdTech platform for ENEM exam preparation, with a mobile app (React 
 
 A maintainable, consistent monorepo where business logic lives in one place (`packages/shared`), bugs are fixed once, and developers can work across apps without friction.
 
+## Current Milestone: v1.1 Validar e alinhar arquitetura multi-tenant do sistema Broto
+
+**Goal:** validate and align Broto's multi-tenant architecture to ensure tenant isolation, permission consistency, and conceptual-model fidelity across current implementations.
+
+**Target features:**
+- Validate permission rules across membership -> class -> organization boundaries
+- Analyze data isolation in Supabase (Row Level Security policies and practical behavior)
+- Verify possible cross-tenant access paths and leakage scenarios
+- Align conceptual multi-tenant model with current implementation details
+- Assess impact of mobile/web duplication on consistency of permission and isolation rules
+
 ## Requirements
 
 ### Validated
@@ -25,15 +36,11 @@ A maintainable, consistent monorepo where business logic lives in one place (`pa
 
 ### Active
 
-- [ ] Eliminate cross-app code duplication (~25% of codebase)
-- [ ] Fix critical race conditions (cache store, 401 handler)
-- [ ] Standardize code formatting and naming conventions across all apps
-- [ ] Move shared business logic to `packages/shared`
-- [ ] Add retry logic and proper error handling to API clients
-- [ ] Remove dead code (.venv from git, optimize SVG assets, audit packages/ui)
-- [ ] Close feature gaps (mobile missing performance tracking)
-- [ ] Fix CORS to fail closed (reject non-whitelisted origins)
-- [ ] Establish automated testing foundation
+- [ ] Validate permission chain rules (`membership -> class -> organization`) across frontend and backend
+- [ ] Validate Supabase tenant isolation guarantees through current RLS coverage and gaps
+- [ ] Detect and document cross-tenant access risks in current architecture
+- [ ] Reconcile conceptual tenancy model with actual implementation behavior
+- [ ] Evaluate architectural consistency impact from mobile/web logic duplication
 
 ### Out of Scope
 
@@ -90,4 +97,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 after initialization*
+*Last updated: 2026-04-03 after milestone v1.1 kickoff*
