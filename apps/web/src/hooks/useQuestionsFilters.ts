@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import type { Area, Topico, Exam, Question, QuestionsResponse } from '@/lib/types/questions'
+import type { Area, Topico, Exam, Question, QuestionsResponse } from '@broto/shared'
 import { useClass } from '@/hooks/useClass'
 
 const QUESTIONS_LIMIT = 10

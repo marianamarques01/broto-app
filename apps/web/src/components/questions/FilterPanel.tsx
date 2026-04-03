@@ -1,4 +1,4 @@
-import type { Topico, Exam } from '@/lib/types/questions'
+import type { Topico, Exam } from '@broto/shared'
 import { LANGUAGE_OPTIONS } from '@/hooks/useQuestionsFilters'
 
 interface FilterPanelProps {

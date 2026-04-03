@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import DOMPurify from 'dompurify'
-import type { Question } from '@/lib/types/questions'
-import { getQuestionId } from '@/lib/types/questions'
+import type { Question } from '@broto/shared'
+import { getQuestionId } from '@broto/shared'
 import { submitAnswer } from '@/lib/answer-question'
 import { ArrowRight, CheckCircle2, XCircle } from 'lucide-react'
 

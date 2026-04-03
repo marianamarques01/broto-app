@@ -5,7 +5,7 @@ import type {
     Exam,
     Question,
     QuestionsResponse,
-} from '@/lib/types/questions';
+} from '@broto/shared';
 import { useClass } from '@/hooks/use-class';
 
 const QUESTIONS_LIMIT = 10;

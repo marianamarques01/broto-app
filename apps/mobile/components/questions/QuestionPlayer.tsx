@@ -3,7 +3,7 @@ import { View, Text, Pressable, useWindowDimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { CheckCircle, XCircle, ChevronRight } from 'lucide-react-native';
 import { OptionButton, type OptionState } from './OptionButton';
-import type { Question } from '@/lib/types/questions';
+import type { Question } from '@broto/shared';
 import { colors } from '@/theme/tokens';
 import { BrotoCtaButton } from '@/components/BrotoCtaButton';
 

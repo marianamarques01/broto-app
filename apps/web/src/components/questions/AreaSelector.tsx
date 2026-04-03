@@ -1,4 +1,4 @@
-import type { Area } from '@/lib/types/questions'
+import type { Area } from '@broto/shared'
 import { BookOpen } from 'lucide-react'
 import { AREA_CONFIG } from '@/lib/area-config'
 

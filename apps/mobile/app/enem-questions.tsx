@@ -29,8 +29,8 @@ import {
 } from '@/hooks/use-questions-filters';
 import { QuestionPlayer } from '@/components/questions/QuestionPlayer';
 import { submitAnswer } from '@/lib/api/answer-question';
-import type { Question } from '@/lib/types/questions';
-import { getQuestionId } from '@/lib/types/questions';
+import type { Question } from '@broto/shared';
+import { getQuestionId } from '@broto/shared';
 import { AREA_CONFIG } from '@/theme/area-config';
 import { colors, fonts } from '@/theme/tokens';
 import { FadeInSection, StaggerItem } from '@/components/AnimatedEntry';
