@@ -98,45 +98,45 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HYGN-01 | — | Pending |
-| HYGN-02 | — | Pending |
-| HYGN-03 | — | Pending |
-| HYGN-04 | — | Pending |
-| TOOL-01 | — | Pending |
-| TOOL-02 | — | Pending |
-| TOOL-03 | — | Pending |
-| TOOL-04 | — | Pending |
-| TOOL-05 | — | Pending |
-| TOOL-06 | — | Pending |
-| TOOL-07 | — | Pending |
-| BUGF-01 | — | Pending |
-| BUGF-02 | — | Pending |
-| BUGF-03 | — | Pending |
-| BUGF-04 | — | Pending |
-| BUGF-05 | — | Pending |
-| SECR-01 | — | Pending |
-| SECR-02 | — | Pending |
-| CONS-01 | — | Pending |
-| CONS-02 | — | Pending |
-| CONS-03 | — | Pending |
-| CONS-04 | — | Pending |
-| CONS-05 | — | Pending |
-| ADPT-01 | — | Pending |
-| ADPT-02 | — | Pending |
-| ADPT-03 | — | Pending |
-| ADPT-04 | — | Pending |
-| RESL-01 | — | Pending |
-| RESL-02 | — | Pending |
-| TEST-01 | — | Pending |
-| TEST-02 | — | Pending |
-| TEST-03 | — | Pending |
-| TEST-04 | — | Pending |
+| HYGN-01 | Phase 1 | Pending |
+| HYGN-02 | Phase 1 | Pending |
+| HYGN-03 | Phase 1 | Pending |
+| HYGN-04 | Phase 1 | Pending |
+| TOOL-01 | Phase 1 | Pending |
+| TOOL-02 | Phase 1 | Pending |
+| TOOL-03 | Phase 1 | Pending |
+| TOOL-04 | Phase 1 | Pending |
+| TOOL-05 | Phase 1 | Pending |
+| TOOL-06 | Phase 1 | Pending |
+| TOOL-07 | Phase 1 | Pending |
+| SECR-01 | Phase 1 | Pending |
+| SECR-02 | Phase 1 | Pending |
+| BUGF-01 | Phase 2 | Pending |
+| BUGF-02 | Phase 2 | Pending |
+| BUGF-03 | Phase 2 | Pending |
+| BUGF-04 | Phase 2 | Pending |
+| BUGF-05 | Phase 2 | Pending |
+| CONS-01 | Phase 3 | Pending |
+| CONS-02 | Phase 3 | Pending |
+| CONS-03 | Phase 3 | Pending |
+| CONS-04 | Phase 3 | Pending |
+| CONS-05 | Phase 3 | Pending |
+| ADPT-01 | Phase 3 | Pending |
+| ADPT-02 | Phase 3 | Pending |
+| ADPT-03 | Phase 3 | Pending |
+| ADPT-04 | Phase 3 | Pending |
+| RESL-01 | Phase 3 | Pending |
+| RESL-02 | Phase 3 | Pending |
+| TEST-01 | Phase 4 | Pending |
+| TEST-02 | Phase 4 | Pending |
+| TEST-03 | Phase 4 | Pending |
+| TEST-04 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 33 total
-- Mapped to phases: 0
-- Unmapped: 33 (awaiting roadmap)
+- Mapped to phases: 33
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-02 after initial definition*
+*Last updated: 2026-04-02 — traceability populated after roadmap creation*
