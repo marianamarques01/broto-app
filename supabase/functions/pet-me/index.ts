@@ -1,29 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').filter(Boolean)
+import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 
 type Fase = 'semente' | 'muda' | 'planta' | 'flor' | 'especial'
-
-function getCorsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get('Origin') ?? ''
-  const allowed =
-    ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin)
-      ? origin || '*'
-      : ALLOWED_ORIGINS[0]
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  }
-}
-
-function json(status: number, body: unknown, cors: Record<string, string>) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...cors },
-  })
-}
 
 function faseFromNivel(n: number): Fase {
   if (n <= 1) return 'semente'
@@ -43,7 +22,11 @@ serve(async (req) => {
   const cors = getCorsHeaders(req)
 
   try {
-    if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+    if (req.method === 'OPTIONS') {
+      if (isOriginBlocked(cors)) return new Response(null, { status: 403 })
+      return new Response('ok', { headers: cors })
+    }
+    if (isOriginBlocked(cors)) return json(403, { error: 'Origin not allowed' }, {})
     if (req.method !== 'GET') return json(405, { error: 'Method not allowed' }, cors)
 
     const authHeader = req.headers.get('Authorization')
