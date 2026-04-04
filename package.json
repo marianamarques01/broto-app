@@ -1,6 +1,7 @@
 {
   "name": "broto",
   "private": true,
+  "packageManager": "npm@11.6.0",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -12,7 +13,9 @@
     "lint:fix": "eslint apps/*/src packages/*/src supabase/functions --fix",
     "format": "prettier --write \"apps/*/src/**/*.{ts,tsx}\" \"apps/mobile/{app,hooks,lib,components,contexts,theme}/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\" \"supabase/functions/**/*.ts\"",
     "format:check": "prettier --check \"apps/*/src/**/*.{ts,tsx}\" \"apps/mobile/{app,hooks,lib,components,contexts,theme}/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\" \"supabase/functions/**/*.ts\"",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:shared": "npm run test --workspace=@broto/shared"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
@@ -20,7 +23,6 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
     "prettier": "^3.8.1",
-    "react-refresh": "^0.17.0",
     "turbo": "^2.0.0",
     "typescript": "^5.4.0",
     "typescript-eslint": "^8.57.1"
