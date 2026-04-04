@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!userId) return
 
     async function fetchProfile() {
+      setLoading(true)
       try {
         const { data } = await supabase
           .from('users')
@@ -68,8 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [userId])
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) return { error: 'E-mail ou senha invalidos' }
+    // Keep loading true until profile loads so ProtectedRoute does not redirect to /login
+    // while user is still null (navigate('/') runs in the same tick as signIn resolves).
+    if (data.user) {
+      setLoading(true)
+      setUserId(data.user.id)
+    }
     return { error: null }
   }
 
@@ -80,11 +87,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (e instanceof ApiError) return { error: e.message }
       return { error: 'Erro ao criar conta' }
     }
-    const { error: sessionError } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: signInData, error: sessionError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
     if (sessionError) {
       return {
         error: 'Conta criada, mas não foi possível entrar automaticamente. Tente fazer login.',
       }
+    }
+    if (signInData.user) {
+      setLoading(true)
+      setUserId(signInData.user.id)
     }
     return { error: null }
   }
