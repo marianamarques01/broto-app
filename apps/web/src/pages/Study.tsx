@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { getQuestionId } from '@broto/shared'
 import { TopBar } from '@/components/layout/TopBar'
 import { AreaSelector } from '@/components/questions/AreaSelector'
 import { FilterPanel } from '@/components/questions/FilterPanel'
@@ -124,7 +125,7 @@ export function Study() {
                   Questão {currentIndex + 1} de {questions.length}
                 </div>
                 <QuestionPlayer
-                  key={`${currentQuestion.year}-${currentQuestion.index}`}
+                  key={getQuestionId(currentQuestion)}
                   question={currentQuestion}
                   areaKey={selectedArea}
                   onNext={handleNext}
