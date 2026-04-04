@@ -136,7 +136,7 @@
 - v1 requirements: 33 total
 - Mapped to phases: 33
 - Unmapped: 0
-- Satisfied (2026-04-05): 28 — Open/Deferred: TOOL-06, BUGF-05, CONS-03, CONS-05 (ver lista acima)
+- Satisfied (2026-04-05): 29 — Open/Deferred: TOOL-06, BUGF-05, CONS-03, CONS-05 (ver lista acima)
 
 ---
 *Requirements defined: 2026-04-02*
