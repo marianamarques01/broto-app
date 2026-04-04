@@ -33,27 +33,29 @@ export function createCachedStore<T>(fetcher: () => Promise<T>): CachedStore<T> 
   function fetchData(): Promise<T | null> {
     if (inflight) return inflight
 
-    const gen = generation
+    const genAtStart = generation
 
     inflight = fetcher()
       .then((data) => {
-        if (gen === generation) {
+        if (genAtStart === generation) {
           cached = data
           fetchedAt = Date.now()
         }
         return cached
       })
       .catch(() => {
-        if (gen === generation) {
+        if (genAtStart === generation) {
           cached = null
         }
         return null
       })
       .finally(() => {
-        if (gen === generation) {
-          inflight = null
-        }
+        const superseded = genAtStart !== generation
+        inflight = null
         notifyListeners()
+        if (superseded) {
+          fetchData()
+        }
       })
 
     return inflight
@@ -62,9 +64,10 @@ export function createCachedStore<T>(fetcher: () => Promise<T>): CachedStore<T> 
   function refresh() {
     generation++
     cached = null
-    inflight = null
     fetchedAt = 0
-    fetchData()
+    if (!inflight) {
+      fetchData()
+    }
   }
 
   function refreshIfStale() {
