@@ -1,27 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-
-const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").filter(Boolean)
-
-function getCorsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get("Origin") ?? ""
-  const allowed =
-    ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin)
-      ? origin || "*"
-      : ALLOWED_ORIGINS[0]
-  return {
-    "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  }
-}
-
-function json(status: number, body: unknown, cors: Record<string, string>) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json", ...cors },
-  })
-}
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
+import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
 
 const MAX_CODE_LENGTH = 20
 
@@ -29,70 +8,48 @@ serve(async (req) => {
   const cors = getCorsHeaders(req)
 
   try {
-    if (req.method === "OPTIONS") return new Response("ok", { headers: cors })
-    if (req.method !== "POST") return json(405, { error: "Method not allowed" }, cors)
+    if (req.method === 'OPTIONS') {
+      if (isOriginBlocked(cors)) return new Response(null, { status: 403 })
+      return new Response('ok', { headers: cors })
+    }
+    if (isOriginBlocked(cors)) return json(403, { error: 'Origin not allowed' }, {})
+    if (req.method !== 'POST') return json(405, { error: 'Method not allowed' }, cors)
 
-    // Auth
-    const supabaseAuthed = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
-    )
-
-    const { data: { user }, error: authError } = await supabaseAuthed.auth.getUser()
-    if (authError || !user) return json(401, { error: "Unauthorized" }, cors)
+    // Auth — validates JWT and returns authenticated user
+    const authResult = await requireUser(req)
+    if (authResult.error) {
+      return json(authResult.error.status, { error: authResult.error.message }, cors)
+    }
+    const { user } = authResult.data
 
     // Input validation
     const { access_code } = await req.json()
-    if (!access_code?.trim()) return json(400, { error: "access_code é obrigatório" }, cors)
-    if (typeof access_code !== "string" || access_code.length > MAX_CODE_LENGTH) {
-      return json(400, { error: "access_code inválido" }, cors)
+    if (!access_code?.trim()) return json(400, { error: 'access_code é obrigatório' }, cors)
+    if (typeof access_code !== 'string' || access_code.length > MAX_CODE_LENGTH) {
+      return json(400, { error: 'access_code inválido' }, cors)
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    )
+    // Transactional class join via RPC — all-or-nothing:
+    // validates class → creates/reactivates membership → creates/reactivates enrollment → updates context
+    const supabaseAdmin = createServiceRoleClientUnsafe()
+    const { data, error: rpcError } = await supabaseAdmin.rpc('rpc_class_join', {
+      p_user_id: user.id,
+      p_access_code: access_code,
+    })
 
-    const normalizedCode = access_code.toUpperCase().trim()
-
-    // Find active class by code
-    const { data: classData, error: classError } = await supabaseAdmin
-      .from("classes")
-      .select("id, name, organization_id, is_active")
-      .eq("access_code", normalizedCode)
-      .eq("is_active", true)
-      .single()
-
-    if (classError || !classData) {
-      return json(404, { error: "Código inválido ou turma inativa" }, cors)
+    if (rpcError) {
+      const hint = (rpcError as Record<string, unknown>).hint ?? ''
+      if (hint === 'INVALID_INPUT') return json(400, { error: rpcError.message }, cors)
+      if (hint === 'CLASS_NOT_FOUND') return json(404, { error: rpcError.message }, cors)
+      if (hint === 'USER_NOT_FOUND') return json(404, { error: rpcError.message }, cors)
+      if (hint === 'CLASS_NO_ORG') return json(500, { error: rpcError.message }, cors)
+      console.error('[class-join] rpc error:', rpcError)
+      return json(500, { error: 'Erro ao entrar na turma' }, cors)
     }
 
-    // Enroll student + update current_class_id atomically via RPC
-    // Fallback: run both operations — if one fails the other state is still acceptable
-    const { error: enrollError } = await supabaseAdmin
-      .from("enrollments")
-      .upsert({
-        class_id: classData.id,
-        student_id: user.id,
-        status: "active"
-      }, { onConflict: "class_id,student_id" })
-
-    if (enrollError) {
-      return json(500, { error: "Erro ao matricular" }, cors)
-    }
-
-    const { error: updateError } = await supabaseAdmin
-      .from("users")
-      .update({ current_class_id: classData.id })
-      .eq("id", user.id)
-
-    if (updateError) {
-      console.error("Failed to update current_class_id:", updateError)
-    }
-
-    return json(200, { success: true, class: classData }, cors)
+    return json(200, { success: true, class: data }, cors)
   } catch (err) {
+    console.error('[class-join]', err)
     return json(500, { error: String(err) }, cors)
   }
 })

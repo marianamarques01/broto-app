@@ -24,7 +24,9 @@ export function useClasses() {
     setLoading(false)
   }, [admin])
 
-  useEffect(() => { fetchClasses() }, [fetchClasses])
+  useEffect(() => {
+    fetchClasses()
+  }, [fetchClasses])
 
   async function createClass(params: {
     name: string
@@ -59,10 +61,7 @@ export function useClasses() {
     classId: string,
     params: { name?: string; description?: string; is_active?: boolean },
   ): Promise<{ error: string | null }> {
-    const { error } = await supabase
-      .from('classes')
-      .update(params)
-      .eq('id', classId)
+    const { error } = await supabase.from('classes').update(params).eq('id', classId)
 
     if (error) return { error: `Erro ao atualizar turma: ${error.message}` }
     await fetchClasses()
@@ -70,10 +69,7 @@ export function useClasses() {
   }
 
   async function deleteClass(classId: string): Promise<{ error: string | null }> {
-    const { error } = await supabase
-      .from('classes')
-      .delete()
-      .eq('id', classId)
+    const { error } = await supabase.from('classes').delete().eq('id', classId)
 
     if (error) return { error: `Erro ao excluir turma: ${error.message}` }
     await fetchClasses()
@@ -84,5 +80,13 @@ export function useClasses() {
     await updateClass(classId, { is_active: isActive })
   }
 
-  return { classes, loading, createClass, updateClass, deleteClass, toggleClassStatus, refetch: fetchClasses }
+  return {
+    classes,
+    loading,
+    createClass,
+    updateClass,
+    deleteClass,
+    toggleClassStatus,
+    refetch: fetchClasses,
+  }
 }

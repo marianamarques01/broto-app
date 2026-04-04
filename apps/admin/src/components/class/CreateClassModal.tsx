@@ -3,7 +3,10 @@ import type { Class } from '@broto/shared'
 
 type Props = {
   onClose: () => void
-  onCreate: (params: { name: string; description?: string }) => Promise<{ data: Class | null; error: string | null }>
+  onCreate: (params: {
+    name: string
+    description?: string
+  }) => Promise<{ data: Class | null; error: string | null }>
 }
 
 export function CreateClassModal({ onClose, onCreate }: Props) {
@@ -18,10 +21,16 @@ export function CreateClassModal({ onClose, onCreate }: Props) {
     if (!name.trim()) return
 
     setLoading(true)
-    const { data, error } = await onCreate({ name: name.trim(), description: description.trim() || undefined })
+    const { data, error } = await onCreate({
+      name: name.trim(),
+      description: description.trim() || undefined,
+    })
     setLoading(false)
 
-    if (error) { setError(error); return }
+    if (error) {
+      setError(error)
+      return
+    }
     setCreated(data)
   }
 
@@ -48,21 +57,33 @@ export function CreateClassModal({ onClose, onCreate }: Props) {
   if (created) {
     return (
       <div style={overlayStyle} onClick={onClose}>
-        <div style={modalStyle} onClick={e => e.stopPropagation()}>
+        <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
           <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>Turma criada!</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
             Compartilhe o codigo abaixo com seus alunos para que possam entrar na turma.
           </p>
-          <div style={{
-            background: 'var(--green-glow)',
-            border: '1px solid var(--border-strong)',
-            borderRadius: 12,
-            padding: '20px',
-            textAlign: 'center',
-            marginBottom: 24,
-          }}>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Codigo de acesso</p>
-            <p style={{ fontSize: 32, fontWeight: 700, letterSpacing: 6, color: 'var(--green-400)', margin: 0 }}>
+          <div
+            style={{
+              background: 'var(--green-glow)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 12,
+              padding: '20px',
+              textAlign: 'center',
+              marginBottom: 24,
+            }}
+          >
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+              Codigo de acesso
+            </p>
+            <p
+              style={{
+                fontSize: 32,
+                fontWeight: 700,
+                letterSpacing: 6,
+                color: 'var(--green-400)',
+                margin: 0,
+              }}
+            >
               {created.access_code}
             </p>
           </div>
@@ -90,7 +111,7 @@ export function CreateClassModal({ onClose, onCreate }: Props) {
 
   return (
     <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
         <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 24 }}>Nova turma</h2>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -101,10 +122,19 @@ export function CreateClassModal({ onClose, onCreate }: Props) {
             <input
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Turma ENEM Manha 2026"
               required
-              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 14, boxSizing: 'border-box', background: 'var(--bg-deep)', color: 'var(--text-primary)' }}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 8,
+                fontSize: 14,
+                boxSizing: 'border-box',
+                background: 'var(--bg-deep)',
+                color: 'var(--text-primary)',
+              }}
             />
           </div>
 
@@ -114,10 +144,20 @@ export function CreateClassModal({ onClose, onCreate }: Props) {
             </label>
             <textarea
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Ex: Focada em Ciencias da Natureza e Matematica"
               rows={3}
-              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 14, resize: 'vertical', boxSizing: 'border-box', background: 'var(--bg-deep)', color: 'var(--text-primary)' }}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 8,
+                fontSize: 14,
+                resize: 'vertical',
+                boxSizing: 'border-box',
+                background: 'var(--bg-deep)',
+                color: 'var(--text-primary)',
+              }}
             />
           </div>
 
@@ -127,7 +167,16 @@ export function CreateClassModal({ onClose, onCreate }: Props) {
             <button
               type="button"
               onClick={onClose}
-              style={{ flex: 1, background: 'transparent', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', borderRadius: 8, padding: '12px', fontSize: 14, cursor: 'pointer' }}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: '1px solid var(--border-strong)',
+                color: 'var(--text-primary)',
+                borderRadius: 8,
+                padding: '12px',
+                fontSize: 14,
+                cursor: 'pointer',
+              }}
             >
               Cancelar
             </button>

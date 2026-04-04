@@ -1,4 +1,4 @@
-import type { Area } from '@/lib/types/questions'
+import type { Area } from '@broto/shared'
 import { BookOpen } from 'lucide-react'
 import { AREA_CONFIG } from '@/lib/area-config'
 
@@ -10,8 +10,14 @@ interface AreaSelectorProps {
 
 export function AreaSelector({ areas, selectedArea, onSelectArea }: AreaSelectorProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
-      {areas.map(area => {
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+        gap: 12,
+      }}
+    >
+      {areas.map((area) => {
         const active = selectedArea === area.value
         const config = AREA_CONFIG[area.value] ?? { color: '#888', icon: BookOpen }
         const Icon = config.icon
@@ -28,9 +34,7 @@ export function AreaSelector({ areas, selectedArea, onSelectArea }: AreaSelector
               gap: 14,
               padding: '16px 18px',
               borderRadius: 'var(--radius-md)',
-              border: active
-                ? `1.5px solid ${config.color}`
-                : '1px solid var(--border-default)',
+              border: active ? `1.5px solid ${config.color}` : '1px solid var(--border-default)',
               background: active
                 ? `linear-gradient(135deg, ${config.color}18, ${config.color}08)`
                 : 'var(--bg-card)',
@@ -48,31 +52,33 @@ export function AreaSelector({ areas, selectedArea, onSelectArea }: AreaSelector
           >
             {/* Subtle glow on active */}
             {active && (
-              <div style={{
-                position: 'absolute',
-                top: -30,
-                right: -30,
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                background: `radial-gradient(circle, ${config.color}20, transparent 70%)`,
-                pointerEvents: 'none',
-              }} />
+              <div
+                style={{
+                  position: 'absolute',
+                  top: -30,
+                  right: -30,
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${config.color}20, transparent 70%)`,
+                  pointerEvents: 'none',
+                }}
+              />
             )}
 
-            <div style={{
-              width: 38,
-              height: 38,
-              borderRadius: 10,
-              background: active
-                ? `${config.color}22`
-                : `${config.color}10`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              transition: 'all 0.2s ease',
-            }}>
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                background: active ? `${config.color}22` : `${config.color}10`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                transition: 'all 0.2s ease',
+              }}
+            >
               <Icon size={18} style={{ color: config.color }} />
             </div>
 

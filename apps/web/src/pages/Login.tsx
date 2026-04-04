@@ -64,13 +64,22 @@ export function Login() {
               E-mail
             </label>
             <div style={{ position: 'relative' }}>
-              <Mail size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Mail
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: 14,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
               <input
                 id="login-email"
                 className="broto-input"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="seu@email.com"
                 style={{ paddingLeft: 40 }}
@@ -83,13 +92,22 @@ export function Login() {
               Senha
             </label>
             <div style={{ position: 'relative' }}>
-              <Lock size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Lock
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: 14,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
               <input
                 id="login-password"
                 className="broto-input"
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Digite sua senha"
                 style={{ paddingLeft: 40 }}
@@ -99,12 +117,24 @@ export function Login() {
 
           {error && <p className="broto-text-error">{error}</p>}
 
-          <button type="submit" disabled={loading} className="broto-btn-primary" style={{ marginTop: 4 }}>
+          <button
+            type="submit"
+            disabled={loading}
+            className="broto-btn-primary"
+            style={{ marginTop: 4 }}
+          >
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: 24, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        <p
+          style={{
+            textAlign: 'center',
+            marginTop: 24,
+            fontSize: '0.85rem',
+            color: 'var(--text-secondary)',
+          }}
+        >
           Ainda não tem conta?{' '}
           <Link to="/signup" className="broto-link-accent">
             Criar conta

@@ -9,7 +9,10 @@ interface Message {
 
 export function BrotoChat() {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'Oi! Sou o Broto, seu assistente de estudos. Como posso te ajudar?' },
+    {
+      role: 'assistant',
+      content: 'Oi! Sou o Broto, seu assistente de estudos. Como posso te ajudar?',
+    },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -24,20 +27,20 @@ export function BrotoChat() {
     if (!input.trim() || loading) return
 
     const userMsg: Message = { role: 'user', content: input.trim() }
-    setMessages(prev => [...prev, userMsg])
+    setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
     try {
       const resp = await api.post<{ message: string }>('/api/broto/chat', {
-        messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
+        messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
       })
-      setMessages(prev => [...prev, { role: 'assistant', content: resp.message }])
+      setMessages((prev) => [...prev, { role: 'assistant', content: resp.message }])
     } catch (err) {
       const detail = err instanceof ApiError ? err.message : ''
       const errorMsg = detail || 'Desculpe, tive um problema. Tente novamente.'
       console.error('[BrotoChat]', err)
-      setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }])
+      setMessages((prev) => [...prev, { role: 'assistant', content: errorMsg }])
     } finally {
       setLoading(false)
     }
@@ -52,7 +55,15 @@ export function BrotoChat() {
             className={`broto-chat__bubble ${msg.role === 'user' ? 'broto-chat__bubble--user' : 'broto-chat__bubble--assistant'}`}
           >
             {msg.role === 'assistant' && (
-              <span style={{ fontSize: '0.65rem', color: 'var(--green-400)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+              <span
+                style={{
+                  fontSize: '0.65rem',
+                  color: 'var(--green-400)',
+                  fontWeight: 600,
+                  display: 'block',
+                  marginBottom: 4,
+                }}
+              >
                 {'\u{1F331}'} Broto
               </span>
             )}
@@ -61,7 +72,15 @@ export function BrotoChat() {
         ))}
         {loading && (
           <div className="broto-chat__typing">
-            <span style={{ fontSize: '0.65rem', color: 'var(--green-400)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+            <span
+              style={{
+                fontSize: '0.65rem',
+                color: 'var(--green-400)',
+                fontWeight: 600,
+                display: 'block',
+                marginBottom: 4,
+              }}
+            >
               {'\u{1F331}'} Broto
             </span>
             Pensando...
@@ -75,7 +94,7 @@ export function BrotoChat() {
           type="text"
           className="broto-input"
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Pergunte algo ao Broto..."
           disabled={loading}
         />

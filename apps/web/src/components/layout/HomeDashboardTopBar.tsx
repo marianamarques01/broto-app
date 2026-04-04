@@ -36,9 +36,11 @@ export function HomeDashboardTopBar({
               {streak} {streak === 1 ? 'dia' : 'dias'}
             </span>
           ) : (
-            <span className="broto-streak-pill broto-streak-pill--muted" title="Comece uma sequência hoje">
-              <Flame size={14} aria-hidden />
-              0 dias
+            <span
+              className="broto-streak-pill broto-streak-pill--muted"
+              title="Comece uma sequência hoje"
+            >
+              <Flame size={14} aria-hidden />0 dias
             </span>
           )}
         </div>
@@ -51,11 +53,7 @@ export function HomeDashboardTopBar({
         >
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
-        <button
-          type="button"
-          className="broto-topbar__icon-btn"
-          aria-label="Notificações"
-        >
+        <button type="button" className="broto-topbar__icon-btn" aria-label="Notificações">
           <Bell size={18} />
         </button>
       </div>

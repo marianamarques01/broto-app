@@ -28,10 +28,27 @@ export function Progress() {
           </p>
           <div className="broto-progress-stats">
             {[
-              { label: 'Questões', value: loading ? '—' : progress?.totalAnswered ?? 0, icon: Target, color: 'var(--green-400)' },
-              { label: 'Acertos', value: loading ? '—' : progress?.totalCorrect ?? 0, icon: CheckCircle2, color: 'var(--green-500)' },
-              { label: 'Erros', value: loading ? '—' : (progress?.totalAnswered ?? 0) - (progress?.totalCorrect ?? 0), icon: XCircle, color: 'var(--red-400)' },
-            ].map(stat => (
+              {
+                label: 'Questões',
+                value: loading ? '—' : (progress?.totalAnswered ?? 0),
+                icon: Target,
+                color: 'var(--green-400)',
+              },
+              {
+                label: 'Acertos',
+                value: loading ? '—' : (progress?.totalCorrect ?? 0),
+                icon: CheckCircle2,
+                color: 'var(--green-500)',
+              },
+              {
+                label: 'Erros',
+                value: loading
+                  ? '—'
+                  : (progress?.totalAnswered ?? 0) - (progress?.totalCorrect ?? 0),
+                icon: XCircle,
+                color: 'var(--red-400)',
+              },
+            ].map((stat) => (
               <div key={stat.label} className="broto-progress-stat">
                 <stat.icon size={16} style={{ color: stat.color, marginBottom: 4 }} />
                 <div className="broto-progress-stat__value">{stat.value}</div>
@@ -56,9 +73,19 @@ export function Progress() {
 
         {/* Empty state */}
         {!loading && !hasData && (
-          <div className="broto-empty-state broto-fade-in broto-fade-in-delay-2" style={{ marginTop: 8 }}>
+          <div
+            className="broto-empty-state broto-fade-in broto-fade-in-delay-2"
+            style={{ marginTop: 8 }}
+          >
             <div style={{ fontSize: '1.5rem', marginBottom: 12 }}>{'\u{1F4CA}'}</div>
-            <p style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 6px' }}>
+            <p
+              style={{
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                margin: '0 0 6px',
+              }}
+            >
               Seu progresso aparece aqui
             </p>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 20px' }}>

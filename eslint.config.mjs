@@ -25,5 +25,36 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
+  // packages/shared must remain platform-agnostic (TOOL-05, D-12)
+  {
+    files: ['packages/shared/src/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['react', 'react-dom', 'react-native', 'expo*', '@react-native*'],
+              message:
+                'packages/shared must remain platform-agnostic — use adapter pattern for platform APIs',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // no-floating-promises prevents unhandled async errors (TOOL-06, D-13)
+  {
+    files: ['apps/*/src/**/*.{ts,tsx}', 'apps/mobile/**/*.{ts,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
+    },
+  },
   prettier,
 )

@@ -40,13 +40,14 @@ export function Home() {
     () => (!loading ? gerarRotina(areasForRoutine, horasPorDia) : []),
     [loading, areasForRoutine, horasPorDia],
   )
-  const diaHoje = useMemo(() => rotina.find(d => d.ehHoje), [rotina])
+  const diaHoje = useMemo(() => rotina.find((d) => d.ehHoje), [rotina])
 
   const areasToFocus = useMemo(
-    () => (progress?.areas ?? [])
-      .filter(a => a.totalAnswered > 0)
-      .sort((a, b) => a.accuracyPct - b.accuracyPct)
-      .slice(0, 3),
+    () =>
+      (progress?.areas ?? [])
+        .filter((a) => a.totalAnswered > 0)
+        .sort((a, b) => a.accuracyPct - b.accuracyPct)
+        .slice(0, 3),
     [progress?.areas],
   )
 
@@ -64,7 +65,7 @@ export function Home() {
       }
     }
     const weakTopico = [...area.topicos]
-      .filter(t => t.totalAnswered > 0)
+      .filter((t) => t.totalAnswered > 0)
       .sort((a, b) => a.accuracyPct - b.accuracyPct)[0]
     const top = weakTopico?.label ?? area.label
     return {
@@ -107,13 +108,22 @@ export function Home() {
             <section className="broto-dashboard-section" aria-label="Seu Broto">
               <PetCard />
             </section>
-            <section className="broto-dashboard-section broto-dashboard-section--grow" aria-label="Missões de hoje">
+            <section
+              className="broto-dashboard-section broto-dashboard-section--grow"
+              aria-label="Missões de hoje"
+            >
               {loading ? (
-                <div className="broto-skeleton" style={{ height: 220, borderRadius: 'var(--radius-md)' }} />
+                <div
+                  className="broto-skeleton"
+                  style={{ height: 220, borderRadius: 'var(--radius-md)' }}
+                />
               ) : diaHoje ? (
                 <DayCard dia={diaHoje} />
               ) : (
-                <div className="broto-card" style={{ padding: 24, color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                <div
+                  className="broto-card"
+                  style={{ padding: 24, color: 'var(--text-muted)', fontSize: '0.9rem' }}
+                >
                   Sem dados de rotina ainda.
                 </div>
               )}
@@ -126,7 +136,12 @@ export function Home() {
               <div className="broto-metric-card broto-metric-card--stat">
                 <div className="broto-metric-card__top">
                   <span className="broto-metric-card__label">Acerto</span>
-                  <Percent className="broto-metric-card__icon broto-metric-card__icon--green" size={20} strokeWidth={1.75} aria-hidden />
+                  <Percent
+                    className="broto-metric-card__icon broto-metric-card__icon--green"
+                    size={20}
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
                 </div>
                 <span className="broto-metric-card__main">
                   {loadingProgress ? '—' : hasProgressData ? `${accuracyPct}%` : '—'}
@@ -135,7 +150,12 @@ export function Home() {
               <div className="broto-metric-card broto-metric-card--stat">
                 <div className="broto-metric-card__top">
                   <span className="broto-metric-card__label">Questões</span>
-                  <BookOpen className="broto-metric-card__icon broto-metric-card__icon--blue" size={20} strokeWidth={1.75} aria-hidden />
+                  <BookOpen
+                    className="broto-metric-card__icon broto-metric-card__icon--blue"
+                    size={20}
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
                 </div>
                 <span className="broto-metric-card__main">
                   {loadingProgress ? '—' : totalAnswered}
@@ -151,11 +171,18 @@ export function Home() {
               <div className="broto-metric-card broto-metric-card--time">
                 <div className="broto-metric-card__top">
                   <span className="broto-metric-card__label">Tempo</span>
-                  <Clock className="broto-metric-card__icon broto-metric-card__icon--gold" size={20} strokeWidth={1.75} aria-hidden />
+                  <Clock
+                    className="broto-metric-card__icon broto-metric-card__icon--gold"
+                    size={20}
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
                 </div>
                 <div className="broto-metric-card__time-row">
                   {loading || loadingPet ? (
-                    <span className="broto-metric-card__main broto-metric-card__main--muted">—</span>
+                    <span className="broto-metric-card__main broto-metric-card__main--muted">
+                      —
+                    </span>
                   ) : goalMinutesPlanned === 0 ? (
                     <>
                       <span className="broto-metric-card__main">0m</span>
@@ -172,11 +199,18 @@ export function Home() {
               <div className="broto-metric-card broto-metric-card--daily">
                 <div className="broto-metric-card__top">
                   <span className="broto-metric-card__label">Meta diária</span>
-                  <Target className="broto-metric-card__icon broto-metric-card__icon--purple" size={20} strokeWidth={1.75} aria-hidden />
+                  <Target
+                    className="broto-metric-card__icon broto-metric-card__icon--purple"
+                    size={20}
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
                 </div>
                 <div className="broto-metric-card__daily-body">
                   {loadingPet ? (
-                    <span className="broto-metric-card__main broto-metric-card__main--muted">—</span>
+                    <span className="broto-metric-card__main broto-metric-card__main--muted">
+                      —
+                    </span>
                   ) : (
                     <span className="broto-metric-card__main">{missionsPct}%</span>
                   )}
@@ -184,7 +218,10 @@ export function Home() {
               </div>
             </div>
 
-            <section className="broto-dashboard-section broto-dashboard-subjects" aria-labelledby="home-subjects-heading">
+            <section
+              className="broto-dashboard-section broto-dashboard-subjects"
+              aria-labelledby="home-subjects-heading"
+            >
               <header className="broto-dashboard-subjects-head">
                 <div className="broto-section-heading-row">
                   <span className="broto-heading-dot" aria-hidden />
@@ -200,13 +237,11 @@ export function Home() {
                   }}
                   aria-label={`Questões de hoje: ${questoesMetaCount} de ${META_QUESTOES_DIA} completas`}
                 >
-                  {loadingPet
-                    ? '—'
-                    : `${questoesMetaCount}/${META_QUESTOES_DIA} completas`}
+                  {loadingPet ? '—' : `${questoesMetaCount}/${META_QUESTOES_DIA} completas`}
                 </Link>
               </header>
               <div className="broto-subject-chips">
-                {areas.map(area => {
+                {areas.map((area) => {
                   const config = AREA_CONFIG[area.value] ?? { color: '#888', icon: BookOpen }
                   const Icon = config.icon
                   return (
@@ -216,7 +251,10 @@ export function Home() {
                       className="broto-subject-chip"
                       style={{ borderColor: `${config.color}40` }}
                     >
-                      <span className="broto-subject-chip__icon" style={{ background: `${config.color}18`, color: config.color }}>
+                      <span
+                        className="broto-subject-chip__icon"
+                        style={{ background: `${config.color}18`, color: config.color }}
+                      >
                         <Icon size={18} />
                       </span>
                       <span className="broto-subject-chip__label">{area.label}</span>

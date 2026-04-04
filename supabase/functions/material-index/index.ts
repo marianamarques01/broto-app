@@ -1,8 +1,14 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
+import {
+  requireUser,
+  requireClassAccess,
+  createServiceRoleClientUnsafe,
+} from '../_shared/authz.ts'
 
-const SERVICE_URL = Deno.env.get("NOTEBOOKLM_SERVICE_URL")!
-const SERVICE_SECRET = Deno.env.get("SERVICE_SECRET") ?? Deno.env.get("NOTEBOOKLM_INTERNAL_SECRET") ?? ""
+const SERVICE_URL = Deno.env.get('NOTEBOOKLM_SERVICE_URL')!
+const SERVICE_SECRET =
+  Deno.env.get('SERVICE_SECRET') ?? Deno.env.get('NOTEBOOKLM_INTERNAL_SECRET') ?? ''
 
 const INDEX_TIMEOUT_MS = 55_000
 
@@ -16,65 +22,98 @@ function serviceHeaders(): Record<string, string> {
 }
 
 serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  )
+  const cors = getCorsHeaders(req)
 
   try {
-    // Auth check — verify caller is an admin of the class's organization
-    const authHeader = req.headers.get("Authorization")
-    if (authHeader) {
-      const supabaseAuthed = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
-      )
-      const { data: { user }, error: authError } = await supabaseAuthed.auth.getUser()
-      if (authError || !user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
-      }
-      // Note: deeper org-level authorization should be added when admin_profiles
-      // are fully enforced (check user.id is admin of the material's org)
+    if (req.method === 'OPTIONS') {
+      if (isOriginBlocked(cors)) return new Response(null, { status: 403 })
+      return new Response('ok', { headers: cors })
     }
+    if (isOriginBlocked(cors)) return json(403, { error: 'Origin not allowed' }, {})
+    if (req.method !== 'POST') return json(405, { error: 'Method not allowed' }, cors)
 
+    // ---- 1. Authentication (mandatory) ----
+    const authResult = await requireUser(req)
+    if (authResult.error) {
+      return json(authResult.error.status, { error: authResult.error.message }, cors)
+    }
+    const { user } = authResult.data
+
+    // ---- 2. Input validation ----
     const { material_id, class_id } = await req.json()
 
-    // Input validation
     if (!material_id || !class_id) {
-      return new Response(JSON.stringify({ error: "material_id e class_id são obrigatórios" }), { status: 400 })
+      return json(400, { error: 'material_id e class_id são obrigatórios' }, cors)
     }
     if (!UUID_RE.test(material_id) || !UUID_RE.test(class_id)) {
-      return new Response(JSON.stringify({ error: "IDs devem ser UUIDs válidos" }), { status: 400 })
+      return json(400, { error: 'IDs devem ser UUIDs válidos' }, cors)
     }
 
-    // Fetch material
-    const { data: material, error: matError } = await supabase
+    // ---- 3. Authorization: user must be teacher+ in the class's organization ----
+    const adminClient = createServiceRoleClientUnsafe()
+    const classAccessResult = await requireClassAccess(adminClient, user.id, class_id, 'teacher')
+    if (classAccessResult.error) {
+      return json(
+        classAccessResult.error.status,
+        { error: classAccessResult.error.message },
+        cors,
+      )
+    }
+    const { classData } = classAccessResult.data
+
+    // ---- 4. Fetch material and verify cross-tenant isolation ----
+    const { data: material, error: matError } = await adminClient
       .from('materials')
-      .select('title, type, source_url')
+      .select('title, type, source_url, class_id, organization_id')
       .eq('id', material_id)
       .single()
 
     if (matError || !material) {
-      return new Response(JSON.stringify({ error: 'Material não encontrado' }), { status: 404 })
+      return json(404, { error: 'Material não encontrado' }, cors)
     }
 
-    // Mark as indexing
-    await supabase
-      .from('materials')
-      .update({ index_status: 'indexing' })
-      .eq('id', material_id)
+    // Belt-and-suspenders: material must belong to the authorized class AND same org
+    if (material.class_id !== class_id) {
+      console.error(
+        '[material-index] cross-tenant attempt: material.class_id',
+        material.class_id,
+        '!== requested class_id',
+        class_id,
+        'by user',
+        user.id,
+      )
+      return json(403, { error: 'Material não pertence à turma informada' }, cors)
+    }
+    if (material.organization_id !== classData.organization_id) {
+      console.error(
+        '[material-index] org mismatch: material.organization_id',
+        material.organization_id,
+        '!== class.organization_id',
+        classData.organization_id,
+        'by user',
+        user.id,
+      )
+      return json(403, { error: 'Material não pertence à organização da turma' }, cors)
+    }
 
-    // Fetch class
-    const { data: cls } = await supabase
+    // ---- 5. Authorized — proceed with indexing ----
+
+    // Mark as indexing
+    await adminClient.from('materials').update({ index_status: 'indexing' }).eq('id', material_id)
+
+    // Fetch class notebook state
+    const { data: cls } = await adminClient
       .from('classes')
       .select('notebook_id, notebook_status, name')
       .eq('id', class_id)
       .single()
 
     if (!cls) {
-      await supabase.from('materials').update({ index_status: 'failed' }).eq('id', material_id)
-      return new Response(JSON.stringify({ error: 'Turma não encontrada' }), { status: 404 })
+      await adminClient
+        .from('materials')
+        .update({ index_status: 'failed' })
+        .eq('id', material_id)
+      return json(404, { error: 'Turma não encontrada' }, cors)
     }
 
     // Create notebook if class doesn't have one yet
@@ -86,12 +125,18 @@ serve(async (req) => {
       })
 
       if (!createRes.ok) {
-        await supabase.from('materials').update({ index_status: 'failed' }).eq('id', material_id)
-        return new Response(JSON.stringify({ error: 'Erro ao criar notebook' }), { status: 500 })
+        await adminClient
+          .from('materials')
+          .update({ index_status: 'failed' })
+          .eq('id', material_id)
+        return json(500, { error: 'Erro ao criar notebook' }, cors)
       }
 
       const { notebook_id } = await createRes.json()
-      await supabase.from('classes').update({ notebook_id, notebook_status: 'indexing' }).eq('id', class_id)
+      await adminClient
+        .from('classes')
+        .update({ notebook_id, notebook_status: 'indexing' })
+        .eq('id', class_id)
     }
 
     // Build indexing payload
@@ -120,34 +165,45 @@ serve(async (req) => {
       clearTimeout(timer)
 
       if (!indexRes.ok) {
-        await supabase.from('materials').update({ index_status: 'failed' }).eq('id', material_id)
-        return new Response(JSON.stringify({ error: 'Erro ao indexar' }), { status: 500 })
+        await adminClient
+          .from('materials')
+          .update({ index_status: 'failed' })
+          .eq('id', material_id)
+        return json(500, { error: 'Erro ao indexar' }, cors)
       }
 
-      await supabase.from('materials').update({ index_status: 'indexed' }).eq('id', material_id)
-      await supabase.from('classes').update({ notebook_status: 'ready' }).eq('id', class_id)
+      await adminClient
+        .from('materials')
+        .update({ index_status: 'indexed' })
+        .eq('id', material_id)
+      await adminClient
+        .from('classes')
+        .update({ notebook_status: 'ready' })
+        .eq('id', class_id)
 
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json(200, { success: true }, cors)
     } catch (err) {
       clearTimeout(timer)
 
       if (err instanceof DOMException && err.name === 'AbortError') {
         // Timeout — mark as pending (not indexed) so it can be retried
-        await supabase.from('materials').update({ index_status: 'pending' }).eq('id', material_id)
+        await adminClient
+          .from('materials')
+          .update({ index_status: 'pending' })
+          .eq('id', material_id)
 
-        return new Response(JSON.stringify({
-          success: false,
-          error: 'Timeout — indexação pode estar em andamento. Material voltou para pendente.',
-        }), {
-          status: 202,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return json(
+          202,
+          {
+            success: false,
+            error: 'Timeout — indexação pode estar em andamento. Material voltou para pendente.',
+          },
+          cors,
+        )
       }
       throw err
     }
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), { status: 500 })
+    return json(500, { error: String(err) }, cors)
   }
 })

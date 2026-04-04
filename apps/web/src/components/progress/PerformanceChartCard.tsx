@@ -15,7 +15,10 @@ const MOCK_PCTS: Record<PerformancePeriod, number[]> = {
   all: [62, 58, 71, 65, 74],
 }
 
-function buildMockBuckets(period: PerformancePeriod, real: PerformanceBucket[]): PerformanceBucket[] {
+function buildMockBuckets(
+  period: PerformancePeriod,
+  real: PerformanceBucket[],
+): PerformanceBucket[] {
   if (period === 'all' && real.length === 0) {
     return [
       { key: 'mock-m1', label: 'out/25', answered: 24, correct: 16, accuracyPct: 67 },
@@ -39,7 +42,7 @@ function buildMockBuckets(period: PerformancePeriod, real: PerformanceBucket[]):
 }
 
 function averageAccuracy(buckets: PerformanceBucket[]): number | null {
-  const withPct = buckets.filter(b => b.accuracyPct !== null)
+  const withPct = buckets.filter((b) => b.accuracyPct !== null)
   if (withPct.length === 0) return null
   const sum = withPct.reduce((s, b) => s + (b.accuracyPct ?? 0), 0)
   return Math.round(sum / withPct.length)
@@ -53,7 +56,7 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
   const [period, setPeriod] = useState<PerformancePeriod>('week')
   const buckets = usePerformanceSeries(period)
 
-  const hasAny = useMemo(() => buckets.some(b => b.answered > 0), [buckets])
+  const hasAny = useMemo(() => buckets.some((b) => b.answered > 0), [buckets])
 
   const { chartBuckets, chartAvg, isMock } = useMemo(() => {
     if (hasAny) {
@@ -91,7 +94,7 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
           </h3>
         </div>
         <div className="broto-perf-card__filters" role="group" aria-label="Período do gráfico">
-          {FILTERS.map(f => (
+          {FILTERS.map((f) => (
             <button
               key={f.id}
               type="button"
@@ -117,7 +120,8 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
 
             {isMock && (
               <p className="broto-perf-mock-hint">
-                Gráfico de exemplo — ao responder questões, seus indicadores substituem esta visualização.
+                Gráfico de exemplo — ao responder questões, seus indicadores substituem esta
+                visualização.
               </p>
             )}
 
@@ -134,7 +138,11 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
                 viewBox={`0 0 ${w} ${chartH + padB}`}
                 preserveAspectRatio="xMidYMid meet"
                 role="img"
-                aria-label={isMock ? 'Exemplo de gráfico de desempenho' : 'Gráfico de taxa de acerto por período'}
+                aria-label={
+                  isMock
+                    ? 'Exemplo de gráfico de desempenho'
+                    : 'Gráfico de taxa de acerto por período'
+                }
               >
                 <defs>
                   <linearGradient id="broto-perf-bar-grad" x1="0" y1="1" x2="0" y2="0">

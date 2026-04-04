@@ -1,64 +1,51 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 
-const SERVICE_URL = Deno.env.get("NOTEBOOKLM_SERVICE_URL")!
-const SERVICE_SECRET = Deno.env.get("SERVICE_SECRET") ?? Deno.env.get("NOTEBOOKLM_INTERNAL_SECRET") ?? ""
+const SERVICE_URL = Deno.env.get('NOTEBOOKLM_SERVICE_URL')!
+const SERVICE_SECRET =
+  Deno.env.get('SERVICE_SECRET') ?? Deno.env.get('NOTEBOOKLM_INTERNAL_SECRET') ?? ''
 
-type ChatMessage = { role: "user" | "assistant"; content: string }
+type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
 const MAX_MESSAGE_LENGTH = 4000
 const MAX_MESSAGES = 50
-
-const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").filter(Boolean)
-
-function getCorsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get("Origin") ?? ""
-  const allowed =
-    ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin)
-      ? origin || "*"
-      : ALLOWED_ORIGINS[0]
-  return {
-    "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  }
-}
-
-function json(status: number, body: unknown, cors: Record<string, string>) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json", ...cors },
-  })
-}
 
 serve(async (req) => {
   const cors = getCorsHeaders(req)
 
   try {
-    if (req.method === "OPTIONS") return new Response("ok", { headers: cors })
-    if (req.method !== "POST") return json(405, { error: "Method not allowed" }, cors)
+    if (req.method === 'OPTIONS') {
+      if (isOriginBlocked(cors)) return new Response(null, { status: 403 })
+      return new Response('ok', { headers: cors })
+    }
+    if (isOriginBlocked(cors)) return json(403, { error: 'Origin not allowed' }, {})
+    if (req.method !== 'POST') return json(405, { error: 'Method not allowed' }, cors)
 
-    const authHeader = req.headers.get("Authorization") ?? ""
+    const authHeader = req.headers.get('Authorization') ?? ''
 
     const supabaseAuthed = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: authHeader } } },
     )
 
-    const { data: { user }, error: authError } = await supabaseAuthed.auth.getUser()
-    if (authError || !user) return json(401, { error: "Unauthorized" }, cors)
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAuthed.auth.getUser()
+    if (authError || !user) return json(401, { error: 'Unauthorized' }, cors)
 
     const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
     // Input validation
-    const payload = await req.json().catch(() => null) as { messages?: ChatMessage[] } | null
+    const payload = (await req.json().catch(() => null)) as { messages?: ChatMessage[] } | null
     const messages = payload?.messages
     if (!Array.isArray(messages) || messages.length === 0) {
-      return json(400, { error: "messages é obrigatório" }, cors)
+      return json(400, { error: 'messages é obrigatório' }, cors)
     }
 
     if (messages.length > MAX_MESSAGES) {
@@ -66,42 +53,47 @@ serve(async (req) => {
     }
 
     for (const m of messages) {
-      if (!m || (m.role !== "user" && m.role !== "assistant") || typeof m.content !== "string") {
-        return json(400, { error: "messages inválido" }, cors)
+      if (!m || (m.role !== 'user' && m.role !== 'assistant') || typeof m.content !== 'string') {
+        return json(400, { error: 'messages inválido' }, cors)
       }
       if (m.content.length > MAX_MESSAGE_LENGTH) {
-        return json(400, { error: `Mensagem excede o limite de ${MAX_MESSAGE_LENGTH} caracteres` }, cors)
+        return json(
+          400,
+          { error: `Mensagem excede o limite de ${MAX_MESSAGE_LENGTH} caracteres` },
+          cors,
+        )
       }
     }
 
-    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')
     if (!lastUserMsg) {
-      return json(400, { error: "Nenhuma mensagem do usuário encontrada" }, cors)
+      return json(400, { error: 'Nenhuma mensagem do usuário encontrada' }, cors)
     }
 
     // Get user's current class
     const { data: userRow, error: userRowError } = await supabaseAdmin
-      .from("users")
-      .select("current_class_id")
-      .eq("id", user.id)
+      .from('users')
+      .select('current_class_id')
+      .eq('id', user.id)
       .single()
 
-    if (userRowError) return json(500, { error: "Erro ao buscar turma do usuario" }, cors)
+    if (userRowError) return json(500, { error: 'Erro ao buscar turma do usuario' }, cors)
 
-    const classId = (userRow as { current_class_id?: string | null } | null)?.current_class_id ?? null
-    if (!classId) return json(400, { error: "Usuario sem turma ativa" }, cors)
+    const classId =
+      (userRow as { current_class_id?: string | null } | null)?.current_class_id ?? null
+    if (!classId) return json(400, { error: 'Usuario sem turma ativa' }, cors)
 
     // Verify enrollment — user must be enrolled in the class
     const { data: enrollment, error: enrollError } = await supabaseAdmin
-      .from("enrollments")
-      .select("id")
-      .eq("class_id", classId)
-      .eq("student_id", user.id)
-      .eq("status", "active")
+      .from('enrollments')
+      .select('id')
+      .eq('class_id', classId)
+      .eq('student_id', user.id)
+      .eq('status', 'active')
       .maybeSingle()
 
     if (enrollError || !enrollment) {
-      return json(403, { error: "Usuário não matriculado nesta turma" }, cors)
+      return json(403, { error: 'Usuário não matriculado nesta turma' }, cors)
     }
 
     // Proxy to Python service
@@ -110,11 +102,11 @@ serve(async (req) => {
     let chatRes: Response
     try {
       chatRes = await fetch(`${SERVICE_URL}/notebook/chat`, {
-        method: "POST",
+        method: 'POST',
         signal: ctrl.signal,
         headers: {
-          "Content-Type": "application/json",
-          "bypass-tunnel-reminder": "true",
+          'Content-Type': 'application/json',
+          'bypass-tunnel-reminder': 'true',
           ...(SERVICE_SECRET ? { Authorization: `Bearer ${SERVICE_SECRET}` } : {}),
         },
         body: JSON.stringify({
@@ -128,14 +120,14 @@ serve(async (req) => {
     }
 
     if (!chatRes.ok) {
-      const errBody = await chatRes.text().catch(() => "")
-      return json(502, { error: "Erro no servico do Broto", details: errBody || undefined }, cors)
+      const errBody = await chatRes.text().catch(() => '')
+      return json(502, { error: 'Erro no servico do Broto', details: errBody || undefined }, cors)
     }
 
-    const chatJson = await chatRes.json().catch(() => null) as { answer?: string } | null
-    const message = chatJson?.answer?.trim() ?? ""
+    const chatJson = (await chatRes.json().catch(() => null)) as { answer?: string } | null
+    const message = chatJson?.answer?.trim() ?? ''
 
-    if (!message) return json(502, { error: "Resposta vazia do servico" }, cors)
+    if (!message) return json(502, { error: 'Resposta vazia do servico' }, cors)
 
     return json(200, { message }, cors)
   } catch (err) {

@@ -22,7 +22,7 @@ export function subscribeDailyMissions(cb: () => void): () => void {
 }
 
 function notifyDailyMissions(): void {
-  listeners.forEach(l => l())
+  listeners.forEach((l) => l())
 }
 
 function todayLocalISO(): string {

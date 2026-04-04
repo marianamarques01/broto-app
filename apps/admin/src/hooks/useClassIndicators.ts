@@ -52,7 +52,7 @@ export function useClassIndicators(classId: string) {
         return
       }
 
-      const studentIds = enrollments.map(e => e.student_id)
+      const studentIds = enrollments.map((e) => e.student_id)
 
       // 2. Buscar dados dos users
       const { data: users } = await supabase
@@ -80,11 +80,11 @@ export function useClassIndicators(classId: string) {
         .in('user_id', studentIds)
         .gte('created_at', sevenDaysAgo)
 
-      const activeStudentIds = new Set(recentAnswers?.map(a => a.user_id) ?? [])
+      const activeStudentIds = new Set(recentAnswers?.map((a) => a.user_id) ?? [])
 
       // Indexar por student_id
-      const usersMap = new Map((users ?? []).map(u => [u.id, u]))
-      const petsMap = new Map((pets ?? []).map(p => [p.user_id, p]))
+      const usersMap = new Map((users ?? []).map((u) => [u.id, u]))
+      const petsMap = new Map((pets ?? []).map((p) => [p.user_id, p]))
       const perfByStudent = new Map<string, typeof topicPerf>()
       for (const tp of topicPerf ?? []) {
         const list = perfByStudent.get(tp.user_id) ?? []
@@ -93,7 +93,7 @@ export function useClassIndicators(classId: string) {
       }
 
       // 6. Montar indicadores por aluno
-      const students: StudentIndicator[] = studentIds.map(sid => {
+      const students: StudentIndicator[] = studentIds.map((sid) => {
         const user = usersMap.get(sid)
         const pet = petsMap.get(sid)
         const perfs = perfByStudent.get(sid) ?? []
@@ -103,14 +103,16 @@ export function useClassIndicators(classId: string) {
         const accuracyRate = totalQuestions > 0 ? correctAnswers / totalQuestions : 0
 
         const weakTopics = perfs
-          .filter(t => (t.total_answered ?? 0) >= 3)
+          .filter((t) => (t.total_answered ?? 0) >= 3)
           .sort((a, b) => {
-            const aRate = (a.total_answered ?? 0) > 0 ? (a.total_correct ?? 0) / a.total_answered! : 0
-            const bRate = (b.total_answered ?? 0) > 0 ? (b.total_correct ?? 0) / b.total_answered! : 0
+            const aRate =
+              (a.total_answered ?? 0) > 0 ? (a.total_correct ?? 0) / a.total_answered! : 0
+            const bRate =
+              (b.total_answered ?? 0) > 0 ? (b.total_correct ?? 0) / b.total_answered! : 0
             return aRate - bRate
           })
           .slice(0, 3)
-          .map(t => t.topico_value)
+          .map((t) => t.topico_value)
 
         return {
           student_id: sid,
@@ -127,13 +129,11 @@ export function useClassIndicators(classId: string) {
       })
 
       const totalStudents = students.length
-      const activeStudents = studentIds.filter(id => activeStudentIds.has(id)).length
-      const avgAccuracy = totalStudents > 0
-        ? students.reduce((s, st) => s + st.accuracy_rate, 0) / totalStudents
-        : 0
-      const avgStreak = totalStudents > 0
-        ? students.reduce((s, st) => s + st.streak, 0) / totalStudents
-        : 0
+      const activeStudents = studentIds.filter((id) => activeStudentIds.has(id)).length
+      const avgAccuracy =
+        totalStudents > 0 ? students.reduce((s, st) => s + st.accuracy_rate, 0) / totalStudents : 0
+      const avgStreak =
+        totalStudents > 0 ? students.reduce((s, st) => s + st.streak, 0) / totalStudents : 0
 
       setIndicators({
         class_id: classId,

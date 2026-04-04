@@ -43,6 +43,22 @@ on conflict (id) do update
       organization_id = excluded.organization_id,
       role = excluded.role;
 
+-- 2b. Membership de staff (fonte de authz do admin app; PR-10)
+insert into public.organization_memberships (user_id, organization_id, role, status, joined_at)
+select
+  '942397fd-bb75-4af0-b0c0-a0c92447071d'::uuid,
+  'a0e00000-0000-4000-8000-000000000001'::uuid,
+  'owner',
+  'active',
+  now()
+where not exists (
+  select 1
+  from public.organization_memberships om
+  where om.user_id = '942397fd-bb75-4af0-b0c0-a0c92447071d'
+    and om.organization_id = 'a0e00000-0000-4000-8000-000000000001'
+    and om.status = 'active'
+);
+
 -- 3. Inserir turma ENEM (aberta, acesso publico via codigo)
 insert into public.classes (id, organization_id, name, description, access_code, is_active, created_by)
 values (

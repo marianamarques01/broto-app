@@ -2,9 +2,9 @@ export type Organization = {
   id: string
   name: string
   slug: string
-  logo_url?: string
+  logo_url?: string | null
   is_public: boolean
-  owner_id: string
+  owner_id?: string | null
   config: OrganizationConfig
   created_at: string
 }

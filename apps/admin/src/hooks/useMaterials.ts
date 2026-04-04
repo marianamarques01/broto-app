@@ -33,7 +33,9 @@ export function useMaterials(classId: string) {
     setLoading(false)
   }, [classId])
 
-  useEffect(() => { fetchMaterials() }, [fetchMaterials])
+  useEffect(() => {
+    fetchMaterials()
+  }, [fetchMaterials])
 
   async function uploadPDF(file: File, title: string): Promise<{ error: string | null }> {
     if (!admin) return { error: 'Nao autenticado' }
@@ -52,9 +54,9 @@ export function useMaterials(classId: string) {
       return { error: `Erro ao fazer upload: ${storageError.message}` }
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('materials')
-      .getPublicUrl(fileName)
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('materials').getPublicUrl(fileName)
 
     const { data: inserted, error: dbError } = await supabase
       .from('materials')
@@ -78,7 +80,11 @@ export function useMaterials(classId: string) {
     return { error: null }
   }
 
-  async function addURL(url: string, title: string, type: 'url' | 'youtube'): Promise<{ error: string | null }> {
+  async function addURL(
+    url: string,
+    title: string,
+    type: 'url' | 'youtube',
+  ): Promise<{ error: string | null }> {
     if (!admin) return { error: 'Nao autenticado' }
 
     const { data: inserted, error: dbError } = await supabase
@@ -104,10 +110,7 @@ export function useMaterials(classId: string) {
   }
 
   async function deleteMaterial(materialId: string): Promise<{ error: string | null }> {
-    const { error } = await supabase
-      .from('materials')
-      .delete()
-      .eq('id', materialId)
+    const { error } = await supabase.from('materials').delete().eq('id', materialId)
 
     if (error) return { error: 'Erro ao remover material' }
     await fetchMaterials()

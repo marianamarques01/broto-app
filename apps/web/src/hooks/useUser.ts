@@ -11,8 +11,8 @@ export interface UserProfile {
   horasDisponiveisPorDia: number
 }
 
-const { useHook, refresh, refreshIfStale } = createCachedHook<UserProfile>(
-  () => api.get<UserProfile>('/api/user/me'),
+const { useHook, refresh, refreshIfStale } = createCachedHook<UserProfile>(() =>
+  api.get<UserProfile>('/api/user/me'),
 )
 
 export { refreshIfStale as refreshUserIfStale }

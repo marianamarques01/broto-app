@@ -18,20 +18,32 @@ export function MaterialsList({ materials, loading, onDelete }: Props) {
   }
 
   return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 12, overflow: 'hidden' }}>
+    <div
+      style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-default)',
+        borderRadius: 12,
+        overflow: 'hidden',
+      }}
+    >
       <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-default)' }}>
-        <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>
-          Materiais ({materials.length})
-        </h3>
+        <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Materiais ({materials.length})</h3>
       </div>
 
       {materials.length === 0 ? (
-        <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+        <div
+          style={{
+            padding: '32px 20px',
+            textAlign: 'center',
+            color: 'var(--text-muted)',
+            fontSize: 13,
+          }}
+        >
           Nenhum material adicionado ainda. Use o painel ao lado para adicionar.
         </div>
       ) : (
         <div>
-          {materials.map(material => (
+          {materials.map((material) => (
             <div
               key={material.id}
               style={{
@@ -44,19 +56,23 @@ export function MaterialsList({ materials, loading, onDelete }: Props) {
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{
-                    fontSize: 11,
-                    padding: '2px 6px',
-                    borderRadius: 4,
-                    background: 'var(--bg-elevated)',
-                    color: 'var(--text-muted)',
-                    fontWeight: 500,
-                  }}>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      padding: '2px 6px',
+                      borderRadius: 4,
+                      background: 'var(--bg-elevated)',
+                      color: 'var(--text-muted)',
+                      fontWeight: 500,
+                    }}
+                  >
                     {typeLabel[material.type] ?? material.type}
                   </span>
                   <MaterialStatusBadge status={material.index_status} />
                 </div>
-                <p style={{ fontSize: 14, color: 'var(--text-primary)', margin: 0, fontWeight: 500 }}>
+                <p
+                  style={{ fontSize: 14, color: 'var(--text-primary)', margin: 0, fontWeight: 500 }}
+                >
                   {material.title}
                 </p>
                 <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '4px 0 0' }}>

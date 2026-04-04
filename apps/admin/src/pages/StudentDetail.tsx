@@ -51,23 +51,34 @@ export function StudentDetail() {
   }, [studentId])
 
   const metricCard = (label: string, value: string | number) => (
-    <div style={{
-      background: 'var(--bg-card)',
-      border: '1px solid var(--border-default)',
-      borderRadius: 12,
-      padding: '16px 20px',
-    }}>
+    <div
+      style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-default)',
+        borderRadius: 12,
+        padding: '16px 20px',
+      }}
+    >
       <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 6px' }}>{label}</p>
-      <p style={{ fontSize: 24, fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>{value}</p>
+      <p style={{ fontSize: 24, fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
+        {value}
+      </p>
     </div>
   )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-void)', color: 'var(--text-primary)' }}>
+    <div
+      style={{
+        display: 'flex',
+        minHeight: '100vh',
+        background: 'var(--bg-void)',
+        color: 'var(--text-primary)',
+      }}
+    >
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Header
-          title={loading ? 'Aluno' : student?.nome ?? 'Aluno'}
+          title={loading ? 'Aluno' : (student?.nome ?? 'Aluno')}
           backTo={`/classes/${classId}`}
         />
 
@@ -84,50 +95,78 @@ export function StudentDetail() {
                     style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover' }}
                   />
                 ) : (
-                  <div style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: '50%',
-                    background: 'var(--green-glow)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 20,
-                    fontWeight: 600,
-                    color: 'var(--green-600)',
-                  }}>
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: '50%',
+                      background: 'var(--green-glow)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 20,
+                      fontWeight: 600,
+                      color: 'var(--green-600)',
+                    }}
+                  >
                     {student.nome.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div>
                   <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>{student.nome}</h3>
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Nivel {student.nivel}</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                    Nivel {student.nivel}
+                  </p>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
+                  gap: 12,
+                  marginBottom: 28,
+                }}
+              >
                 {metricCard('XP', student.xp)}
                 {metricCard('Nivel', student.nivel)}
                 {metricCard('Streak', `${student.streak}d`)}
-                {metricCard('Questoes', student.topicPerformance.reduce((s, t) => s + t.total_answered, 0))}
+                {metricCard(
+                  'Questoes',
+                  student.topicPerformance.reduce((s, t) => s + t.total_answered, 0),
+                )}
               </div>
 
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 12, overflow: 'hidden' }}>
-                <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-default)' }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Desempenho por topico</h3>
+              <div
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-default)' }}
+                >
+                  <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>
+                    Desempenho por topico
+                  </h3>
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
                   <thead>
                     <tr style={{ background: 'var(--bg-deep)' }}>
-                      {['Topico', 'Respondidas', 'Corretas', 'Acerto'].map(h => (
-                        <th key={h} style={{
-                          padding: '10px 20px',
-                          textAlign: 'left',
-                          fontWeight: 500,
-                          fontSize: 12,
-                          color: 'var(--text-muted)',
-                          borderBottom: '1px solid var(--border-default)',
-                        }}>
+                      {['Topico', 'Respondidas', 'Corretas', 'Acerto'].map((h) => (
+                        <th
+                          key={h}
+                          style={{
+                            padding: '10px 20px',
+                            textAlign: 'left',
+                            fontWeight: 500,
+                            fontSize: 12,
+                            color: 'var(--text-muted)',
+                            borderBottom: '1px solid var(--border-default)',
+                          }}
+                        >
                           {h}
                         </th>
                       ))}
@@ -136,30 +175,57 @@ export function StudentDetail() {
                   <tbody>
                     {student.topicPerformance.length === 0 ? (
                       <tr>
-                        <td colSpan={4} style={{ padding: '24px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                        <td
+                          colSpan={4}
+                          style={{
+                            padding: '24px 20px',
+                            textAlign: 'center',
+                            color: 'var(--text-muted)',
+                            fontSize: 13,
+                          }}
+                        >
                           Nenhum dado de desempenho ainda
                         </td>
                       </tr>
-                    ) : student.topicPerformance
-                      .sort((a, b) => b.total_answered - a.total_answered)
-                      .map(tp => {
-                        const rate = tp.total_answered > 0 ? tp.total_correct / tp.total_answered : 0
-                        return (
-                          <tr key={tp.topico_value} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                            <td style={{ padding: '12px 20px', color: 'var(--text-primary)' }}>{tp.topico_value}</td>
-                            <td style={{ padding: '12px 20px', color: 'var(--text-secondary)' }}>{tp.total_answered}</td>
-                            <td style={{ padding: '12px 20px', color: 'var(--text-secondary)' }}>{tp.total_correct}</td>
-                            <td style={{ padding: '12px 20px' }}>
-                              <span style={{
-                                color: rate >= 0.7 ? 'var(--green-600)' : rate >= 0.4 ? 'var(--gold-600)' : 'var(--red-400)',
-                                fontWeight: 500,
-                              }}>
-                                {Math.round(rate * 100)}%
-                              </span>
-                            </td>
-                          </tr>
-                        )
-                      })}
+                    ) : (
+                      student.topicPerformance
+                        .sort((a, b) => b.total_answered - a.total_answered)
+                        .map((tp) => {
+                          const rate =
+                            tp.total_answered > 0 ? tp.total_correct / tp.total_answered : 0
+                          return (
+                            <tr
+                              key={tp.topico_value}
+                              style={{ borderBottom: '1px solid var(--border-subtle)' }}
+                            >
+                              <td style={{ padding: '12px 20px', color: 'var(--text-primary)' }}>
+                                {tp.topico_value}
+                              </td>
+                              <td style={{ padding: '12px 20px', color: 'var(--text-secondary)' }}>
+                                {tp.total_answered}
+                              </td>
+                              <td style={{ padding: '12px 20px', color: 'var(--text-secondary)' }}>
+                                {tp.total_correct}
+                              </td>
+                              <td style={{ padding: '12px 20px' }}>
+                                <span
+                                  style={{
+                                    color:
+                                      rate >= 0.7
+                                        ? 'var(--green-600)'
+                                        : rate >= 0.4
+                                          ? 'var(--gold-600)'
+                                          : 'var(--red-400)',
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  {Math.round(rate * 100)}%
+                                </span>
+                              </td>
+                            </tr>
+                          )
+                        })
+                    )}
                   </tbody>
                 </table>
               </div>

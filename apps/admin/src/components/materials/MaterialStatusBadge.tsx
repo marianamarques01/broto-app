@@ -13,14 +13,16 @@ export function MaterialStatusBadge({ status }: Props) {
   const { label, color, bg } = config[status]
 
   return (
-    <span style={{
-      fontSize: 11,
-      padding: '2px 6px',
-      borderRadius: 4,
-      background: bg,
-      color,
-      fontWeight: 500,
-    }}>
+    <span
+      style={{
+        fontSize: 11,
+        padding: '2px 6px',
+        borderRadius: 4,
+        background: bg,
+        color,
+        fontWeight: 500,
+      }}
+    >
       {label}
     </span>
   )

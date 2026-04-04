@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import type { Area, Topico, Exam, Question, QuestionsResponse } from '@/lib/types/questions'
+import type { Area, Topico, Exam, Question, QuestionsResponse } from '@broto/shared'
 import { useClass } from '@/hooks/useClass'
 
 const QUESTIONS_LIMIT = 10
@@ -38,7 +38,13 @@ async function loadTopicMapping(baseUrl: string): Promise<Record<string, string>
   return mapping
 }
 
-const examDetailsCache = new Map<string, { year: number; questions: Array<{ title: string; index: number; discipline: string; language?: string | null }> }>()
+const examDetailsCache = new Map<
+  string,
+  {
+    year: number
+    questions: Array<{ title: string; index: number; discipline: string; language?: string | null }>
+  }
+>()
 
 async function loadExamDetails(baseUrl: string, year: number) {
   const key = `${baseUrl}::${year}`
@@ -64,7 +70,10 @@ async function fetchExams(baseUrl: string): Promise<Exam[]> {
   const data = await res.json()
   if (!Array.isArray(data)) return []
   return data
-    .map((e: { year?: number; title?: string }) => ({ year: Number(e?.year), title: String(e?.title ?? '') }))
+    .map((e: { year?: number; title?: string }) => ({
+      year: Number(e?.year),
+      title: String(e?.title ?? ''),
+    }))
     .filter((e: Exam) => e.year >= EXAM_YEAR_MIN && e.year <= EXAM_YEAR_MAX)
 }
 
@@ -75,9 +84,17 @@ async function fetchTopics(baseUrl: string, areaValue: string): Promise<Topico[]
   return Array.isArray(data) ? data : []
 }
 
-async function fetchQuestionDetail(baseUrl: string, year: number, index: number, language?: string | null): Promise<Question | null> {
+async function fetchQuestionDetail(
+  baseUrl: string,
+  year: number,
+  index: number,
+  language?: string | null,
+): Promise<Question | null> {
   const paths = language
-    ? [`${baseUrl}/${year}/questions/${index}-${language}/details.json`, `${baseUrl}/${year}/questions/${index}/details.json`]
+    ? [
+        `${baseUrl}/${year}/questions/${index}-${language}/details.json`,
+        `${baseUrl}/${year}/questions/${index}/details.json`,
+      ]
     : [`${baseUrl}/${year}/questions/${index}/details.json`]
 
   for (const path of paths) {
@@ -85,12 +102,19 @@ async function fetchQuestionDetail(baseUrl: string, year: number, index: number,
     if (res.ok) {
       const q = await res.json()
       return {
-        title: q.title, index: q.index, year: q.year ?? year,
-        discipline: q.discipline ?? null, language: q.language ?? language ?? null,
+        title: q.title,
+        index: q.index,
+        year: q.year ?? year,
+        discipline: q.discipline ?? null,
+        language: q.language ?? language ?? null,
         context: q.context ?? null,
-        alternatives: (q.alternatives ?? []).map((a: { letter: string; text?: string | null; isCorrect?: boolean }) => ({
-          letter: a.letter, text: a.text ?? null, isCorrect: a.isCorrect ?? false,
-        })),
+        alternatives: (q.alternatives ?? []).map(
+          (a: { letter: string; text?: string | null; isCorrect?: boolean }) => ({
+            letter: a.letter,
+            text: a.text ?? null,
+            isCorrect: a.isCorrect ?? false,
+          }),
+        ),
       }
     }
   }
@@ -98,7 +122,13 @@ async function fetchQuestionDetail(baseUrl: string, year: number, index: number,
 }
 
 interface SearchParams {
-  baseUrl: string; area: string; year?: string; topicoId?: string; topicoValue?: string; language?: string; limit?: number
+  baseUrl: string
+  area: string
+  year?: string
+  topicoId?: string
+  topicoValue?: string
+  language?: string
+  limit?: number
 }
 
 async function searchQuestions(params: SearchParams): Promise<QuestionsResponse> {
@@ -108,14 +138,18 @@ async function searchQuestions(params: SearchParams): Promise<QuestionsResponse>
     topicoId && topicoId !== IDIOMAS_TOPIC_ID ? loadTopicMapping(baseUrl) : Promise.resolve(null),
   ])
   const yearsToSearch = year
-    ? exams.filter(e => String(e.year) === year).map(e => e.year)
-    : exams.map(e => e.year).sort((a, b) => b - a)
+    ? exams.filter((e) => String(e.year) === year).map((e) => e.year)
+    : exams.map((e) => e.year).sort((a, b) => b - a)
 
   let topicQuestionSet: Set<string> | null = null
   if (topicoId && topicoId !== IDIOMAS_TOPIC_ID && topicMapping) {
     const topicoValue = params.topicoValue
     if (topicoValue) {
-      topicQuestionSet = new Set(Object.entries(topicMapping).filter(([, v]) => v === topicoValue).map(([k]) => k))
+      topicQuestionSet = new Set(
+        Object.entries(topicMapping)
+          .filter(([, v]) => v === topicoValue)
+          .map(([k]) => k),
+      )
     }
   }
 
@@ -123,7 +157,7 @@ async function searchQuestions(params: SearchParams): Promise<QuestionsResponse>
   const allRefs: QuestionRef[] = []
 
   const allDetails = await Promise.all(
-    yearsToSearch.map(y => loadExamDetails(baseUrl, y).then(d => ({ y, d }))),
+    yearsToSearch.map((y) => loadExamDetails(baseUrl, y).then((d) => ({ y, d }))),
   )
 
   for (const { y, d: examDetails } of allDetails) {
@@ -144,7 +178,9 @@ async function searchQuestions(params: SearchParams): Promise<QuestionsResponse>
 
   const total = allRefs.length
   const slice = allRefs.slice(0, limit)
-  const questions = await Promise.all(slice.map(ref => fetchQuestionDetail(baseUrl, ref.year, ref.index, ref.language)))
+  const questions = await Promise.all(
+    slice.map((ref) => fetchQuestionDetail(baseUrl, ref.year, ref.index, ref.language)),
+  )
   return {
     questions: questions.filter((q): q is Question => q !== null),
     metadata: { limit, offset: 0, total, hasMore: total > limit },
@@ -168,63 +204,162 @@ export function useQuestionsFilters() {
   const topicosRef = useRef<Topico[]>([])
 
   const loadInitialData = useCallback(async () => {
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
     try {
       const [areasData, examsData] = await Promise.all([fetchAreas(baseUrl), fetchExams(baseUrl)])
-      setAreas(areasData); setExams(examsData)
+      setAreas(areasData)
+      setExams(examsData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados')
-    } finally { setLoading(false) }
+    } finally {
+      setLoading(false)
+    }
   }, [baseUrl])
 
-  useEffect(() => { loadInitialData() }, [loadInitialData])
+  useEffect(() => {
+    loadInitialData()
+  }, [loadInitialData])
 
   useEffect(() => {
-    if (!selectedArea) { setTopicos([]); topicosRef.current = []; setSelectedTopico(''); setSelectedLanguage(''); return }
-    fetchTopics(baseUrl, selectedArea).then(data => {
-      const list = selectedArea === LINGUAGENS_AREA_VALUE ? [IDIOMAS_TOPIC, ...data] : data
-      setTopicos(list); topicosRef.current = list
-    }).catch(() => { setTopicos([]); topicosRef.current = [] })
-    setSelectedTopico(''); setSelectedLanguage('')
+    if (!selectedArea) {
+      setTopicos([])
+      topicosRef.current = []
+      setSelectedTopico('')
+      setSelectedLanguage('')
+      return
+    }
+    fetchTopics(baseUrl, selectedArea)
+      .then((data) => {
+        const list = selectedArea === LINGUAGENS_AREA_VALUE ? [IDIOMAS_TOPIC, ...data] : data
+        setTopicos(list)
+        topicosRef.current = list
+      })
+      .catch(() => {
+        setTopicos([])
+        topicosRef.current = []
+      })
+    setSelectedTopico('')
+    setSelectedLanguage('')
   }, [selectedArea, baseUrl])
 
   const isIdiomasTopicSelected = selectedTopico === IDIOMAS_TOPIC_ID
 
   useEffect(() => {
-    if (!selectedArea) { setQuestions([]); return }
-    setLoadingQuestions(true); setError(null)
-    const topicoValue = topicosRef.current.find(t => t.id === selectedTopico)?.value
+    if (!selectedArea) {
+      setQuestions([])
+      return
+    }
+    setLoadingQuestions(true)
+    setError(null)
+    const topicoValue = topicosRef.current.find((t) => t.id === selectedTopico)?.value
 
     const run = async () => {
       if (isIdiomasTopicSelected) {
         const langs = selectedLanguage ? [selectedLanguage] : ['ingles', 'espanhol']
-        const results = await Promise.all(langs.map(lang => searchQuestions({ baseUrl, area: selectedArea, year: selectedYear || undefined, language: lang, limit: IDIOMAS_QUESTIONS_LIMIT })))
-        setQuestions(results.flatMap(r => r.questions))
+        const results = await Promise.all(
+          langs.map((lang) =>
+            searchQuestions({
+              baseUrl,
+              area: selectedArea,
+              year: selectedYear || undefined,
+              language: lang,
+              limit: IDIOMAS_QUESTIONS_LIMIT,
+            }),
+          ),
+        )
+        setQuestions(results.flatMap((r) => r.questions))
       } else {
-        const result = await searchQuestions({ baseUrl, area: selectedArea, year: selectedYear || undefined, topicoId: selectedTopico || undefined, topicoValue, limit: QUESTIONS_LIMIT })
+        const result = await searchQuestions({
+          baseUrl,
+          area: selectedArea,
+          year: selectedYear || undefined,
+          topicoId: selectedTopico || undefined,
+          topicoValue,
+          limit: QUESTIONS_LIMIT,
+        })
         setQuestions(result.questions)
       }
     }
 
-    run().catch(err => { setError(err instanceof Error ? err.message : 'Erro ao buscar questoes'); setQuestions([]) }).finally(() => setLoadingQuestions(false))
-  }, [baseUrl, selectedArea, selectedYear, selectedTopico, selectedLanguage, isIdiomasTopicSelected])
+    run()
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Erro ao buscar questoes')
+        setQuestions([])
+      })
+      .finally(() => setLoadingQuestions(false))
+  }, [
+    baseUrl,
+    selectedArea,
+    selectedYear,
+    selectedTopico,
+    selectedLanguage,
+    isIdiomasTopicSelected,
+  ])
 
   const retry = useCallback(() => {
-    if (areas.length === 0) { loadInitialData() } else {
-      setLoadingQuestions(true); setError(null)
-      const topicoValue = topicosRef.current.find(t => t.id === selectedTopico)?.value
+    if (areas.length === 0) {
+      loadInitialData()
+    } else {
+      setLoadingQuestions(true)
+      setError(null)
+      const topicoValue = topicosRef.current.find((t) => t.id === selectedTopico)?.value
       const run = isIdiomasTopicSelected
-        ? Promise.all((selectedLanguage ? [selectedLanguage] : ['ingles', 'espanhol']).map(lang => searchQuestions({ baseUrl, area: selectedArea, year: selectedYear || undefined, language: lang, limit: IDIOMAS_QUESTIONS_LIMIT }))).then(results => setQuestions(results.flatMap(r => r.questions)))
-        : searchQuestions({ baseUrl, area: selectedArea, year: selectedYear || undefined, topicoId: selectedTopico || undefined, topicoValue, limit: QUESTIONS_LIMIT }).then(r => setQuestions(r.questions))
-      run.catch(err => { setError(err instanceof Error ? err.message : 'Erro ao buscar questoes'); setQuestions([]) }).finally(() => setLoadingQuestions(false))
+        ? Promise.all(
+            (selectedLanguage ? [selectedLanguage] : ['ingles', 'espanhol']).map((lang) =>
+              searchQuestions({
+                baseUrl,
+                area: selectedArea,
+                year: selectedYear || undefined,
+                language: lang,
+                limit: IDIOMAS_QUESTIONS_LIMIT,
+              }),
+            ),
+          ).then((results) => setQuestions(results.flatMap((r) => r.questions)))
+        : searchQuestions({
+            baseUrl,
+            area: selectedArea,
+            year: selectedYear || undefined,
+            topicoId: selectedTopico || undefined,
+            topicoValue,
+            limit: QUESTIONS_LIMIT,
+          }).then((r) => setQuestions(r.questions))
+      run
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : 'Erro ao buscar questoes')
+          setQuestions([])
+        })
+        .finally(() => setLoadingQuestions(false))
     }
-  }, [baseUrl, areas.length, loadInitialData, selectedArea, selectedYear, selectedTopico, selectedLanguage, isIdiomasTopicSelected])
+  }, [
+    baseUrl,
+    areas.length,
+    loadInitialData,
+    selectedArea,
+    selectedYear,
+    selectedTopico,
+    selectedLanguage,
+    isIdiomasTopicSelected,
+  ])
 
   return {
-    areas, topicos, exams, questions, loading, loadingQuestions, error,
-    selectedArea, selectedYear, selectedTopico, selectedLanguage,
-    setSelectedArea, setSelectedYear, setSelectedTopico, setSelectedLanguage,
-    retry, isLinguagensArea: selectedArea === LINGUAGENS_AREA_VALUE,
+    areas,
+    topicos,
+    exams,
+    questions,
+    loading,
+    loadingQuestions,
+    error,
+    selectedArea,
+    selectedYear,
+    selectedTopico,
+    selectedLanguage,
+    setSelectedArea,
+    setSelectedYear,
+    setSelectedTopico,
+    setSelectedLanguage,
+    retry,
+    isLinguagensArea: selectedArea === LINGUAGENS_AREA_VALUE,
     isLanguageFilterEnabled: selectedArea === LINGUAGENS_AREA_VALUE && isIdiomasTopicSelected,
   }
 }

@@ -100,10 +100,7 @@ function getNotaClass(nota: number): string {
 function ProgressBar({ current, total }: { current: number; total: number }) {
   return (
     <div className="onb-progress">
-      <div
-        className="onb-progress__fill"
-        style={{ width: `${(current / total) * 100}%` }}
-      />
+      <div className="onb-progress__fill" style={{ width: `${(current / total) * 100}%` }} />
     </div>
   )
 }
@@ -178,7 +175,7 @@ function StepObjetivo({
         <input
           className="broto-input"
           value={data.faculdade}
-          onChange={e => onChange({ faculdade: e.target.value })}
+          onChange={(e) => onChange({ faculdade: e.target.value })}
           placeholder="Ex: USP, UFMG, UNICAMP..."
         />
         <p className="onb-hint">Opcional — pode deixar em branco</p>
@@ -189,7 +186,7 @@ function StepObjetivo({
         <input
           className="broto-input"
           value={data.curso}
-          onChange={e => onChange({ curso: e.target.value })}
+          onChange={(e) => onChange({ curso: e.target.value })}
           placeholder="Ex: Medicina, Direito..."
         />
       </div>
@@ -197,7 +194,7 @@ function StepObjetivo({
       <div className="onb-field">
         <label className="broto-label">Cursos populares</label>
         <div className="onb-chips">
-          {CURSOS_POPULARES.map(c => (
+          {CURSOS_POPULARES.map((c) => (
             <button
               key={c}
               type="button"
@@ -247,12 +244,14 @@ function StepMeta({
           max={900}
           step={10}
           value={data.metaNota}
-          onChange={e => onChange({ metaNota: Number(e.target.value) })}
+          onChange={(e) => onChange({ metaNota: Number(e.target.value) })}
           className="onb-range"
-          style={{
-            '--range-pct': `${((data.metaNota - 400) / 500) * 100}%`,
-            '--range-color': notaColor,
-          } as React.CSSProperties}
+          style={
+            {
+              '--range-pct': `${((data.metaNota - 400) / 500) * 100}%`,
+              '--range-color': notaColor,
+            } as React.CSSProperties
+          }
         />
         <div className="onb-range-labels">
           <span>400</span>
@@ -261,13 +260,17 @@ function StepMeta({
       </div>
 
       <div className="onb-meta-pills">
-        {[500, 600, 700, 750, 800, 850].map(n => (
+        {[500, 600, 700, 750, 800, 850].map((n) => (
           <button
             key={n}
             type="button"
             onClick={() => onChange({ metaNota: n })}
             className={`onb-chip${data.metaNota === n ? ' onb-chip--active' : ''}`}
-            style={data.metaNota === n ? { borderColor: getNotaColor(n), color: getNotaColor(n) } : undefined}
+            style={
+              data.metaNota === n
+                ? { borderColor: getNotaColor(n), color: getNotaColor(n) }
+                : undefined
+            }
           >
             {n}
           </button>
@@ -276,10 +279,9 @@ function StepMeta({
 
       <div className="onb-ref-table">
         <p className="onb-ref-table__title">Notas de referencia</p>
-        {NOTAS_REFERENCIA.map(r => {
+        {NOTAS_REFERENCIA.map((r) => {
           const isHighlight =
-            !!highlightCurso &&
-            r.curso.toLowerCase().includes(highlightCurso.toLowerCase())
+            !!highlightCurso && r.curso.toLowerCase().includes(highlightCurso.toLowerCase())
           return (
             <div
               key={r.curso}
@@ -316,11 +318,15 @@ function StepNivel({
         subtitle="Seja honesto — isso ajuda a criar sua rotina ideal"
       />
 
-      {AREAS.map(area => {
+      {AREAS.map((area) => {
         const selected = data.niveis[area.key]
         const areaColor = `var(${area.cssVar})`
         return (
-          <div key={area.key} className="onb-area-card" style={{ '--area-c': areaColor } as React.CSSProperties}>
+          <div
+            key={area.key}
+            className="onb-area-card"
+            style={{ '--area-c': areaColor } as React.CSSProperties}
+          >
             <div className="onb-area-card__accent" />
             <div className="onb-area-card__header">
               <div className="onb-area-card__icon">
@@ -329,7 +335,7 @@ function StepNivel({
               <span className="onb-area-card__label">{area.label}</span>
             </div>
             <div className="onb-nivel-row">
-              {NIVEIS.map(n => {
+              {NIVEIS.map((n) => {
                 const isSelected = selected === n.value
                 return (
                   <button
@@ -344,16 +350,17 @@ function StepNivel({
                           key={i}
                           className="onb-nivel-dot"
                           style={{
-                            background: i < n.dots
-                              ? isSelected ? areaColor : 'var(--text-muted)'
-                              : 'var(--bg-elevated)',
+                            background:
+                              i < n.dots
+                                ? isSelected
+                                  ? areaColor
+                                  : 'var(--text-muted)'
+                                : 'var(--bg-elevated)',
                           }}
                         />
                       ))}
                     </span>
-                    <span style={isSelected ? { color: areaColor } : undefined}>
-                      {n.label}
-                    </span>
+                    <span style={isSelected ? { color: areaColor } : undefined}>{n.label}</span>
                   </button>
                 )
               })}
@@ -377,9 +384,7 @@ function StepDisponibilidade({
   const toggleHorario = (h: Horario) => {
     const current = data.horarios
     onChange({
-      horarios: current.includes(h)
-        ? current.filter(x => x !== h)
-        : [...current, h],
+      horarios: current.includes(h) ? current.filter((x) => x !== h) : [...current, h],
     })
   }
 
@@ -394,7 +399,7 @@ function StepDisponibilidade({
       <div className="onb-field">
         <label className="broto-label">Horas por dia</label>
         <div style={{ display: 'flex', gap: 8 }}>
-          {HORAS_OPTIONS.map(h => (
+          {HORAS_OPTIONS.map((h) => (
             <button
               key={h}
               type="button"
@@ -418,7 +423,7 @@ function StepDisponibilidade({
         <label className="broto-label">Melhor horario pra estudar</label>
         <p className="onb-hint">Pode selecionar mais de um</p>
         <div className="onb-horarios">
-          {HORARIOS.map(h => {
+          {HORARIOS.map((h) => {
             const selected = data.horarios.includes(h.value)
             return (
               <button
@@ -451,7 +456,7 @@ function NivelIndicator({ nivel, color }: { nivel: NivelArea | null; color: stri
   const dots = nivel === 'avancado' ? 3 : nivel === 'intermediario' ? 2 : 1
   return (
     <span className="onb-nivel-indicator">
-      {[1, 2, 3].map(i => (
+      {[1, 2, 3].map((i) => (
         <span
           key={i}
           className="onb-nivel-indicator__dot"
@@ -476,11 +481,7 @@ function StepResumo({
 
   return (
     <div className="onb-step-body">
-      <StepHeader
-        icon={<Sparkles size={24} />}
-        title="Tudo pronto!"
-        subtitle="Veja seu resumo"
-      />
+      <StepHeader icon={<Sparkles size={24} />} title="Tudo pronto!" subtitle="Veja seu resumo" />
 
       <div className="onb-resumo-card">
         {(data.curso || data.faculdade) && (
@@ -501,24 +502,20 @@ function StepResumo({
           <span>
             {data.horasPorDia}h/dia
             {data.horarios.length > 0
-              ? ` — ${data.horarios
-                    .map(h => h.charAt(0).toUpperCase() + h.slice(1))
-                    .join(', ')}`
+              ? ` — ${data.horarios.map((h) => h.charAt(0).toUpperCase() + h.slice(1)).join(', ')}`
               : ''}
           </span>
         </div>
       </div>
 
       <div className="onb-resumo-areas">
-        {AREAS.map(area => (
+        {AREAS.map((area) => (
           <div key={area.key} className="onb-resumo-area">
             <div className="onb-resumo-area__icon" style={{ color: `var(${area.cssVar})` }}>
               <area.Icon size={16} />
             </div>
             <NivelIndicator nivel={data.niveis[area.key]} color={`var(${area.cssVar})`} />
-            <span className="onb-resumo-area__label">
-              {nivelLabel(data.niveis[area.key])}
-            </span>
+            <span className="onb-resumo-area__label">{nivelLabel(data.niveis[area.key])}</span>
           </div>
         ))}
       </div>
@@ -567,12 +564,12 @@ export function Onboarding() {
   })
 
   const updateData = useCallback(
-    (partial: Partial<OnboardingState>) => setData(prev => ({ ...prev, ...partial })),
+    (partial: Partial<OnboardingState>) => setData((prev) => ({ ...prev, ...partial })),
     [],
   )
 
-  const goNext = () => setStep(s => Math.min(s + 1, TOTAL_STEPS))
-  const goBack = () => setStep(s => Math.max(s - 1, 0))
+  const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS))
+  const goBack = () => setStep((s) => Math.max(s - 1, 0))
 
   const handleFinish = () => {
     // TODO: save data via API
@@ -596,11 +593,7 @@ export function Onboarding() {
         {/* Progress bar (not on welcome) */}
         {step > 0 && (
           <div className="onb-topbar">
-            <button
-              onClick={goBack}
-              className="onb-nav-btn"
-              aria-label="Voltar"
-            >
+            <button onClick={goBack} className="onb-nav-btn" aria-label="Voltar">
               <ChevronLeft size={20} />
             </button>
             <ProgressBar current={step} total={TOTAL_STEPS} />
@@ -616,9 +609,7 @@ export function Onboarding() {
 
         {/* Steps */}
         <div className="onb-step-container">
-          {step === 0 && (
-            <StepWelcome nome={nome} onContinue={goNext} onSkipAll={handleSkipAll} />
-          )}
+          {step === 0 && <StepWelcome nome={nome} onContinue={goNext} onSkipAll={handleSkipAll} />}
           {step === 1 && <StepObjetivo data={data} onChange={updateData} />}
           {step === 2 && <StepMeta data={data} onChange={updateData} />}
           {step === 3 && <StepNivel data={data} onChange={updateData} />}

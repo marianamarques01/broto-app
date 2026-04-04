@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import '@/styles/app.css'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { OrganizationProvider } from '@/contexts/OrganizationContext'
 import { ClassProvider } from '@/contexts/ClassContext'
 import { router } from '@/router'
 
@@ -14,9 +15,11 @@ rootElement.dataset.theme = initialTheme
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <ClassProvider>
-        <RouterProvider router={router} />
-      </ClassProvider>
+      <OrganizationProvider>
+        <ClassProvider>
+          <RouterProvider router={router} />
+        </ClassProvider>
+      </OrganizationProvider>
     </AuthProvider>
-  </StrictMode>
+  </StrictMode>,
 )

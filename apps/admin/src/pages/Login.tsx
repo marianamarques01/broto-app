@@ -30,21 +30,25 @@ export function Login() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'var(--bg-void)',
-    }}>
-      <div style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border-default)',
-        borderRadius: 16,
-        padding: '40px 48px',
-        width: 400,
-        maxWidth: '90vw',
-      }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-void)',
+      }}
+    >
+      <div
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-default)',
+          borderRadius: 16,
+          padding: '40px 48px',
+          width: 400,
+          maxWidth: '90vw',
+        }}
+      >
         <div style={{ marginBottom: 32 }}>
           <h1 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>Broto Admin</h1>
           <p style={{ color: 'var(--text-muted)', marginTop: 8, fontSize: 14 }}>
@@ -60,7 +64,7 @@ export function Login() {
             <input
               type="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               required
               style={{
                 width: '100%',
@@ -82,7 +86,7 @@ export function Login() {
             <input
               type="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               required
               style={{
                 width: '100%',
@@ -97,9 +101,7 @@ export function Login() {
             />
           </div>
 
-          {error && (
-            <p style={{ color: 'var(--red-400)', fontSize: 13, margin: 0 }}>{error}</p>
-          )}
+          {error && <p style={{ color: 'var(--red-400)', fontSize: 13, margin: 0 }}>{error}</p>}
 
           <button
             type="submit"

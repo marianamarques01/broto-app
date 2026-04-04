@@ -37,20 +37,32 @@ export function CreateClass() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-void)', color: 'var(--text-primary)' }}>
+    <div
+      style={{
+        display: 'flex',
+        minHeight: '100vh',
+        background: 'var(--bg-void)',
+        color: 'var(--text-primary)',
+      }}
+    >
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Header title="Nova turma" backTo="/" />
 
         <main style={{ padding: '24px 32px', flex: 1 }}>
-          <div style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-default)',
-            borderRadius: 12,
-            padding: '32px 40px',
-            maxWidth: 520,
-          }}>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-default)',
+              borderRadius: 12,
+              padding: '32px 40px',
+              maxWidth: 520,
+            }}
+          >
+            <form
+              onSubmit={handleSubmit}
+              style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+            >
               <div>
                 <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>
                   Nome da turma *
@@ -58,7 +70,7 @@ export function CreateClass() {
                 <input
                   type="text"
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={(e) => setName(e.target.value)}
                   placeholder="Ex: Turma ENEM Manha 2026"
                   required
                   style={{
@@ -80,7 +92,7 @@ export function CreateClass() {
                 </label>
                 <textarea
                   value={description}
-                  onChange={e => setDescription(e.target.value)}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder="Ex: Focada em Ciencias da Natureza e Matematica"
                   rows={3}
                   style={{

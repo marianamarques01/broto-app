@@ -53,10 +53,7 @@ export function mergeParamsIntoBody(
 /**
  * Extract a human-readable error message from a parsed response body.
  */
-export function extractErrorMessage(
-  data: unknown,
-  fallbackStatus: number,
-): string {
+export function extractErrorMessage(data: unknown, fallbackStatus: number): string {
   if (data && typeof data === 'object') {
     const d = data as Record<string, unknown>
     if (typeof d.error === 'string') return d.error

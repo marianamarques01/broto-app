@@ -27,7 +27,7 @@ export function createCachedStore<T>(fetcher: () => Promise<T>): CachedStore<T> 
   const listeners = new Set<() => void>()
 
   function notifyListeners() {
-    listeners.forEach(fn => fn())
+    listeners.forEach((fn) => fn())
   }
 
   function fetchData(): Promise<T | null> {
@@ -36,7 +36,7 @@ export function createCachedStore<T>(fetcher: () => Promise<T>): CachedStore<T> 
     const gen = generation
 
     inflight = fetcher()
-      .then(data => {
+      .then((data) => {
         if (gen === generation) {
           cached = data
           fetchedAt = Date.now()
@@ -75,11 +75,17 @@ export function createCachedStore<T>(fetcher: () => Promise<T>): CachedStore<T> 
 
   function subscribe(listener: () => void) {
     listeners.add(listener)
-    return () => { listeners.delete(listener) }
+    return () => {
+      listeners.delete(listener)
+    }
   }
 
-  function getCached() { return cached }
-  function isLoading() { return cached === null && inflight !== null }
+  function getCached() {
+    return cached
+  }
+  function isLoading() {
+    return cached === null && inflight !== null
+  }
 
   return { getCached, isLoading, subscribe, fetchData, refresh, refreshIfStale }
 }

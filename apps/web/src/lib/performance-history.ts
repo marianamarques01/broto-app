@@ -23,7 +23,7 @@ export function subscribePerformanceHistory(cb: () => void): () => void {
 }
 
 function notify(): void {
-  listeners.forEach(l => l())
+  listeners.forEach((l) => l())
 }
 
 function todayLocalISO(): string {
@@ -85,12 +85,7 @@ function monthShortLabel(ym: string): string {
   return `${names[m - 1]}/${String(y).slice(2)}`
 }
 
-function bucket(
-  key: string,
-  label: string,
-  answered: number,
-  correct: number,
-): PerformanceBucket {
+function bucket(key: string, label: string, answered: number, correct: number): PerformanceBucket {
   return {
     key,
     label,
@@ -139,7 +134,9 @@ export function getPerformanceBuckets(period: PerformancePeriod): PerformanceBuc
   }
 
   // all — por mês civil, desde o primeiro dia com dado até hoje (máx. 12 meses)
-  const keys = Object.keys(store.days).filter(k => store.days[k].answered > 0).sort()
+  const keys = Object.keys(store.days)
+    .filter((k) => store.days[k].answered > 0)
+    .sort()
   if (keys.length === 0) return []
 
   const first = new Date(keys[0] + 'T12:00:00')
@@ -152,7 +149,7 @@ export function getPerformanceBuckets(period: PerformancePeriod): PerformanceBuc
     cur.setMonth(cur.getMonth() + 1)
   }
 
-  return months.map(ym => {
+  return months.map((ym) => {
     let a = 0
     let c = 0
     const [yy, mm] = ym.split('-').map(Number)

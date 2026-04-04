@@ -3,8 +3,18 @@ import type { AreaStat } from '@/hooks/useProgress'
 const LABELS_DIA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 const LABELS_DIA_CURTO = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 const MESES = [
-  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
 ]
 
 export function hojeIdx(): number {
@@ -61,10 +71,10 @@ export function gerarRotina(areas: AreaStat[], horasPorDia: number): DiaRotina[]
     const area = areaIdx >= 0 && ordered.length > 0 ? ordered[areaIdx % ordered.length] : null
     const topicosDestaque = area
       ? area.topicos
-          .filter(t => t.totalAnswered > 0)
+          .filter((t) => t.totalAnswered > 0)
           .sort((a, b) => a.accuracyPct - b.accuracyPct)
           .slice(0, 3)
-          .map(t => ({ value: t.value, label: t.label, accuracyPct: t.accuracyPct }))
+          .map((t) => ({ value: t.value, label: t.label, accuracyPct: t.accuracyPct }))
       : []
 
     return {

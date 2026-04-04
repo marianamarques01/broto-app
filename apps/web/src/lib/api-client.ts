@@ -16,7 +16,9 @@ async function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
   const fnName = pathToFunctionName(path)
   const method = options.method ?? 'POST'
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   const token = session?.access_token
 
   const body = mergeParamsIntoBody(options.body, options.params)
@@ -25,8 +27,8 @@ async function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
     method,
     headers: {
       'Content-Type': 'application/json',
-      'apikey': API_KEY,
-      'Authorization': `Bearer ${token ?? API_KEY}`,
+      apikey: API_KEY,
+      Authorization: `Bearer ${token ?? API_KEY}`,
     },
     body: body ? JSON.stringify(body) : undefined,
   })
@@ -58,7 +60,10 @@ export const api = {
   async patch<T>(path: string, body?: Record<string, unknown>): Promise<T> {
     return invoke<T>(path, { method: 'PATCH', body })
   },
-  async getWithParams<T>(path: string, params: Record<string, string | number | undefined>): Promise<T> {
+  async getWithParams<T>(
+    path: string,
+    params: Record<string, string | number | undefined>,
+  ): Promise<T> {
     return invoke<T>(path, { method: 'GET', params })
   },
 }
