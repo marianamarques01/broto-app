@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { View, Text, Pressable, useWindowDimensions } from 'react-native'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { View, Text, useWindowDimensions } from 'react-native'
 import RenderHtml from 'react-native-render-html'
 import { CheckCircle, XCircle, ChevronRight } from 'lucide-react-native'
 import { OptionButton, type OptionState } from './OptionButton'
 import type { Question } from '@broto/shared'
+import { getQuestionId } from '@broto/shared'
 import { colors } from '@/theme/tokens'
 import { BrotoCtaButton } from '@/components/BrotoCtaButton'
 
@@ -11,7 +12,8 @@ interface QuestionPlayerProps {
   question: Question
   questionNumber?: number
   totalQuestions?: number
-  onAnswer: (answer: string, isCorrect: boolean) => void
+  /** A questão passada é sempre a do enunciado exibido (evita fechar captura sobre estado do pai). */
+  onAnswer: (question: Question, answer: string, isCorrect: boolean) => void
   onNext?: () => void
 }
 
@@ -25,21 +27,28 @@ export function QuestionPlayer({
   const { width } = useWindowDimensions()
   const [selected, setSelected] = useState<string | null>(null)
   const [answered, setAnswered] = useState(false)
+  const answeringRef = useRef(false)
 
+  const questionKey = getQuestionId(question)
+  // Sincroniza estado local com nova questão (ano/índice/idioma); necessário se o pai não passar `key`.
   useEffect(() => {
+    answeringRef.current = false
+    /* eslint-disable react-hooks/set-state-in-effect -- reset intencional quando questionKey (ano/índice/idioma) muda */
     setSelected(null)
     setAnswered(false)
-  }, [question.year, question.index])
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [questionKey])
 
   const handleSelect = useCallback(
     (letter: string) => {
-      if (answered) return
+      if (answered || answeringRef.current) return
+      answeringRef.current = true
       const isCorrect = question.alternatives.find((a) => a.letter === letter)?.isCorrect ?? false
       setSelected(letter)
       setAnswered(true)
-      onAnswer(letter, isCorrect)
+      onAnswer(question, letter, isCorrect)
     },
-    [answered, question.alternatives, onAnswer],
+    [answered, question, onAnswer],
   )
 
   function getState(letter: string): OptionState {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { View, Text, ScrollView, Pressable, ActivityIndicator, Modal, FlatList } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -253,15 +253,15 @@ export default function EnemQuestionsScreen() {
   }
 
   const handleAnswer = useCallback(
-    (_answer: string, isCorrect: boolean) => {
+    (question: Question, _letter: string, isCorrect: boolean) => {
       setScores((s) => ({
         correct: s.correct + (isCorrect ? 1 : 0),
         total: s.total + 1,
       }))
-      const questionId = getQuestionId(activeQuestion!)
+      const questionId = getQuestionId(question)
       submitAnswer({ questionId, isCorrect, areaKey: selectedArea }).catch(() => {})
     },
-    [activeQuestion, selectedArea],
+    [selectedArea],
   )
 
   const handleNext = useCallback(() => {
@@ -351,6 +351,7 @@ export default function EnemQuestionsScreen() {
           showsVerticalScrollIndicator={false}
         >
           <QuestionPlayer
+            key={getQuestionId(activeQuestion)}
             question={activeQuestion}
             questionNumber={questionIdx + 1}
             totalQuestions={questions.length}

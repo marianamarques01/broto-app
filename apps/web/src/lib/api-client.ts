@@ -1,3 +1,4 @@
+import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import {
   ApiError,
@@ -5,6 +6,7 @@ import {
   mergeParamsIntoBody,
   extractErrorMessage,
   withExponentialBackoff,
+  withJwtRefreshRetry,
   type InvokeOptions,
 } from '@broto/shared'
 
@@ -17,38 +19,80 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
   const fnName = pathToFunctionName(path)
   const method = options.method ?? 'POST'
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const token = session?.access_token
+  /** After refreshSession(), force this session on the next fetch (avoids stale getSession). */
+  let sessionOverride: Session | null = null
 
-  const body = mergeParamsIntoBody(options.body, options.params)
-
-  const res = await fetch(`${FUNCTIONS_URL}/${fnName}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: API_KEY,
-      Authorization: `Bearer ${token ?? API_KEY}`,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
-
-  const data = await res.json().catch(() => ({}))
-
-  if (!res.ok) {
-    const msg = extractErrorMessage(data, res.status)
-    console.error('[api-client]', fnName, res.status, msg)
-
-    if (res.status === 401) {
-      await supabase.auth.signOut().catch(() => {})
-      window.location.href = '/login'
+  async function resolveAccessToken(): Promise<string> {
+    if (sessionOverride) {
+      const t = sessionOverride.access_token
+      sessionOverride = null
+      if (t) return t
     }
-
-    throw new ApiError(msg, res.status, data)
+    let {
+      data: { session },
+    } = await supabase.auth.getSession()
+    let token = session?.access_token
+    if (!token) {
+      const { data, error } = await supabase.auth.refreshSession()
+      if (!error && data.session?.access_token) {
+        session = data.session
+        token = data.session.access_token
+      }
+    }
+    if (!token) {
+      throw new ApiError('Não autenticado', 401, { error: 'Não autenticado' })
+    }
+    return token
   }
 
-  return data as T
+  const executeFetch = async () => {
+    const token = await resolveAccessToken()
+
+    const body = mergeParamsIntoBody(options.body, options.params)
+
+    const res = await fetch(`${FUNCTIONS_URL}/${fnName}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: API_KEY,
+        // Never send anon key as Bearer — Edge getUser() would reject (401 on answer-question, etc.).
+        Authorization: `Bearer ${token}`,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    })
+
+    const data = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+      const msg = extractErrorMessage(data, res.status)
+      throw new ApiError(msg, res.status, data)
+    }
+
+    return data as T
+  }
+
+  try {
+    return await withJwtRefreshRetry(
+      executeFetch,
+      async () => {
+        const { data, error } = await supabase.auth.refreshSession()
+        if (error || !data.session?.access_token) return false
+        sessionOverride = data.session
+        return true
+      },
+      (e) => e instanceof ApiError && e.status === 401,
+    )
+  } catch (e) {
+    if (e instanceof ApiError) {
+      console.error('[api-client]', fnName, e.status, e.message)
+
+      if (e.status === 401) {
+        await supabase.auth.signOut().catch(() => {})
+        window.location.href = '/login'
+      }
+    }
+    throw e
+  }
 }
 
 function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
