@@ -43,9 +43,12 @@ export function ClassProvider({ children }: { children: ReactNode }) {
       setLoading(true)
       const supabase = createClient()
       const { data: userData, error: authErr } = await supabase.auth.getUser()
-      if (authErr) {
+      const user = userData?.user
+
+      // Sem sessão, getUser() retorna AuthSessionMissingError — estado normal quando deslogado.
+      if (!user) {
         if (alive) {
-          setError(formatClassLoadError(authErr))
+          setError(null)
           setCurrentClass(null)
           setOrganization(null)
           setLoading(false)
@@ -53,10 +56,9 @@ export function ClassProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const user = userData?.user
-      if (!user) {
+      if (authErr) {
         if (alive) {
-          setError(null)
+          setError(formatClassLoadError(authErr))
           setCurrentClass(null)
           setOrganization(null)
           setLoading(false)
