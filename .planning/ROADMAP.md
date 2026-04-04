@@ -12,7 +12,7 @@ Starting from a codebase with ~25% duplication, critical race conditions, and ze
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Tooling, Hygiene & Security** - Establish guardrails, kill dead code, fix CORS, format everything
+- [x] **Phase 1: Tooling, Hygiene & Security** - Establish guardrails, kill dead code, fix CORS, format everything
 - [ ] **Phase 2: Bug Fixes & Error Propagation** - Fix known race conditions and replace silent error swallowing
 - [ ] **Phase 3: Code Consolidation** - Move all shared logic to `packages/shared` using zero-dep and adapter patterns
 - [ ] **Phase 4: Tests & Resilience** - Add retry logic, propagate filter errors visibly, and cover shared modules with unit tests
@@ -79,7 +79,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Tooling, Hygiene & Security | 0/5 | In progress | - |
+| 1. Tooling, Hygiene & Security | 5/5 | Done (plans 01-01 … 01-05) | 2026-04 |
 | 2. Bug Fixes & Error Propagation | 0/? | Not started | - |
 | 3. Code Consolidation | 0/? | Not started | - |
 | 4. Tests & Resilience | 0/? | Not started | - |
