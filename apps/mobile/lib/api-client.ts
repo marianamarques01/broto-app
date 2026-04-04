@@ -7,6 +7,7 @@ import {
   mergeParamsIntoBody,
   extractErrorMessage,
   withExponentialBackoff,
+  withJwtRefreshRetry,
   type HttpMethod,
   type InvokeOptions,
 } from '@broto/shared'
@@ -28,24 +29,37 @@ function scheduleUnauthorizedRedirect(): void {
   })()
 }
 
+function isEdgeFunction401(e: unknown): boolean {
+  return (
+    e instanceof FunctionsHttpError && !!e.context && (e.context as Response).status === 401
+  )
+}
+
 async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
   const fnName = pathToFunctionName(path)
   const supabase = createClient()
 
-  const invokeOptions: { method?: HttpMethod; body?: Record<string, unknown> } = {}
-  if (options.method) invokeOptions.method = options.method
-
-  const body = mergeParamsIntoBody(options.body, options.params)
-  if (body !== undefined) invokeOptions.body = body
+  const buildInvokeOptions = () => {
+    const invokeOpts: { method?: HttpMethod; body?: Record<string, unknown> } = {}
+    if (options.method) invokeOpts.method = options.method
+    const merged = mergeParamsIntoBody(options.body, options.params)
+    if (merged !== undefined) invokeOpts.body = merged
+    return invokeOpts
+  }
 
   try {
-    const { data, error } = await supabase.functions.invoke(fnName, invokeOptions)
-
-    if (error) {
-      throw error
-    }
-
-    return data as T
+    return await withJwtRefreshRetry(
+      async () => {
+        const { data, error } = await supabase.functions.invoke(fnName, buildInvokeOptions())
+        if (error) throw error
+        return data as T
+      },
+      async () => {
+        const { data, error } = await supabase.auth.refreshSession()
+        return !error && !!data.session
+      },
+      isEdgeFunction401,
+    )
   } catch (e) {
     if (e instanceof FunctionsHttpError && e.context) {
       const res = e.context as Response

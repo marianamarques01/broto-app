@@ -79,12 +79,12 @@ serve(async (req) => {
 
     const { data: withCorrect, error: acErr } = await supabaseAdmin
       .from('user_question_answers')
-      .select('is_correct')
+      .select('acertou')
       .eq('user_id', user.id)
       .gte('created_at', start.toISOString())
 
     if (!acErr && withCorrect) {
-      acertosHoje = withCorrect.filter((r) => r.is_correct === true).length
+      acertosHoje = withCorrect.filter((r) => (r as { acertou?: boolean }).acertou === true).length
     }
 
     const humor = Math.min(100, 45 + Math.min(streak, 10) * 3)

@@ -5,6 +5,7 @@ import {
   mergeParamsIntoBody,
   extractErrorMessage,
   withExponentialBackoff,
+  withJwtRefreshRetry,
   type InvokeOptions,
 } from '@broto/shared'
 
@@ -17,38 +18,54 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
   const fnName = pathToFunctionName(path)
   const method = options.method ?? 'POST'
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const token = session?.access_token
+  const executeFetch = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const token = session?.access_token
 
-  const body = mergeParamsIntoBody(options.body, options.params)
+    const body = mergeParamsIntoBody(options.body, options.params)
 
-  const res = await fetch(`${FUNCTIONS_URL}/${fnName}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: API_KEY,
-      Authorization: `Bearer ${token ?? API_KEY}`,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
+    const res = await fetch(`${FUNCTIONS_URL}/${fnName}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: API_KEY,
+        Authorization: `Bearer ${token ?? API_KEY}`,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    })
 
-  const data = await res.json().catch(() => ({}))
+    const data = await res.json().catch(() => ({}))
 
-  if (!res.ok) {
-    const msg = extractErrorMessage(data, res.status)
-    console.error('[api-client]', fnName, res.status, msg)
-
-    if (res.status === 401) {
-      await supabase.auth.signOut().catch(() => {})
-      window.location.href = '/login'
+    if (!res.ok) {
+      const msg = extractErrorMessage(data, res.status)
+      throw new ApiError(msg, res.status, data)
     }
 
-    throw new ApiError(msg, res.status, data)
+    return data as T
   }
 
-  return data as T
+  try {
+    return await withJwtRefreshRetry(
+      executeFetch,
+      async () => {
+        const { data, error } = await supabase.auth.refreshSession()
+        return !error && !!data.session
+      },
+      (e) => e instanceof ApiError && e.status === 401,
+    )
+  } catch (e) {
+    if (e instanceof ApiError) {
+      console.error('[api-client]', fnName, e.status, e.message)
+
+      if (e.status === 401) {
+        await supabase.auth.signOut().catch(() => {})
+        window.location.href = '/login'
+      }
+    }
+    throw e
+  }
 }
 
 function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
