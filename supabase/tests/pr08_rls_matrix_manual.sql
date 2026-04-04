@@ -1,0 +1,67 @@
+-- PR-08: matriz manual + auditoria RLS (staging → produção controlada)
+-- Aplicar migração PR-08 antes de executar estes cenários.
+--
+-- === Pré-requisitos de dados de teste ===
+--   aluno_A: membership student ativo em org1, enrollment ativo em class_org1
+--   aluno_B: membership student ativo em org2
+--   staff_S1: membership teacher|org_admin|owner ativo em org1 (nunca em org2)
+--   user_U0: authenticated, zero membership ativo
+--
+-- === 1) Baseline por persona (esperado) ===
+--
+-- organizations
+--   aluno_A: org1 Y; org2 privada N; org pública is_public Y
+--   U0: orgs privadas N; públicas Y (só metadado exposto pela policy)
+--
+-- classes
+--   aluno_A: turmas ativas em org1 com enrollment ativo Y; turmas org2 N
+--   staff_S1: CRUD turmas org1 Y; turmas org2 N
+--
+-- enrollments
+--   aluno_A: SELECT próprias linhas ativas Y; INSERT via client N (erro / zero linhas)
+--   staff_S1: SELECT/UPDATE matrículas turmas org1 Y (UPDATE inclui turma inativa com p_require_active false no helper)
+--
+-- organization_memberships
+--   aluno_A: SELECT só próprias linhas; não vê linhas de aluno_B
+--   staff_S1: SELECT todas com organization_id = org1
+--
+-- materials / user_question_answers / topic_performance
+--   aluno_A: materiais só turma matriculado; respostas/performance próprias
+--   staff_S1: SELECT dados de alunos com enrollment ativo em turma ativa (org1)
+--
+-- === 2) Isolamento cross-tenant (obrigatório antes de produção) ===
+--
+-- Como aluno_A (JWT), rodar:
+--   SELECT * FROM organizations WHERE id = '<uuid_org2_privada>';
+--   → 0 linhas
+--   SELECT * FROM classes WHERE organization_id = '<uuid_org2>';
+--   → 0 linhas
+--
+--   SELECT * FROM enrollments;
+--   → só linhas do próprio student_id (e coerentes org/turma ativa)
+--
+-- Como staff_S1 (JWT org1), rodar:
+--   SELECT * FROM enrollments e JOIN classes c ON c.id = e.class_id WHERE c.organization_id = '<uuid_org2>';
+--   → 0 linhas
+--
+-- === 3) SELECT * sem filtro (não pode vazar outro tenant) ===
+--
+-- Cada persona, nas tabelas: organizations, classes, enrollments, materials,
+-- organization_memberships, user_question_answers, topic_performance:
+--   Contar linhas retornadas por SELECT * e comparar com conjunto esperado
+--   (apenas próprio tenant / próprio user_id, exceto org is_public).
+--
+-- === 4) Student não acessa como teacher ===
+--
+-- aluno_A (apenas role student nas memberships):
+--   Tentar UPDATE em materials WHERE organization_id = org1 → 0 linhas afetadas ou erro RLS
+--   Tentar DELETE em classes WHERE organization_id = org1 → idem
+--   SELECT em enrollments de outro student_id na mesma turma → 0 linhas
+--
+-- === 5) Pentest / checklist extra ===
+--
+-- [ ] Dois browsers: sessão A e B; confirmar que UI não mostra dados cruzados por cache (cliente)
+-- [ ] Api com service_role: continua a inserir enrollments (smoke RPC class_join)
+-- [ ] Turma is_active = false: aluno não vê turma nem matrícula no caminho aluno (policy + helper true)
+-- [ ] staff_S1 consegue SELECT enrollments de turma inativa org1? (helper false) — sim, se negócio precisar
+-- [ ] Levantamento: nenhum .from('enrollments').insert no repo com client autenticado

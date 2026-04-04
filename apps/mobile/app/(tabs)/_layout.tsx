@@ -11,6 +11,7 @@ import {
 } from 'phosphor-react-native'
 import { colors } from '@/theme/tokens'
 import { useUser } from '@/hooks/useUser'
+import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
 import { TabIcon } from '@/components/TabIcon'
 import { BrotoChatFab } from '@/components/BrotoChatFab'
 
@@ -28,6 +29,7 @@ export default function TabsLayout() {
 
   return (
     <View style={{ flex: 1 }}>
+      <OrganizationSwitcher />
       <Tabs
         screenOptions={{
           headerShown: false,

@@ -1,184 +1,132 @@
-# Feature Research — Monorepo Consolidation
+# Feature Research
 
-**Domain:** Codebase health initiative — React/RN Turborepo monorepo consolidation
-**Researched:** 2026-04-02
-**Confidence:** HIGH for structural patterns (well-established); MEDIUM for specific tooling choices (training data, no live verification)
-
----
-
-## Context
-
-This research maps the feature landscape for a **consolidation milestone**, not a product feature milestone. "Features" here are capabilities the **codebase itself** should have: what makes a monorepo healthy, what makes it painful to work in, and what is a distraction during a consolidation sprint.
-
-The project is a Turborepo with 3 apps (mobile/Expo, web/Vite, admin/Vite) + `packages/shared` + Supabase backend. The shared package is ~30% utilized; ~25% of code is duplicated between mobile and web.
-
----
+**Domain:** Milestone de validacao e alinhamento de arquitetura multi-tenant (app ja existente)
+**Researched:** 2026-04-03
+**Confidence:** HIGH para RLS/isolation e testes de autorizacao (fontes oficiais); MEDIUM para padrao de execucao de milestone (sintese de pratica de mercado)
 
 ## Feature Landscape
 
-### Table Stakes (Codebase Must Have These to Be Healthy)
+### Table Stakes (Users Expect These)
 
-Missing any of these means the consolidation goal is not met and the codebase remains in a fragile state.
+Capacidades minimas para um milestone de validacao multi-tenant ser considerado confiavel.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| **Shared types in one place** | Types duplicated between apps diverge silently over time, causing runtime bugs. Every multi-app monorepo needs a single type source. | LOW | Already partially done. Expand to cover `study-area-mock`, `useQuestionsFilters` filter types, and remove re-export shims (`apps/*/lib/types/questions.ts`). |
-| **Shared pure business logic in `packages/shared`** | Logic like `answer-question`, `daily-missions` core, `useClass` query, `ClassContext` query logic exist in 2+ copies. A bug fix in one app leaves the other broken. | MEDIUM | ~500 lines can be moved. Requires platform-agnostic design (no `AsyncStorage`, no `window`). |
-| **Platform adapter pattern for storage** | `daily-missions` uses `AsyncStorage` on mobile and `localStorage` on web — same concept, different APIs. Without an adapter, shared code is impossible for storage-touching logic. | MEDIUM | Define `StorageAdapter` interface in shared; inject at app startup. Small surface area. |
-| **Single Prettier + ESLint config at root** | Inconsistent formatting (double vs single quotes, semicolons) creates noisy diffs and cognitive overhead when switching between apps. | LOW | Root `eslint.config.mjs` and root `prettier` already exist as devDependencies. Needs config file that mobile opts into. |
-| **Consistent file naming convention** | Mobile uses `kebab-case` for hooks, web uses `camelCase`. Ambiguity creates friction and potential build errors on case-sensitive filesystems (CI Linux vs dev macOS). | LOW | Decision is already made in PROJECT.md: standardize on web conventions (camelCase). |
-| **Atomic concurrency guards (no boolean flags)** | The `inflight` flag in `create-cached-hook.ts` and `handlingUnauthorized` boolean in `api-client.ts` are known race conditions. They cause duplicate requests and double sign-outs. | MEDIUM | Replace boolean flags with `Promise` locks. Pattern: `let inflight: Promise<T> | null = null`. |
-| **Error propagation (no silent `.catch(() => {})`)** | `ClassContext`, `daily-missions`, and `broto-chat` swallow errors. Developers can't debug, users see blank UI. | LOW | Surfaces bugs immediately. Replace silent catches with at minimum `console.error` + re-throw or structured error state. |
-| **Dead code removed from git** | `.venv` (3,305 files, ~55 MB) and large binary assets bloat clone time, slow CI, and obscure real changes in PRs. | LOW | `git rm -r --cached supabase/services/notebooklm/.venv` + `.gitignore` entry. One-time fix. |
-| **Named exports as default pattern** | Mobile uses `export default function`, web uses named exports. Inconsistent imports complicate refactoring and tree-shaking. | LOW | Standardize on named exports. Aligns with web/admin which are already consistent. |
-| **CORS fail-closed** | Current: if `ALLOWED_ORIGINS` env var is empty, CORS accepts any origin. This is a security misconfiguration, not an optimization. | LOW | One-line fix: default to rejecting unknown origins, never `*`. |
+| Matriz de autorizacao por cadeia (`membership -> class -> organization`) | Sem matriz explicita, as regras reais ficam implicitas e inconsistentes entre endpoints e clientes. | MEDIUM | Dependencia: modelo conceitual atual em `.planning/PROJECT.md` e mapeamento de entidades no Supabase. Entrega: tabela de permissoes por acao/recurso. |
+| Suite de validacao de RLS por tabela critica | Em arquitetura shared-schema, isolamento no banco e baseline de seguranca; sem isso, risco de vazamento cross-tenant. | HIGH | Dependencia: politicas RLS ativas nas tabelas de negocio e usuarios de teste em tenants distintos. Deve cobrir SELECT/INSERT/UPDATE/DELETE. |
+| Testes de acesso cruzado (negativos) por perfil | Milestone de alinhamento precisa provar que bypass nao funciona (IDOR, troca de IDs, escalacao). | HIGH | Dependencia: massa de dados multi-tenant e roteiros de ataque controlados (OWASP WSTG authorization + multi-tenant cheat sheet). |
+| Evidencia de alinhamento modelo vs implementacao | Em sistemas legados, divergencia entre "como deveria ser" e "como esta" e comum; sem gap map nao ha alinhamento real. | MEDIUM | Dependencia: diagrama/contrato conceitual + leitura de policies, queries e guards atuais em mobile/web/admin/backend. |
+| Checklist de consistencia cross-platform (mobile/web/admin) | Regras de permissao precisam ser iguais em todas as superficies; se divergem, isolamento fica fragil. | MEDIUM | Dependencia: inventario de pontos de decisao de permissao nos 3 clientes + APIs/Edge Functions. |
+| Criterio de aprovacao/falha por risco | Validacao sem gate objetivo vira "analise sem decisao"; precisa de threshold de bloqueio. | LOW | Dependencia: classificacao de riscos (critico/alto/medio/baixo) e owners para remediacao. |
 
-### Differentiators (Developer Velocity Gains)
+### Differentiators (Competitive Advantage)
 
-These are not required for a healthy codebase, but they pay dividends in long-term developer speed and confidence. They are appropriate targets for phases 2–3 of consolidation, after the table stakes are stable.
+Nao obrigatorios, mas aumentam qualidade, repetibilidade e velocidade em futuros milestones de seguranca/alinhamento.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Shared hook cores with platform-specific wrappers** | `usePet`, `useProgress`, `useUser` are 95% identical between mobile and web. A shared core + thin platform wrapper eliminates the "bug in mobile, not in web" problem class. | MEDIUM | Pattern: `packages/shared/src/hooks/use-pet.core.ts` (pure logic) + `apps/mobile/hooks/usePet.ts` (adds `useFocusEffect`) + `apps/web/src/hooks/usePet.ts` (adds `refreshIfStale`). |
-| **Shared `useQuestionsFilters` core** | Largest duplication at 500+ lines. Mobile has better error messages; web has better parallelism. A shared core could have both. | HIGH | High complexity because of architectural differences (3-tier URL resolution vs 1-tier). Don't attempt until simpler hooks are moved first. Dependency: platform adapter pattern. |
-| **Retry logic with exponential backoff** | Currently: one failure = broken UX. Retry handles transient network issues transparently. Critical for mobile (unreliable connections). | MEDIUM | Implement once in `packages/shared/src/api/retry.ts`, used by both app API clients. Pattern is well-understood; `p-retry` or hand-rolled are both fine. |
-| **Automated tests for `packages/shared`** | Zero tests currently (grade: F). Tests on shared code have the highest leverage — they protect logic used by all 3 apps. | MEDIUM | Vitest is the natural choice (already using Vite toolchain on web/admin). Target: unit tests for `createCachedHook`, `generateClassCode`, `answer-question`, `daily-missions` core. |
-| **Hardcoded taxonomy extracted to constants** | `IDIOMAS_TOPIC_ID = '__idiomas'` and 20+ topic mappings in edge functions are scattered magic strings. A single `packages/shared/src/constants/taxonomy.ts` makes them discoverable and testable. | LOW | High value for low cost. Dependency: nothing. Can be done independently. |
-| **`packages/ui` audited and either used or removed** | The package exists, is referenced by `@broto/web`, but no real components are imported from it. Dead package = confusion about where components should live. | LOW | Audit imports; if empty, delete. If partially used, document what it contains and its intended scope. |
-| **`import type` enforced consistently** | TypeScript `import type` reduces bundle sizes and clarifies intent. Currently inconsistent in mobile. | LOW | ESLint rule `@typescript-eslint/consistent-type-imports` enforces this automatically once a shared config exists. Free after ESLint consolidation. |
-| **Edge function CORS + auth middleware** | All edge functions repeat the same CORS and auth check boilerplate. A shared middleware reduces copy-paste and ensures security changes propagate everywhere. | MEDIUM | Deno doesn't have npm middleware, but a shared `_shared/` directory with helper functions works well in Supabase edge functions. |
+| Harness automatizado de cenarios de tenancy (regressao) | Transforma validacao manual em suite repetivel por release, reduzindo regressao silenciosa. | HIGH | Dependencia: fixtures de tenants, usuarios e memberships; pipeline de execucao (local + CI). |
+| "Policy coverage map" (acao -> endpoint -> policy -> teste) | Rastreabilidade ponta a ponta: mostra rapidamente onde ha regra sem teste ou teste sem regra. | MEDIUM | Dependencia: matriz de autorizacao base + inventario de endpoints/queries. |
+| Teste de paridade de regra entre plataformas | Detecta diferenca de comportamento entre mobile/web/admin para mesma acao e mesmo usuario. | MEDIUM | Dependencia: definicao unica de cenarios (golden cases) e executor por plataforma. |
+| Scorecard de isolamento por tenant boundary | Facilita decisao de roadmap: onde investir primeiro com base em risco residual objetivo. | LOW | Dependencia: evidencias dos testes negativos + severidade OWASP-like. |
+| Guardrails para novas features (template de permissao) | Evita drift futuro exigindo "regra + policy + teste" no nascimento de cada feature. | LOW | Dependencia: padrao de PR/checklist e dono tecnico do dominio de acesso. |
 
-### Anti-Features (Things to Deliberately NOT Do During Consolidation)
+### Anti-Features (Commonly Requested, Often Problematic)
 
-These seem like good ideas during a consolidation sprint, but each one expands scope, introduces regression risk, or creates the wrong kind of coupling.
+Escopos que parecem bons, mas atrapalham milestone de validacao/alinhamento.
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| **Full Supabase abstraction layer / repository pattern** | Supabase is coupled everywhere; abstracting it seems like the right fix. | This is a rewrite, not a refactor. Touching every data call in all 3 apps + edge functions while also moving logic risks massive regression. The benefit (backend swappability) is not a current requirement. | Incrementally extract the query logic into hook/service functions. Don't introduce interfaces/repositories yet. |
-| **New shared UI component library** | `packages/ui` exists; building shared components seems natural. | Mobile and web use entirely different rendering systems (React Native views vs DOM). True shared UI is impossible without a compatibility layer (React Native Web), which is a separate initiative. | Style tokens / design constants can be shared. Components cannot. Keep platform-specific UI in each app. |
-| **Migrate mobile to React 19** | Web is on React 19.1.0, mobile is also on 19.1.0 — they look aligned, but Expo's React Native compatibility matrix is the constraint, not the version number. | Expo SDK 54 has specific React/React Native version requirements. Changing this during consolidation is an unforced error that can break native builds. | Leave React version decisions to Expo upgrade cycles. |
-| **Service layer / full architecture refactor** | Business logic is in components; a service layer is the correct long-term pattern. | Introducing a new architectural layer (`Component → Hook → Service → Repository`) during consolidation means touching every component in every app. This is scope expansion that delays the actual consolidation work. | Move logic to `packages/shared` first. The service layer can emerge naturally in a subsequent milestone once shared logic exists. |
-| **Onboarding completion** | TODOs exist in onboarding files; "cleanup" feels like it includes fixing them. | Onboarding is a product feature (new user flow), not a code health issue. Completing it adds untested product scope to a consolidation milestone. | Explicitly out of scope. File a separate feature milestone for onboarding. |
-| **Switching from Supabase SDK to raw fetch in shared** | Reducing dependency on `@supabase/supabase-js` in shared feels like decoupling. | The SDK is already a dependency in all apps; avoiding it in shared creates inconsistency. Shared code that needs auth should receive a Supabase client via injection, not avoid it entirely. | Inject the Supabase client into shared services rather than importing it directly. |
-| **`createCachedHook` merged into shared** | The pattern is duplicated between mobile and web; DRY instinct says consolidate. | React hooks must use the React instance of the consuming app. Sharing a hook implementation across apps that use different React instances causes the "invalid hook call" error. This is the documented reason it's intentionally kept per-app. | Keep `createCachedHook` in each app. Share only the *type definitions* and the `createCachedStore` primitive from shared (already correct). |
-
----
+| Reescrever arquitetura multi-tenant durante a validacao | "Ja que vamos validar, vamos corrigir tudo agora." | Mistura auditoria com rework estrutural, aumenta risco e impede concluir diagnostico confiavel. | Primeiro fechar gap map + riscos priorizados; depois fase dedicada de remediation. |
+| Migrar modelo de isolamento (ex.: shared schema -> schema/database por tenant) no mesmo milestone | Parece "solucao definitiva" para isolamento. | Alto impacto operacional e de dados; invalida baseline de comparacao e estoura escopo. | Validar stack atual (Supabase + RLS) e abrir estudo de viabilidade separado. |
+| Criar camada de autorizacao totalmente nova no frontend antes de validar regras atuais | Busca padronizacao imediata entre apps. | Pode mascarar falhas existentes e introduzir regressao cross-platform no meio da auditoria. | Mapear regra atual, medir divergencia, depois padronizar incrementalmente. |
+| Expandir para features de produto fora do tema (onboarding, UX, novas telas) | Pressao para "aproveitar a janela". | Dilui foco de risco de seguranca/isolamento e reduz profundidade dos testes criticos. | Manter estrito em permissao, isolamento, acesso cruzado e alinhamento modelo-implementacao. |
 
 ## Feature Dependencies
 
 ```
-[Shared Prettier/ESLint config]
-    └──enables──> [Consistent naming convention migration]
-                      └──enables──> [Shared hook cores with wrappers]
+[Matriz de autorizacao por cadeia]
+    └──requires──> [Inventario de recursos e acoes]
+    └──enables──> [Policy coverage map]
 
-[Platform adapter pattern (StorageAdapter)]
-    └──requires──> [Shared daily-missions core]
-    └──requires──> [Shared useQuestionsFilters core] (later)
+[Validacao RLS por tabela]
+    └──requires──> [Policies ativas + tenants de teste]
+    └──enables──> [Scorecard de isolamento]
 
-[Atomic concurrency guards]
-    └──enables──> [Shared hook cores with wrappers]  (safe to share once fixed)
+[Testes de acesso cruzado (negativos)]
+    └──requires──> [Massa de dados multi-tenant]
+    └──requires──> [Matriz de autorizacao por cadeia]
+    └──enables──> [Criterio de aprovacao/falha]
 
-[Error propagation fixed]
-    └──enables──> [Automated tests for packages/shared]  (tests need observable errors)
+[Alinhamento modelo vs implementacao]
+    └──requires──> [Modelo conceitual explicito]
+    └──requires──> [Levantamento de regras em mobile/web/admin/backend]
+    └──enables──> [Plano de remediation priorizado]
 
-[Dead code removed]
-    └──enables──> [Accurate dependency audit]
-
-[Shared types fully populated]
-    └──enables──> [Shared pure business logic]
-                      └──enables──> [Shared hook cores with wrappers]
+[Consistencia cross-platform]
+    └──requires──> [Golden cases de autorizacao]
+    └──requires──> [Executor por plataforma]
 ```
 
 ### Dependency Notes
 
-- **Shared config requires nothing upstream:** It's the first unlock. Everything downstream benefits from it.
-- **Platform adapter requires shared types:** The `StorageAdapter` interface is a type; types must be stable before adapters are defined.
-- **Tests require stable shared logic:** Writing tests against code that is actively being restructured creates churn. Tests belong after each consolidation unit stabilizes, not before.
-- **`useQuestionsFilters` consolidation requires adapter pattern:** The storage and URL differences make this impossible without adapters. It's the last hook to move, not the first.
-- **`createCachedHook` must NOT be consolidated:** React instance isolation is the constraint. This is a hard dependency on the per-app architecture decision.
-
----
+- **A matriz de autorizacao e o primeiro desbloqueio:** sem ela, os testes negativos viram exploracao ad-hoc.
+- **Validacao de RLS depende de dados multi-tenant reais:** sem tenants diferentes, nao existe prova de isolamento.
+- **Consistencia cross-platform depende de cenarios unicos:** o mesmo caso precisa rodar em mobile/web/admin para detectar drift.
+- **Alinhamento modelo-implementacao precisa de duas visoes:** modelo desejado e comportamento atual instrumentado.
 
 ## MVP Definition
 
-For this milestone, "MVP" means the **minimum set of consolidation work that delivers a materially healthier codebase** without partial states that create new confusion.
+### Launch With (v1)
 
-### Launch With (v1 — Core Consolidation)
+Minimo viavel para validar e alinhar arquitetura multi-tenant existente:
 
-- [ ] Dead code removed (`.venv`, large binary assets, re-export shims) — unambiguous improvement with zero regression risk
-- [ ] Root Prettier + ESLint config enforced across all apps — prevents new inconsistency from accumulating
-- [ ] Race conditions fixed (`create-cached-hook.ts`, `api-client.ts` 401 handler) — stops known bugs from masking other issues
-- [ ] Silent error catches replaced with observable errors — surfaces hidden failures
-- [ ] Identical duplicates moved to `packages/shared` (`study-area-mock`, `useClass`, `answer-question`) — highest-value, lowest-risk moves
-- [ ] CORS fail-closed — security correctness, one-line fix
+- [ ] Matriz de autorizacao por cadeia completa (`membership -> class -> organization`)
+- [ ] Validacao de RLS para tabelas criticas com evidencias por operacao (CRUD)
+- [ ] Testes de acesso cruzado negativos para perfis-chave (aluno, admin, membro de outra org)
+- [ ] Relatorio de gaps modelo vs implementacao com severidade e impacto
+- [ ] Checklist de consistencia cross-platform para regras de permissao/isolamento
+- [ ] Gate de aprovacao com criterios objetivos (bloqueia release quando risco critico aberto)
 
-### Add After Core Is Stable (v1.x — Logic Consolidation)
+### Add After Validation (v1.x)
 
-- [ ] Platform adapter pattern (`StorageAdapter`) — enables the next layer
-- [ ] `daily-missions` unified with adapter — once adapter exists, this is straightforward
-- [ ] `usePet`, `useProgress`, `useUser` shared cores — high-value once patterns are stable
-- [ ] Hardcoded taxonomy extracted to constants — independent, low-risk
-- [ ] Retry logic in shared — after API clients are consistent
+- [ ] Harness automatizado de regressao multi-tenant
+- [ ] Policy coverage map integrado ao fluxo de review
+- [ ] Scorecard de isolamento por dominio funcional
 
-### Future Consideration (v2+ — Architecture Improvement)
+### Future Consideration (v2+)
 
-- [ ] Automated tests for `packages/shared` — correct target, but writing tests during active restructuring creates churn
-- [ ] `useQuestionsFilters` shared core — highest complexity, highest risk, defer until simpler hooks are proven
-- [ ] Edge function middleware pattern — correct improvement, but Supabase edge functions are not the consolidation bottleneck
-- [ ] Service layer / repository pattern — separate architectural milestone
-
----
+- [ ] Guardrails obrigatorios para novas features (regra + policy + teste)
+- [ ] Programa continuo de auditoria de autorizacao por trimestre
 
 ## Feature Prioritization Matrix
 
-| Feature | Dev Value | Implementation Cost | Priority |
-|---------|-----------|---------------------|----------|
-| Remove `.venv` from git | HIGH | LOW | P1 |
-| Root Prettier/ESLint config | HIGH | LOW | P1 |
-| Fix race conditions (cache + 401) | HIGH | MEDIUM | P1 |
-| Fix silent error catches | HIGH | LOW | P1 |
-| Move identical duplicates to shared | HIGH | LOW | P1 |
-| CORS fail-closed | MEDIUM | LOW | P1 |
-| Platform adapter (StorageAdapter) | HIGH | MEDIUM | P2 |
-| Unified `daily-missions` | HIGH | MEDIUM | P2 |
-| Shared hook cores (`usePet`, etc.) | HIGH | MEDIUM | P2 |
-| Taxonomy constants extracted | MEDIUM | LOW | P2 |
-| Retry logic in shared | MEDIUM | MEDIUM | P2 |
-| Automated tests for shared | HIGH | MEDIUM | P2 |
-| `packages/ui` audited/removed | LOW | LOW | P2 |
-| `useQuestionsFilters` shared core | HIGH | HIGH | P3 |
-| Edge function middleware | MEDIUM | MEDIUM | P3 |
-| Service layer / repository pattern | HIGH | HIGH | P3 |
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| Matriz de autorizacao por cadeia | HIGH | MEDIUM | P1 |
+| Validacao RLS por tabela critica | HIGH | HIGH | P1 |
+| Testes de acesso cruzado negativos | HIGH | HIGH | P1 |
+| Gap map modelo vs implementacao | HIGH | MEDIUM | P1 |
+| Checklist cross-platform de regras | HIGH | MEDIUM | P1 |
+| Gate de aprovacao/falha | HIGH | LOW | P1 |
+| Harness automatizado de regressao | HIGH | HIGH | P2 |
+| Policy coverage map | MEDIUM | MEDIUM | P2 |
+| Scorecard de isolamento | MEDIUM | LOW | P2 |
+| Guardrails para novas features | MEDIUM | LOW | P3 |
 
 **Priority key:**
-- P1: Must have for consolidation milestone to be considered done
-- P2: High value, add once P1 work is stable
-- P3: Correct direction, separate milestone
-
----
-
-## Confidence Assessment
-
-| Area | Confidence | Notes |
-|------|------------|-------|
-| Table stakes identification | HIGH | Derived directly from CRITICAL-ANALYSIS.md with established patterns |
-| Platform adapter pattern | HIGH | Well-documented pattern in RN monorepos; AsyncStorage/localStorage adapter is standard |
-| React instance isolation (`createCachedHook`) | HIGH | Documented React constraint; violating it produces known "invalid hook call" error |
-| Testing tool recommendation (Vitest) | MEDIUM | Strong fit given Vite toolchain; could not verify against live Turborepo docs |
-| Complexity estimates | MEDIUM | Based on codebase analysis; actual effort may vary based on hidden coupling |
-| Anti-features list | HIGH | Each anti-feature has a concrete rationale grounded in the codebase's constraints |
-
----
+- P1: obrigatorio para considerar o milestone validado
+- P2: acelera manutencao e reduz regressao no curto prazo
+- P3: governanca continua apos alinhamento inicial
 
 ## Sources
 
-- `/Users/marianamsamp/enem-mobile/.planning/codebase/CRITICAL-ANALYSIS.md` — primary source for current duplication, fragility, and inconsistency data
-- `/Users/marianamsamp/enem-mobile/.planning/PROJECT.md` — scope constraints, out-of-scope decisions, key decisions log
-- Turborepo documentation (training data, August 2025 cutoff) — workspace structure, task pipeline patterns
-- React documentation on hook rules (training data) — React instance isolation rationale for `createCachedHook`
-- React Native / Expo documentation on platform differences (training data) — AsyncStorage vs localStorage adapter pattern
+- Projeto interno: `/Users/marianamsamp/enem-mobile/.planning/PROJECT.md`
+- Supabase docs (RLS em Postgres): [supabase.com/docs/guides/database/postgres/row-level-security](https://supabase.com/docs/guides/database/postgres/row-level-security) (HIGH)
+- OWASP Multi-Tenant Security Cheat Sheet: [cheatsheetseries.owasp.org/.../Multi_Tenant_Security_Cheat_Sheet.html](https://cheatsheetseries.owasp.org/cheatsheets/Multi_Tenant_Security_Cheat_Sheet.html) (HIGH)
+- OWASP WSTG Authorization Testing: [owasp.org/.../05-Authorization_Testing](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/) (HIGH)
+- Pesquisa de ecossistema (sintese de mercado, validar com contexto do repositorio): resultados web de 2026 para "multi-tenant validation checklist" e "Supabase RLS best practices" (MEDIUM)
 
 ---
-
-*Feature research for: Broto EdTech — Codebase Consolidation milestone*
-*Researched: 2026-04-02*
+*Feature research for: validacao e alinhamento de arquitetura multi-tenant no Broto*
+*Researched: 2026-04-03*
