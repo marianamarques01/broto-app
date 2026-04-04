@@ -11,9 +11,55 @@ type AdminAuthContextType = {
 
 const AdminAuthContext = createContext<AdminAuthContextType | null>(null)
 
-async function fetchAdminProfile(userId: string): Promise<AdminProfile | null> {
-  const { data } = await supabase.from('admin_profiles').select('*').eq('id', userId).single()
-  return data ?? null
+const STAFF_MEMBERSHIP_ROLES = ['teacher', 'org_admin', 'owner'] as const
+
+type AuthUserHint = {
+  email?: string | null
+  fullName?: string | null
+}
+
+async function fetchAdminProfile(userId: string, hint?: AuthUserHint): Promise<AdminProfile | null> {
+  const [{ data: userRow, error: userErr }, { data: memberships, error: memErr }] = await Promise.all([
+    supabase.from('users').select('email, nome, current_organization_id').eq('id', userId).maybeSingle(),
+    supabase
+      .from('organization_memberships')
+      .select('organization_id, role, joined_at')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .in('role', [...STAFF_MEMBERSHIP_ROLES]),
+  ])
+
+  if (userErr) console.error('[admin-auth]', userErr.message)
+  if (memErr) {
+    console.error('[admin-auth]', memErr.message)
+    return null
+  }
+
+  if (!memberships?.length) return null
+
+  const storedOrgId = userRow?.current_organization_id ?? null
+  const byStored = storedOrgId
+    ? memberships.find((m) => m.organization_id === storedOrgId) ?? null
+    : null
+
+  const chosen =
+    byStored ??
+    [...memberships].sort(
+      (a, b) =>
+        new Date(b.joined_at ?? 0).getTime() - new Date(a.joined_at ?? 0).getTime(),
+    )[0]
+
+  const email = userRow?.email ?? hint?.email ?? ''
+  const full_name = userRow?.nome?.trim() ? userRow.nome : hint?.fullName ?? ''
+
+  return {
+    id: userId,
+    email,
+    full_name,
+    organization_id: chosen.organization_id,
+    role: chosen.role as AdminProfile['role'],
+    created_at: chosen.joined_at ?? new Date().toISOString(),
+  }
 }
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
@@ -52,7 +98,10 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) return { error: 'E-mail ou senha invalidos' }
 
-    const profile = await fetchAdminProfile(data.user.id)
+    const profile = await fetchAdminProfile(data.user.id, {
+      email: data.user.email,
+      fullName: (data.user.user_metadata?.full_name as string | undefined) ?? null,
+    })
 
     if (!profile) {
       await supabase.auth.signOut()

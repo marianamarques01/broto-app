@@ -22,6 +22,7 @@ import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '@/hooks/useAuth'
+import { OrganizationProvider } from '@/contexts/OrganizationContext'
 import { ClassProvider } from '@/contexts/ClassContext'
 import { colors, fonts, fontSize, spacing } from '@/theme/tokens'
 import { CentralGlowSvg } from '@/components/HeroGlowSvg'
@@ -273,31 +274,33 @@ export default function RootLayout() {
   }, [status, segments, router, splashVisible])
 
   return (
-    <ClassProvider>
-      <Head>
-        <title>{'broto \u2014 estude & flores\u00e7a'}</title>
-      </Head>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen
-          name="broto-chat"
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-          }}
-        />
-        <Stack.Screen
-          name="study-area"
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-          }}
-        />
-      </Stack>
-      <AnimatedSplash visible={splashVisible} />
-    </ClassProvider>
+    <OrganizationProvider>
+      <ClassProvider>
+        <Head>
+          <title>{'broto \u2014 estude & flores\u00e7a'}</title>
+        </Head>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen
+            name="broto-chat"
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+            }}
+          />
+          <Stack.Screen
+            name="study-area"
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+            }}
+          />
+        </Stack>
+        <AnimatedSplash visible={splashVisible} />
+      </ClassProvider>
+    </OrganizationProvider>
   )
 }

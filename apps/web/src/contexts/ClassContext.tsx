@@ -1,6 +1,8 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Class, Organization } from '@broto/shared'
+import { mapOrganizationRow, resolveClassTenantRow } from '@broto/shared'
+import { useOrganization } from '@/contexts/OrganizationContext'
 
 type ClassContextType = {
   currentClass: Class | null
@@ -25,19 +27,25 @@ function formatClassLoadError(err: unknown): string {
 }
 
 export function ClassProvider({ children }: { children: ReactNode }) {
+  const { effectiveActiveOrganizationId, loading: orgLoading } = useOrganization()
   const [currentClass, setCurrentClass] = useState<Class | null>(null)
   const [organization, setOrganization] = useState<Organization | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (orgLoading) return
+
     let alive = true
 
     async function load() {
+      setLoading(true)
       const { data: userData, error: authErr } = await supabase.auth.getUser()
       if (authErr) {
         if (alive) {
           setError(formatClassLoadError(authErr))
+          setCurrentClass(null)
+          setOrganization(null)
           setLoading(false)
         }
         return
@@ -47,6 +55,8 @@ export function ClassProvider({ children }: { children: ReactNode }) {
       if (!user) {
         if (alive) {
           setError(null)
+          setCurrentClass(null)
+          setOrganization(null)
           setLoading(false)
         }
         return
@@ -54,7 +64,7 @@ export function ClassProvider({ children }: { children: ReactNode }) {
 
       const { data: profile, error: profileError } = await supabase
         .from('users')
-        .select('current_class_id')
+        .select('current_class_id, classes:current_class_id(*, organizations(*))')
         .eq('id', user.id)
         .single()
 
@@ -68,46 +78,51 @@ export function ClassProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const classId = (profile as { current_class_id?: string } | null)?.current_class_id
-      if (!classId) {
+      const profileRecord = profile as Record<string, unknown> | null
+      const resolution = resolveClassTenantRow(
+        effectiveActiveOrganizationId,
+        profileRecord?.classes,
+      )
+
+      if (resolution.kind === 'no-active-org') {
+        if (alive) {
+          setCurrentClass(null)
+          setOrganization(null)
+          setError(null)
+          setLoading(false)
+        }
+        return
+      }
+
+      if (resolution.kind === 'use-current-class') {
         if (alive) {
           setError(null)
+          setCurrentClass(resolution.classRow as unknown as Class)
+          setOrganization(mapOrganizationRow(resolution.organizationRow))
+        }
+      } else {
+        const { data: orgRow, error: orgError } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('id', resolution.organizationId)
+          .maybeSingle()
+
+        if (!alive) return
+
+        if (orgError) {
           setCurrentClass(null)
           setOrganization(null)
+          setError(formatClassLoadError(orgError))
           setLoading(false)
+          return
         }
-        return
-      }
 
-      const { data: classData, error: classError } = await supabase
-        .from('classes')
-        .select('*, organizations(*)')
-        .eq('id', classId)
-        .single()
-
-      if (classError) {
-        if (alive) {
-          setCurrentClass(null)
-          setOrganization(null)
-          setError(formatClassLoadError(classError))
-          setLoading(false)
-        }
-        return
-      }
-
-      if (alive) {
         setError(null)
-        if (classData) {
-          setCurrentClass(classData as unknown as Class)
-          setOrganization(
-            ((classData as Record<string, unknown>).organizations as Organization) ?? null,
-          )
-        } else {
-          setCurrentClass(null)
-          setOrganization(null)
-        }
-        setLoading(false)
+        setCurrentClass(null)
+        setOrganization(mapOrganizationRow(orgRow))
       }
+
+      if (alive) setLoading(false)
     }
 
     load().catch((err) => {
@@ -118,13 +133,18 @@ export function ClassProvider({ children }: { children: ReactNode }) {
         setLoading(false)
       }
     })
+
     return () => {
       alive = false
     }
-  }, [])
+  }, [orgLoading, effectiveActiveOrganizationId])
+
+  const combinedLoading = orgLoading || loading
 
   return (
-    <ClassContext.Provider value={{ currentClass, organization, loading, error }}>
+    <ClassContext.Provider
+      value={{ currentClass, organization, loading: combinedLoading, error }}
+    >
       {error ? (
         <div
           className="broto-error-banner"

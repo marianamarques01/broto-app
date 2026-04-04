@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
+import { api, ApiError } from '@/lib/api-client'
 import type { UserProfile } from '@broto/shared'
 
 type AuthContextType = {
@@ -73,12 +74,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signUp(email: string, password: string, nome: string) {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { nome } },
-    })
-    if (error) return { error: 'Erro ao criar conta' }
+    try {
+      await api.post<{ userId: string }>('/api/auth/signup', { email, password, nome })
+    } catch (e) {
+      if (e instanceof ApiError) return { error: e.message }
+      return { error: 'Erro ao criar conta' }
+    }
+    const { error: sessionError } = await supabase.auth.signInWithPassword({ email, password })
+    if (sessionError) {
+      return {
+        error: 'Conta criada, mas não foi possível entrar automaticamente. Tente fazer login.',
+      }
+    }
     return { error: null }
   }
 

@@ -1,4 +1,7 @@
 export * from './types/organization'
+export * from './types/organization-membership'
+export * from './utils/active-organization'
+export * from './utils/organization-tenant'
 export * from './types/class'
 export * from './types/student'
 export * from './types/question'

@@ -29,14 +29,18 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Importing `react` inside any file under `packages/shared/src/` triggers an ESLint error at lint time
   4. All Supabase edge functions reject requests from non-whitelisted origins with a 403 — no `Access-Control-Allow-Origin: *` defaults remain
   5. `packages/ui` has either been removed from the monorepo (if unused) or has a comment in its `package.json` explaining its purpose
-**Plans**: 5 plans
+**Plans**: 9 plans
 
 Plans:
 - [x] 01-01-PLAN.md — Git hygiene: untrack .venv, optimize SVGs, remove packages/ui (HYGN-01, HYGN-02, HYGN-03)
-- [x] 01-02-PLAN.md — Dead code: remove re-export files, create root tsconfig.base.json (HYGN-04, TOOL-01)
+- [x] 01-02-PLAN.md — TypeScript config baseline: create root tsconfig.base.json and extends (TOOL-01)
+- [x] 01-09-PLAN.md — Dead code: remove question type re-export wrappers and update imports (HYGN-04)
 - [x] 01-03-PLAN.md — Tooling config: fix Prettier glob, add ESLint guards (TOOL-02, TOOL-03, TOOL-05, TOOL-06)
-- [x] 01-04-PLAN.md — Format commit + hook renaming to camelCase (TOOL-04, TOOL-07)
+- [x] 01-04-PLAN.md — Atomic formatting commit only (TOOL-04)
 - [x] 01-05-PLAN.md — CORS extraction and hardening in edge functions (SECR-01, SECR-02)
+- [ ] 01-06-PLAN.md — Gap closure HYGN-02: aggressive SVG optimization with byte-budget validation
+- [ ] 01-07-PLAN.md — Register formatting SHA in .git-blame-ignore-revs (TOOL-04)
+- [ ] 01-08-PLAN.md — Rename mobile hooks to camelCase in isolated commit (TOOL-07)
 
 ### Phase 2: Bug Fixes & Error Propagation
 **Goal**: Known bugs are fixed and all previously silent errors are observable before any code moves to shared
