@@ -6,28 +6,29 @@ import {
   pathToFunctionName,
   mergeParamsIntoBody,
   extractErrorMessage,
+  withExponentialBackoff,
   type HttpMethod,
   type InvokeOptions,
 } from '@broto/shared'
 
 export { ApiError } from '@broto/shared'
 
-let handlingUnauthorized = false
+/** Single pipeline for 401: dedupes parallel failures without resetting mid-flight. */
+let unauthorizedPipeline: Promise<void> | null = null
 
-async function handleUnauthorizedOnce() {
-  if (handlingUnauthorized) return
-  handlingUnauthorized = true
-  try {
-    const supabase = createClient()
-    await supabase.auth.signOut().catch(() => {})
-    router.replace('/(auth)/login')
-  } finally {
-    // Reset after signOut + navigation completes (deterministic, not timer)
-    handlingUnauthorized = false
-  }
+function scheduleUnauthorizedRedirect(): void {
+  unauthorizedPipeline ??= (async () => {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut().catch(() => {})
+      router.replace('/(auth)/login')
+    } finally {
+      unauthorizedPipeline = null
+    }
+  })()
 }
 
-async function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
+async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
   const fnName = pathToFunctionName(path)
   const supabase = createClient()
 
@@ -51,13 +52,17 @@ async function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
       const resBody = await res.json().catch(() => ({}))
       const msg = extractErrorMessage(resBody, res.status)
       if (res.status === 401) {
-        handleUnauthorizedOnce().catch(() => {})
+        scheduleUnauthorizedRedirect()
       }
       throw new ApiError(msg, res.status, resBody)
     }
     if (e instanceof ApiError) throw e
     throw new ApiError(e instanceof Error ? e.message : 'Erro na requisição', 500, e)
   }
+}
+
+function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
+  return withExponentialBackoff(() => invokeOnce<T>(path, options))
 }
 
 export const api = {

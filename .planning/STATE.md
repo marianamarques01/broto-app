@@ -1,75 +1,70 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-stopped_at: Roadmap written, STATE.md initialized, REQUIREMENTS.md traceability updated
-last_updated: "2026-04-03T02:09:31.450Z"
+milestone: v1.1
+milestone_name: codebase-consolidation
+status: consolidation-phases-complete
+stopped_at: Phases 2–4 delivered in repo; planning docs reconciled 2026-04-05
+last_updated: "2026-04-05T12:00:00.000Z"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 4
   total_plans: 5
-  completed_plans: 0
+  completed_plans: 5
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-02)
+See: .planning/PROJECT.md
 
 **Core value:** A maintainable, consistent monorepo where business logic lives in one place, bugs are fixed once, and developers can work across apps without friction.
-**Current focus:** Phase 01 — tooling-hygiene-security
+**Current focus:** Encerramento operacional multi-tenant (RLS/CORS em staging) e backlog de consolidação residual — ver `.planning/NEXT-REFACTOR-PLAN.md` **Fase E** e ROADMAP «Follow-ups».
 
 ## Current Position
 
-Phase: 01 (tooling-hygiene-security) — EXECUTING
-Plan: 1 of 5
+- Phase 01 (tooling-hygiene-security): **closed** (5/5 plans delivered)
+- Phase 02 (bug fixes and error propagation): **closed** (cache refresh coalescing, 401 pipeline, ClassContext errors, daily-missions propagation)
+- Phase 03 (code consolidation): **closed** com excepção documentada em ROADMAP (area-config com ícones por app)
+- Phase 04 (tests & resilience): **closed** (Vitest + testes em `packages/shared`, retry nos API clients, erros visíveis em `useQuestionsFilters` / missões)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
+- Total plans completed: 5 (Phase 1) + implementation wave (Phases 2–4, sem PLAN.md por fase)
 - Average duration: —
-- Total execution time: 0 hours
+- Total execution time: —
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 1 | 5 | — | — |
+| 2–4 | impl | — | — |
 
 **Recent Trend:**
 
-- Last 5 plans: —
-- Trend: —
-
-*Updated after each plan completion*
+- Milestone consolidation sync: 2026-04-05 (`ROADMAP.md`, `STATE.md`, `REQUIREMENTS.md`, nota em `NEXT-REFACTOR-PLAN.md`)
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- Roadmap: Coarse granularity applied — 6 research phases compressed to 4 delivery phases
-- Roadmap: Security (CORS) grouped with Phase 1 tooling — both are zero-risk, zero-logic-change work
-- Roadmap: RESL-01/RESL-02 grouped with Phase 3 consolidation — retry logic belongs with the API client work
+- **Area config:** Não movido integralmente para `@broto/shared` — ícones RN (`lucide-react-native` + tokens) vs web (`lucide-react` + hex); critério de produto para uma fonte única de metadados **sem** componentes.
+- **Fase E multi-tenant:** Continua a exigir validação humana (matriz RLS, `ALLOWED_ORIGINS` em produção), independentemente do fecho das fases 2–4.
 
 ### Pending Todos
 
-None yet.
+- EXECUTAR matriz / smoke tests RLS e checklist `docs/multi-tenant/*` em staging (Fase E).
+- Opcional: CONS-03, CONS-05, BUGF-05 (ver ROADMAP «Follow-ups»).
 
 ### Blockers/Concerns
 
-- Phase 3: `bumpPerformanceDay` mobile gap needs clarification before planning — intentional product decision or unimplemented feature? (see research SUMMARY.md)
-- Phase 3: `packages/ui` dependency in `apps/web` may be type-only — must verify before dead code removal in Phase 1
-- Phase 4: Vitest + Turborepo `turbo.json` task config needs live verification (MEDIUM confidence in research)
+- Nenhum bloqueador técnico declarado para o merge do trabalho de consolidação; CI local: `format:check`, `typecheck`, `build`, `test` (shared) verdes na última verificação da sprint.
 
 ## Session Continuity
 
-Last session: 2026-04-02
-Stopped at: Roadmap written, STATE.md initialized, REQUIREMENTS.md traceability updated
+Last session: 2026-04-05
+Stopped at: Documentação GSD alinhada ao estado entregue no código (fases 2–4)
 Resume file: None

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { api, ApiError } from '@/lib/api-client'
-import type { UserProfile } from '@/hooks/useUser'
+import type { UserProfile } from '@broto/shared'
 
 type AuthContextType = {
   user: UserProfile | null

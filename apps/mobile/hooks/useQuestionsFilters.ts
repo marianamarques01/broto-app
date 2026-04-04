@@ -325,9 +325,10 @@ export function useQuestionsFilters(): QuestionsFiltersState & QuestionsFiltersA
         setTopicos(list)
         topicosRef.current = list
       })
-      .catch(() => {
+      .catch((err) => {
         setTopicos([])
         topicosRef.current = []
+        setError(normalizeNetworkErrorMessage(err, 'Erro ao carregar tópicos'))
       })
     setSelectedTopico('')
     setSelectedLanguage('')
