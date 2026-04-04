@@ -13,9 +13,9 @@ Starting from a codebase with ~25% duplication, critical race conditions, and ze
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Tooling, Hygiene & Security** - Establish guardrails, kill dead code, fix CORS, format everything
-- [ ] **Phase 2: Bug Fixes & Error Propagation** - Fix known race conditions and replace silent error swallowing
-- [ ] **Phase 3: Code Consolidation** - Move all shared logic to `packages/shared` using zero-dep and adapter patterns
-- [ ] **Phase 4: Tests & Resilience** - Add retry logic, propagate filter errors visibly, and cover shared modules with unit tests
+- [x] **Phase 2: Bug Fixes & Error Propagation** - Fix known race conditions and replace silent error swallowing
+- [x] **Phase 3: Code Consolidation** - Move all shared logic to `packages/shared` using zero-dep and adapter patterns
+- [x] **Phase 4: Tests & Resilience** - Add retry logic, propagate filter errors visibly, and cover shared modules with unit tests
 
 ## Phase Details
 
@@ -54,7 +54,7 @@ Plans:
 **Depends on**: Phase 2
 **Requirements**: CONS-01, CONS-02, CONS-03, CONS-04, CONS-05, ADPT-01, ADPT-02, ADPT-03, ADPT-04, RESL-01, RESL-02
 **Success Criteria** (what must be TRUE):
-  1. `study-area-mock`, `UserProfile`, `DailyMissionsState`, `AreaKey`, `SubmitAnswerPayload`, and area config data all resolve from `@broto/shared` in both apps — no local duplicate definitions remain
+  1. `study-area-mock`, `UserProfile`, `DailyMissionsState`, `AreaKey`, `SubmitAnswerPayload` resolve from `@broto/shared` in both apps — no local duplicate definitions remain for those modules/types. **Excepção (produto/UI):** metadados de área com ícones (`AREA_CONFIG` mobile vs web) mantêm-se por app — shapes e dependências RN/Web divergem; unificação = backlog pós-milestone.
   2. Mobile app gains `bumpPerformanceDay()` behavior on answer submission — the same shared `answer-question` module drives both apps
   3. `IStorage` interface exists in `packages/shared` and both apps provide working adapter implementations — `daily-missions` logic runs identically on mobile (AsyncStorage) and web (localStorage)
   4. Shared fetcher cores for `usePet`, `useProgress`, and `useUser` exist in `packages/shared` with no React imports — each app wraps them in thin hook files
@@ -70,16 +70,19 @@ Plans:
   2. The `createCachedStore` race condition is covered by a regression test that would have caught the original bug
   3. `daily-missions` shared logic is covered by unit tests that use a mock `IStorage` adapter — no real storage or network calls
   4. `answer-question` shared logic is covered by unit tests exercising both the happy path and error cases
-**Plans**: TBD
+**Plans**: Delivered as implementation commits on branch `chore/planning-gsd-sync` (2026-04); sem PLAN.md dedicados por fase.
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order: 1 → 2 → 3 → 4
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Tooling, Hygiene & Security | 5/5 | Done (plans 01-01 … 01-05) | 2026-04 |
-| 2. Bug Fixes & Error Propagation | 0/? | Not started | - |
-| 3. Code Consolidation | 0/? | Not started | - |
-| 4. Tests & Resilience | 0/? | Not started | - |
+| Phase | Delivered | Status | Completed |
+|-------|-----------|--------|-----------|
+| 1. Tooling, Hygiene & Security | 5/5 plans | Done | 2026-04 |
+| 2. Bug Fixes & Error Propagation | impl | Done | 2026-04 |
+| 3. Code Consolidation | impl (ver excepção area-config em critérios) | Done | 2026-04 |
+| 4. Tests & Resilience | Vitest em `packages/shared` + `turbo run test` | Done | 2026-04 |
+
+**Follow-ups fora deste fecho:** CONS-03 (layer de labels/cores sem ícones, se desejado), CONS-05 (núcleo React-free `useClass`), BUGF-05 (telemetria/log para erros não-ApiError em `broto-chat`).
+

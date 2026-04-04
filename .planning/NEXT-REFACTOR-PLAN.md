@@ -6,17 +6,19 @@
 
 **Atualização (2026-04-04, `main`):** `npm run format:check` está **verde**; a lista de 11 ficheiros falhados referia outro snapshot/revisão.
 
+**Atualização (2026-04-05):** Fases **B–D** do plano (equivalente ROADMAP 2–4) estão **entregues no código**: `createCachedStore`/401/ClassContext/daily-missions, consolidação em `@broto/shared` (missões, study mock, tipos, fetchers, retry, `runAfterAnswerSubmitted`), Vitest + `turbo run test`. **Permanecem** Fase **A** (lint `no-floating-promises` verde em todo o repo — tooling), **E** (multi-tenant RLS/CORS em staging), e requisitos **CONS-03**, **CONS-05**, **BUGF-05** em aberto — ver `.planning/REQUIREMENTS.md` e `.planning/ROADMAP.md` (Follow-ups).
+
 ---
 
 ## Resumo executivo
 
 Grande parte dos **guardrails da Phase 01 (tooling, ESLint em `packages/shared`, CORS nas Edge Functions, `tsconfig.base.json`, remoção de `packages/ui`) já está refletida no código**. As **migrações e planos PR-08 (RLS)** existem em `supabase/migrations/` e há **contexto de organização** (`OrganizationContext`, `OrganizationSwitcher`) em mobile e web, alinhado ao checklist `docs/multi-tenant/multi-tenant-implementation-pr-checklist.md`.
 
-Por outro lado, o **estado registrado em `.planning/` está desatualizado em relação ao código**: `ROADMAP.md`, `STATE.md` e `REQUIREMENTS.md` ainda descrevem milestone **v1.0**, progresso **0/5** e requisitos **todos abertos**, enquanto o repositório já evoluiu para **v1.1 multi-tenant**. O relatório `01-VERIFICATION.md` cita **SVGs grandes em caminhos que já não existem** no working tree atual — a verificação precisa ser **reexecutada**, não tomada como verdade atual.
+*Histórico (2026-04-04):* o estado em `.planning/` estava por vezes atrás do código; **2026-04-05:** `ROADMAP.md`, `STATE.md` e `REQUIREMENTS.md` foram **reconciliados** com o repositório **v1.1** e com a onda de consolidação (fases 2–4). O relatório `01-VERIFICATION.md` sobre SVGs específicos pode permanecer como **histórico** até revalidação explícita.
 
-O **`npm run format:check` falha em 11 arquivos** (contextos multi-tenant, `authz`, `material-index`, util compartilhado, etc.), o que **quebra o critério de “Prettier verde”** da Phase 01 e deve ser tratado como **regressão de higiene** antes de declarar tooling “fechado”.
+*Histórico (2026-04-04):* `format:check` falhava em vários ficheiros. **Situação atual:** correr `npm run format:check` no HEAD da branch de trabalho; tratar falhas como regressão de higiene.
 
-**Não há framework de testes unitários** nos `package.json` pesquisados (sem Vitest/Jest), em linha com `.planning/codebase/TESTING.md` e com o embed em `CLAUDE.md` — lacuna crítica para evolução segura.
+**Testes unitários:** `packages/shared` passa a incluir **Vitest** (`npm run test` / `npm run test:shared`). Actualizar `.planning/codebase/TESTING.md` e geradores de docs em oportunidade futura.
 
 **Recomendação central:** (1) corrigir formatação e sincronizar artefatos GSD; (2) executar a **fila original de bugs/consolidação/testes** (`ROADMAP.md` fases 2–4), adaptada ao que já foi feito em multi-tenant; (3) fechar **verificação humana** de RLS/CORS em staging conforme checklist.
 
@@ -36,17 +38,17 @@ O **`npm run format:check` falha em 11 arquivos** (contextos multi-tenant, `auth
 | Multi-tenant RLS (PR-08) | Aplicado no SQL | Migrações `20260410120000_pr08_rls_membership_core.sql`, `20260412120000_pr08_2_fix_classes_rls_recursion.sql` com `ENABLE ROW LEVEL SECURITY` / `CREATE POLICY` |
 | PR-09 (contexto de organização) | Parcialmente aplicado | `OrganizationContext.tsx` / `OrganizationSwitcher` em web e mobile; `ClassContext` usa `useOrganization` |
 
-### Evidência em artefatos GSD (divergência)
+### Evidência em artefatos GSD (2026-04-05)
 
-- **`ROADMAP.md`:** checkbox da Phase 1 ainda `[ ]`; tabela **“Plans Complete 0/5”** é **incorreta** (há vários planos `01-0x-PLAN.md` marcados `[x]` no próprio arquivo); planos `01-06`, `01-07`, `01-08` aparecem `[ ]` embora o código e `01-VERIFICATION.md` indiquem itens correspondentes já atendidos (ex.: blame ignore, camelCase hooks).
-- **`STATE.md`:** milestone **v1.0**, “0 plans completed”, “Phase 01 plan 1 of 5” — **obsoleto** face à branch v1.1 e ao trabalho já mergeado.
-- **`REQUIREMENTS.md`:** todos os requisitos ainda `[ ]` — **não reflete** implementações já feitas (HYGN-03, TOOL-01–07, SECR-01–02, etc.).
-- **`01-VERIFICATION.md`:** útil como **histórico**; conteúdo sobre **SVGs** referencia ficheiros que **já não existem** no tree atual — **não usar como gate atual** sem nova verificação.
+- **`ROADMAP.md`:** fases 1–4 marcadas fechados; tabela de progresso e follow-ups (CONS-03, CONS-05, BUGF-05) actualizados.
+- **`STATE.md`:** milestone **v1.1** `codebase-consolidation`; fases 2–4 **closed**; foco actual **Fase E** / backlog residual.
+- **`REQUIREMENTS.md`:** checkboxes e traceability alinhados ao código; **Open** explícitos: TOOL-06 (violações remanescentes), BUGF-05, CONS-03, CONS-05.
+- **`01-VERIFICATION.md`:** útil como **histórico**; revalidar gates de asset se necessário.
 
-### Conclusão objetiva
+### Conclusão objetiva (2026-04-05)
 
-- **Aplicado no código:** sim, para a maior parte dos itens críticos de Phase 01 + avanço multi-tenant (RLS, contextos).  
-- **Finalizado como milestone GSD:** **não** — documentação de progresso não foi atualizada; **Prettier não está verde**; verificação formal da Phase 01 está **parcialmente invalidada** por drift de ficheiros e por regressão de formatação.
+- **Aplicado no código:** sim — Phase 01 + ondas 2–4 de consolidação + multi-tenant em evolução.  
+- **Documentação GSD:** **sincronizada** com o entregue (exc. notas históricas em `01-VERIFICATION.md`). **Tooling:** confirmar `format:check` no CI/local; **lint** global ainda com dívidas (TOOL-06).
 
 ---
 
@@ -91,7 +93,7 @@ O **`npm run format:check` falha em 11 arquivos** (contextos multi-tenant, `auth
 | Testes | “No unit test framework” | Confirmado — sem Vitest/Jest nos `package.json` raiz pesquisados | Plano fase 4 ainda válido |
 | CORS / Edge Functions | Descrito em ARCHITECTURE | Implementação em `_shared/cors.ts` | Coerente |
 | RLS multi-tenant | Checklist em `docs/multi-tenant/` | Migrações `pr08_*` presentes | Falta **matriz de testes** e validação em ambiente real (checklist PR-08) |
-| Duplicação de lógica | CRITICAL-ANALYSIS / research | `organization-tenant.ts` em shared + consumo em ClassContext — **boa direção**; ainda há trabalho CONS-* por cumprir no ROADMAP | Continuar consolidação após bugs |
+| Duplicação de lógica | CRITICAL-ANALYSIS / research | CONS-01/02/04/ADPT/RESL entregues; **CONS-03** (area metadata), **CONS-05** (`useClass` core) em backlog | Ver ROADMAP Follow-ups |
 
 ### Alinhamento `docs/multi-tenant/` ↔ `supabase/migrations/`
 
@@ -128,6 +130,8 @@ npm run typecheck
 
 ### Fase B — Bugs e propagação de erros (ex-Phase 2 do ROADMAP)
 
+**Estado (2026-04-05):** **Entregue** no código (cache, 401, ClassContext, daily-missions).
+
 **Objetivo:** Corrigir condições de corrida e erros silenciosos antes de mais consolidação.
 
 **Critérios de sucesso** (herdados do ROADMAP)
@@ -152,6 +156,8 @@ npm run typecheck
 
 ### Fase C — Consolidação em `@broto/shared` (ex-Phase 3)
 
+**Estado (2026-04-05):** **Entregue** com excepção **CONS-03** (area-config) e **CONS-05** (`useClass` core), documentadas no ROADMAP.
+
 **Objetivo:** Reduzir duplicação mobile/web; manter shared **sem React**; adaptadores para storage.
 
 **Critérios de sucesso** (ajustar às linhas já movidas, ex. `organization-tenant`)
@@ -174,6 +180,8 @@ npm run build
 ---
 
 ### Fase D — Fundação de testes (ex-Phase 4)
+
+**Estado (2026-04-05):** **Entregue** — Vitest, `turbo run test`, testes para store / daily-missions / `runAfterAnswerSubmitted`.
 
 **Objetivo:** Vitest (ou equivalente acordado) em `packages/shared`; testes de regressão para cache e domínios críticos.
 
