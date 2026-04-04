@@ -2,33 +2,17 @@ import { api } from '@/lib/api-client'
 import { createCachedHook } from './createCachedHook'
 import { useFocusEffect } from 'expo-router'
 import { useCallback } from 'react'
+import {
+  createUserProgressFetcher,
+  type ProgressData,
+  type AreaStat,
+  type TopicoStat,
+} from '@broto/shared'
 
-export interface TopicoStat {
-  value: string
-  label: string
-  totalAnswered: number
-  totalCorrect: number
-  accuracyPct: number
-}
+export type { ProgressData, AreaStat, TopicoStat } from '@broto/shared'
 
-export interface AreaStat {
-  value: string
-  label: string
-  totalAnswered: number
-  totalCorrect: number
-  accuracyPct: number
-  topicos: TopicoStat[]
-}
-
-export interface ProgressData {
-  totalAnswered: number
-  totalCorrect: number
-  accuracyPct: number
-  areas: AreaStat[]
-}
-
-const { useHook, refresh, refreshIfStale } = createCachedHook<ProgressData>(() =>
-  api.get<ProgressData>('/api/user/progress'),
+const { useHook, refresh, refreshIfStale } = createCachedHook<ProgressData>(
+  createUserProgressFetcher((path) => api.get(path)),
 )
 
 export const refreshProgress = refresh

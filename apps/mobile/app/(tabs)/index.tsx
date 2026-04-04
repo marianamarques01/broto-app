@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native'
+import { View, Text, ScrollView, Pressable, RefreshControl, StyleSheet } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -260,6 +260,7 @@ export default function HomeScreen() {
   const { user } = useUser()
   const [refreshing, setRefreshing] = useState(false)
   const [daily, setDaily] = useState<DailyMissionsState | null>(null)
+  const [dailyMissionsError, setDailyMissionsError] = useState<string | null>(null)
 
   const xp = pet?.xp ?? 0
   const xpInLevel = xp % 100
@@ -279,11 +280,21 @@ export default function HomeScreen() {
 
   useEffect(() => {
     let alive = true
+    setDailyMissionsError(null)
     getDailyMissionsState()
       .then((state) => {
-        if (alive) setDaily(state)
+        if (alive) {
+          setDaily(state)
+          setDailyMissionsError(null)
+        }
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (alive) {
+          setDailyMissionsError(
+            err instanceof Error ? err.message : 'Erro ao carregar missões do dia',
+          )
+        }
+      })
     return () => {
       alive = false
     }
@@ -351,8 +362,15 @@ export default function HomeScreen() {
     refreshPet()
     refreshProgress()
     getDailyMissionsState()
-      .then(setDaily)
-      .catch(() => {})
+      .then((s) => {
+        setDaily(s)
+        setDailyMissionsError(null)
+      })
+      .catch((err) => {
+        setDailyMissionsError(
+          err instanceof Error ? err.message : 'Erro ao carregar missões do dia',
+        )
+      })
     const t = setTimeout(() => setRefreshing(false), 800)
     return () => clearTimeout(t)
   }, [refreshPet, refreshProgress])
@@ -648,6 +666,24 @@ export default function HomeScreen() {
             </View>
           </FadeInSection>
         </View>
+
+        {dailyMissionsError ? (
+          <View
+            style={{
+              marginHorizontal: 20,
+              marginBottom: 12,
+              padding: 12,
+              borderRadius: 12,
+              backgroundColor: 'rgba(180, 40, 40, 0.2)',
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: 'rgba(255,100,100,0.4)',
+            }}
+          >
+            <Text style={{ color: '#ffb4b4', fontSize: 13, textAlign: 'center' }}>
+              {dailyMissionsError}
+            </Text>
+          </View>
+        ) : null}
 
         {/* ── Missions ── */}
         <View style={{ width: '100%', marginBottom: 4 }}>

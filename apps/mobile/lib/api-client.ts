@@ -6,6 +6,7 @@ import {
   pathToFunctionName,
   mergeParamsIntoBody,
   extractErrorMessage,
+  withExponentialBackoff,
   type HttpMethod,
   type InvokeOptions,
 } from '@broto/shared'
@@ -27,7 +28,7 @@ function scheduleUnauthorizedRedirect(): void {
   })()
 }
 
-async function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
+async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
   const fnName = pathToFunctionName(path)
   const supabase = createClient()
 
@@ -58,6 +59,10 @@ async function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
     if (e instanceof ApiError) throw e
     throw new ApiError(e instanceof Error ? e.message : 'Erro na requisição', 500, e)
   }
+}
+
+function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
+  return withExponentialBackoff(() => invokeOnce<T>(path, options))
 }
 
 export const api = {

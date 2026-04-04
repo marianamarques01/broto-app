@@ -13,7 +13,12 @@ type ClassContextType = {
 export const ClassContext = createContext<ClassContextType | null>(null)
 
 function formatClassLoadError(err: unknown): string {
-  if (err && typeof err === 'object' && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
+  if (
+    err &&
+    typeof err === 'object' &&
+    'message' in err &&
+    typeof (err as { message: unknown }).message === 'string'
+  ) {
     const m = (err as { message: string }).message.trim()
     if (m) return m
   }

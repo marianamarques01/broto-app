@@ -4,6 +4,7 @@ import {
   pathToFunctionName,
   mergeParamsIntoBody,
   extractErrorMessage,
+  withExponentialBackoff,
   type InvokeOptions,
 } from '@broto/shared'
 
@@ -12,7 +13,7 @@ export { ApiError } from '@broto/shared'
 const FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
 const API_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-async function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
+async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
   const fnName = pathToFunctionName(path)
   const method = options.method ?? 'POST'
 
@@ -48,6 +49,10 @@ async function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
   }
 
   return data as T
+}
+
+function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
+  return withExponentialBackoff(() => invokeOnce<T>(path, options))
 }
 
 export const api = {

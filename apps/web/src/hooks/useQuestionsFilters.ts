@@ -218,7 +218,7 @@ export function useQuestionsFilters() {
   }, [baseUrl])
 
   useEffect(() => {
-    loadInitialData()
+    void loadInitialData()
   }, [loadInitialData])
 
   useEffect(() => {
@@ -235,9 +235,10 @@ export function useQuestionsFilters() {
         setTopicos(list)
         topicosRef.current = list
       })
-      .catch(() => {
+      .catch((err) => {
         setTopicos([])
         topicosRef.current = []
+        setError(err instanceof Error ? err.message : 'Erro ao carregar tópicos')
       })
     setSelectedTopico('')
     setSelectedLanguage('')
@@ -299,7 +300,7 @@ export function useQuestionsFilters() {
 
   const retry = useCallback(() => {
     if (areas.length === 0) {
-      loadInitialData()
+      void loadInitialData()
     } else {
       setLoadingQuestions(true)
       setError(null)

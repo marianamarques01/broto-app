@@ -4,7 +4,7 @@ import { useProgress } from '@/hooks/useProgress'
 import { useDailyMissionsState } from '@/hooks/useDailyMissionsState'
 import { BookOpen, CheckCircle2, Coffee, Lock, Zap } from 'lucide-react'
 import { AREA_CONFIG } from '@/lib/area-config'
-import type { DailyMissionsState } from '@/lib/daily-missions'
+import type { DailyMissionsState } from '@broto/shared'
 
 interface DiaRotina {
   label: string
@@ -119,7 +119,7 @@ function MissionsExternalHead({
 
 export function DayCard({ dia }: DayCardProps) {
   const { progress } = useProgress()
-  const daily = useDailyMissionsState()
+  const { daily, error: dailyMissionsError } = useDailyMissionsState()
 
   if (dia.ehDescanso) {
     return (
@@ -148,6 +148,11 @@ export function DayCard({ dia }: DayCardProps) {
   return (
     <div className="broto-missions-stack">
       <MissionsExternalHead doneMissions={doneMissions} showBadge />
+      {dailyMissionsError ? (
+        <div className="broto-error-banner" role="alert" style={{ marginBottom: 8 }}>
+          {dailyMissionsError}
+        </div>
+      ) : null}
       <article className="broto-missions-panel" aria-labelledby="broto-missions-title">
         <ul className="broto-missions-panel__list">
           {missions.map((mission, i) => {

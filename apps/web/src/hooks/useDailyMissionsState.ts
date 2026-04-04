@@ -1,13 +1,50 @@
 import { useState, useEffect } from 'react'
+import type { DailyMissionsState } from '@broto/shared'
 import { getDailyMissionsState, subscribeDailyMissions } from '@/lib/daily-missions'
 
-export function useDailyMissionsState() {
-  const [daily, setDaily] = useState(getDailyMissionsState)
+const emptyDaily = (): DailyMissionsState => ({ date: '', byArea: {} })
+
+export function useDailyMissionsState(): {
+  daily: DailyMissionsState
+  error: string | null
+} {
+  const [daily, setDaily] = useState<DailyMissionsState>(emptyDaily)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setDaily(getDailyMissionsState())
-    return subscribeDailyMissions(() => setDaily(getDailyMissionsState()))
+    let alive = true
+    getDailyMissionsState()
+      .then((s) => {
+        if (alive) {
+          setDaily(s)
+          setError(null)
+        }
+      })
+      .catch((e) => {
+        if (alive) {
+          setError(e instanceof Error ? e.message : 'Erro ao carregar missões do dia')
+          setDaily(emptyDaily())
+        }
+      })
+    const unsub = subscribeDailyMissions(() => {
+      getDailyMissionsState()
+        .then((s) => {
+          if (alive) {
+            setDaily(s)
+            setError(null)
+          }
+        })
+        .catch((e) => {
+          if (alive) {
+            setError(e instanceof Error ? e.message : 'Erro ao carregar missões do dia')
+          }
+        })
+    })
+    return () => {
+      alive = false
+      unsub()
+    }
   }, [])
 
-  return daily
+  return { daily, error }
 }
