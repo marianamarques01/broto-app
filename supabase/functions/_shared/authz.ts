@@ -83,10 +83,7 @@ function meetsMinRole(actual: string, minimum: MembershipRole): boolean {
  * Named "Unsafe" intentionally to force callers to acknowledge the risk.
  */
 export function createServiceRoleClientUnsafe(): SupabaseClient {
-  return createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  )
+  return createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 }
 
 /**
@@ -105,21 +102,24 @@ export async function requireUser(
   req: Request,
 ): Promise<AuthzResult<{ user: AuthUser; supabaseAuthed: SupabaseClient }>> {
   const authHeader = req.headers.get('Authorization')
-  if (!authHeader) {
+  const jwt = authHeader?.replace(/^Bearer\s+/i, '').trim()
+
+  // Reject missing token — never treat "Bearer <anon_jwt>" as a logged-in user (see api-clients).
+  if (!jwt) {
     return { data: null, error: { status: 401, message: 'Authorization header required' } }
   }
 
-  // Client scoped to the request JWT — respects RLS
+  // Edge: validate with explicit JWT + scoped client for any follow-up RLS calls.
   const supabaseAuthed = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } },
+    { global: { headers: { Authorization: `Bearer ${jwt}` } } },
   )
 
   const {
     data: { user },
     error: authError,
-  } = await supabaseAuthed.auth.getUser()
+  } = await supabaseAuthed.auth.getUser(jwt)
 
   if (authError || !user) {
     return { data: null, error: { status: 401, message: 'Unauthorized' } }

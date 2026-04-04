@@ -1,3 +1,4 @@
+import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import {
   ApiError,
@@ -18,11 +19,34 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
   const fnName = pathToFunctionName(path)
   const method = options.method ?? 'POST'
 
-  const executeFetch = async () => {
-    const {
+  /** After refreshSession(), force this session on the next fetch (avoids stale getSession). */
+  let sessionOverride: Session | null = null
+
+  async function resolveAccessToken(): Promise<string> {
+    if (sessionOverride) {
+      const t = sessionOverride.access_token
+      sessionOverride = null
+      if (t) return t
+    }
+    let {
       data: { session },
     } = await supabase.auth.getSession()
-    const token = session?.access_token
+    let token = session?.access_token
+    if (!token) {
+      const { data, error } = await supabase.auth.refreshSession()
+      if (!error && data.session?.access_token) {
+        session = data.session
+        token = data.session.access_token
+      }
+    }
+    if (!token) {
+      throw new ApiError('Não autenticado', 401, { error: 'Não autenticado' })
+    }
+    return token
+  }
+
+  const executeFetch = async () => {
+    const token = await resolveAccessToken()
 
     const body = mergeParamsIntoBody(options.body, options.params)
 
@@ -31,7 +55,8 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
       headers: {
         'Content-Type': 'application/json',
         apikey: API_KEY,
-        Authorization: `Bearer ${token ?? API_KEY}`,
+        // Never send anon key as Bearer — Edge getUser() would reject (401 on answer-question, etc.).
+        Authorization: `Bearer ${token}`,
       },
       body: body ? JSON.stringify(body) : undefined,
     })
@@ -51,7 +76,9 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
       executeFetch,
       async () => {
         const { data, error } = await supabase.auth.refreshSession()
-        return !error && !!data.session
+        if (error || !data.session?.access_token) return false
+        sessionOverride = data.session
+        return true
       },
       (e) => e instanceof ApiError && e.status === 401,
     )
