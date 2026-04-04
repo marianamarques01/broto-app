@@ -1,12 +1,3 @@
-export type GeneratedContent = {
-  id: string
-  class_id: string
-  topic_id: string
-  content_type: 'flashcards' | 'mind_map' | 'study_guide'
-  data: FlashcardsData | MindMapData | string
-  generated_at: string
-}
-
 export type Flashcard = {
   front: string
   back: string

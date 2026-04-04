@@ -14,7 +14,3 @@ export function generateClassCode(): string {
   )
   return l + d
 }
-
-export function normalizeClassCode(code: string): string {
-  return code.toUpperCase().trim()
-}

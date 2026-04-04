@@ -6,7 +6,6 @@ import {
   BookOpen,
   ChevronRight,
   ChevronDown,
-  ChevronUp,
   RotateCcw,
   CheckCircle2,
   XCircle,
@@ -770,11 +769,9 @@ function FlashcardDeck({
 
 function PracticeQuestions({
   questions,
-  areaColor,
   onDone,
 }: {
   questions: StudyPackage['practiceQuestions']
-  areaColor: string
   onDone: (correct: number, total: number) => void
 }) {
   const [currentIdx, setCurrentIdx] = useState(0)
@@ -1514,7 +1511,6 @@ export function StudyArea() {
             {activeTab === 'questions' && (
               <PracticeQuestions
                 questions={pkg.practiceQuestions}
-                areaColor={areaColor}
                 onDone={(correct, total) => {
                   markDone('questions')
                   setQuestionsResult({ correct, total })

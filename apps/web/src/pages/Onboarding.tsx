@@ -88,13 +88,6 @@ function getNotaColor(nota: number): string {
   return 'var(--area-matematica)'
 }
 
-function getNotaClass(nota: number): string {
-  if (nota < 550) return ''
-  if (nota < 700) return 'onb-nota--green'
-  if (nota < 800) return 'onb-nota--gold'
-  return 'onb-nota--purple'
-}
-
 /* ── Shared Components ──────────────────────────────────── */
 
 function ProgressBar({ current, total }: { current: number; total: number }) {
