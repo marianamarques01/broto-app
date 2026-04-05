@@ -1,7 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import DOMPurify from 'dompurify'
 import type { Question } from '@broto/shared'
-import { getQuestionId } from '@broto/shared'
+import {
+  getQuestionId,
+  questionFieldMarkdownToHtml,
+  questionFieldNeedsHtmlRendering,
+} from '@broto/shared'
 import { submitAnswer } from '@/lib/answer-question'
 import { ArrowRight, CheckCircle2, XCircle } from 'lucide-react'
 
@@ -11,12 +15,59 @@ interface QuestionPlayerProps {
   onNext: () => void
 }
 
+const purifyQuestionHtml = (raw: string) =>
+  DOMPurify.sanitize(raw, {
+    ALLOWED_TAGS: [
+      'p',
+      'br',
+      'strong',
+      'em',
+      'span',
+      'img',
+      'ul',
+      'ol',
+      'li',
+      'table',
+      'tr',
+      'td',
+      'th',
+      'sup',
+      'sub',
+      'b',
+      'i',
+      'u',
+      'h3',
+      'h4',
+      'div',
+    ],
+    ALLOWED_ATTR: ['src', 'alt', 'class', 'style'],
+  })
+
 export function QuestionPlayer({ question, areaKey, onNext }: QuestionPlayerProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [answered, setAnswered] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   const correct = question.alternatives.find((a) => a.isCorrect)?.letter ?? null
+
+  const contextHtmlRaw = useMemo(
+    () => questionFieldMarkdownToHtml(question.context),
+    [question.context],
+  )
+  const contextSafeHtml = useMemo(
+    () => (contextHtmlRaw ? purifyQuestionHtml(contextHtmlRaw) : ''),
+    [contextHtmlRaw],
+  )
+
+  const titleHtmlRaw = useMemo(
+    () => questionFieldMarkdownToHtml(question.title),
+    [question.title],
+  )
+  const titleAsHtml = titleHtmlRaw != null && questionFieldNeedsHtmlRendering(titleHtmlRaw)
+  const titleSafeHtml = useMemo(
+    () => (titleAsHtml && titleHtmlRaw ? purifyQuestionHtml(titleHtmlRaw) : ''),
+    [titleAsHtml, titleHtmlRaw],
+  )
 
   async function handleSelect(letter: string) {
     if (answered) return
@@ -81,7 +132,7 @@ export function QuestionPlayer({ question, areaKey, onNext }: QuestionPlayerProp
         )}
       </div>
 
-      {question.context && (
+      {contextSafeHtml ? (
         <div
           style={{
             fontSize: '0.88rem',
@@ -93,48 +144,34 @@ export function QuestionPlayer({ question, areaKey, onNext }: QuestionPlayerProp
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-subtle)',
           }}
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(question.context, {
-              ALLOWED_TAGS: [
-                'p',
-                'br',
-                'strong',
-                'em',
-                'span',
-                'img',
-                'ul',
-                'ol',
-                'li',
-                'table',
-                'tr',
-                'td',
-                'th',
-                'sup',
-                'sub',
-                'b',
-                'i',
-                'u',
-                'h3',
-                'h4',
-                'div',
-              ],
-              ALLOWED_ATTR: ['src', 'alt', 'class', 'style'],
-            }),
-          }}
+          dangerouslySetInnerHTML={{ __html: contextSafeHtml }}
         />
-      )}
+      ) : null}
 
-      <p
-        style={{
-          fontSize: '0.92rem',
-          lineHeight: 1.65,
-          color: 'var(--text-primary)',
-          marginBottom: 22,
-          marginTop: 0,
-        }}
-      >
-        {question.title}
-      </p>
+      {titleAsHtml ? (
+        <div
+          style={{
+            fontSize: '0.92rem',
+            lineHeight: 1.65,
+            color: 'var(--text-primary)',
+            marginBottom: 22,
+            marginTop: 0,
+          }}
+          dangerouslySetInnerHTML={{ __html: titleSafeHtml }}
+        />
+      ) : (
+        <p
+          style={{
+            fontSize: '0.92rem',
+            lineHeight: 1.65,
+            color: 'var(--text-primary)',
+            marginBottom: 22,
+            marginTop: 0,
+          }}
+        >
+          {question.title}
+        </p>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {question.alternatives.map((alt) => {
