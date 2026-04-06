@@ -1,6 +1,6 @@
 import { usePet } from '@/hooks/usePet'
 import { useTheme } from '@/hooks/useTheme'
-import { ChevronRight, Flame, Moon, Sun } from 'lucide-react'
+import { ChevronRight, Flame, Moon, Sparkles, Sun } from 'lucide-react'
 
 export type StudyBreadcrumbParts = {
   area: string
@@ -9,15 +9,17 @@ export type StudyBreadcrumbParts = {
 
 export type TopBarProps = {
   title: string
+  subtitle?: string
   /** Trecho contextual ao lado do título (referência v2). */
   studyBreadcrumb?: StudyBreadcrumbParts
   variant?: 'default' | 'study'
 }
 
-export function TopBar({ title, studyBreadcrumb, variant = 'default' }: TopBarProps) {
+export function TopBar({ title, subtitle, studyBreadcrumb, variant = 'default' }: TopBarProps) {
   const { pet } = usePet()
   const { theme, toggleTheme } = useTheme()
   const streak = pet?.streak ?? 0
+  const xpTotal = pet?.xp ?? 0
   const isStudy = variant === 'study'
 
   return (
@@ -38,9 +40,22 @@ export function TopBar({ title, studyBreadcrumb, variant = 'default' }: TopBarPr
           <div className="broto-topbar__title-row">
             <h2 className="broto-topbar__title">{title}</h2>
           </div>
+          {subtitle ? <p className="broto-topbar__subtitle">{subtitle}</p> : null}
         </div>
       )}
       <div className="broto-topbar__actions-cluster">
+        {xpTotal > 0 ? (
+          <span className="broto-xp-pill" title="XP total">
+            <Sparkles size={14} aria-hidden />
+            {xpTotal.toLocaleString('pt-BR')} XP
+          </span>
+        ) : null}
+        {streak > 0 ? (
+          <span className="broto-streak-pill" title="Dias seguidos estudando">
+            <Flame size={14} aria-hidden />
+            {streak} {streak === 1 ? 'dia' : 'dias'}
+          </span>
+        ) : null}
         <button
           type="button"
           className="broto-topbar__icon-btn"
@@ -50,12 +65,6 @@ export function TopBar({ title, studyBreadcrumb, variant = 'default' }: TopBarPr
         >
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
-        {streak > 0 ? (
-          <span className="broto-streak-pill" title="Dias seguidos estudando">
-            <Flame size={14} aria-hidden />
-            {streak} {streak === 1 ? 'dia' : 'dias'}
-          </span>
-        ) : null}
       </div>
     </header>
   )

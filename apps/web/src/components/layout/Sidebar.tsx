@@ -8,6 +8,8 @@ import {
   LogOut,
   GraduationCap,
   Library,
+  Settings,
+  UserCircle,
 } from 'lucide-react'
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
 
@@ -20,12 +22,22 @@ const NAV_ITEMS = [
   { path: '/broto', label: 'Broto AI', icon: MessageCircle },
 ]
 
+const FOOTER_LINKS = [
+  { path: '/settings', label: 'Configurações', icon: Settings },
+  { path: '/profile', label: 'Perfil', icon: UserCircle },
+] as const
+
 type SidebarProps = {
   onNavigate?: () => void
 }
 
 export function Sidebar({ onNavigate }: SidebarProps) {
-  const { user, signOut } = useAuth()
+  const { signOut } = useAuth()
+
+  function handleSignOut() {
+    signOut()
+    onNavigate?.()
+  }
 
   return (
     <aside className="broto-sidebar broto-sidebar--collapsible">
@@ -49,7 +61,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
       <OrganizationSwitcher />
 
-      <nav className="broto-sidebar__nav">
+      <nav className="broto-sidebar__nav" aria-label="Principal">
         {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.path}
@@ -68,13 +80,25 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="broto-sidebar__footer">
-        <p className="broto-sidebar__user">{user?.nome ?? user?.email}</p>
-        <button type="button" onClick={signOut} className="broto-sidebar__signout">
-          <LogOut size={16} />
-          Sair
+      <nav className="broto-sidebar__footer-nav" aria-label="Conta e sessão">
+        {FOOTER_LINKS.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `broto-sidebar__link${isActive ? ' broto-sidebar__link--active' : ''}`
+            }
+            onClick={onNavigate}
+          >
+            <item.icon size={20} className="broto-sidebar__link-icon" />
+            <span className="broto-sidebar__link-label">{item.label}</span>
+          </NavLink>
+        ))}
+        <button type="button" className="broto-sidebar__link broto-sidebar__link--logout" onClick={handleSignOut}>
+          <LogOut size={20} className="broto-sidebar__link-icon" aria-hidden />
+          <span className="broto-sidebar__link-label">Logout</span>
         </button>
-      </div>
+      </nav>
     </aside>
   )
 }

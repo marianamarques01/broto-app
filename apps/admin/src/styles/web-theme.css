@@ -4,8 +4,8 @@
 :root[data-theme="dark"] {
   /* Typography */
   --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
   --font-logo: "Outfit", var(--font-sans);
+  --font-display: var(--font-logo);
 
   /* Background */
   --bg-void: #070c09;
@@ -77,8 +77,8 @@
 
 :root[data-theme="light"] {
   --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
   --font-logo: "Outfit", var(--font-sans);
+  --font-display: var(--font-logo);
 
   --bg-void: #f5faf7;
   --bg-deep: #ffffff;

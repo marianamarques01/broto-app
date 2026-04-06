@@ -6,7 +6,7 @@
 <title>Broto — Área de Estudo v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
@@ -42,8 +42,8 @@
   --border-a:rgba(45,212,168,0.35);
 
   --r-sm:8px;--r-md:14px;--r-lg:20px;--r-xl:28px;--r-full:9999px;
-  --font-display:'Playfair Display',Georgia,serif;
   --font-body:'Outfit',-apple-system,sans-serif;
+  --font-display:var(--font-body);
 }
 
 html{font-size:16px;scroll-behavior:smooth}
@@ -191,7 +191,7 @@ body::before{
   margin-bottom:6px;
 }
 .welcome-text h2 em{
-  font-style:italic;color:var(--teal-300);
+  font-style:normal;color:var(--teal-300);
 }
 .welcome-text p{font-size:0.88rem;color:var(--text-2);font-weight:400;line-height:1.5}
 

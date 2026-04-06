@@ -44,6 +44,9 @@ export function HomeDashboardTopBar({
             </span>
           )}
         </div>
+        <button type="button" className="broto-topbar__icon-btn" aria-label="Notificações">
+          <Bell size={18} />
+        </button>
         <button
           type="button"
           className="broto-topbar__icon-btn"
@@ -52,9 +55,6 @@ export function HomeDashboardTopBar({
           onClick={toggleTheme}
         >
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-        <button type="button" className="broto-topbar__icon-btn" aria-label="Notificações">
-          <Bell size={18} />
         </button>
       </div>
     </header>

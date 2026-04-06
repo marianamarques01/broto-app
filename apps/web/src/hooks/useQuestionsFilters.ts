@@ -4,8 +4,8 @@ import { useClass } from '@/hooks/useClass'
 
 const QUESTIONS_LIMIT = 10
 const IDIOMAS_QUESTIONS_LIMIT = 5
-const LINGUAGENS_AREA_VALUE = 'linguagens'
-const IDIOMAS_TOPIC_ID = '__idiomas'
+export const LINGUAGENS_AREA_VALUE = 'linguagens'
+export const IDIOMAS_TOPIC_ID = '__idiomas'
 const EXAM_YEAR_MIN = 2015
 const EXAM_YEAR_MAX = 2023
 
@@ -187,7 +187,8 @@ async function searchQuestions(params: SearchParams): Promise<QuestionsResponse>
   }
 }
 
-export function useQuestionsFilters() {
+export function useQuestionsFilters(options?: { enableQuestionFetch?: boolean }) {
+  const enableQuestionFetch = options?.enableQuestionFetch !== false
   const { organization } = useClass()
   const baseUrl = getBaseUrl(organization?.slug ?? null)
   const [areas, setAreas] = useState<Area[]>([])
@@ -247,8 +248,9 @@ export function useQuestionsFilters() {
   const isIdiomasTopicSelected = selectedTopico === IDIOMAS_TOPIC_ID
 
   useEffect(() => {
-    if (!selectedArea) {
+    if (!enableQuestionFetch || !selectedArea) {
       setQuestions([])
+      setLoadingQuestions(false)
       return
     }
     setLoadingQuestions(true)
@@ -290,6 +292,7 @@ export function useQuestionsFilters() {
       })
       .finally(() => setLoadingQuestions(false))
   }, [
+    enableQuestionFetch,
     baseUrl,
     selectedArea,
     selectedYear,

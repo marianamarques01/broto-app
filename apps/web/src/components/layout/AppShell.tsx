@@ -25,7 +25,9 @@ export function AppShell() {
         onClick={() => setNavOpen(false)}
       />
       <div className="broto-app__body">
-        <Sidebar onNavigate={() => setNavOpen(false)} />
+        <div className="broto-sidebar-rail">
+          <Sidebar onNavigate={() => setNavOpen(false)} />
+        </div>
         <main className="broto-app__main">
           <Outlet />
         </main>
