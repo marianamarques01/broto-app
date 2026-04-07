@@ -2,13 +2,14 @@
 
 **Origem:** [broto-sistema-completo.md](./broto-sistema-completo.md) (linhas 356–361)  
 **Escopo deste documento:** apenas o simulado **autogerido pelo aluno** (não inclui fluxo do professor/turma — item separado no mesmo doc).  
-**Branch sugerida:** `plan/simulado-enem-aluno` *(criação local falhou neste ambiente por falta de espaço em disco; criar a branch manualmente quando possível).*
+**Branch:** `plan/simulado-enem-aluno`  
+**Rastreio GSD:** requisitos **SMCK-01** … **SMCK-08** em [.planning/REQUIREMENTS.md](../.planning/REQUIREMENTS.md); tarefas em [.planning/phases/feat-simulado-enem-aluno/PLAN.md](../.planning/phases/feat-simulado-enem-aluno/PLAN.md).
 
 ---
 
 ## 1. Objetivo do produto
 
-Permitir que o aluno **monte um simulado personalizado** (quantidade, áreas, tópicos, dificuldade opcional), que o sistema **monte uma lista única de questões** a partir do **mesmo banco/corpus** já usado no app (storage estático ENEM + mapeamento tópico), que o aluno **resolva na experiência de player** já existente e que o **resultado** apareça de forma clara e **alimente indicadores** (percentual, por área/tópico, tempo médio; ranking/percentis como extensão opcional).
+Permitir que o aluno **monte um simulado personalizado** (quantidade, áreas, tópicos, dificuldade opcional) ou modo aleatorio (todas as areas dificuldades topicos aluno escolhe somente quantidade de questoes), que o sistema **monte uma lista única de questões** a partir do **mesmo banco/corpus** já usado no app (storage estático ENEM + mapeamento tópico), que o aluno **resolva na experiência de player** já existente e que o **resultado** apareça de forma clara e **alimente indicadores** (percentual, por área/tópico, tempo médio; ranking/percentis como extensão opcional).
 
 **Referência de UX:** fluxo descrito em [onboarding-flow.md](./onboarding-flow.md) para o *simulado diagnóstico* (20 questões fixas, 5 por área) — aqui a configuração é **flexível**, mas a experiência de prova e o pós-prova devem reutilizar o mesmo padrão visual e de navegação sempre que fizer sentido.
 
@@ -30,7 +31,7 @@ Permitir que o aluno **monte um simulado personalizado** (quantidade, áreas, t�
 
 ## 3. Requisitos funcionais (MVP)
 
-1. **Configuração:** aluno define `nQuestoes` (com limites min/max razonáveis), **área(s)** ENEM, opcionalmente **tópico(s)** (multi-seleção alinhada aos filtros atuais), **ano(s)** ou “qualquer ano” dentro do range já suportado, **idioma** quando aplicável (Linguagens), **dificuldade opcional** se os metadados existirem ou via regra documentada (ver §6).
+1. **Configuração:** aluno define `nQuestoes` (com limites min/max razonáveis), **área(s)** ENEM, opcionalmente **tópico(s)** (multi-seleção alinhada aos filtros atuais), **ano(s)** ou “qualquer ano” dentro do range já suportado, **idioma** quando aplicável (Linguagens), **dificuldade opcional** se os metadados existirem ou via regra documentada (ver §6). Atalho **modo aleatório:** apenas `nQuestoes` e filtros globais (ex.: anos/idioma); áreas/tópicos/dificuldades saem da amostragem sobre o corpus permitido.
 2. **Geração:** conjunto **sem repetição** de `question_id`; se o pool filtrado for menor que `nQuestoes`, avisar e sugerir afrouxar filtros ou reduzir quantidade.
 3. **Execução:** mesmo fluxo que “estudo por lista” — reutilizar `QuestionPlayer` (web/mobile) com lista pré-montada; registrar respostas com `answer-question` (mantém XP/indicadores atuais).
 4. **Resultado imediato:** percentual geral, acertos **por área** e **por tópico** (quando mapeado), **tempo médio** por questão (e total), opção de ver gabarito com áudio/texto já existentes no player conforme produto atual.
@@ -144,6 +145,5 @@ Registro de cada resposta continua em **`answer-question`**; estender payload co
 
 ## 12. Próximos passos operacionais
 
-1. Liberar espaço em disco local e criar a branch `plan/simulado-enem-aluno`.
-2. Inserir fase no `.planning/ROADMAP.md` ou backlog GSD, conforme workflow do time.
-3. Validar com produto: limites de N, defaults do diagnóstico no onboarding, e se gabarito é imediato ou só ao final.
+1. Executar tarefas em `PLAN.md` (wave 1) com commits atômicos por SMCK quando possível.
+2. Validar com produto: limites de N, defaults do diagnóstico no onboarding, e se gabarito é imediato ou só ao final.

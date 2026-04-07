@@ -90,3 +90,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 **Follow-ups fora deste fecho:** CONS-03 (layer de labels/cores sem ícones, se desejado), CONS-05 (núcleo React-free `useClass`), BUGF-05 (telemetria/log para erros não-ApiError em `broto-chat`).
 
+**Produto (pós-consolidação):** simulado ENEM autogerido pelo aluno — requisitos **SMCK-***, plano executável em `.planning/phases/feat-simulado-enem-aluno/PLAN.md`.
+
