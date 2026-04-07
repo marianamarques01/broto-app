@@ -1,18 +1,24 @@
-import { useMemo } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet, FASE_LABEL } from '@/hooks/usePet'
 import { useUser } from '@/hooks/useUser'
 import { PetCard } from '@/components/pet/PetCard'
 import { HomeDashboardTopBar } from '@/components/layout/HomeDashboardTopBar'
-import { DayCard } from '@/components/routine/DayCard'
 import { PerformanceChartCard } from '@/components/progress/PerformanceChartCard'
-import { BookOpen, Play, Clock, Target, Percent } from 'lucide-react'
+import { BookOpen, Play } from 'lucide-react'
+import { DashboardStudyStats } from '@/components/progress/DashboardStudyStats'
 import { AREA_CONFIG } from '@/lib/area-config'
 import { gerarRotina } from '@/lib/routine'
 import { DEFAULT_AREAS } from '@/lib/default-areas'
+import { HomeRightSidebar } from '@/components/home/HomeRightSidebar'
+import { HomePetBanner } from '@/components/home/HomePetBanner'
+import { HomeDashboardMetricsPlaceholder } from '@/components/home/HomeDashboardMetricsPlaceholder'
+import { AREA_ACCENT_VARS, StudyAreaCardPattern } from '@/components/study/study-area-card-pattern'
+import { BrotoChatModal } from '@/components/broto/BrotoChatModal'
 
-const META_QUESTOES_DIA = 3
+/** `false` = oculta KPIs (Acerto, Questões…) e o bloco “Desempenho” no dashboard. */
+const SHOW_HOME_METRICS_SECTION = false
 
 function plantStatusLine(fase: keyof typeof FASE_LABEL): string {
   const lines: Record<keyof typeof FASE_LABEL, string> = {
@@ -26,6 +32,7 @@ function plantStatusLine(fase: keyof typeof FASE_LABEL): string {
 }
 
 export function Home() {
+  const [brotoChatOpen, setBrotoChatOpen] = useState(false)
   const { user: profile, loading: loadingUser } = useUser()
   const { progress, loading: loadingProgress } = useProgress()
   const { pet, loading: loadingPet } = usePet()
@@ -51,16 +58,11 @@ export function Home() {
     [progress?.areas],
   )
 
-  const questoesHoje = pet?.questoesHoje ?? 0
-  const questoesMetaCount = Math.min(questoesHoje, META_QUESTOES_DIA)
-  const questoesMetaCompleta = questoesHoje >= META_QUESTOES_DIA
-  const missionsPct = Math.round((questoesMetaCount / META_QUESTOES_DIA) * 100)
-
   const continueCta = useMemo(() => {
     const area = areasToFocus[0]
     if (!area) {
       return {
-        title: 'Começar a estudar',
+        title: 'Banco de Questões',
         subtitle: 'Escolha a matéria e pratique questões do ENEM.',
       }
     }
@@ -74,24 +76,10 @@ export function Home() {
     }
   }, [areasToFocus])
 
-  const goalMinutesPlanned = useMemo(() => {
-    if (!diaHoje || diaHoje.ehDescanso) return 0
-    return Math.max(diaHoje.duracaoMin, horasPorDia * 60)
-  }, [diaHoje, horasPorDia])
-
-  const studiedMinutesEstimate = useMemo(() => {
-    if (goalMinutesPlanned <= 0) return 0
-    return Math.round((questoesMetaCount / META_QUESTOES_DIA) * goalMinutesPlanned)
-  }, [goalMinutesPlanned, questoesHoje])
-
   const fase = pet?.fase ?? 'semente'
   const plantLine = plantStatusLine(fase)
   const xpTotal = pet?.xp ?? 0
   const streak = pet?.streak ?? 0
-  const accuracyPct = progress?.accuracyPct ?? 0
-  const totalAnswered = progress?.totalAnswered ?? 0
-  const hasProgressData = !loadingProgress && progress !== null && progress.totalAnswered > 0
-
   return (
     <div className="broto-home-dashboard">
       <HomeDashboardTopBar
@@ -101,198 +89,128 @@ export function Home() {
         streak={streak}
       />
 
-      <div className="broto-main-inner broto-main-inner--dashboard">
-        <div className="broto-dashboard-grid broto-fade-in">
-          {/* Coluna 1 — Broto + rotina de hoje */}
-          <div className="broto-dashboard-col broto-dashboard-col--left">
-            <section className="broto-dashboard-section" aria-label="Seu Broto">
-              <PetCard />
-            </section>
-            <section
-              className="broto-dashboard-section broto-dashboard-section--grow"
-              aria-label="Missões de hoje"
-            >
-              {loading ? (
-                <div
-                  className="broto-skeleton"
-                  style={{ height: 220, borderRadius: 'var(--radius-md)' }}
-                />
-              ) : diaHoje ? (
-                <DayCard dia={diaHoje} />
-              ) : (
-                <div
-                  className="broto-card"
-                  style={{ padding: 24, color: 'var(--text-muted)', fontSize: '0.9rem' }}
-                >
-                  Sem dados de rotina ainda.
-                </div>
-              )}
-            </section>
-          </div>
-
-          {/* Coluna 2 — indicadores + desempenho (gráfico) */}
-          <div className="broto-dashboard-col broto-dashboard-col--center">
-            <div className="broto-dashboard-indicators">
-              <div className="broto-metric-card broto-metric-card--stat">
-                <div className="broto-metric-card__top">
-                  <span className="broto-metric-card__label">Acerto</span>
-                  <Percent
-                    className="broto-metric-card__icon broto-metric-card__icon--green"
-                    size={20}
-                    strokeWidth={1.75}
-                    aria-hidden
-                  />
-                </div>
-                <span className="broto-metric-card__main">
-                  {loadingProgress ? '—' : hasProgressData ? `${accuracyPct}%` : '—'}
-                </span>
-              </div>
-              <div className="broto-metric-card broto-metric-card--stat">
-                <div className="broto-metric-card__top">
-                  <span className="broto-metric-card__label">Questões</span>
-                  <BookOpen
-                    className="broto-metric-card__icon broto-metric-card__icon--blue"
-                    size={20}
-                    strokeWidth={1.75}
-                    aria-hidden
-                  />
-                </div>
-                <span className="broto-metric-card__main">
-                  {loadingProgress ? '—' : totalAnswered}
-                </span>
-              </div>
-            </div>
-            <PerformanceChartCard loadingProgress={loadingProgress} />
-          </div>
-
-          {/* Coluna 3 — tempo, meta, matérias, CTA, FAB */}
-          <div className="broto-dashboard-col broto-dashboard-col--right">
-            <div className="broto-dashboard-indicators">
-              <div className="broto-metric-card broto-metric-card--time">
-                <div className="broto-metric-card__top">
-                  <span className="broto-metric-card__label">Tempo</span>
-                  <Clock
-                    className="broto-metric-card__icon broto-metric-card__icon--gold"
-                    size={20}
-                    strokeWidth={1.75}
-                    aria-hidden
-                  />
-                </div>
-                <div className="broto-metric-card__time-row">
-                  {loading || loadingPet ? (
-                    <span className="broto-metric-card__main broto-metric-card__main--muted">
-                      —
-                    </span>
-                  ) : goalMinutesPlanned === 0 ? (
-                    <>
-                      <span className="broto-metric-card__main">0m</span>
-                      <span className="broto-metric-card__suffix">/ 0m</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="broto-metric-card__main">{studiedMinutesEstimate}m</span>
-                      <span className="broto-metric-card__suffix">/ {goalMinutesPlanned}m</span>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="broto-metric-card broto-metric-card--daily">
-                <div className="broto-metric-card__top">
-                  <span className="broto-metric-card__label">Meta diária</span>
-                  <Target
-                    className="broto-metric-card__icon broto-metric-card__icon--purple"
-                    size={20}
-                    strokeWidth={1.75}
-                    aria-hidden
-                  />
-                </div>
-                <div className="broto-metric-card__daily-body">
-                  {loadingPet ? (
-                    <span className="broto-metric-card__main broto-metric-card__main--muted">
-                      —
-                    </span>
-                  ) : (
-                    <span className="broto-metric-card__main">{missionsPct}%</span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <section
-              className="broto-dashboard-section broto-dashboard-subjects"
-              aria-labelledby="home-subjects-heading"
-            >
-              <header className="broto-dashboard-subjects-head">
-                <div className="broto-section-heading-row">
-                  <span className="broto-heading-dot" aria-hidden />
-                  <h3 id="home-subjects-heading" className="broto-section-label">
-                    Acesso rápido às matérias
-                  </h3>
-                </div>
-                <Link
-                  to="/study"
-                  className="broto-missions-panel__badge broto-subjects-questions-btn"
-                  style={{
-                    color: questoesMetaCompleta ? 'var(--green-400)' : 'var(--text-muted)',
-                  }}
-                  aria-label={`Questões de hoje: ${questoesMetaCount} de ${META_QUESTOES_DIA} completas`}
-                >
-                  {loadingPet ? '—' : `${questoesMetaCount}/${META_QUESTOES_DIA} completas`}
-                </Link>
-              </header>
-              <div className="broto-subject-chips">
-                {areas.map((area) => {
-                  const config = AREA_CONFIG[area.value] ?? { color: '#888', icon: BookOpen }
-                  const Icon = config.icon
-                  return (
-                    <Link
-                      key={area.value}
-                      to="/study"
-                      className="broto-subject-chip"
-                      style={{ borderColor: `${config.color}40` }}
-                    >
-                      <span
-                        className="broto-subject-chip__icon"
-                        style={{ background: `${config.color}18`, color: config.color }}
+      <div className="broto-home-dashboard__body">
+        <div className="broto-home-dashboard__main">
+          <div className="broto-main-inner broto-main-inner--dashboard">
+            <div className="broto-dashboard-grid broto-dashboard-grid--pet-banner broto-fade-in">
+              <div className="broto-dashboard-hero">
+                <HomePetBanner />
+                <div className="broto-dashboard-hero__aside">
+                  <section
+                    className="broto-dashboard-section broto-dashboard-subjects"
+                    aria-labelledby="home-subjects-heading"
+                  >
+                    <header className="broto-dashboard-subjects-head">
+                      <div className="broto-section-heading-row">
+                        <h3 id="home-subjects-heading" className="broto-section-label">
+                          Acesso rápido
+                        </h3>
+                      </div>
+                      <Link
+                        to="/study"
+                        className="broto-missions-panel__badge broto-subjects-questions-btn broto-dashboard-subjects__study-link"
+                        aria-label={`Abrir a área de estudo com todas as matérias (${areas.length} áreas)`}
                       >
-                        <Icon size={18} />
+                        Ver estudo
+                      </Link>
+                    </header>
+                    <div className="broto-subject-chips">
+                      {areas.map((area) => {
+                        const config = AREA_CONFIG[area.value] ?? { color: '#888', icon: BookOpen }
+                        const Icon = config.icon
+                        const av = AREA_ACCENT_VARS[area.value] ?? AREA_ACCENT_VARS.linguagens
+                        const nTopicos = area.topicos.length
+                        const metaLinha =
+                          area.totalAnswered > 0
+                            ? `${nTopicos} tópicos · ${area.accuracyPct}% média`
+                            : `${nTopicos} tópicos · sem média`
+                        return (
+                          <Link
+                            key={area.value}
+                            to="/study"
+                            className="study-area-card broto-subject-area-card"
+                            style={
+                              {
+                                '--study-area-accent': config.color,
+                                '--ac-dim': av.dim,
+                                '--ac-glow': av.glow,
+                              } as CSSProperties
+                            }
+                          >
+                            <StudyAreaCardPattern areaKey={area.value} />
+                            <div className="study-area-card__glow" aria-hidden />
+                            <div className="study-area-card__icon">
+                              <Icon size={18} color="currentColor" strokeWidth={1.8} />
+                            </div>
+                            <div className="study-area-card__text">
+                              <p className="study-area-card__label">{area.label}</p>
+                              <p className="study-area-card__meta">{metaLinha}</p>
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                    <Link to="/study" className="broto-continue-studies">
+                      <span className="broto-continue-studies__watermark" aria-hidden>
+                        <Play size={140} strokeWidth={1.2} fill="currentColor" />
                       </span>
-                      <span className="broto-subject-chip__label">{area.label}</span>
+                      <span className="broto-continue-studies__inner">
+                        <span className="broto-continue-studies__play-chip">
+                          <Play size={22} fill="currentColor" strokeWidth={0} aria-hidden />
+                        </span>
+                        <span className="broto-continue-studies__copy">
+                          <span className="broto-continue-studies__title">{continueCta.title}</span>
+                          <span className="broto-continue-studies__subtitle">
+                            {continueCta.subtitle}
+                          </span>
+                        </span>
+                      </span>
                     </Link>
-                  )
-                })}
+                  </section>
+                </div>
               </div>
-              <Link to="/study" className="broto-continue-studies">
-                <span className="broto-continue-studies__watermark" aria-hidden>
-                  <Play size={140} strokeWidth={1.2} fill="currentColor" />
-                </span>
-                <span className="broto-continue-studies__inner">
-                  <span className="broto-continue-studies__play-chip">
-                    <Play size={22} fill="currentColor" strokeWidth={0} aria-hidden />
-                  </span>
-                  <span className="broto-continue-studies__copy">
-                    <span className="broto-continue-studies__title">{continueCta.title}</span>
-                    <span className="broto-continue-studies__subtitle">{continueCta.subtitle}</span>
-                  </span>
-                </span>
-              </Link>
-            </section>
+
+              {SHOW_HOME_METRICS_SECTION ? (
+                <DashboardStudyStats />
+              ) : (
+                <HomeDashboardMetricsPlaceholder />
+              )}
+
+              {/* Card legado do Broto: mantido no DOM, oculto via CSS (substituído pelo banner) */}
+              <div className="broto-pet-card-legacy" aria-hidden>
+                <PetCard />
+              </div>
+
+              {/* Desempenho — largura total após mover Acesso rápido para a hero */}
+              {SHOW_HOME_METRICS_SECTION ? (
+                <div className="broto-dashboard-col broto-dashboard-col--center">
+                  <PerformanceChartCard loadingProgress={loadingProgress} />
+                </div>
+              ) : null}
+             </div>
           </div>
         </div>
+
+        <HomeRightSidebar diaHoje={diaHoje} horasPorDia={horasPorDia} />
       </div>
 
       <div className="broto-fab-ia-wrap" role="presentation">
         <span className="broto-fab-ia-ring" aria-hidden />
         <span className="broto-fab-ia-glow" aria-hidden />
-        <Link
-          to="/broto"
+        <button
+          type="button"
           className="broto-fab-ia"
           title="Conversar com o Broto (IA)"
           aria-label="Conversar com o Broto (IA)"
+          aria-expanded={brotoChatOpen}
+          aria-controls="broto-chat-floating-panel"
+          onClick={() => setBrotoChatOpen(true)}
         >
           {'\u{1F331}'}
-        </Link>
+        </button>
       </div>
+
+      {brotoChatOpen ? <BrotoChatModal onClose={() => setBrotoChatOpen(false)} /> : null}
     </div>
   )
 }

@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { TopBar } from '@/components/layout/TopBar'
+import { TopBar, type StudyBreadcrumbParts } from '@/components/layout/TopBar'
 import { AREA_CONFIG, getAreaColor } from '@/lib/area-config'
 import {
   BookOpen,
@@ -9,7 +9,6 @@ import {
   RotateCcw,
   CheckCircle2,
   XCircle,
-  Sparkles,
   Brain,
   HelpCircle,
   Map,
@@ -18,6 +17,8 @@ import {
   Trophy,
   Zap,
   Loader2,
+  ClipboardList,
+  ArrowDownUp,
 } from 'lucide-react'
 import {
   getMockTopics,
@@ -27,242 +28,368 @@ import {
   type TopicOption,
   type MindMapNode,
 } from '@/lib/study-area-mock'
+import { AREA_ACCENT_VARS, StudyAreaCardPattern } from '@/components/study/study-area-card-pattern'
 
 /* ─── Types ────────────────────────────────── */
 
 type Step = 'select' | 'loading' | 'study'
 type Tab = 'summary' | 'flashcards' | 'questions' | 'mindmap'
 
+const RING_R = 19
+const RING_C = 2 * Math.PI * RING_R
+
+function computeTopicStats(topics: TopicOption[]) {
+  const totalAnswered = topics.reduce((s, t) => s + t.totalAnswered, 0)
+  const withData = topics.filter((t) => t.accuracy !== null)
+  let weightedAcc: number | null = null
+  if (withData.length > 0) {
+    const num = withData.reduce((s, t) => s + t.accuracy! * t.totalAnswered, 0)
+    const den = withData.reduce((s, t) => s + t.totalAnswered, 0)
+    weightedAcc = den > 0 ? Math.round(num / den) : null
+  }
+  const lowest =
+    withData.length > 0 ? Math.min(...withData.map((t) => t.accuracy!)) : null
+  return {
+    totalAnswered,
+    weightedAcc,
+    lowest,
+    topicCount: topics.length,
+  }
+}
+
+function topicsForScope(areaKey: string | null): TopicOption[] {
+  if (areaKey) return getMockTopics(areaKey)
+  return Object.keys(AREA_CONFIG).flatMap((k) => getMockTopics(k))
+}
+
+function areaCardAverage(areaKey: string): number | null {
+  const topics = getMockTopics(areaKey)
+  const withData = topics.filter((t) => t.accuracy !== null)
+  if (withData.length === 0) return null
+  const num = withData.reduce((s, t) => s + t.accuracy! * t.totalAnswered, 0)
+  const den = withData.reduce((s, t) => s + t.totalAnswered, 0)
+  return den > 0 ? Math.round(num / den) : null
+}
+
+function getGlobalWeakest():
+  | { areaKey: string; topic: TopicOption; areaLabel: string }
+  | null {
+  let best: { areaKey: string; topic: TopicOption; acc: number } | null = null
+  for (const key of Object.keys(AREA_CONFIG)) {
+    for (const t of getMockTopics(key)) {
+      if (t.accuracy === null) continue
+      if (!best || t.accuracy < best.acc) {
+        best = { areaKey: key, topic: t, acc: t.accuracy }
+      }
+    }
+  }
+  if (!best) return null
+  return {
+    areaKey: best.areaKey,
+    topic: best.topic,
+    areaLabel: AREA_CONFIG[best.areaKey]?.label ?? '',
+  }
+}
+
+function topicTier(accuracy: number | null): {
+  label: string
+  tagClass: string
+  ringColor: string
+  displayPct: number
+  metaHint: string
+} {
+  if (accuracy === null) {
+    return {
+      label: 'Novo',
+      tagClass: 'study-topic-card__tag--novo',
+      ringColor: 'var(--text-muted)',
+      displayPct: 0,
+      metaHint: 'Sem dados ainda',
+    }
+  }
+  if (accuracy < 50) {
+    return {
+      label: 'Focar',
+      tagClass: 'study-topic-card__tag--focar',
+      ringColor: 'var(--status-coral)',
+      displayPct: accuracy,
+      metaHint: 'Prioridade alta',
+    }
+  }
+  if (accuracy < 70) {
+    return {
+      label: 'Reforçar',
+      tagClass: 'study-topic-card__tag--reforcar',
+      ringColor: 'var(--gold-400)',
+      displayPct: accuracy,
+      metaHint: 'Progresso moderado',
+    }
+  }
+  return {
+    label: 'Manter',
+    tagClass: 'study-topic-card__tag--manter',
+    ringColor: 'var(--teal-400)',
+    displayPct: accuracy,
+    metaHint: 'Bom desempenho',
+  }
+}
+
+function RingProgress({ pct, stroke, centerLabel }: { pct: number; stroke: string; centerLabel: string }) {
+  const off = RING_C - (pct / 100) * RING_C
+  return (
+    <div className="study-ring-wrap">
+      <svg className="study-ring-svg" viewBox="0 0 48 48" aria-hidden>
+        <circle className="study-ring-bg" cx={24} cy={24} r={RING_R} />
+        <circle
+          className="study-ring-fill"
+          cx={24}
+          cy={24}
+          r={RING_R}
+          stroke={stroke}
+          strokeDasharray={RING_C}
+          style={
+            {
+              '--ring-circ': RING_C,
+              '--ring-offset': off,
+            } as CSSProperties
+          }
+        />
+      </svg>
+      <div className="study-ring-label" style={{ color: stroke }}>
+        {centerLabel}
+      </div>
+    </div>
+  )
+}
+
 /* ─── Area/Topic Selector ──────────────────── */
 
 function AreaTopicSelector({
+  selectedArea,
+  onSelectArea,
   onStart,
 }: {
+  selectedArea: string | null
+  onSelectArea: (key: string | null) => void
   onStart: (areaKey: string, topico: TopicOption) => void
 }) {
-  const [selectedArea, setSelectedArea] = useState<string | null>(null)
+  const [sortWeakestFirst, setSortWeakestFirst] = useState(true)
+  const scopeTopics = topicsForScope(selectedArea)
+  const welcomeStats = computeTopicStats(scopeTopics)
   const topics = selectedArea ? getMockTopics(selectedArea) : []
 
-  // sort: weakest first, then no-data
   const sorted = [...topics].sort((a, b) => {
     if (a.accuracy === null && b.accuracy === null) return 0
     if (a.accuracy === null) return 1
     if (b.accuracy === null) return -1
-    return a.accuracy - b.accuracy
+    return sortWeakestFirst ? a.accuracy - b.accuracy : b.accuracy - a.accuracy
   })
 
-  const weakest = sorted.find((t) => t.accuracy !== null)
+  const weakestInArea = sorted.find((t) => t.accuracy !== null)
+  const globalPick = getGlobalWeakest()
+  const spotlight =
+    selectedArea && weakestInArea
+      ? {
+          areaKey: selectedArea,
+          topic: weakestInArea,
+          areaLabel: AREA_CONFIG[selectedArea]?.label ?? '',
+        }
+      : globalPick
+
+  const suggestedValue = selectedArea
+    ? weakestInArea?.value
+    : globalPick?.topic.value
+
+  const areaKeys = Object.keys(AREA_CONFIG)
+  const areaDelays = [100, 180, 260, 340]
 
   return (
     <div>
-      {/* Section label */}
-      <p
-        style={{
-          fontSize: '0.7rem',
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          color: 'var(--text-muted)',
-          marginBottom: 14,
-        }}
-      >
-        Escolha a área de estudo
-      </p>
+      <div className="study-welcome">
+        <div className="study-welcome__text">
+          <h2 className="study-welcome__title">
+            Escolha seu caminho
+            <br />
+            de <em>estudo</em>
+          </h2>
+          <p className="study-welcome__sub">
+            Selecione uma área e um tópico — preparamos resumo, flashcards, quiz e mapa mental pra você.
+          </p>
+        </div>
+        <div className="study-quickstats" aria-label="Resumo de desempenho">
+          <div className="study-quickstat">
+            <span className="study-quickstat__val">{welcomeStats.totalAnswered}</span>
+            <span className="study-quickstat__lab">Questões</span>
+          </div>
+          <div className="study-quickstat">
+            <span
+              className={`study-quickstat__val${welcomeStats.weightedAcc !== null ? ' study-quickstat__val--teal' : ''}`}
+            >
+              {welcomeStats.weightedAcc !== null ? `${welcomeStats.weightedAcc}%` : '—'}
+            </span>
+            <span className="study-quickstat__lab">Acerto geral</span>
+          </div>
+          <div
+            className={`study-quickstat${welcomeStats.lowest !== null ? ' study-quickstat--coral' : ''}`}
+          >
+            <span className="study-quickstat__val">
+              {welcomeStats.lowest !== null ? `${welcomeStats.lowest}%` : '—'}
+            </span>
+            <span className="study-quickstat__lab">Menor nota</span>
+          </div>
+        </div>
+      </div>
 
-      {/* Area grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-          gap: 10,
-        }}
-      >
-        {Object.entries(AREA_CONFIG).map(([key, cfg]) => {
-          const active = selectedArea === key
+      <div className="study-areas-label">Área de conhecimento</div>
+      <div className="study-areas">
+        {areaKeys.map((key, i) => {
+          const cfg = AREA_CONFIG[key]
           const Icon = cfg.icon
+          const active = selectedArea === key
+          const avg = areaCardAverage(key)
+          const n = getMockTopics(key).length
+          const av = AREA_ACCENT_VARS[key] ?? AREA_ACCENT_VARS.linguagens
           return (
             <button
               key={key}
               type="button"
-              onClick={() => setSelectedArea(active ? null : key)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '14px 16px',
-                borderRadius: 'var(--radius-sm)',
-                border: active ? `1.5px solid ${cfg.color}` : '1px solid var(--border-default)',
-                background: active
-                  ? `linear-gradient(135deg, ${cfg.color}18, ${cfg.color}08)`
-                  : 'var(--bg-card)',
-                boxShadow: active
-                  ? `0 0 20px ${cfg.color}15, 0 4px 12px rgba(0,0,0,0.2)`
-                  : '0 2px 8px rgba(0,0,0,0.15)',
-                cursor: 'pointer',
-                transition: 'all 0.18s',
-                textAlign: 'left',
-              }}
+              className={`study-area-card${active ? ' study-area-card--active' : ''}`}
+              style={
+                {
+                  '--study-area-accent': cfg.color,
+                  '--ac-dim': av.dim,
+                  '--ac-glow': av.glow,
+                  animation: 'study-scale-in 0.4s ease-out both',
+                  animationDelay: `${areaDelays[i] ?? 340}ms`,
+                } as CSSProperties
+              }
+              onClick={() => onSelectArea(active ? null : key)}
             >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: `${cfg.color}20`,
-                }}
-              >
-                <Icon size={18} color={cfg.color} />
+              <StudyAreaCardPattern areaKey={key} />
+              <div className="study-area-card__glow" aria-hidden />
+              <span className="study-area-card__dot" aria-hidden />
+              <div className="study-area-card__icon">
+                <Icon size={20} color="currentColor" strokeWidth={1.8} />
               </div>
-              <span
-                style={{
-                  fontSize: '0.88rem',
-                  fontWeight: active ? 600 : 500,
-                  color: active ? cfg.color : 'var(--text-primary)',
-                }}
-              >
-                {cfg.label}
-              </span>
+              <p className="study-area-card__label">{cfg.label}</p>
+              <p className="study-area-card__meta">
+                {n} tópicos · {avg !== null ? `${avg}% média` : 'sem média'}
+              </p>
             </button>
           )
         })}
       </div>
 
-      {/* Topic list */}
-      {selectedArea && (
-        <div style={{ marginTop: 24 }}>
-          <p
-            style={{
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: 'var(--text-muted)',
-              marginBottom: 14,
-            }}
-          >
-            Escolha o topico
-          </p>
-
-          {weakest && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--green-glow)',
-                border: '1px solid rgba(16,185,129,0.15)',
-                marginBottom: 14,
-                fontSize: '0.82rem',
-                color: 'var(--green-400)',
+      <div className="study-split">
+        <div className="study-side">
+          <div className="study-spotlight">
+            <div className="study-spotlight__badge">✨ Recomendação IA</div>
+            <h3 className="study-spotlight__title">
+              {spotlight ? spotlight.topic.label : 'Selecione uma área'}
+            </h3>
+            <p className="study-spotlight__body">
+              {spotlight
+                ? selectedArea
+                  ? `Seu ponto mais fraco em ${spotlight.areaLabel}, com ${spotlight.topic.accuracy}% de acerto e ${spotlight.topic.totalAnswered} questões. Foque aqui para subir sua nota mais rápido.`
+                  : `Seu ponto mais fraco entre todas as áreas: ${spotlight.topic.label} (${spotlight.topic.accuracy}% em ${spotlight.areaLabel}). Escolha a área acima ou comece agora pela sugestão.`
+                : 'Assim que você praticar mais questões, indicamos o melhor próximo passo automaticamente.'}
+            </p>
+            <button
+              type="button"
+              className="study-spotlight__cta"
+              disabled={!spotlight}
+              onClick={() => {
+                if (!spotlight) return
+                void onStart(spotlight.areaKey, spotlight.topic)
               }}
             >
-              <Sparkles size={14} />
-              <span>
-                Sugerido: <strong>{weakest.label}</strong> — seu ponto mais fraco nessa area (
-                {weakest.accuracy}% de acerto)
-              </span>
+              Estudar agora
+              <ArrowRight size={14} strokeWidth={2} aria-hidden />
+            </button>
+          </div>
+
+          <Link className="study-banco" to="/study/questions">
+            <div className="study-banco__head">
+              <div className="study-banco__icon">
+                <ClipboardList size={16} strokeWidth={1.8} aria-hidden />
+              </div>
+              <h4 className="study-banco__title">Banco de Questões</h4>
             </div>
-          )}
+            <p className="study-banco__desc">
+              Pratique com filtros por ano, tópico e prova — fora do pacote guiado.
+            </p>
+            <div className="study-banco__arrow">
+              Acessar
+              <ChevronRight size={14} strokeWidth={2} aria-hidden />
+            </div>
+          </Link>
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {sorted.map((topic) => {
-              const areaColor = getAreaColor(selectedArea)
-              const hasData = topic.accuracy !== null
-              return (
-                <button
-                  key={topic.value}
-                  type="button"
-                  onClick={() => onStart(selectedArea, topic)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 14,
-                    padding: '14px 18px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-default)',
-                    background: 'var(--bg-card)',
-                    cursor: 'pointer',
-                    transition: 'border-color 0.15s, background 0.15s',
-                    textAlign: 'left',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = `${areaColor}44`
-                    e.currentTarget.style.background = `${areaColor}08`
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--border-default)'
-                    e.currentTarget.style.background = 'var(--bg-card)'
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '0.9rem',
-                        fontWeight: 600,
-                        color: 'var(--text-primary)',
-                      }}
-                    >
-                      {topic.label}
-                    </p>
-                    <p
-                      style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}
-                    >
-                      {hasData
-                        ? `${topic.accuracy}% acerto · ${topic.totalAnswered} questoes`
-                        : 'Nenhuma questao respondida'}
-                    </p>
-                  </div>
+        <div className="study-topics">
+          <div className="study-topics__header">
+            <h2 className="study-topics__title">
+              {selectedArea
+                ? `Tópicos de ${AREA_CONFIG[selectedArea]?.label ?? ''}`
+                : 'Tópicos'}
+            </h2>
+            <button
+              type="button"
+              className="study-sort-btn"
+              disabled={!selectedArea}
+              onClick={() => setSortWeakestFirst((v) => !v)}
+            >
+              <ArrowDownUp size={12} strokeWidth={2} aria-hidden />
+              {sortWeakestFirst ? 'Menor acerto' : 'Maior acerto'}
+            </button>
+          </div>
 
-                  {/* Accuracy bar */}
-                  {hasData && (
-                    <div
-                      style={{
-                        width: 80,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        gap: 4,
-                      }}
-                    >
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: areaColor }}>
-                        {topic.accuracy}%
-                      </span>
-                      <div
-                        style={{
-                          width: '100%',
-                          height: 5,
-                          borderRadius: 999,
-                          background: 'rgba(255,255,255,0.28)',
-                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${topic.accuracy}%`,
-                            height: '100%',
-                            borderRadius: 999,
-                            background: areaColor,
-                            transition: 'width 0.4s ease',
-                          }}
-                        />
+          {!selectedArea ? (
+            <div className="study-empty">
+              Selecione uma área acima para listar os tópicos e ordenar por desempenho.
+            </div>
+          ) : (
+            <div className="study-topics-grid">
+              {sorted.map((topic, idx) => {
+                const tier = topicTier(topic.accuracy)
+                const isSuggested = topic.value === suggestedValue && topic.accuracy !== null
+                const q =
+                  topic.totalAnswered === 1 ? '1 questão' : `${topic.totalAnswered} questões`
+                const staggerMs = 450 + idx * 60
+                return (
+                  <button
+                    key={topic.value}
+                    type="button"
+                    className={`study-topic-card${isSuggested ? ' study-topic-card--suggested' : ''}`}
+                    style={
+                      {
+                        animation: 'study-slide-up 0.4s ease-out both',
+                        animationDelay: `${staggerMs}ms`,
+                      } as CSSProperties
+                    }
+                    onClick={() => onStart(selectedArea, topic)}
+                  >
+                    <RingProgress
+                      pct={tier.displayPct}
+                      stroke={tier.ringColor}
+                      centerLabel={topic.accuracy === null ? '—' : `${tier.displayPct}%`}
+                    />
+                    <div className="study-topic-card__body">
+                      <p className="study-topic-card__name">{topic.label}</p>
+                      <div className="study-topic-card__meta">
+                        <span>{q}</span>
+                        <span className="study-topic-card__meta-sep" aria-hidden />
+                        <span>{tier.metaHint}</span>
                       </div>
                     </div>
-                  )}
-
-                  <ChevronRight size={16} color="var(--text-muted)" />
-                </button>
-              )
-            })}
-          </div>
+                    <span className={`study-topic-card__tag ${tier.tagClass}`}>{tier.label}</span>
+                    <ChevronRight size={16} strokeWidth={2} className="study-topic-card__chev" aria-hidden />
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -985,7 +1112,8 @@ function MindMapView({
   function toggle(id: string) {
     setExpanded((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
@@ -1285,6 +1413,8 @@ function SessionSummaryView({
 /* ─── Main Page ────────────────────────────── */
 
 export function StudyArea() {
+  const [selectedArea, setSelectedArea] = useState<string | null>(null)
+  const [loadingTopicLabel, setLoadingTopicLabel] = useState('…')
   const [step, setStep] = useState<Step>('select')
   const [activeTab, setActiveTab] = useState<Tab>('summary')
   const [pkg, setPkg] = useState<StudyPackage | null>(null)
@@ -1306,6 +1436,8 @@ export function StudyArea() {
   }, [])
 
   async function handleStart(areaKey: string, topico: TopicOption) {
+    setSelectedArea(areaKey)
+    setLoadingTopicLabel(topico.label)
     setStep('loading')
     setActiveTab('summary')
     setCompleted({ summary: false, flashcards: false, questions: false, mindmap: false })
@@ -1329,132 +1461,41 @@ export function StudyArea() {
     setStep('select')
     setPkg(null)
     setShowSummary(false)
+    setSelectedArea(null)
   }
 
   const TABS: Tab[] = ['summary', 'flashcards', 'questions', 'mindmap']
 
+  let studyBreadcrumb: StudyBreadcrumbParts | undefined
+  if (step === 'loading' && selectedArea) {
+    studyBreadcrumb = {
+      area: AREA_CONFIG[selectedArea]?.label ?? '',
+      detail: 'preparando…',
+    }
+  } else if (step === 'select' && selectedArea) {
+    studyBreadcrumb = {
+      area: AREA_CONFIG[selectedArea]?.label ?? '',
+      detail: `${getMockTopics(selectedArea).length} tópicos`,
+    }
+  } else if (pkg) {
+    studyBreadcrumb = { area: areaLabel, detail: pkg.topicoLabel }
+  }
+
   return (
     <>
-      <TopBar
-        title={
-          step === 'select'
-            ? 'Área de Estudo'
-            : pkg
-              ? `${areaLabel} · ${pkg.topicoLabel}`
-              : 'Área de Estudo'
-        }
-      />
-      <div className="broto-main-inner" ref={mainRef}>
+      <TopBar variant="study" title="Área de Estudo" studyBreadcrumb={studyBreadcrumb} />
+      <div className="broto-main-inner broto-main-inner--study" ref={mainRef}>
         {step === 'select' && (
-          <>
-            {/* Hero */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 14,
-                padding: '20px 24px',
-                borderRadius: 'var(--radius-md)',
-                background: 'linear-gradient(135deg, var(--bg-card), var(--bg-elevated))',
-                border: '1px solid var(--border-default)',
-                marginBottom: 24,
-              }}
-            >
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 14,
-                  background: 'var(--green-glow)',
-                  border: '1px solid var(--border-strong)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.5rem',
-                }}
-              >
-                📚
-              </div>
-              <div>
-                <h1
-                  style={{
-                    margin: 0,
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  Área de Estudo
-                </h1>
-                <p
-                  style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}
-                >
-                  Escolha um tópico e receba um pacote personalizado: resumo, flashcards, quiz e
-                  mapa mental.
-                </p>
-              </div>
-            </div>
-
-            <Link
-              to="/study/questions"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 14,
-                padding: '16px 20px',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid rgba(16, 185, 129, 0.28)',
-                background:
-                  'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02))',
-                marginBottom: 24,
-                textDecoration: 'none',
-                color: 'inherit',
-                transition: 'border-color 0.15s, box-shadow 0.15s',
-              }}
-            >
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
-                  background: 'var(--green-glow)',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <BookOpen size={22} color="var(--green-400)" strokeWidth={1.75} aria-hidden />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '0.95rem',
-                    fontWeight: 600,
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  Banco de questões do ENEM
-                </p>
-                <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  Pratique com filtros por ano, tópico e prova — fora do pacote guiado.
-                </p>
-              </div>
-              <ChevronRight
-                size={20}
-                color="var(--text-muted)"
-                style={{ flexShrink: 0 }}
-                aria-hidden
-              />
-            </Link>
-
-            <AreaTopicSelector onStart={handleStart} />
-          </>
+          <AreaTopicSelector
+            selectedArea={selectedArea}
+            onSelectArea={setSelectedArea}
+            onStart={handleStart}
+          />
         )}
 
-        {step === 'loading' && pkg === null && <PackageLoading areaKey="" topicoLabel="..." />}
+        {step === 'loading' && pkg === null && (
+          <PackageLoading areaKey={selectedArea ?? ''} topicoLabel={loadingTopicLabel} />
+        )}
 
         {step === 'study' && pkg && !showSummary && (
           <>

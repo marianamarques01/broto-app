@@ -204,33 +204,48 @@ function WeekCalendar({ rotina }: { rotina: DiaRotina[] }) {
           const dayNum = datas[i].getDate()
 
           return (
-            <View key={dia.idx} style={{ flex: 1, alignItems: 'center' }}>
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontFamily: fonts.sansSemiBold,
-                  color: isToday ? colors.green[400] : colors.text.muted,
-                  letterSpacing: 0.5,
-                }}
-              >
-                {dia.labelCurto}
-              </Text>
+            <View
+              key={dia.idx}
+              style={{ flex: 1, minWidth: 0, alignItems: 'center' }}
+            >
               <View
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
+                  height: 14,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontFamily: fonts.sansSemiBold,
+                    color: isToday ? colors.green[400] : colors.text.muted,
+                    letterSpacing: 0.5,
+                    lineHeight: 14,
+                  }}
+                >
+                  {dia.labelCurto}
+                </Text>
+              </View>
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginTop: 8,
                   marginBottom: 6,
                   backgroundColor: isToday ? colors.green[600] : 'transparent',
+                  overflow: 'hidden',
                 }}
               >
                 <Text
                   style={{
                     fontSize: 14,
+                    fontVariant: ['tabular-nums'],
                     fontFamily: isToday ? fonts.sansBold : fonts.sansMedium,
+                    lineHeight: 14,
                     color: isToday
                       ? '#fff'
                       : dia.ehPassado

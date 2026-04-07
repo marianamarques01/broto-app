@@ -1,29 +1,18 @@
-import { View, Text, ScrollView, Pressable, RefreshControl, StyleSheet } from 'react-native'
+import { View, Text, ScrollView, RefreshControl, StyleSheet } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { useRouter } from 'expo-router'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useMemo, useCallback, memo, useState, useEffect } from 'react'
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated'
-import {
-  Flame,
-  Lock,
-  CheckCircle2,
-  Sparkles,
-  BookOpen,
-  Zap,
-  Target,
-  ArrowUpRight,
-} from 'lucide-react-native'
+import { useMemo, useCallback, useState, useEffect } from 'react'
+import { Flame, BookOpen, Target } from 'lucide-react-native'
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
 import { useProgress } from '@/hooks/useProgress'
 import { useUser } from '@/hooks/useUser'
 import { HeaderAuth } from '@/components/HeaderAuth'
 import { BrotoLogo } from '@/components/BrotoLogo'
-import { BrotoCtaButton } from '@/components/BrotoCtaButton'
-import { AREA_CONFIG, getAreaConfig } from '@/theme/area-config'
+import { AREA_CONFIG } from '@/theme/area-config'
 import { colors, fonts, radii, space } from '@/theme/tokens'
 import { AnimatedBar, FadeInSection } from '@/components/AnimatedEntry'
 import { getDailyMissionsState, type DailyMissionsState } from '@/lib/missions/daily-missions'
+import { HomeScheduleRail } from '@/components/home/HomeScheduleRail'
 
 const DEFAULT_AREAS = ['matematica', 'linguagens', 'ciencias-humanas']
 
@@ -52,7 +41,6 @@ const STAT_ICONS = [
   { key: 'acerto', Icon: Target, iconColor: colors.green[400] },
 ] as const
 
-// ─── Mission card ─────────────────────────────────────────────────────────────
 interface Mission {
   title: string
   subtitle: string
@@ -62,198 +50,8 @@ interface Mission {
   locked: boolean
 }
 
-const MissionCard = memo(function MissionCard({
-  mission,
-  onPress,
-}: {
-  mission: Mission
-  onPress: () => void
-}) {
-  const area = getAreaConfig(mission.areaKey)
-  const { Icon } = area
-
-  return (
-    <Pressable
-      onPress={() => !mission.locked && onPress()}
-      style={({ pressed }) => ({
-        opacity: mission.locked ? 0.55 : pressed ? 0.85 : 1,
-      })}
-    >
-      <View
-        style={{
-          width: '100%',
-          padding: 16,
-          borderRadius: 24,
-          borderWidth: 1,
-          borderColor: mission.locked ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.06)',
-          backgroundColor: mission.locked ? '#0B1F15' : '#122B1E',
-          flexDirection: 'row',
-          alignItems: 'center',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Area icon */}
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 999,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1,
-            marginRight: 12,
-            backgroundColor: 'rgba(0, 0, 0, 0.25)',
-            borderColor: mission.done
-              ? 'rgba(34,197,94,0.5)'
-              : mission.locked
-                ? 'rgba(148,163,184,0.45)'
-                : 'rgba(248,250,252,0.14)',
-          }}
-        >
-          {mission.locked ? (
-            <Lock size={16} color="rgba(255,255,255,0.65)" />
-          ) : mission.done ? (
-            <CheckCircle2 size={16} color={colors.green[400]} />
-          ) : (
-            <Icon size={16} color="rgba(255,255,255,0.88)" />
-          )}
-        </View>
-
-        {/* Content */}
-        <View style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}>
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={{
-              fontSize: 13,
-              lineHeight: 18,
-              fontFamily: fonts.sansMedium,
-              color: mission.locked
-                ? 'rgba(255,255,255,0.72)'
-                : mission.done
-                  ? 'rgba(255,255,255,0.9)'
-                  : '#ffffff',
-              textDecorationLine: mission.done ? 'line-through' : 'none',
-              flexShrink: 1,
-            }}
-          >
-            {mission.title}
-          </Text>
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={{
-              fontSize: 12,
-              lineHeight: 16,
-              fontFamily: fonts.sans,
-              color: mission.locked ? 'rgba(255,255,255,0.58)' : 'rgba(255,255,255,0.68)',
-              marginTop: 4,
-            }}
-          >
-            {mission.locked ? 'Complete a missão anterior' : mission.subtitle}
-          </Text>
-        </View>
-
-        {/* XP badge (active) */}
-        {!mission.done && !mission.locked && (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginLeft: 12,
-              backgroundColor: 'rgba(223,204,0,0.15)',
-              borderRadius: 8,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderWidth: 1,
-              borderColor: 'rgba(223,204,0,0.4)',
-            }}
-          >
-            <Zap size={11} color={colors.gold[400]} />
-            <Text
-              style={{
-                fontSize: 12,
-                fontFamily: fonts.sansBold,
-                color: colors.gold[400],
-                marginLeft: 3,
-              }}
-            >
-              +{mission.xp}
-            </Text>
-          </View>
-        )}
-
-        {/* XP earned (done) */}
-        {mission.done && (
-          <View
-            style={{
-              marginLeft: 12,
-              backgroundColor: 'rgba(34,197,94,0.2)',
-              borderRadius: 8,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderWidth: 1,
-              borderColor: 'rgba(34,197,94,0.3)',
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 11,
-                fontFamily: fonts.sansSemiBold,
-                color: colors.green[400],
-              }}
-            >
-              +{mission.xp} XP
-            </Text>
-          </View>
-        )}
-      </View>
-    </Pressable>
-  )
-})
-
-// ─── CTA Começar missões ─────────────────────────────────────────────────────
-function StartMissionsButton({
-  label,
-  onPress,
-  delay = 0,
-}: {
-  label: string
-  onPress: () => void
-  delay?: number
-  done?: boolean
-}) {
-  const scale = useSharedValue(1)
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }))
-
-  const onPressIn = () => {
-    scale.value = withSpring(0.97, { damping: 14, stiffness: 380 })
-  }
-  const onPressOut = () => {
-    scale.value = withSpring(1, { damping: 14, stiffness: 380 })
-  }
-
-  return (
-    <FadeInSection delay={delay}>
-      <Animated.View style={[animatedStyle, { width: '100%', alignSelf: 'stretch' }]}>
-        <BrotoCtaButton
-          title={label}
-          onPress={onPress}
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
-          rightIcon={<ArrowUpRight size={18} color={colors.cta.text} />}
-        />
-      </Animated.View>
-    </FadeInSection>
-  )
-}
-
 // ─── Main screen ──────────────────────────────────────────────────────────────
 export default function HomeScreen() {
-  const router = useRouter()
   const insets = useSafeAreaInsets()
   const { pet, loading, refresh: refreshPet } = usePet()
   const { progress, refresh: refreshProgress } = useProgress()
@@ -352,9 +150,35 @@ export default function HomeScreen() {
     ] satisfies Mission[]
   }, [progress?.areas, daily])
 
-  const doneMissions = useMemo(() => missions.filter((m) => m.done).length, [missions])
+  const scheduleFocus = useMemo(() => {
+    const areas = progress?.areas?.length ? progress.areas : []
+    const ordered = [...areas].sort((a, b) => {
+      if (a.totalAnswered === 0 && b.totalAnswered === 0) return 0
+      if (a.totalAnswered === 0) return 1
+      if (b.totalAnswered === 0) return -1
+      return a.accuracyPct - b.accuracyPct
+    })
+    const area = ordered[0]
+    return {
+      ehDescanso: false,
+      areaLabel: area?.label ?? null,
+      areaSlug: area?.value ?? null,
+      duracaoMin: (user?.horasDisponiveisPorDia ?? 2) * 60,
+    }
+  }, [progress?.areas, user?.horasDisponiveisPorDia])
 
-  const goToQuestions = useCallback(() => router.push('/(tabs)/questions'), [router])
+  const missionTimeline = useMemo(
+    () =>
+      missions.map((m) => ({
+        title: m.title,
+        subtitle: m.subtitle,
+        done: m.done,
+        locked: m.locked,
+        areaSlug: m.areaKey,
+        xpTotal: m.xp,
+      })),
+    [missions],
+  )
 
   const onRefresh = useCallback(() => {
     if (refreshing) return
@@ -435,6 +259,8 @@ export default function HomeScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -449,7 +275,6 @@ export default function HomeScreen() {
           paddingTop: 16,
           paddingBottom: 40 + insets.bottom,
         }}
-        showsVerticalScrollIndicator={false}
       >
         {/* ── Greeting ── */}
         <View style={{ width: '100%', marginBottom: 16 }}>
@@ -685,101 +510,14 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {/* ── Missions ── */}
-        <View style={{ width: '100%', marginBottom: 4 }}>
-          <FadeInSection delay={250}>
-            <View style={{ width: '100%' }}>
-              {/* Section header */}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: 12,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor: colors.gold[400],
-                    }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontFamily: fonts.sans,
-                      color: '#BBBBBB',
-                      letterSpacing: 0.2,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Missões de hoje
-                  </Text>
-                </View>
-                {/* Progress counter */}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderRadius: 999,
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    backgroundColor:
-                      doneMissions === 3 ? 'rgba(16,185,129,0.15)' : colors.bg.elevated,
-                    borderWidth: 1,
-                    borderColor: doneMissions === 3 ? colors.border.strong : colors.border.subtle,
-                  }}
-                >
-                  {doneMissions === 3 && (
-                    <View style={{ marginRight: 4 }}>
-                      <Sparkles size={11} color={colors.green[400]} />
-                    </View>
-                  )}
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontFamily: fonts.sans,
-                      color: doneMissions === 3 ? colors.green[400] : colors.text.muted,
-                    }}
-                  >
-                    {doneMissions}/3 completas
-                  </Text>
-                </View>
-              </View>
-
-              {/* Mission progress bar */}
-              <View style={{ height: 4, marginBottom: 12, justifyContent: 'center' }}>
-                <AnimatedBar
-                  progress={(doneMissions / 3) * 100}
-                  color={colors.cta.gradientEnd}
-                  bgColor={colors.bg.elevated}
-                  height={4}
-                  delay={400}
-                />
-              </View>
-
-              {/* Mission cards — stable keys */}
-              <View style={{ width: '100%', gap: 8 }}>
-                {missions.map((mission, i) => (
-                  <MissionCard key={`mission-${i}`} mission={mission} onPress={goToQuestions} />
-                ))}
-              </View>
-            </View>
-          </FadeInSection>
-        </View>
-
-        {/* ── CTA Começar missões ── */}
-        <View style={{ marginTop: space[3] }}>
-          <StartMissionsButton
-            label={doneMissions === 3 ? 'Missões completas! Continuar' : 'COMEÇAR MISSÕES'}
-            onPress={goToQuestions}
-            delay={500}
-            done={doneMissions === 3}
-          />
-        </View>
+        <HomeScheduleRail
+          horasPorDia={user?.horasDisponiveisPorDia ?? 2}
+          questoesHoje={questoesHoje}
+          pet={pet ?? null}
+          missionItems={missionTimeline}
+          focusDia={scheduleFocus}
+          progressAreas={progress?.areas}
+        />
       </ScrollView>
     </SafeAreaView>
   )

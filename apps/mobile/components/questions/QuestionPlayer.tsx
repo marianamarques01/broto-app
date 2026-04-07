@@ -4,7 +4,11 @@ import RenderHtml from 'react-native-render-html'
 import { CheckCircle, XCircle, ChevronRight } from 'lucide-react-native'
 import { OptionButton, type OptionState } from './OptionButton'
 import type { Question } from '@broto/shared'
-import { getQuestionId } from '@broto/shared'
+import {
+  getQuestionId,
+  questionFieldMarkdownToHtml,
+  questionFieldNeedsHtmlRendering,
+} from '@broto/shared'
 import { colors } from '@/theme/tokens'
 import { BrotoCtaButton } from '@/components/BrotoCtaButton'
 
@@ -63,16 +67,18 @@ export function QuestionPlayer({
     answered && (question.alternatives.find((a) => a.letter === selected)?.isCorrect ?? false)
   const correctLetter = question.alternatives.find((a) => a.isCorrect)?.letter
 
-  const contextHtml = useMemo(() => {
-    if (!question.context) return null
-    return question.context
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
-      .replace(/\n/g, '<br />')
-  }, [question.context])
+  const contextHtml = useMemo(() => questionFieldMarkdownToHtml(question.context), [question.context])
 
   const htmlSource = useMemo(
     () => (contextHtml ? { html: contextHtml } : { html: '' }),
     [contextHtml],
+  )
+
+  const titleHtml = useMemo(() => questionFieldMarkdownToHtml(question.title), [question.title])
+  const titleAsHtml = titleHtml != null && questionFieldNeedsHtmlRendering(titleHtml)
+  const titleHtmlSource = useMemo(
+    () => (titleAsHtml && titleHtml ? { html: titleHtml } : { html: '' }),
+    [titleAsHtml, titleHtml],
   )
   const renderHtmlBaseStyle = useMemo(
     () => ({
@@ -126,12 +132,26 @@ export function QuestionPlayer({
           backgroundColor: colors.bg.card,
         }}
       >
-        <Text
-          className="text-sm font-semibold leading-relaxed"
-          style={{ color: colors.text.primary }}
-        >
-          {question.title}
-        </Text>
+        {titleAsHtml ? (
+          <RenderHtml
+            contentWidth={width - 64}
+            source={titleHtmlSource}
+            baseStyle={{
+              color: colors.text.primary,
+              fontSize: 14,
+              lineHeight: 22,
+              fontWeight: '600',
+            }}
+            tagsStyles={renderHtmlTagsStyles}
+          />
+        ) : (
+          <Text
+            className="text-sm font-semibold leading-relaxed"
+            style={{ color: colors.text.primary }}
+          >
+            {question.title}
+          </Text>
+        )}
         {contextHtml && (
           <View className="mt-3">
             <RenderHtml

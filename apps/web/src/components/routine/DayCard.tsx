@@ -4,7 +4,7 @@ import { useProgress } from '@/hooks/useProgress'
 import { useDailyMissionsState } from '@/hooks/useDailyMissionsState'
 import { BookOpen, CheckCircle2, Coffee, Lock, Zap } from 'lucide-react'
 import { AREA_CONFIG } from '@/lib/area-config'
-import type { DailyMissionsState } from '@broto/shared'
+import { buildDailyMissions } from '@/lib/build-daily-missions'
 
 interface DiaRotina {
   label: string
@@ -19,74 +19,6 @@ interface DayCardProps {
   dia: DiaRotina
 }
 
-const DEFAULT_MISSION_AREAS = ['matematica', 'linguagens', 'ciencias-humanas'] as const
-
-function areaLabel(key: string) {
-  return AREA_CONFIG[key]?.label ?? 'Questões'
-}
-
-interface Mission {
-  title: string
-  subtitle: string
-  xp: number
-  areaKey: string
-  done: boolean
-  locked: boolean
-}
-
-function buildMissions(areas: AreaStat[] | undefined, daily: DailyMissionsState): Mission[] {
-  const sortedKeys = areas?.length
-    ? [...areas]
-        .filter((a) => a.totalAnswered >= 1)
-        .sort((a, b) => a.accuracyPct - b.accuracyPct)
-        .map((a) => a.value)
-    : []
-
-  const missionAreas = [
-    sortedKeys[0] ?? DEFAULT_MISSION_AREAS[0],
-    sortedKeys[1] ?? DEFAULT_MISSION_AREAS[1],
-    sortedKeys[2] ?? DEFAULT_MISSION_AREAS[2],
-  ]
-
-  const areaAnswered = (key: string) => daily.byArea[key]?.answered ?? 0
-  const areaCorrect = (key: string) => daily.byArea[key]?.correct ?? 0
-  const areaAccuracy = (key: string) => {
-    const a = areaAnswered(key)
-    if (a === 0) return null
-    return Math.round((areaCorrect(key) / a) * 100)
-  }
-
-  return [
-    {
-      title: `3 questões de ${areaLabel(missionAreas[0])}`,
-      subtitle: 'Área com maior oportunidade',
-      xp: 30,
-      areaKey: missionAreas[0],
-      done: areaAnswered(missionAreas[0]) >= 3,
-      locked: false,
-    },
-    {
-      title: `2 questões de ${areaLabel(missionAreas[1])}`,
-      subtitle: 'Continue progredindo',
-      xp: 20,
-      areaKey: missionAreas[1],
-      done: areaAnswered(missionAreas[1]) >= 2,
-      locked: areaAnswered(missionAreas[0]) < 3,
-    },
-    {
-      title: 'Atingir 70% de acerto',
-      subtitle:
-        areaAccuracy(missionAreas[2]) !== null
-          ? `Acerto atual: ${areaAccuracy(missionAreas[2])}%`
-          : 'Acerto atual: —',
-      xp: 50,
-      areaKey: missionAreas[2],
-      done: areaAnswered(missionAreas[2]) >= 5 && (areaAccuracy(missionAreas[2]) ?? 0) >= 70,
-      locked: areaAnswered(missionAreas[2]) < 5,
-    },
-  ]
-}
-
 function MissionsExternalHead({
   doneMissions,
   showBadge,
@@ -98,7 +30,6 @@ function MissionsExternalHead({
   return (
     <header className="broto-missions-external-head" aria-labelledby="broto-missions-title">
       <div className="broto-section-heading-row">
-        <span className="broto-heading-dot" aria-hidden />
         <h2 id="broto-missions-title" className="broto-missions-panel__heading">
           Missões de hoje
         </h2>
@@ -141,7 +72,7 @@ export function DayCard({ dia }: DayCardProps) {
     )
   }
 
-  const missions = buildMissions(progress?.areas, daily)
+  const missions = buildDailyMissions(progress?.areas, daily)
   const doneMissions = missions.filter((m) => m.done).length
   const allDone = doneMissions === 3
 

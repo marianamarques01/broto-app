@@ -11,6 +11,8 @@ import { Progress } from '@/pages/Progress'
 import { Routine } from '@/pages/Routine'
 import { JoinClass } from '@/pages/JoinClass'
 import { BrotoPage } from '@/pages/BrotoPage'
+import { Settings } from '@/pages/Settings'
+import { Profile } from '@/pages/Profile'
 import { Link } from 'react-router-dom'
 
 function NotFound() {
@@ -53,6 +55,8 @@ export const router = createBrowserRouter([
       { path: '/routine', element: <Routine /> },
       { path: '/join-class', element: <JoinClass /> },
       { path: '/broto', element: <BrotoPage /> },
+      { path: '/settings', element: <Settings /> },
+      { path: '/profile', element: <Profile /> },
     ],
   },
   { path: '*', element: <NotFound /> },
