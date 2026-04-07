@@ -2,7 +2,7 @@ import type { AreaStat } from '@/hooks/useProgress'
 
 const LABELS_DIA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 const LABELS_DIA_CURTO = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
-const MESES = [
+export const MESES = [
   'janeiro',
   'fevereiro',
   'março',
@@ -15,7 +15,7 @@ const MESES = [
   'outubro',
   'novembro',
   'dezembro',
-]
+] as const
 
 export function hojeIdx(): number {
   const d = new Date().getDay()

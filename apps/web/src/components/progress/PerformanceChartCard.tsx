@@ -88,7 +88,6 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
     <section className="broto-perf-section" aria-labelledby="broto-perf-title">
       <div className="broto-perf-external-head">
         <div className="broto-section-heading-row">
-          <span className="broto-heading-dot" aria-hidden />
           <h3 id="broto-perf-title" className="broto-perf-card__title">
             Desempenho
           </h3>

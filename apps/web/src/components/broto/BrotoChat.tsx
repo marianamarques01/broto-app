@@ -1,18 +1,18 @@
-import { useState, useRef, useEffect, type FormEvent } from 'react'
+import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react'
 import { api, ApiError } from '@/lib/api-client'
 import { Send } from 'lucide-react'
 
-interface Message {
+export interface BrotoChatMessage {
   role: 'user' | 'assistant'
   content: string
 }
 
-export function BrotoChat() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: 'Oi! Sou o Broto, seu assistente de estudos. Como posso te ajudar?',
-    },
+export const BROTO_WELCOME_TEXT =
+  'Oi! Sou o Broto, seu assistente de estudos. Como posso te ajudar?'
+
+export function useBrotoChat() {
+  const [messages, setMessages] = useState<BrotoChatMessage[]>([
+    { role: 'assistant', content: BROTO_WELCOME_TEXT },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,20 +20,18 @@ export function BrotoChat() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, loading])
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    if (!input.trim() || loading) return
-
-    const userMsg: Message = { role: 'user', content: input.trim() }
-    setMessages((prev) => [...prev, userMsg])
+  const resetConversation = useCallback(() => {
+    setMessages([{ role: 'assistant', content: BROTO_WELCOME_TEXT }])
     setInput('')
-    setLoading(true)
+  }, [])
 
+  const runAssistant = useCallback(async (history: BrotoChatMessage[]) => {
+    setLoading(true)
     try {
       const resp = await api.post<{ message: string }>('/api/broto/chat', {
-        messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
+        messages: history.map((m) => ({ role: m.role, content: m.content })),
       })
       setMessages((prev) => [...prev, { role: 'assistant', content: resp.message }])
     } catch (err) {
@@ -44,7 +42,44 @@ export function BrotoChat() {
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  const sendUserText = useCallback(
+    (raw: string) => {
+      const trimmed = raw.trim()
+      if (!trimmed || loading) return
+
+      const userMsg: BrotoChatMessage = { role: 'user', content: trimmed }
+
+      setMessages((prev) => {
+        const history = [...prev, userMsg]
+        void runAssistant(history)
+        return history
+      })
+      setInput('')
+    },
+    [loading, runAssistant],
+  )
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    sendUserText(input)
   }
+
+  return {
+    messages,
+    input,
+    setInput,
+    loading,
+    endRef,
+    handleSubmit,
+    sendUserText,
+    resetConversation,
+  }
+}
+
+export function BrotoChat() {
+  const { messages, input, setInput, loading, endRef, handleSubmit } = useBrotoChat()
 
   return (
     <div className="broto-chat">
@@ -89,24 +124,30 @@ export function BrotoChat() {
         <div ref={endRef} />
       </div>
 
-      <form className="broto-chat__form" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          className="broto-input"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Pergunte algo ao Broto..."
-          disabled={loading}
-        />
-        <button
-          type="submit"
-          className="broto-chat__send"
-          disabled={loading || !input.trim()}
-          aria-label="Enviar mensagem"
+      <div className="broto-chat__composer-wrap">
+        <form
+          className={`broto-chat__composer${loading ? ' broto-chat__composer--busy' : ''}`}
+          onSubmit={handleSubmit}
+          aria-busy={loading}
         >
-          <Send size={16} aria-hidden />
-        </button>
-      </form>
+          <input
+            type="text"
+            className="broto-input broto-chat__composer-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Pergunte algo ao Broto..."
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            className={`broto-chat__send ${input.trim() && !loading ? 'broto-chat__send--active' : ''}`}
+            disabled={loading || !input.trim()}
+            aria-label="Enviar mensagem"
+          >
+            <Send size={16} aria-hidden />
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

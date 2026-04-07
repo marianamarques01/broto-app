@@ -32,7 +32,7 @@
 .broto-sidebar__brand-name {
   font-family: var(--font-logo);
   font-size: 1.4rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.01em;
   color: var(--text-primary);
   margin: 0;
@@ -76,7 +76,7 @@
 .broto-sidebar__link--active {
   background: rgba(16, 185, 129, 0.14);
   color: var(--green-400);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .broto-sidebar__link-icon {
