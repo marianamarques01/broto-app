@@ -6,6 +6,7 @@ export const AREA_CONFIG: Record<string, { color: string; icon: typeof BookOpen;
     'ciencias-humanas': { color: '#60a5fa', icon: Globe, label: 'Ciências Humanas' },
     'ciencias-natureza': { color: '#a78bfa', icon: FlaskConical, label: 'Ciências da Natureza' },
     matematica: { color: '#f5c842', icon: Calculator, label: 'Matemática' },
+    sem_area: { color: '#888', icon: BookOpen, label: 'Sem área' },
   }
 
 export function getAreaColor(value: string): string {

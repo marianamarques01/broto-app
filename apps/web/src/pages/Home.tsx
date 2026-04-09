@@ -6,7 +6,7 @@ import { useUser } from '@/hooks/useUser'
 import { PetCard } from '@/components/pet/PetCard'
 import { HomeDashboardTopBar } from '@/components/layout/HomeDashboardTopBar'
 import { PerformanceChartCard } from '@/components/progress/PerformanceChartCard'
-import { BookOpen, Play } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { DashboardStudyStats } from '@/components/progress/DashboardStudyStats'
 import { AREA_CONFIG } from '@/lib/area-config'
 import { gerarRotina } from '@/lib/routine'
@@ -49,33 +49,6 @@ export function Home() {
   )
   const diaHoje = useMemo(() => rotina.find((d) => d.ehHoje), [rotina])
 
-  const areasToFocus = useMemo(
-    () =>
-      (progress?.areas ?? [])
-        .filter((a) => a.totalAnswered > 0)
-        .sort((a, b) => a.accuracyPct - b.accuracyPct)
-        .slice(0, 3),
-    [progress?.areas],
-  )
-
-  const continueCta = useMemo(() => {
-    const area = areasToFocus[0]
-    if (!area) {
-      return {
-        title: 'Banco de Questões',
-        subtitle: 'Escolha a matéria e pratique questões do ENEM.',
-      }
-    }
-    const weakTopico = [...area.topicos]
-      .filter((t) => t.totalAnswered > 0)
-      .sort((a, b) => a.accuracyPct - b.accuracyPct)[0]
-    const top = weakTopico?.label ?? area.label
-    return {
-      title: 'Continuar estudos',
-      subtitle: `Última: ${area.label} — ${top}`,
-    }
-  }, [areasToFocus])
-
   const fase = pet?.fase ?? 'semente'
   const plantLine = plantStatusLine(fase)
   const xpTotal = pet?.xp ?? 0
@@ -115,7 +88,9 @@ export function Home() {
                       </Link>
                     </header>
                     <div className="broto-subject-chips">
-                      {areas.map((area) => {
+                      {areas
+                        .filter((area) => area.value !== 'sem_area')
+                        .map((area, i) => {
                         const config = AREA_CONFIG[area.value] ?? { color: '#888', icon: BookOpen }
                         const Icon = config.icon
                         const av = AREA_ACCENT_VARS[area.value] ?? AREA_ACCENT_VARS.linguagens
@@ -124,6 +99,7 @@ export function Home() {
                           area.totalAnswered > 0
                             ? `${nTopicos} tópicos · ${area.accuracyPct}% média`
                             : `${nTopicos} tópicos · sem média`
+                        const areaDelays = [100, 180, 260, 340]
                         return (
                           <Link
                             key={area.value}
@@ -134,38 +110,23 @@ export function Home() {
                                 '--study-area-accent': config.color,
                                 '--ac-dim': av.dim,
                                 '--ac-glow': av.glow,
+                                animation: 'study-scale-in 0.4s ease-out both',
+                                animationDelay: `${areaDelays[i] ?? 340}ms`,
                               } as CSSProperties
                             }
                           >
                             <StudyAreaCardPattern areaKey={area.value} />
                             <div className="study-area-card__glow" aria-hidden />
+                            <span className="study-area-card__dot" aria-hidden />
                             <div className="study-area-card__icon">
-                              <Icon size={18} color="currentColor" strokeWidth={1.8} />
+                              <Icon size={20} color="currentColor" strokeWidth={1.8} />
                             </div>
-                            <div className="study-area-card__text">
-                              <p className="study-area-card__label">{area.label}</p>
-                              <p className="study-area-card__meta">{metaLinha}</p>
-                            </div>
+                            <p className="study-area-card__label">{area.label}</p>
+                            <p className="study-area-card__meta">{metaLinha}</p>
                           </Link>
                         )
                       })}
                     </div>
-                    <Link to="/study" className="broto-continue-studies">
-                      <span className="broto-continue-studies__watermark" aria-hidden>
-                        <Play size={140} strokeWidth={1.2} fill="currentColor" />
-                      </span>
-                      <span className="broto-continue-studies__inner">
-                        <span className="broto-continue-studies__play-chip">
-                          <Play size={22} fill="currentColor" strokeWidth={0} aria-hidden />
-                        </span>
-                        <span className="broto-continue-studies__copy">
-                          <span className="broto-continue-studies__title">{continueCta.title}</span>
-                          <span className="broto-continue-studies__subtitle">
-                            {continueCta.subtitle}
-                          </span>
-                        </span>
-                      </span>
-                    </Link>
                   </section>
                 </div>
               </div>

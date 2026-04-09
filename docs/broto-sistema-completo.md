@@ -353,7 +353,16 @@ npm run typecheck                 # Todos os apps
 
 ## Planos Futuros
 
-1. **Simulado ENEM/Prova (professor cria, aluno faz)**:
+1. **Simulado ENEM (aluno cria e faz)**:
+(similar ao simulado de onboarding)
+   - Aluno configura um simulado escolhendo **numero de questoes**, **materias/areas**, **topicos**, **dificuldade (opcional)**,
+   - O sistema gera a prova a partir do banco de questoes (ex: ENEM por ano/area/topico) 
+   - Aluno realiza o simulado
+   - Resultados alimentam indicadores: nota/percentual, acertos por area/topico, tempo medio por questao, ranking/percentis (opcional).
+
+  e 
+
+  **Simulado ENEM/Prova (professor cria, aluno faz)**:
    - Professor configura um simulado escolhendo **numero de questoes**, **materias/areas**, **topicos**, **dificuldade (opcional)**, **tempo total**, **regras** (ex: permitir pausar, mostrar gabarito ao final).
    - O sistema gera a prova a partir do banco de questoes (ex: ENEM por ano/area/topico) e publica para uma turma (com janela de disponibilidade).
    - Aluno realiza o simulado com experiencia de prova: cronometro, navegacao por questoes, marcacao para revisao, envio final.

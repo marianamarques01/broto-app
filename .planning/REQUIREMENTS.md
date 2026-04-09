@@ -82,6 +82,19 @@
 - **ONBR-01**: Onboarding flow completed (currently has TODO stubs)
 - **ONBR-02**: Diagnostic quiz implemented post-onboarding
 
+### Simulado ENEM — aluno autogerido (SMCK)
+
+Prefixo **SMCK** (*student mock*): rastreabilidade com `.planning/phases/feat-simulado-enem-aluno/PLAN.md` e `docs/plan-simulado-enem-aluno.md`.
+
+- [ ] **SMCK-01**: Migração `practice_sessions` (ou nome alinhado ao produto), RLS, coluna opcional `session_id` em `user_question_answers`
+- [ ] **SMCK-02**: Edge `practice-session-create` / `practice-session-complete` (ou função unificada) + `answer-question` aceita `sessionId` com validação de posse
+- [ ] **SMCK-03**: `@broto/shared` — tipos (`StudentMockExamConfig`, etc.) + `buildMockExamPayload` + testes Vitest (pool vazio, menor que N, multisseleção, **modo aleatório** só com N questões sobre corpus completo filtrado por regras de ano/idioma globais)
+- [ ] **SMCK-04**: Web — configurar simulado, integração `QuestionPlayer`, tela de resultado
+- [ ] **SMCK-05**: Mobile — paridade de fluxo e mensagens com a web
+- [ ] **SMCK-06**: Onboarding — CTA “Simulado diagnóstico” navega para fluxo com defaults fixos (cruza **ONBR-02**)
+- [ ] **SMCK-07**: Histórico de simulados do aluno (listagem de sessões concluídas)
+- [ ] **SMCK-08**: Ranking / percentis entre alunos — *deferred* (LGPD, opt-in, agregações); não faz parte do MVP em PLAN wave 1
+
 ## Out of Scope
 
 | Feature | Reason |
@@ -131,13 +144,20 @@
 | TEST-02 | Phase 4 | Satisfied |
 | TEST-03 | Phase 4 | Satisfied |
 | TEST-04 | Phase 4 | Satisfied |
+| SMCK-01 | feat-simulado-enem-aluno | Planned |
+| SMCK-02 | feat-simulado-enem-aluno | Planned |
+| SMCK-03 | feat-simulado-enem-aluno | Planned |
+| SMCK-04 | feat-simulado-enem-aluno | Planned |
+| SMCK-05 | feat-simulado-enem-aluno | Planned |
+| SMCK-06 | feat-simulado-enem-aluno | Planned |
+| SMCK-07 | feat-simulado-enem-aluno | Planned |
+| SMCK-08 | feat-simulado-enem-aluno | Deferred |
 
 **Coverage:**
-- v1 requirements: 33 total
-- Mapped to phases: 33
-- Unmapped: 0
-- Satisfied (2026-04-05): 29 — Open/Deferred: TOOL-06, BUGF-05, CONS-03, CONS-05 (ver lista acima)
+- v1 requirements: 33 total — consolidation milestone
+- SMCK (pós-milestone): 8 requisitos planejados (1 deferred: SMCK-08)
+- Satisfied (2026-04-05): 29 — Open/Deferred v1: TOOL-06, BUGF-05, CONS-03, CONS-05 (ver lista acima)
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-05 — reconciliado com código (fases 2–4); itens Open/Deferred explícitos*
+*Last updated: 2026-04-07 — adicionado SMCK (simulado aluno) + rastreio PLAN.md*

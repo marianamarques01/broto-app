@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import DOMPurify from 'dompurify'
 import type { Question } from '@broto/shared'
 import {
@@ -13,6 +13,12 @@ interface QuestionPlayerProps {
   question: Question
   areaKey: string
   onNext: () => void
+  sessionId?: string
+  onAnswerRecorded?: (payload: {
+    questionId: string
+    isCorrect: boolean
+    timeSpentSec: number
+  }) => void
 }
 
 const purifyQuestionHtml = (raw: string) =>
@@ -43,10 +49,23 @@ const purifyQuestionHtml = (raw: string) =>
     ALLOWED_ATTR: ['src', 'alt', 'class', 'style'],
   })
 
-export function QuestionPlayer({ question, areaKey, onNext }: QuestionPlayerProps) {
+export function QuestionPlayer({
+  question,
+  areaKey,
+  onNext,
+  sessionId,
+  onAnswerRecorded,
+}: QuestionPlayerProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [answered, setAnswered] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const questionStartMs = useRef<number>(Date.now())
+
+  useEffect(() => {
+    questionStartMs.current = Date.now()
+    setSelected(null)
+    setAnswered(false)
+  }, [question])
 
   const correct = question.alternatives.find((a) => a.isCorrect)?.letter ?? null
 
@@ -76,11 +95,19 @@ export function QuestionPlayer({ question, areaKey, onNext }: QuestionPlayerProp
     setSubmitting(true)
 
     const isCorrect = letter === correct
+    const timeSpentSec = Math.max(0, Math.round((Date.now() - questionStartMs.current) / 1000))
     try {
       await submitAnswer({
         questionId: getQuestionId(question),
         isCorrect,
         areaKey,
+        timeSpentSec,
+        sessionId,
+      })
+      onAnswerRecorded?.({
+        questionId: getQuestionId(question),
+        isCorrect,
+        timeSpentSec,
       })
     } catch {
       // fail silently
