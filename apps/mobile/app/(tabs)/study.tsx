@@ -313,6 +313,15 @@ export default function StudyScreen() {
             </Link>
           </FadeInSection>
 
+          <FadeInSection delay={250}>
+            <Link href="/mock-exam" asChild>
+              <BrotoCtaButton
+                title="SIMULADO ENEM"
+                rightIcon={<ArrowRight size={18} color={colors.cta.text} />}
+              />
+            </Link>
+          </FadeInSection>
+
           {/* Focus areas */}
           {(mostrarFoco || mostrarIniciar) && (
             <FadeInSection delay={300}>

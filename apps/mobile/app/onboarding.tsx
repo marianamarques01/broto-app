@@ -1,5 +1,13 @@
 import { useState, useCallback } from 'react'
-import { View, Text, Pressable, ScrollView, TextInput, StyleSheet } from 'react-native'
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  TextInput,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native'
 import Animated, { FadeIn, FadeInUp, FadeInDown } from 'react-native-reanimated'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -24,10 +32,32 @@ import {
 } from 'lucide-react-native'
 import { colors, fonts, fontSize } from '@/theme/tokens'
 import { BrotoCtaButton } from '@/components/BrotoCtaButton'
+import { api } from '@/lib/api-client'
+import { refreshUser } from '@/hooks/useUser'
+import { useClass } from '@/hooks/useClass'
+import { getQuestionsStaticBaseUrl } from '@/lib/questions-static-base'
+import { formatMockExamFlowError } from '@/lib/mock-exam-flow-error'
+import {
+  buildMockExamPayload,
+  fetchMockExamQuestions,
+  loadMockExamPool,
+  type StudentMockExamConfig,
+} from '@broto/shared'
 
 /* ── Constants ──────────────────────────────────────────── */
 
 const TOTAL_STEPS = 6
+
+/** Simulado diagnostico: 20 questoes, 5 por area (valores = `areas.json` / `details.discipline`). */
+const ONBOARDING_DIAGNOSTIC_MOCK_CFG: StudentMockExamConfig = {
+  nQuestoes: 20,
+  randomMode: false,
+  areaValues: ['linguagens', 'ciencias-humanas', 'ciencias-natureza', 'matematica'],
+  topicoValues: [],
+  years: [],
+  language: '',
+  expandLinguagensIdiomas: false,
+}
 
 const CURSOS_POPULARES = [
   'Medicina',
@@ -597,10 +627,18 @@ function StepResumo({
   data,
   onSimulado,
   onStart,
+  simuladoLoading,
+  simuladoError,
+  saveLoading,
+  saveError,
 }: {
   data: OnboardingState
-  onSimulado: () => void
-  onStart: () => void
+  onSimulado: () => void | Promise<void>
+  onStart: () => void | Promise<void>
+  simuladoLoading: boolean
+  simuladoError: string | null
+  saveLoading: boolean
+  saveError: string | null
 }) {
   const nivelLabel = (n: NivelArea | null) =>
     n === 'avancado' ? 'Ava' : n === 'intermediario' ? 'Int' : 'Ini'
@@ -669,18 +707,39 @@ function StepResumo({
           5 questoes de cada area (~15 min).{'\n'}
           Com isso, seu plano fica ainda mais preciso!
         </Text>
+        {simuladoError ? (
+          <Text style={[st.simuladoDesc, { color: colors.red[400], marginBottom: 8 }]}>
+            {simuladoError}
+          </Text>
+        ) : null}
         <BrotoCtaButton
-          onPress={onSimulado}
+          onPress={() => void onSimulado()}
           title="Fazer simulado"
           leftIcon={<Brain size={18} color="#fff" />}
           compact
+          loading={simuladoLoading}
+          disabled={saveLoading}
         />
       </Animated.View>
 
+      {saveError ? (
+        <Text style={[st.startWithoutText, { color: colors.red[400], textAlign: 'center', marginTop: 8 }]}>
+          {saveError}
+        </Text>
+      ) : null}
+
       {/* Start without simulado */}
       <Animated.View entering={FadeInUp.delay(600).duration(400)}>
-        <Pressable onPress={onStart} style={st.startWithoutBtn}>
-          <Text style={st.startWithoutText}>Comecar sem simulado</Text>
+        <Pressable
+          onPress={() => void onStart()}
+          style={st.startWithoutBtn}
+          disabled={saveLoading || simuladoLoading}
+        >
+          {saveLoading ? (
+            <ActivityIndicator color={colors.text.muted} />
+          ) : (
+            <Text style={st.startWithoutText}>Comecar sem simulado</Text>
+          )}
         </Pressable>
       </Animated.View>
     </ScrollView>
@@ -692,8 +751,13 @@ function StepResumo({
 export default function OnboardingScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const { organization } = useClass()
 
   const [step, setStep] = useState(0)
+  const [simuladoLoading, setSimuladoLoading] = useState(false)
+  const [simuladoError, setSimuladoError] = useState<string | null>(null)
+  const [saveLoading, setSaveLoading] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [data, setData] = useState<OnboardingState>({
     faculdade: '',
     curso: '',
@@ -716,19 +780,118 @@ export default function OnboardingScreen() {
   const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS))
   const goBack = () => setStep((s) => Math.max(s - 1, 0))
 
-  const handleFinish = () => {
-    // TODO: save data via API
-    router.replace('/(tabs)')
-  }
+  const handleFinish = useCallback(async () => {
+    setSaveError(null)
+    setSaveLoading(true)
+    try {
+      await api.post('/api/user/onboarding', {
+        faculdade: data.faculdade,
+        curso: data.curso,
+        metaNota: data.metaNota,
+        niveis: data.niveis,
+        horasPorDia: data.horasPorDia,
+        horarios: data.horarios,
+      })
+      await refreshUser()
+      router.replace('/(tabs)')
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Erro ao salvar')
+    } finally {
+      setSaveLoading(false)
+    }
+  }, [data, router])
 
-  const handleSimulado = () => {
-    // TODO: navigate to diagnostic quiz
-    router.replace('/(tabs)')
-  }
+  const handleSimulado = useCallback(async () => {
+    setSimuladoError(null)
+    const baseUrl = getQuestionsStaticBaseUrl(organization?.slug ?? null)
+    if (!baseUrl) {
+      setSimuladoError('Nao foi possivel carregar o banco de questoes.')
+      return
+    }
 
-  const handleSkipAll = () => {
+    const cfg = ONBOARDING_DIAGNOSTIC_MOCK_CFG
+    setSimuladoLoading(true)
+    try {
+      await api.post('/api/user/onboarding', {
+        faculdade: data.faculdade,
+        curso: data.curso,
+        metaNota: data.metaNota,
+        niveis: data.niveis,
+        horasPorDia: data.horasPorDia,
+        horarios: data.horarios,
+      })
+      await refreshUser()
+
+      const pool = await loadMockExamPool({
+        baseUrl,
+        randomMode: cfg.randomMode,
+        areaValues: cfg.areaValues,
+        topicoValues: cfg.topicoValues,
+        years: cfg.years,
+        language: cfg.language,
+        expandLinguagensIdiomas: cfg.expandLinguagensIdiomas,
+      })
+
+      const built = buildMockExamPayload(cfg.nQuestoes, cfg.randomMode, cfg.areaValues, pool)
+
+      if (!built.ok) {
+        if (built.error.code === 'POOL_EMPTY') {
+          setSimuladoError(
+            'Nenhuma questao encontrada. Tente novamente em instantes ou use a area de estudo.',
+          )
+        } else {
+          setSimuladoError(
+            `Nao ha questoes suficientes: pedidas ${built.error.requested}, disponiveis ${built.error.poolSize}.`,
+          )
+        }
+        return
+      }
+
+      const questions = await fetchMockExamQuestions(baseUrl, built.questionIds)
+      if (questions.length === 0) {
+        setSimuladoError('Nao foi possivel carregar o conteudo das questoes. Tente novamente.')
+        return
+      }
+      if (questions.length < built.questionIds.length) {
+        setSimuladoError('Algumas questoes nao puderam ser carregadas. Tente de novo.')
+        return
+      }
+
+      type CreateRes = { sessionId?: string; questionIds?: string[] }
+      const created = await api.post<CreateRes>('/api/practice-session/create', {
+        config: cfg,
+        questionIds: built.questionIds,
+      })
+
+      if (!created.sessionId) {
+        setSimuladoError('Erro ao criar sessao no servidor.')
+        return
+      }
+
+      router.replace(`/mock-exam/play/${created.sessionId}`)
+    } catch (e) {
+      setSimuladoError(formatMockExamFlowError(e))
+    } finally {
+      setSimuladoLoading(false)
+    }
+  }, [data, organization?.slug, router])
+
+  const handleSkipAll = useCallback(async () => {
+    try {
+      await api.post('/api/user/onboarding', {
+        faculdade: '',
+        curso: '',
+        metaNota: 0,
+        niveis: {},
+        horasPorDia: 2,
+        horarios: [],
+      })
+      await refreshUser()
+    } catch {
+      // segue para o app
+    }
     router.replace('/(tabs)')
-  }
+  }, [router])
 
   // Step 0 (Welcome) has its own layout
   if (step === 0) {
@@ -752,7 +915,15 @@ export default function OnboardingScreen() {
         {step === 3 && <StepNivel data={data} onChange={updateData} />}
         {step === 4 && <StepDisponibilidade data={data} onChange={updateData} />}
         {step === 5 && (
-          <StepResumo data={data} onSimulado={handleSimulado} onStart={handleFinish} />
+          <StepResumo
+            data={data}
+            onSimulado={handleSimulado}
+            onStart={handleFinish}
+            simuladoLoading={simuladoLoading}
+            simuladoError={simuladoError}
+            saveLoading={saveLoading}
+            saveError={saveError}
+          />
         )}
       </View>
 

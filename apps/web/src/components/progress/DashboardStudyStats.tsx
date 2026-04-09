@@ -37,10 +37,13 @@ export function DashboardStudyStats({ className }: DashboardStudyStatsProps) {
     return Math.max(diaHoje.duracaoMin, horasPorDia * 60)
   }, [diaHoje, horasPorDia])
 
-  const studiedMinutesEstimate = useMemo(() => {
+  /** Minutos estudados hoje: tempo registrado no servidor (tempo por questão), senão estimativa pela meta. */
+  const studiedMinutesToday = useMemo(() => {
+    const sec = pet?.tempoEstudoSegHoje
+    if (typeof sec === 'number' && sec > 0) return Math.round(sec / 60)
     if (goalMinutesPlanned <= 0) return 0
     return Math.round((questoesMetaCount / META_QUESTOES_DIA) * goalMinutesPlanned)
-  }, [goalMinutesPlanned, questoesMetaCount])
+  }, [pet?.tempoEstudoSegHoje, goalMinutesPlanned, questoesMetaCount])
 
   const accuracyPct = progress?.accuracyPct ?? 0
   const totalAnswered = progress?.totalAnswered ?? 0
@@ -115,7 +118,7 @@ export function DashboardStudyStats({ className }: DashboardStudyStatsProps) {
               </>
             ) : (
               <>
-                <span className="broto-stat-item__val-main">{studiedMinutesEstimate}m</span>
+                <span className="broto-stat-item__val-main">{studiedMinutesToday}m</span>
                 <span className="broto-stat-item__suffix">/ {goalMinutesPlanned}m</span>
               </>
             )}

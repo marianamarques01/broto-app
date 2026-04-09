@@ -1,0 +1,101 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
+import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
+
+const HORARIO_SET = new Set(['manha', 'tarde', 'noite'])
+
+function clampInt(n: number, min: number, max: number): number {
+  if (!Number.isFinite(n)) return min
+  return Math.min(max, Math.max(min, Math.round(n)))
+}
+
+function parseBody(raw: unknown): Record<string, unknown> | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  return raw as Record<string, unknown>
+}
+
+serve(async (req) => {
+  const cors = getCorsHeaders(req)
+
+  try {
+    if (req.method === 'OPTIONS') {
+      if (isOriginBlocked(cors)) return new Response(null, { status: 403 })
+      return new Response('ok', { headers: cors })
+    }
+    if (isOriginBlocked(cors)) return json(403, { error: 'Origin not allowed' }, {})
+    if (req.method !== 'POST') return json(405, { error: 'Method not allowed' }, cors)
+
+    const authResult = await requireUser(req)
+    if (authResult.error) {
+      return json(authResult.error.status, { error: authResult.error.message }, cors)
+    }
+    const { user } = authResult.data
+
+    const raw = parseBody(await req.json().catch(() => null))
+    if (!raw) {
+      return json(400, { error: 'JSON inválido' }, cors)
+    }
+
+    const faculdade = typeof raw.faculdade === 'string' ? raw.faculdade.trim().slice(0, 500) : ''
+    const curso = typeof raw.curso === 'string' ? raw.curso.trim().slice(0, 200) : ''
+    const metaNota = clampInt(
+      typeof raw.metaNota === 'number' ? raw.metaNota : Number(raw.metaNota),
+      0,
+      1000,
+    )
+    const horasPorDia = clampInt(
+      typeof raw.horasPorDia === 'number' ? raw.horasPorDia : Number(raw.horasPorDia),
+      1,
+      12,
+    )
+
+    const niveis: Record<string, string | null> = {}
+    if (raw.niveis && typeof raw.niveis === 'object' && !Array.isArray(raw.niveis)) {
+      for (const [k, v] of Object.entries(raw.niveis as Record<string, unknown>)) {
+        const key = String(k).slice(0, 64)
+        if (v === null || v === undefined) {
+          niveis[key] = null
+        } else if (v === 'iniciante' || v === 'intermediario' || v === 'avancado') {
+          niveis[key] = v
+        }
+      }
+    }
+
+    const horarios: string[] = []
+    if (Array.isArray(raw.horarios)) {
+      for (const h of raw.horarios) {
+        if (typeof h === 'string' && HORARIO_SET.has(h) && !horarios.includes(h)) {
+          horarios.push(h)
+        }
+      }
+    }
+
+    const onboardingProfile = {
+      faculdade,
+      curso,
+      metaNota,
+      niveis,
+      horarios,
+    }
+
+    const admin = createServiceRoleClientUnsafe()
+    const { error } = await admin
+      .from('users')
+      .update({
+        horas_disponiveis_por_dia: horasPorDia,
+        onboarding_profile: onboardingProfile,
+        onboarding_done: true,
+      })
+      .eq('id', user.id)
+
+    if (error) {
+      console.error('[user-onboarding]', error)
+      return json(500, { error: 'Não foi possível salvar o onboarding' }, cors)
+    }
+
+    return json(200, { ok: true, onboardingProfile }, cors)
+  } catch (err) {
+    console.error('[user-onboarding]', err)
+    return json(500, { error: String(err) }, cors)
+  }
+})

@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
+import { areaKeyFromTopico } from '../_shared/enem-topic-area.ts'
 
 type Fase = 'semente' | 'muda' | 'planta' | 'flor' | 'especial'
 
@@ -66,25 +67,55 @@ serve(async (req) => {
     const start = new Date()
     start.setUTCHours(0, 0, 0, 0)
 
-    let questoesHoje = 0
-    let acertosHoje = 0
-
-    const { count, error: cntErr } = await supabaseAdmin
+    const { data: todayRows, error: todayErr } = await supabaseAdmin
       .from('user_question_answers')
-      .select('id', { count: 'exact', head: true })
+      .select('question_id, acertou, tempo_resposta')
       .eq('user_id', user.id)
       .gte('created_at', start.toISOString())
 
-    if (!cntErr && count != null) questoesHoje = count
+    if (todayErr) {
+      console.error('pet-me today answers:', todayErr)
+      return json(500, { error: todayErr.message }, cors)
+    }
 
-    const { data: withCorrect, error: acErr } = await supabaseAdmin
-      .from('user_question_answers')
-      .select('acertou')
-      .eq('user_id', user.id)
-      .gte('created_at', start.toISOString())
+    const answers = (todayRows ?? []) as {
+      question_id: string
+      acertou: boolean
+      tempo_resposta: number | null
+    }[]
+    const questoesHoje = answers.length
+    const acertosHoje = answers.filter((r) => r.acertou === true).length
+    const tempoEstudoSegHoje = answers.reduce((s, r) => {
+      const t = r.tempo_resposta
+      return s + (typeof t === 'number' && Number.isFinite(t) ? Math.max(0, t) : 0)
+    }, 0)
 
-    if (!acErr && withCorrect) {
-      acertosHoje = withCorrect.filter((r) => (r as { acertou?: boolean }).acertou === true).length
+    const qids = [...new Set(answers.map((a) => a.question_id))]
+    const topicByQid = new Map<string, string | null>()
+    if (qids.length > 0) {
+      const { data: maps, error: mapErr } = await supabaseAdmin
+        .from('question_topic_mapping')
+        .select('question_id, topico_value')
+        .in('question_id', qids)
+
+      if (mapErr) {
+        console.error('pet-me mapping:', mapErr)
+      } else {
+        for (const row of maps ?? []) {
+          const rec = row as { question_id?: string; topico_value?: string }
+          if (rec.question_id) topicByQid.set(rec.question_id, rec.topico_value ?? null)
+        }
+      }
+    }
+
+    const studyTodayByArea: Record<string, { answered: number; correct: number }> = {}
+    for (const a of answers) {
+      const topico = topicByQid.get(a.question_id) ?? null
+      const area = areaKeyFromTopico(topico)
+      const cur = studyTodayByArea[area] ?? { answered: 0, correct: 0 }
+      cur.answered += 1
+      if (a.acertou) cur.correct += 1
+      studyTodayByArea[area] = cur
     }
 
     const humor = Math.min(100, 45 + Math.min(streak, 10) * 3)
@@ -100,6 +131,8 @@ serve(async (req) => {
         streak,
         questoesHoje,
         acertosHoje,
+        tempoEstudoSegHoje,
+        studyTodayByArea,
       },
       cors,
     )

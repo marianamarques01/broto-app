@@ -7,6 +7,10 @@ export interface PetData {
   streak: number
   questoesHoje: number
   acertosHoje: number
+  /** Soma dos `tempo_resposta` (segundos) das respostas de hoje (UTC), quando o backend envia. */
+  tempoEstudoSegHoje?: number
+  /** Contagens do dia (UTC) por área derivadas do banco — alinha missões ao servidor. */
+  studyTodayByArea?: Record<string, { answered: number; correct: number }>
 }
 
 export const FASE_EMOJI: Record<PetData['fase'], string> = {

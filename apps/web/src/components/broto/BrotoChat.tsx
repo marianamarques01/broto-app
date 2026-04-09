@@ -35,9 +35,11 @@ export function useBrotoChat() {
       })
       setMessages((prev) => [...prev, { role: 'assistant', content: resp.message }])
     } catch (err) {
+      if (!(err instanceof ApiError)) {
+        console.error('[BrotoChat] request failed (non-ApiError)', err)
+      }
       const detail = err instanceof ApiError ? err.message : ''
       const errorMsg = detail || 'Desculpe, tive um problema. Tente novamente.'
-      console.error('[BrotoChat]', err)
       setMessages((prev) => [...prev, { role: 'assistant', content: errorMsg }])
     } finally {
       setLoading(false)

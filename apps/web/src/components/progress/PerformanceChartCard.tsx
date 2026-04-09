@@ -1,45 +1,14 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { usePerformanceSeries } from '@/hooks/usePerformanceSeries'
 import type { PerformanceBucket, PerformancePeriod } from '@/lib/performance-history'
+import { useProgress } from '@/hooks/useProgress'
 
 const FILTERS: { id: PerformancePeriod; label: string }[] = [
   { id: 'week', label: 'Semana' },
   { id: 'month', label: 'Mês' },
   { id: 'all', label: 'Tudo' },
 ]
-
-/** Valores ilustrativos (%) alinhados ao número de barras de cada período */
-const MOCK_PCTS: Record<PerformancePeriod, number[]> = {
-  week: [52, 61, 48, 58, 64, 71, 69],
-  month: [55, 62, 68, 73],
-  all: [62, 58, 71, 65, 74],
-}
-
-function buildMockBuckets(
-  period: PerformancePeriod,
-  real: PerformanceBucket[],
-): PerformanceBucket[] {
-  if (period === 'all' && real.length === 0) {
-    return [
-      { key: 'mock-m1', label: 'out/25', answered: 24, correct: 16, accuracyPct: 67 },
-      { key: 'mock-m2', label: 'nov/25', answered: 18, correct: 13, accuracyPct: 72 },
-      { key: 'mock-m3', label: 'dez/25', answered: 30, correct: 21, accuracyPct: 70 },
-    ]
-  }
-
-  const series = MOCK_PCTS[period]
-  return real.map((b, i) => {
-    const pct = series[i] ?? 58 + (i % 5) * 3
-    const answered = 6 + (i % 4) * 2
-    const correct = Math.round((answered * pct) / 100)
-    return {
-      ...b,
-      answered,
-      correct,
-      accuracyPct: pct,
-    }
-  })
-}
 
 function averageAccuracy(buckets: PerformanceBucket[]): number | null {
   const withPct = buckets.filter((b) => b.accuracyPct !== null)
@@ -54,27 +23,15 @@ interface PerformanceChartCardProps {
 
 export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardProps) {
   const [period, setPeriod] = useState<PerformancePeriod>('week')
-  const buckets = usePerformanceSeries(period)
+  const { buckets, loading: loadingSeries, error: seriesError } = usePerformanceSeries(period)
+  const { progress } = useProgress()
 
   const hasAny = useMemo(() => buckets.some((b) => b.answered > 0), [buckets])
+  const chartAvg = useMemo(() => averageAccuracy(buckets), [buckets])
+  const globalAccuracy = progress?.accuracyPct ?? null
+  const hasGlobalProgress = globalAccuracy != null && (progress?.totalAnswered ?? 0) > 0
 
-  const { chartBuckets, chartAvg, isMock } = useMemo(() => {
-    if (hasAny) {
-      return {
-        chartBuckets: buckets,
-        chartAvg: averageAccuracy(buckets),
-        isMock: false,
-      }
-    }
-    const mock = buildMockBuckets(period, buckets)
-    return {
-      chartBuckets: mock,
-      chartAvg: averageAccuracy(mock),
-      isMock: true,
-    }
-  }, [hasAny, period, buckets])
-
-  const n = Math.max(chartBuckets.length, 1)
+  const n = Math.max(buckets.length, 1)
   const gap = 6
   const padL = 8
   const padR = 8
@@ -83,6 +40,8 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
   const w = 320
   const innerW = w - padL - padR
   const barW = (innerW - gap * (n - 1)) / n
+
+  const showSkeleton = loadingProgress || loadingSeries
 
   return (
     <section className="broto-perf-section" aria-labelledby="broto-perf-title">
@@ -107,92 +66,103 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
       </div>
 
       <div className="broto-perf-card">
-        {loadingProgress ? (
+        {showSkeleton ? (
           <div className="broto-perf-card__skeleton" aria-hidden />
         ) : (
           <>
             <p className="broto-perf-card__subtitle">
-              {period === 'week' && 'Últimos 7 dias — taxa de acerto por dia.'}
-              {period === 'month' && 'Últimas 4 semanas — taxa de acerto agregada.'}
-              {period === 'all' && 'Histórico por mês (neste navegador).'}
+              {period === 'week' && 'Últimos 7 dias (UTC) — taxa de acerto por dia, dados da sua conta.'}
+              {period === 'month' && 'Últimas 4 semanas — taxa de acerto agregada por semana.'}
+              {period === 'all' && 'Histórico por mês civil — até 12 meses com atividade.'}
             </p>
 
-            {isMock && (
-              <p className="broto-perf-mock-hint">
-                Gráfico de exemplo — ao responder questões, seus indicadores substituem esta
-                visualização.
+            {seriesError ? (
+              <p className="broto-perf-mock-hint" role="alert">
+                {seriesError}
               </p>
-            )}
+            ) : null}
 
-            {chartAvg !== null && (
+            {!hasAny && !seriesError ? (
+              <div style={{ padding: '8px 0 16px' }}>
+                <p className="broto-muted" style={{ margin: '0 0 12px', fontSize: '0.88rem' }}>
+                  Ainda não há respostas registradas neste período. Pratique questões para ver seu
+                  ritmo aqui.
+                </p>
+                {hasGlobalProgress ? (
+                  <p className="broto-perf-card__avg" style={{ marginBottom: 12 }}>
+                    Acerto geral no banco de questões: <strong>{globalAccuracy}%</strong>
+                  </p>
+                ) : null}
+                <Link to="/study/questions" className="broto-btn-primary broto-btn-primary--inline">
+                  Ir para questões
+                </Link>
+              </div>
+            ) : null}
+
+            {hasAny && chartAvg !== null ? (
               <p className="broto-perf-card__avg">
-                {isMock ? 'Média de exemplo: ' : 'Média no período: '}
-                <strong>{chartAvg}%</strong>
+                Média no período: <strong>{chartAvg}%</strong>
               </p>
-            )}
+            ) : null}
 
-            <div className={`broto-perf-chart-wrap${isMock ? ' broto-perf-chart-wrap--mock' : ''}`}>
-              <svg
-                className="broto-perf-chart"
-                viewBox={`0 0 ${w} ${chartH + padB}`}
-                preserveAspectRatio="xMidYMid meet"
-                role="img"
-                aria-label={
-                  isMock
-                    ? 'Exemplo de gráfico de desempenho'
-                    : 'Gráfico de taxa de acerto por período'
-                }
-              >
-                <defs>
-                  <linearGradient id="broto-perf-bar-grad" x1="0" y1="1" x2="0" y2="0">
-                    <stop offset="0%" stopColor="#059669" />
-                    <stop offset="100%" stopColor="#34d399" />
-                  </linearGradient>
-                </defs>
-                {chartBuckets.map((b, i) => {
-                  const x = padL + i * (barW + gap)
-                  const pct = b.accuracyPct
-                  const hFill = pct === null ? 6 : Math.max((pct / 100) * chartH, 8)
-                  const y = chartH - hFill
-                  const title = isMock
-                    ? `Exemplo ${b.label}: ${pct ?? '—'}%`
-                    : `${b.label}: ${pct !== null ? `${pct}%` : '—'} (${b.answered} quest.)`
-                  return (
-                    <g key={b.key}>
-                      <title>{title}</title>
-                      <rect
-                        x={x}
-                        y={0}
-                        width={barW}
-                        height={chartH}
-                        rx={4}
-                        className="broto-perf-chart__track"
-                      />
-                      <rect
-                        x={x}
-                        y={y}
-                        width={barW}
-                        height={hFill}
-                        rx={4}
-                        className={
-                          pct === null
-                            ? 'broto-perf-chart__bar broto-perf-chart__bar--empty'
-                            : 'broto-perf-chart__bar'
-                        }
-                      />
-                      <text
-                        x={x + barW / 2}
-                        y={chartH + 16}
-                        textAnchor="middle"
-                        className="broto-perf-chart__xlabel"
-                      >
-                        {b.label}
-                      </text>
-                    </g>
-                  )
-                })}
-              </svg>
-            </div>
+            {hasAny ? (
+              <div className="broto-perf-chart-wrap">
+                <svg
+                  className="broto-perf-chart"
+                  viewBox={`0 0 ${w} ${chartH + padB}`}
+                  preserveAspectRatio="xMidYMid meet"
+                  role="img"
+                  aria-label="Gráfico de taxa de acerto por período"
+                >
+                  <defs>
+                    <linearGradient id="broto-perf-bar-grad" x1="0" y1="1" x2="0" y2="0">
+                      <stop offset="0%" stopColor="#059669" />
+                      <stop offset="100%" stopColor="#34d399" />
+                    </linearGradient>
+                  </defs>
+                  {buckets.map((b, i) => {
+                    const x = padL + i * (barW + gap)
+                    const pct = b.accuracyPct
+                    const hFill = pct === null ? 6 : Math.max((pct / 100) * chartH, 8)
+                    const y = chartH - hFill
+                    const title = `${b.label}: ${pct !== null ? `${pct}%` : '—'} (${b.answered} quest.)`
+                    return (
+                      <g key={b.key}>
+                        <title>{title}</title>
+                        <rect
+                          x={x}
+                          y={0}
+                          width={barW}
+                          height={chartH}
+                          rx={4}
+                          className="broto-perf-chart__track"
+                        />
+                        <rect
+                          x={x}
+                          y={y}
+                          width={barW}
+                          height={hFill}
+                          rx={4}
+                          className={
+                            pct === null
+                              ? 'broto-perf-chart__bar broto-perf-chart__bar--empty'
+                              : 'broto-perf-chart__bar'
+                          }
+                        />
+                        <text
+                          x={x + barW / 2}
+                          y={chartH + 16}
+                          textAnchor="middle"
+                          className="broto-perf-chart__xlabel"
+                        >
+                          {b.label}
+                        </text>
+                      </g>
+                    )
+                  })}
+                </svg>
+              </div>
+            ) : null}
           </>
         )}
       </div>

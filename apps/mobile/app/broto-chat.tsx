@@ -80,6 +80,9 @@ export default function BrotoChatScreen() {
         { id: String(nextId.current++), role: 'assistant', content: resp.message },
       ])
     } catch (err) {
+      if (!(err instanceof ApiError)) {
+        console.error('[broto-chat] request failed (non-ApiError)', err)
+      }
       const detail = err instanceof ApiError ? err.message : ''
       setMessages((prev) => [
         ...prev,

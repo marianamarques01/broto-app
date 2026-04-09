@@ -78,7 +78,10 @@ export function HomeRightSidebar({ diaHoje, horasPorDia }: { diaHoje: DiaRotina 
 
   const questoesHoje = pet?.questoesHoje ?? 0
 
-  const missions = useMemo(() => buildDailyMissions(progress?.areas, daily), [progress?.areas, daily])
+  const missions = useMemo(
+    () => buildDailyMissions(progress?.areas, daily, pet?.studyTodayByArea),
+    [progress?.areas, daily, pet?.studyTodayByArea],
+  )
 
   const review = useMemo(() => buildFlashcardReviewCopy(progress?.areas), [progress?.areas])
 

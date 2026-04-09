@@ -29,7 +29,25 @@ export function Routine() {
     <div>
       <TopBar title="Rotina" subtitle="Seu plano de estudos semanal" />
 
-      <div className="broto-main-inner">
+        <div className="broto-main-inner">
+        <p
+          className="broto-muted"
+          style={{
+            fontSize: '0.88rem',
+            lineHeight: 1.5,
+            margin: '0 0 18px',
+            padding: '12px 14px',
+            borderRadius: 'var(--radius-sm)',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          Seu cronograma é gerado automaticamente neste aparelho: priorizamos áreas com menor taxa de
+          acerto (com base no que já foi respondido) e respeitamos suas horas de estudo por dia. Não é
+          um plano salvo no servidor — ao evoluir o produto, poderemos vincular a uma rotina
+          personalizada persistente ou sugerida pela IA.
+        </p>
+
         <div className="broto-routine-meta">
           <span className="broto-routine-meta__week">
             {loading ? '...' : semanaLabel}

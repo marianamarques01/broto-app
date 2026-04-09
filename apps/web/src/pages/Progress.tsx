@@ -152,7 +152,11 @@ export function Progress() {
   const { pet, loading: loadingPet } = usePet()
   const { user, loading: loadingUser } = useUser()
   const [chartPeriod, setChartPeriod] = useState<PerformancePeriod>('week')
-  const buckets = usePerformanceSeries(chartPeriod)
+  const {
+    buckets,
+    loading: chartLoading,
+    error: chartError,
+  } = usePerformanceSeries(chartPeriod)
 
   const loading = loadingProgress || loadingPet || loadingUser
   const hasData = !loadingProgress && progress !== null && progress.totalAnswered > 0
@@ -414,18 +418,26 @@ export function Progress() {
                   </div>
                 </div>
                 <p className="broto-prog-chart-sub">
-                  {chartPeriod === 'week' && 'Últimos 7 dias — taxa de acerto por dia'}
+                  {chartPeriod === 'week' && 'Últimos 7 dias (UTC) — taxa de acerto por dia, dados da conta'}
                   {chartPeriod === 'month' && 'Últimas 4 semanas — taxa agregada'}
-                  {chartPeriod === 'all' && 'Histórico mensal'}
+                  {chartPeriod === 'all' && 'Histórico mensal (até 12 meses)'}
                 </p>
+                {chartError ? (
+                  <p className="broto-prog-chart-empty" role="alert">
+                    {chartError}
+                  </p>
+                ) : null}
                 <div
-                  className={`broto-prog-chart-wrap${!chartHasData ? ' broto-prog-chart-wrap--empty' : ''}`}
+                  className={`broto-prog-chart-wrap${!chartHasData && !chartLoading ? ' broto-prog-chart-wrap--empty' : ''}`}
                 >
-                  {!chartHasData && (
+                  {chartLoading ? (
+                    <p className="broto-prog-chart-empty">Carregando histórico...</p>
+                  ) : null}
+                  {!chartLoading && !chartHasData && !chartError ? (
                     <p className="broto-prog-chart-empty">
                       Responda questões para ver seu gráfico de evolução.
                     </p>
-                  )}
+                  ) : null}
                   <svg
                     className="broto-prog-chart"
                     viewBox={`0 0 ${chartW} ${chartH + chartPadB}`}
