@@ -6524,6 +6524,19 @@ select.broto-select:focus {
   max-width: 480px;
 }
 
+.broto-qbank-intro--compact {
+  margin: 0 0 20px;
+}
+
+.broto-qbank-intro-title--compact {
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  margin: 0 0 6px;
+}
+
+.broto-main-inner--study .broto-qbank-shell {
+  margin-top: 0;
+}
+
 .broto-qbank-intro-stats {
   display: flex;
   gap: 10px;

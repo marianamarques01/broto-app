@@ -7,7 +7,6 @@ import {
   MessageCircle,
   LogOut,
   GraduationCap,
-  Library,
   Settings,
   UserCircle,
 } from 'lucide-react'
@@ -16,7 +15,6 @@ import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
 const NAV_ITEMS = [
   { path: '/', label: 'Inicio', icon: Home },
   { path: '/study', label: 'Área de Estudo', icon: GraduationCap },
-  { path: '/study/questions', label: 'Banco de questões', icon: Library },
   { path: '/progress', label: 'Progresso', icon: BarChart3 },
   { path: '/routine', label: 'Rotina', icon: CalendarCheck },
   { path: '/broto', label: 'Broto AI', icon: MessageCircle },
@@ -66,9 +64,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           <NavLink
             key={item.path}
             to={item.path}
-            end={
-              item.path === '/' || item.path === '/study' || item.path === '/study/questions'
-            }
+            end={item.path === '/' || item.path === '/study'}
             className={({ isActive }) =>
               `broto-sidebar__link${isActive ? ' broto-sidebar__link--active' : ''}`
             }

@@ -5,7 +5,6 @@ import { Login } from '@/pages/Login'
 import { Signup } from '@/pages/Signup'
 import { Onboarding } from '@/pages/Onboarding'
 import { Home } from '@/pages/Home'
-import { Study } from '@/pages/Study'
 import { StudyArea } from '@/pages/StudyArea'
 import { Progress } from '@/pages/Progress'
 import { Routine } from '@/pages/Routine'
@@ -52,7 +51,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { path: '/', element: <Home /> },
-      { path: '/study/questions', element: <Study /> },
+      { path: '/study/questions', element: <Navigate to="/study?bank=1" replace /> },
       { path: '/study/mock-exam', element: <MockExamConfig /> },
       { path: '/study/mock-exam/history', element: <MockExamHistory /> },
       { path: '/study/mock-exam/play/:sessionId', element: <MockExamPlay /> },

@@ -93,7 +93,7 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
                     Acerto geral no banco de questões: <strong>{globalAccuracy}%</strong>
                   </p>
                 ) : null}
-                <Link to="/study/questions" className="broto-btn-primary broto-btn-primary--inline">
+                <Link to="/study?bank=1" className="broto-btn-primary broto-btn-primary--inline">
                   Ir para questões
                 </Link>
               </div>
