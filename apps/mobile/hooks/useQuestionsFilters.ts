@@ -4,8 +4,8 @@ import { useClass } from '@/hooks/useClass'
 
 const QUESTIONS_LIMIT = 10
 const IDIOMAS_QUESTIONS_LIMIT = 5
-const LINGUAGENS_AREA_VALUE = 'linguagens'
-const IDIOMAS_TOPIC_ID = '__idiomas'
+export const LINGUAGENS_AREA_VALUE = 'linguagens'
+export const IDIOMAS_TOPIC_ID = '__idiomas'
 
 /** Apenas questões de 2015 a 2023. */
 const EXAM_YEAR_MIN = 2015
@@ -261,7 +261,11 @@ interface QuestionsFiltersActions {
   retry: () => void
 }
 
-export function useQuestionsFilters(): QuestionsFiltersState & QuestionsFiltersActions {
+export function useQuestionsFilters(options?: {
+  /** Quando true, não busca lista de questões ao mudar área (ex.: tela de montar simulado). */
+  skipQuestionFetch?: boolean
+}): QuestionsFiltersState & QuestionsFiltersActions {
+  const skipQuestionFetch = options?.skipQuestionFetch ?? false
   const { organization } = useClass()
   const baseUrl = getBaseUrl(organization?.slug ?? null)
   const canLoadInitialData = !!baseUrl
@@ -308,7 +312,7 @@ export function useQuestionsFilters(): QuestionsFiltersState & QuestionsFiltersA
       setLoading(false)
       return
     }
-    loadInitialData()
+    void loadInitialData()
   }, [canLoadInitialData, loadInitialData])
 
   useEffect(() => {
@@ -337,6 +341,10 @@ export function useQuestionsFilters(): QuestionsFiltersState & QuestionsFiltersA
   const isIdiomasTopicSelected = selectedTopico === IDIOMAS_TOPIC_ID
 
   useEffect(() => {
+    if (skipQuestionFetch) {
+      setLoadingQuestions(false)
+      return
+    }
     if (!selectedArea) {
       setQuestions([])
       return
@@ -385,6 +393,7 @@ export function useQuestionsFilters(): QuestionsFiltersState & QuestionsFiltersA
       })
       .finally(() => setLoadingQuestions(false))
   }, [
+    skipQuestionFetch,
     baseUrl,
     selectedArea,
     selectedYear,
@@ -395,7 +404,7 @@ export function useQuestionsFilters(): QuestionsFiltersState & QuestionsFiltersA
 
   const retry = useCallback(() => {
     if (areas.length === 0) {
-      loadInitialData()
+      void loadInitialData()
     } else {
       setLoadingQuestions(true)
       setError(null)

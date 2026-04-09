@@ -35,7 +35,9 @@ serve(async (req) => {
 
     const { data, error } = await supabaseAdmin
       .from('users')
-      .select('id, nome, email, image, onboarding_done, data_enem, horas_disponiveis_por_dia')
+      .select(
+        'id, nome, email, image, onboarding_done, data_enem, horas_disponiveis_por_dia, onboarding_profile',
+      )
       .eq('id', user.id)
       .maybeSingle()
 
@@ -49,6 +51,28 @@ serve(async (req) => {
 
     const dataEnem = data.data_enem != null ? String(data.data_enem).slice(0, 10) : null
 
+    const rawProfile = (data as { onboarding_profile?: unknown }).onboarding_profile
+    let onboardingProfile: unknown = null
+    if (rawProfile && typeof rawProfile === 'object' && !Array.isArray(rawProfile)) {
+      const p = rawProfile as Record<string, unknown>
+      const faculdade = typeof p.faculdade === 'string' ? p.faculdade : ''
+      const curso = typeof p.curso === 'string' ? p.curso : ''
+      const metaNota = typeof p.metaNota === 'number' ? p.metaNota : Number(p.metaNota) || 0
+      const horarios = Array.isArray(p.horarios)
+        ? (p.horarios as unknown[]).filter((h): h is string => typeof h === 'string')
+        : []
+      let niveis: Record<string, string | null> = {}
+      if (p.niveis && typeof p.niveis === 'object' && !Array.isArray(p.niveis)) {
+        niveis = Object.fromEntries(
+          Object.entries(p.niveis as Record<string, unknown>).map(([k, v]) => [
+            k,
+            v === null || v === undefined ? null : typeof v === 'string' ? v : null,
+          ]),
+        )
+      }
+      onboardingProfile = { faculdade, curso, metaNota, niveis, horarios }
+    }
+
     return json(
       200,
       {
@@ -59,6 +83,7 @@ serve(async (req) => {
         onboardingDone: Boolean(data.onboarding_done),
         dataEnem,
         horasDisponiveisPorDia: data.horas_disponiveis_por_dia ?? 2,
+        onboardingProfile,
       },
       cors,
     )

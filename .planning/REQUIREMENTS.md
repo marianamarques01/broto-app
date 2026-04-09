@@ -28,7 +28,7 @@
 - [x] **BUGF-02**: Race condition in mobile `api-client.ts` 401 handler fixed — uses Promise instead of boolean `handlingUnauthorized`
 - [x] **BUGF-03**: Silent error swallowing in `ClassContext.tsx` replaced with user-visible error state
 - [x] **BUGF-04**: Silent error swallowing in `daily-missions` catch blocks replaced with proper error propagation
-- [ ] **BUGF-05**: `broto-chat.tsx` error handler captures non-ApiError details for debugging — *mensagem genérica para não-ApiError; sem log estruturado*
+- [x] **BUGF-05**: `broto-chat.tsx` error handler captures non-ApiError details for debugging — *mobile + web `BrotoChat`: `console.error` apenas para não-`ApiError`*
 
 ### Security Hardening
 
@@ -79,8 +79,8 @@
 
 ### Onboarding
 
-- **ONBR-01**: Onboarding flow completed (currently has TODO stubs)
-- **ONBR-02**: Diagnostic quiz implemented post-onboarding
+- [x] **ONBR-01**: Onboarding flow completed — *persistência via Edge `user-onboarding` + coluna `users.onboarding_profile` (web + mobile)*
+- [x] **ONBR-02**: Diagnostic quiz implemented post-onboarding — *web + mobile: CTA cria `practice-session` e abre player*
 
 ### Simulado ENEM — aluno autogerido (SMCK)
 
@@ -90,8 +90,8 @@ Prefixo **SMCK** (*student mock*): rastreabilidade com `.planning/phases/feat-si
 - [ ] **SMCK-02**: Edge `practice-session-create` / `practice-session-complete` (ou função unificada) + `answer-question` aceita `sessionId` com validação de posse
 - [ ] **SMCK-03**: `@broto/shared` — tipos (`StudentMockExamConfig`, etc.) + `buildMockExamPayload` + testes Vitest (pool vazio, menor que N, multisseleção, **modo aleatório** só com N questões sobre corpus completo filtrado por regras de ano/idioma globais)
 - [ ] **SMCK-04**: Web — configurar simulado, integração `QuestionPlayer`, tela de resultado
-- [ ] **SMCK-05**: Mobile — paridade de fluxo e mensagens com a web
-- [ ] **SMCK-06**: Onboarding — CTA “Simulado diagnóstico” navega para fluxo com defaults fixos (cruza **ONBR-02**)
+- [x] **SMCK-05**: Mobile — paridade de fluxo e mensagens com a web — *rotas `app/mock-exam/*`, config + play + result + history*
+- [x] **SMCK-06**: Onboarding — CTA “Simulado diagnóstico” navega para fluxo com defaults fixos (cruza **ONBR-02**)
 - [ ] **SMCK-07**: Histórico de simulados do aluno (listagem de sessões concluídas)
 - [ ] **SMCK-08**: Ranking / percentis entre alunos — *deferred* (LGPD, opt-in, agregações); não faz parte do MVP em PLAN wave 1
 

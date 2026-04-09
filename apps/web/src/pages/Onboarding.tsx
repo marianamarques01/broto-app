@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useClass } from '@/hooks/useClass'
+import { refreshUser } from '@/hooks/useUser'
 import { api } from '@/lib/api-client'
 import { formatMockExamFlowError } from '@/lib/mock-exam-flow-error'
 import { getQuestionsStaticBaseUrl } from '@/lib/questions-static-base'
@@ -488,12 +489,16 @@ function StepResumo({
   onStart,
   simuladoLoading,
   simuladoError,
+  saveLoading,
+  saveError,
 }: {
   data: OnboardingState
-  onSimulado: () => void
-  onStart: () => void
+  onSimulado: () => void | Promise<void>
+  onStart: () => void | Promise<void>
   simuladoLoading: boolean
   simuladoError: string | null
+  saveLoading: boolean
+  saveError: string | null
 }) {
   const nivelLabel = (n: NivelArea | null) =>
     n === 'avancado' ? 'Ava' : n === 'intermediario' ? 'Int' : 'Ini'
@@ -558,7 +563,7 @@ function StepResumo({
           type="button"
           onClick={() => void onSimulado()}
           className="broto-btn-primary"
-          disabled={simuladoLoading}
+          disabled={simuladoLoading || saveLoading}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
         >
           {simuladoLoading ? (
@@ -570,8 +575,26 @@ function StepResumo({
         </button>
       </div>
 
-      <button type="button" onClick={onStart} className="onb-btn-secondary">
-        Comecar sem simulado
+      {saveError ? (
+        <p className="onb-hint" style={{ color: 'var(--red-400)', marginTop: 8 }}>
+          {saveError}
+        </p>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={() => void onStart()}
+        className="onb-btn-secondary"
+        disabled={saveLoading || simuladoLoading}
+      >
+        {saveLoading ? (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <Loader2 size={16} style={{ animation: 'broto-rotate 0.7s linear infinite' }} />
+            Salvando...
+          </span>
+        ) : (
+          'Comecar sem simulado'
+        )}
       </button>
     </div>
   )
@@ -587,6 +610,8 @@ export function Onboarding() {
   const [step, setStep] = useState(0)
   const [simuladoLoading, setSimuladoLoading] = useState(false)
   const [simuladoError, setSimuladoError] = useState<string | null>(null)
+  const [saveLoading, setSaveLoading] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [data, setData] = useState<OnboardingState>({
     faculdade: '',
     curso: '',
@@ -609,10 +634,26 @@ export function Onboarding() {
   const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS))
   const goBack = () => setStep((s) => Math.max(s - 1, 0))
 
-  const handleFinish = () => {
-    // TODO: save data via API
-    navigate('/')
-  }
+  const handleFinish = useCallback(async () => {
+    setSaveError(null)
+    setSaveLoading(true)
+    try {
+      await api.post('/api/user/onboarding', {
+        faculdade: data.faculdade,
+        curso: data.curso,
+        metaNota: data.metaNota,
+        niveis: data.niveis,
+        horasPorDia: data.horasPorDia,
+        horarios: data.horarios,
+      })
+      await refreshUser()
+      navigate('/')
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Erro ao salvar')
+    } finally {
+      setSaveLoading(false)
+    }
+  }, [data, navigate])
 
   const handleSimulado = useCallback(async () => {
     setSimuladoError(null)
@@ -625,6 +666,16 @@ export function Onboarding() {
     const cfg = ONBOARDING_DIAGNOSTIC_MOCK_CFG
     setSimuladoLoading(true)
     try {
+      await api.post('/api/user/onboarding', {
+        faculdade: data.faculdade,
+        curso: data.curso,
+        metaNota: data.metaNota,
+        niveis: data.niveis,
+        horasPorDia: data.horasPorDia,
+        horarios: data.horarios,
+      })
+      await refreshUser()
+
       const pool = await loadMockExamPool({
         baseUrl,
         randomMode: cfg.randomMode,
@@ -688,11 +739,24 @@ export function Onboarding() {
     } finally {
       setSimuladoLoading(false)
     }
-  }, [navigate, organization?.slug])
+  }, [navigate, organization?.slug, data])
 
-  const handleSkipAll = () => {
+  const handleSkipAll = useCallback(async () => {
+    try {
+      await api.post('/api/user/onboarding', {
+        faculdade: '',
+        curso: '',
+        metaNota: 0,
+        niveis: {},
+        horasPorDia: 2,
+        horarios: [],
+      })
+      await refreshUser()
+    } catch {
+      // ainda navega — usuario pode editar perfil depois
+    }
     navigate('/')
-  }
+  }, [navigate])
 
   const nome = user?.nome?.split(' ')[0] ?? ''
 
@@ -730,6 +794,8 @@ export function Onboarding() {
               onStart={handleFinish}
               simuladoLoading={simuladoLoading}
               simuladoError={simuladoError}
+              saveLoading={saveLoading}
+              saveError={saveError}
             />
           )}
         </div>
