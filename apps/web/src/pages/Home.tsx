@@ -13,12 +13,8 @@ import { gerarRotina } from '@/lib/routine'
 import { DEFAULT_AREAS } from '@/lib/default-areas'
 import { HomeRightSidebar } from '@/components/home/HomeRightSidebar'
 import { HomePetBanner } from '@/components/home/HomePetBanner'
-import { HomeDashboardMetricsPlaceholder } from '@/components/home/HomeDashboardMetricsPlaceholder'
 import { AREA_ACCENT_VARS, StudyAreaCardPattern } from '@/components/study/study-area-card-pattern'
 import { BrotoChatModal } from '@/components/broto/BrotoChatModal'
-
-/** `false` = oculta KPIs (Acerto, Questões…) e o bloco “Desempenho” no dashboard. */
-const SHOW_HOME_METRICS_SECTION = false
 
 function plantStatusLine(fase: keyof typeof FASE_LABEL): string {
   const lines: Record<keyof typeof FASE_LABEL, string> = {
@@ -131,11 +127,7 @@ export function Home() {
                 </div>
               </div>
 
-              {SHOW_HOME_METRICS_SECTION ? (
-                <DashboardStudyStats />
-              ) : (
-                <HomeDashboardMetricsPlaceholder />
-              )}
+              <DashboardStudyStats />
 
               {/* Card legado do Broto: mantido no DOM, oculto via CSS (substituído pelo banner) */}
               <div className="broto-pet-card-legacy" aria-hidden>
@@ -143,11 +135,9 @@ export function Home() {
               </div>
 
               {/* Desempenho — largura total após mover Acesso rápido para a hero */}
-              {SHOW_HOME_METRICS_SECTION ? (
-                <div className="broto-dashboard-col broto-dashboard-col--center">
-                  <PerformanceChartCard loadingProgress={loadingProgress} />
-                </div>
-              ) : null}
+              <div className="broto-dashboard-col broto-dashboard-col--center">
+                <PerformanceChartCard loadingProgress={loadingProgress} />
+              </div>
              </div>
           </div>
         </div>

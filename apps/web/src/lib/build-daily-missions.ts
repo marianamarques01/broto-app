@@ -17,10 +17,34 @@ export interface DailyMissionItem {
   locked: boolean
 }
 
+function mergeByAreaWithServer(
+  daily: DailyMissionsState,
+  serverToday?: Record<string, { answered: number; correct: number }>,
+): DailyMissionsState['byArea'] {
+  if (!serverToday || Object.keys(serverToday).length === 0) return daily.byArea
+  const keys = new Set([
+    ...Object.keys(daily.byArea),
+    ...Object.keys(serverToday),
+  ])
+  const out: DailyMissionsState['byArea'] = {}
+  for (const k of keys) {
+    const l = daily.byArea[k] ?? { answered: 0, correct: 0 }
+    const s = serverToday[k] ?? { answered: 0, correct: 0 }
+    out[k] = {
+      answered: Math.max(l.answered, s.answered),
+      correct: Math.max(l.correct, s.correct),
+    }
+  }
+  return out
+}
+
 export function buildDailyMissions(
   areas: AreaStat[] | undefined,
   daily: DailyMissionsState,
+  /** Contagens do dia vindas do banco (`pet-me`) para alinhar missões ao servidor. */
+  studyTodayByArea?: Record<string, { answered: number; correct: number }>,
 ): DailyMissionItem[] {
+  const byArea = mergeByAreaWithServer(daily, studyTodayByArea)
   const sortedKeys = areas?.length
     ? [...areas]
         .filter((a) => a.totalAnswered >= 1)
@@ -34,8 +58,8 @@ export function buildDailyMissions(
     sortedKeys[2] ?? DEFAULT_MISSION_AREAS[2],
   ]
 
-  const areaAnswered = (key: string) => daily.byArea[key]?.answered ?? 0
-  const areaCorrect = (key: string) => daily.byArea[key]?.correct ?? 0
+  const areaAnswered = (key: string) => byArea[key]?.answered ?? 0
+  const areaCorrect = (key: string) => byArea[key]?.correct ?? 0
   const areaAccuracy = (key: string) => {
     const a = areaAnswered(key)
     if (a === 0) return null

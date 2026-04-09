@@ -1,13 +1,5 @@
-export type PerformancePeriod = 'week' | 'month' | 'all'
-
-export interface PerformanceBucket {
-  key: string
-  label: string
-  answered: number
-  correct: number
-  /** null quando não houve questões no bucket */
-  accuracyPct: number | null
-}
+export type { PerformancePeriod, PerformanceBucket } from '@broto/shared'
+import type { PerformanceBucket, PerformancePeriod } from '@broto/shared'
 
 const STORAGE_KEY = 'broto:perf-days:v1'
 

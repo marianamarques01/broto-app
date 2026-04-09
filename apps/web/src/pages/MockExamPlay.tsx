@@ -140,7 +140,10 @@ export function MockExamPlay() {
       void api
         .patch('/api/practice-session/complete', { sessionId: sid, summary })
         .catch(() => {})
-      navigate('/study/mock-exam/result', { state: { summary, sessionId: sid } })
+      navigate(
+        `/study/mock-exam/result?sessionId=${encodeURIComponent(sid)}`,
+        { state: { summary, sessionId: sid } },
+      )
       return
     }
     setIndex((i) => i + 1)
