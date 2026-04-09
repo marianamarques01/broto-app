@@ -26,7 +26,10 @@ export function TopBar({ title, subtitle, studyBreadcrumb, variant = 'default' }
     <header className={`broto-topbar${isStudy ? ' broto-topbar--study' : ''}`}>
       {isStudy ? (
         <div className="broto-topbar__study-lead">
-          <h2 className="broto-topbar__title">{title}</h2>
+          <div className="broto-topbar__study-lead-primary">
+            <h2 className="broto-topbar__title">{title}</h2>
+            {subtitle ? <p className="broto-topbar__subtitle broto-topbar__subtitle--study">{subtitle}</p> : null}
+          </div>
           {studyBreadcrumb ? (
             <div className="broto-topbar__breadcrumb-inline">
               <span className="broto-topbar__breadcrumb-area">{studyBreadcrumb.area}</span>

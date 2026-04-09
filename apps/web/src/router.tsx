@@ -13,6 +13,10 @@ import { JoinClass } from '@/pages/JoinClass'
 import { BrotoPage } from '@/pages/BrotoPage'
 import { Settings } from '@/pages/Settings'
 import { Profile } from '@/pages/Profile'
+import { MockExamConfig } from '@/pages/MockExamConfig'
+import { MockExamHistory } from '@/pages/MockExamHistory'
+import { MockExamPlay } from '@/pages/MockExamPlay'
+import { MockExamResult } from '@/pages/MockExamResult'
 import { Link } from 'react-router-dom'
 
 function NotFound() {
@@ -49,6 +53,10 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <Home /> },
       { path: '/study/questions', element: <Study /> },
+      { path: '/study/mock-exam', element: <MockExamConfig /> },
+      { path: '/study/mock-exam/history', element: <MockExamHistory /> },
+      { path: '/study/mock-exam/play/:sessionId', element: <MockExamPlay /> },
+      { path: '/study/mock-exam/result', element: <MockExamResult /> },
       { path: '/study', element: <StudyArea /> },
       { path: '/study-area', element: <Navigate to="/study" replace /> },
       { path: '/progress', element: <Progress /> },

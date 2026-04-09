@@ -16,7 +16,8 @@ import type { Question } from '@broto/shared'
 import { getQuestionId } from '@broto/shared'
 import { getAreaColor } from '@/lib/area-config'
 import { useProgress } from '@/hooks/useProgress'
-import { ArrowRight, ChevronLeft, ChevronRight, Clock, Search, SlidersHorizontal } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, Brain, ChevronLeft, ChevronRight, Clock, Search, SlidersHorizontal } from 'lucide-react'
 
 const PAGE_SIZE = 8
 
@@ -433,6 +434,32 @@ export function Study() {
                 </div>
               </div>
             </section>
+
+            <Link
+              className="broto-qbank-destaque broto-qbank-destaque--link"
+              to="/study/mock-exam"
+              aria-labelledby="broto-qbank-destaque-mock-title"
+            >
+              <div className="broto-qbank-destaque__icon" aria-hidden>
+                <Brain size={22} strokeWidth={1.75} />
+              </div>
+              <div className="broto-qbank-destaque__main">
+                <h3 id="broto-qbank-destaque-mock-title" className="broto-qbank-destaque__title">
+                  Simulado ENEM
+                </h3>
+                <p className="broto-qbank-destaque__desc">
+                  Resolva várias questões em sequência, com correção e resumo ao final. Defina quantidade,
+                  anos, áreas e tópicos — ou ative o modo aleatório para treinar com sorteio do banco, no
+                  espírito da prova.
+                </p>
+              </div>
+              <ChevronRight
+                className="broto-qbank-destaque__chev"
+                size={22}
+                strokeWidth={2}
+                aria-hidden
+              />
+            </Link>
 
             <div className="broto-qbank-area-tabs" role="tablist" aria-label="Áreas do ENEM">
               {areas.map((area) => {

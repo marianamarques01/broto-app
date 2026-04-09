@@ -1,6 +1,16 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { useClass } from '@/hooks/useClass'
+import { api } from '@/lib/api-client'
+import { formatMockExamFlowError } from '@/lib/mock-exam-flow-error'
+import { getQuestionsStaticBaseUrl } from '@/lib/questions-static-base'
+import {
+  buildMockExamPayload,
+  fetchMockExamQuestions,
+  loadMockExamPool,
+  type StudentMockExamConfig,
+} from '@broto/shared'
 import {
   GraduationCap,
   Target,
@@ -18,11 +28,23 @@ import {
   Calculator,
   Brain,
   Check,
+  Loader2,
 } from 'lucide-react'
 
 /* ── Constants ──────────────────────────────────────────── */
 
 const TOTAL_STEPS = 6
+
+/** Simulado diagnóstico pós-onboarding: 20 questões, 5 por área (valores = `areas.json` / `details.discipline`). */
+const ONBOARDING_DIAGNOSTIC_MOCK_CFG: StudentMockExamConfig = {
+  nQuestoes: 20,
+  randomMode: false,
+  areaValues: ['linguagens', 'ciencias-humanas', 'ciencias-natureza', 'matematica'],
+  topicoValues: [],
+  years: [],
+  language: '',
+  expandLinguagensIdiomas: false,
+}
 
 const CURSOS_POPULARES = [
   'Medicina',
@@ -464,10 +486,14 @@ function StepResumo({
   data,
   onSimulado,
   onStart,
+  simuladoLoading,
+  simuladoError,
 }: {
   data: OnboardingState
   onSimulado: () => void
   onStart: () => void
+  simuladoLoading: boolean
+  simuladoError: string | null
 }) {
   const nivelLabel = (n: NivelArea | null) =>
     n === 'avancado' ? 'Ava' : n === 'intermediario' ? 'Int' : 'Ini'
@@ -523,12 +549,28 @@ function StepResumo({
         <p className="onb-simulado-card__desc">
           5 questoes de cada area (~15 min). Com isso, seu plano fica ainda mais preciso!
         </p>
-        <button onClick={onSimulado} className="broto-btn-primary">
-          <Brain size={16} /> Fazer simulado
+        {simuladoError ? (
+          <p className="onb-hint" style={{ color: 'var(--red-400)', marginBottom: 8 }}>
+            {simuladoError}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => void onSimulado()}
+          className="broto-btn-primary"
+          disabled={simuladoLoading}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+        >
+          {simuladoLoading ? (
+            <Loader2 size={16} style={{ animation: 'broto-rotate 0.7s linear infinite' }} />
+          ) : (
+            <Brain size={16} />
+          )}
+          Fazer simulado
         </button>
       </div>
 
-      <button onClick={onStart} className="onb-btn-secondary">
+      <button type="button" onClick={onStart} className="onb-btn-secondary">
         Comecar sem simulado
       </button>
     </div>
@@ -539,9 +581,12 @@ function StepResumo({
 
 export function Onboarding() {
   const { user } = useAuth()
+  const { organization } = useClass()
   const navigate = useNavigate()
 
   const [step, setStep] = useState(0)
+  const [simuladoLoading, setSimuladoLoading] = useState(false)
+  const [simuladoError, setSimuladoError] = useState<string | null>(null)
   const [data, setData] = useState<OnboardingState>({
     faculdade: '',
     curso: '',
@@ -569,10 +614,81 @@ export function Onboarding() {
     navigate('/')
   }
 
-  const handleSimulado = () => {
-    // TODO: navigate to diagnostic quiz
-    navigate('/')
-  }
+  const handleSimulado = useCallback(async () => {
+    setSimuladoError(null)
+    const baseUrl = getQuestionsStaticBaseUrl(organization?.slug ?? null)
+    if (!baseUrl) {
+      setSimuladoError('Nao foi possivel carregar o banco de questoes.')
+      return
+    }
+
+    const cfg = ONBOARDING_DIAGNOSTIC_MOCK_CFG
+    setSimuladoLoading(true)
+    try {
+      const pool = await loadMockExamPool({
+        baseUrl,
+        randomMode: cfg.randomMode,
+        areaValues: cfg.areaValues,
+        topicoValues: cfg.topicoValues,
+        years: cfg.years,
+        language: cfg.language,
+        expandLinguagensIdiomas: cfg.expandLinguagensIdiomas,
+      })
+
+      const built = buildMockExamPayload(
+        cfg.nQuestoes,
+        cfg.randomMode,
+        cfg.areaValues,
+        pool,
+      )
+
+      if (!built.ok) {
+        if (built.error.code === 'POOL_EMPTY') {
+          setSimuladoError(
+            'Nenhuma questao encontrada. Tente novamente em instantes ou use a area de estudo.',
+          )
+        } else {
+          setSimuladoError(
+            `Nao ha questoes suficientes: pedidas ${built.error.requested}, disponiveis ${built.error.poolSize}.`,
+          )
+        }
+        return
+      }
+
+      const questions = await fetchMockExamQuestions(baseUrl, built.questionIds)
+      if (questions.length === 0) {
+        setSimuladoError('Nao foi possivel carregar o conteudo das questoes. Tente novamente.')
+        return
+      }
+      if (questions.length < built.questionIds.length) {
+        setSimuladoError('Algumas questoes nao puderam ser carregadas. Tente de novo.')
+        return
+      }
+
+      type CreateRes = { sessionId?: string; questionIds?: string[] }
+      const created = await api.post<CreateRes>('/api/practice-session/create', {
+        config: cfg,
+        questionIds: built.questionIds,
+      })
+
+      if (!created.sessionId) {
+        setSimuladoError('Erro ao criar sessao no servidor.')
+        return
+      }
+
+      navigate(`/study/mock-exam/play/${created.sessionId}`, {
+        state: {
+          questions,
+          sessionId: created.sessionId,
+          questionIds: built.questionIds,
+        },
+      })
+    } catch (e) {
+      setSimuladoError(formatMockExamFlowError(e))
+    } finally {
+      setSimuladoLoading(false)
+    }
+  }, [navigate, organization?.slug])
 
   const handleSkipAll = () => {
     navigate('/')
@@ -608,7 +724,13 @@ export function Onboarding() {
           {step === 3 && <StepNivel data={data} onChange={updateData} />}
           {step === 4 && <StepDisponibilidade data={data} onChange={updateData} />}
           {step === 5 && (
-            <StepResumo data={data} onSimulado={handleSimulado} onStart={handleFinish} />
+            <StepResumo
+              data={data}
+              onSimulado={handleSimulado}
+              onStart={handleFinish}
+              simuladoLoading={simuladoLoading}
+              simuladoError={simuladoError}
+            />
           )}
         </div>
 

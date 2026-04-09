@@ -38,6 +38,9 @@ type Tab = 'summary' | 'flashcards' | 'questions' | 'mindmap'
 const RING_R = 19
 const RING_C = 2 * Math.PI * RING_R
 
+/** Áreas reais do ENEM — `sem_area` é só fallback de dados, não entra na grade. */
+const STUDY_AREA_CARD_KEYS = Object.keys(AREA_CONFIG).filter((k) => k !== 'sem_area')
+
 function computeTopicStats(topics: TopicOption[]) {
   const totalAnswered = topics.reduce((s, t) => s + t.totalAnswered, 0)
   const withData = topics.filter((t) => t.accuracy !== null)
@@ -59,7 +62,7 @@ function computeTopicStats(topics: TopicOption[]) {
 
 function topicsForScope(areaKey: string | null): TopicOption[] {
   if (areaKey) return getMockTopics(areaKey)
-  return Object.keys(AREA_CONFIG).flatMap((k) => getMockTopics(k))
+  return STUDY_AREA_CARD_KEYS.flatMap((k) => getMockTopics(k))
 }
 
 function areaCardAverage(areaKey: string): number | null {
@@ -75,7 +78,7 @@ function getGlobalWeakest():
   | { areaKey: string; topic: TopicOption; areaLabel: string }
   | null {
   let best: { areaKey: string; topic: TopicOption; acc: number } | null = null
-  for (const key of Object.keys(AREA_CONFIG)) {
+  for (const key of STUDY_AREA_CARD_KEYS) {
     for (const t of getMockTopics(key)) {
       if (t.accuracy === null) continue
       if (!best || t.accuracy < best.acc) {
@@ -200,7 +203,7 @@ function AreaTopicSelector({
     ? weakestInArea?.value
     : globalPick?.topic.value
 
-  const areaKeys = Object.keys(AREA_CONFIG)
+  const areaKeys = STUDY_AREA_CARD_KEYS
   const areaDelays = [100, 180, 260, 340]
 
   return (
@@ -320,6 +323,22 @@ function AreaTopicSelector({
             </p>
             <div className="study-banco__arrow">
               Acessar
+              <ChevronRight size={14} strokeWidth={2} aria-hidden />
+            </div>
+          </Link>
+
+          <Link className="study-banco" to="/study/mock-exam">
+            <div className="study-banco__head">
+              <div className="study-banco__icon">
+                <Brain size={16} strokeWidth={1.8} aria-hidden />
+              </div>
+              <h4 className="study-banco__title">Simulado ENEM</h4>
+            </div>
+            <p className="study-banco__desc">
+              Monte um simulado com quantidade e filtros personalizados e acompanhe o resultado.
+            </p>
+            <div className="study-banco__arrow">
+              Configurar
               <ChevronRight size={14} strokeWidth={2} aria-hidden />
             </div>
           </Link>

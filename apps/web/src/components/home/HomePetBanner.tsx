@@ -7,7 +7,7 @@ const META_QUESTOES_DIA = 3
 function PetXpRing({ pct, size }: { pct: number; size: number }) {
   const rawId = useId()
   const gradId = `broto-pet-ring-grad-${rawId.replace(/:/g, '')}`
-  const stroke = 4
+  const stroke = 5
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
   const p = Math.min(100, Math.max(0, pct))
@@ -68,7 +68,7 @@ export function HomePetBanner() {
   const hitPct = questoesHoje > 0 ? Math.round((acertosHoje / questoesHoje) * 100) : null
 
   /** Diâmetro do anel XP — anel mais justo ao emoji (tamanho do emoji só no CSS). */
-  const ringSize = 88
+  const ringSize = 108
 
   return (
     <section

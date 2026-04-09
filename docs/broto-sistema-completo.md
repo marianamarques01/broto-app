@@ -362,7 +362,7 @@ npm run typecheck                 # Todos os apps
 
   e 
 
-    **Simulado ENEM/Prova (professor cria, aluno faz)**:
+  **Simulado ENEM/Prova (professor cria, aluno faz)**:
    - Professor configura um simulado escolhendo **numero de questoes**, **materias/areas**, **topicos**, **dificuldade (opcional)**, **tempo total**, **regras** (ex: permitir pausar, mostrar gabarito ao final).
    - O sistema gera a prova a partir do banco de questoes (ex: ENEM por ano/area/topico) e publica para uma turma (com janela de disponibilidade).
    - Aluno realiza o simulado com experiencia de prova: cronometro, navegacao por questoes, marcacao para revisao, envio final.

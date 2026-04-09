@@ -5,6 +5,10 @@
 **Branch:** `plan/simulado-enem-aluno`  
 **Rastreio GSD:** requisitos **SMCK-01** … **SMCK-08** em [.planning/REQUIREMENTS.md](../.planning/REQUIREMENTS.md); tarefas em [.planning/phases/feat-simulado-enem-aluno/PLAN.md](../.planning/phases/feat-simulado-enem-aluno/PLAN.md).
 
+### Convenção de IDs (time Broto)
+
+O time padroniza requisitos como **`PREFIXO-NN`**: exatamente **quatro letras**, hífen, **dois dígitos** (`01` … `99`), listados e atualizados em `REQUIREMENTS.md`. Cada família tem um prefixo estável (ex.: **TOOL-** tooling, **CONS-** consolidação, **ONBR-** onboarding). O escopo **simulado autogerido pelo aluno** usa o prefixo **SMCK** (*student mock*), **SMCK-01** … **SMCK-08**. Interseções com outras famílias aparecem no texto (ex.: **ONBR-02** para o diagnóstico pós-onboarding).
+
 ---
 
 ## 1. Objetivo do produto
@@ -39,6 +43,15 @@ Permitir que o aluno **monte um simulado personalizado** (quantidade, áreas, t�
 
 **Fora do MVP inicial (backlog explícito):** ranking global e percentis (exige agregações entre usuários, política de privacidade/LGPD e custo de queries).
 
+| Tema funcional (§3) | Requisito |
+|---------------------|-----------|
+| Configuração + atalho aleatório | **SMCK-03**, **SMCK-04**, **SMCK-05** |
+| Geração (sem repetição, pool &lt; N) | **SMCK-03** |
+| Execução no player + `answer-question` | **SMCK-02**, **SMCK-04**, **SMCK-05** |
+| Resultado imediato (%, área, tópico, tempo) | **SMCK-02**, **SMCK-04**, **SMCK-05** |
+| Histórico | **SMCK-07** |
+| Ranking / percentis | **SMCK-08** (deferred) |
+
 ---
 
 ## 4. Requisitos não funcionais
@@ -68,6 +81,32 @@ Permitir que o aluno **monte um simulado personalizado** (quantidade, áreas, t�
 **RLS:** políticas no mesmo espírito de `user_question_answers` (dono lê/escreve; staff conforme matriz PR08).
 
 **Alternativa mais enxuta (só se quiser evitar migração no primeiro slice):** sessão apenas em memória/localStorage + relatório pontual; **não** recomendado se o objetivo é histórico e consistência multi-dispositivo.
+
+### Diagrama — modelo alvo (MVP)
+
+```mermaid
+erDiagram
+  practice_sessions ||--o{ user_question_answers : "session_id (opcional)"
+  users ||--o{ practice_sessions : owns
+  users ||--o{ user_question_answers : owns
+
+  practice_sessions {
+    uuid id PK
+    uuid user_id FK
+    timestamptz created_at
+    timestamptz completed_at "nullable"
+    text kind "ex. student_mock"
+    jsonb config
+    jsonb question_ids
+    jsonb summary "nullable pós-prova"
+  }
+
+  user_question_answers {
+    uuid id PK
+    uuid user_id FK
+    uuid session_id FK "nullable, fluxo legado"
+  }
+```
 
 ---
 
@@ -102,6 +141,44 @@ Registro de cada resposta continua em **`answer-question`**; estender payload co
 - Player: passar `initialQueue` + `onSessionComplete` para fechar sessão e navegar para **Resultado**.
 - Onboarding: trocar `TODO` por navegação para **fluxo de simulado** com config **fixa** equivalente ao diagnóstico (20q / 5 por área) ou deep link para nova tela com defaults pré-preenchidos.
 
+### Diagrama — fluxo ponta a ponta
+
+```mermaid
+flowchart LR
+  subgraph Entrada["Entrada"]
+    A[Home / Estudo / ONBR]
+    B[Configurar simulado]
+  end
+  subgraph Core["Núcleo"]
+    C["buildMockExamPayload\n(SMCK-03)"]
+    D[POST practice-session]
+    E[QuestionPlayer]
+    F["answer-question\n+ sessionId"]
+    G[PATCH complete + summary]
+  end
+  subgraph Saida["Saída"]
+    H[Resultado]
+    I[Desempenho por tópico]
+    J[Histórico SMCK-07]
+  end
+
+  A --> B
+  B --> C
+  C --> D
+  D --> E
+  E --> F
+  F --> E
+  E --> G
+  G --> H
+  F --> I
+  H --> J
+
+  classDef dim fill:#eef6ff,stroke:#2c5282,stroke-width:1px
+  classDef core fill:#f0fff4,stroke:#276749,stroke-width:1px
+  class Entrada,Saida dim
+  class Core core
+```
+
 ---
 
 ## 8. Indicadores e tela de progresso
@@ -121,6 +198,37 @@ Registro de cada resposta continua em **`answer-question`**; estender payload co
 5. Mobile: paridade.
 6. Onboarding: ligar CTA ao fluxo com defaults diagnósticos.
 7. Polish: histórico, seed/compartilhar, acessibilidade e cópia em PT-BR.
+
+### Mapa SMCK ↔ ordem (espelha PLAN.md)
+
+Na prática **SMCK-02** e **SMCK-03** seguem **SMCK-01** em paralelo; **SMCK-04** só fecha quando ambos + amostragem estável.
+
+```mermaid
+flowchart TB
+  SMCK01["SMCK-01\nSchema + RLS"]
+  SMCK02["SMCK-02\nEdges + sessionId"]
+  SMCK03["SMCK-03\nshared + testes"]
+  SMCK04["SMCK-04\nWeb"]
+  SMCK05["SMCK-05\nMobile"]
+  SMCK06["SMCK-06\nOnboarding"]
+  SMCK07["SMCK-07\nHistórico"]
+  SMCK08["SMCK-08\nRanking — fora do MVP"]
+
+  SMCK01 --> SMCK02
+  SMCK01 --> SMCK03
+  SMCK02 --> SMCK04
+  SMCK03 --> SMCK04
+  SMCK04 --> SMCK05
+  SMCK04 --> SMCK06
+  SMCK04 --> SMCK07
+
+  classDef wave fill:#e8f4fc,stroke:#1565a0,stroke-width:2px,color:#0d3d61
+  classDef defer fill:#fafafa,stroke:#9e9e9e,stroke-width:1px,stroke-dasharray: 6 4,color:#616161
+  class SMCK01,SMCK02,SMCK03,SMCK04,SMCK05,SMCK06,SMCK07 wave
+  class SMCK08 defer
+```
+
+*Setas = dependência lógica de entrega, não calendário. **SMCK-08** permanece em backlog.*
 
 ---
 

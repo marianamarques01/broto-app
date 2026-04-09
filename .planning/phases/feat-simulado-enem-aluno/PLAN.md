@@ -23,6 +23,9 @@ requirements:
   - SMCK-07
   - SMCK-08
 
+# Rastreio: IDs seguem REQUIREMENTS.md — prefixo de 4 letras + traço + 2 dígitos (ex. SMCK-03).
+# SMCK = simulado autogerido pelo aluno (student mock). Cross-ref: ONBR-02 (onboarding diagnóstico).
+
 must_haves:
   truths:
     - "Aluno monta simulado (N, áreas, tópicos, filtros) e recebe N questões distintas quando o pool permite"
@@ -48,6 +51,93 @@ Implementar o **simulado ENEM autogerido pelo aluno**: configuração de critér
 
 Referência de contexto: `docs/plan-simulado-enem-aluno.md`, `docs/broto-sistema-completo.md`, `docs/onboarding-flow.md`.
 </objective>
+
+## Convenção de requisitos (time)
+
+| Padrão | Exemplo | Onde vive |
+|--------|---------|-----------|
+| `AAAA-NN` — prefixo de **4 letras** + hífen + **2 dígitos** | `SMCK-03`, `TOOL-01` | [.planning/REQUIREMENTS.md](../../REQUIREMENTS.md) |
+| Família **SMCK** (*student mock*) | **SMCK-01** … **SMCK-08** | Este phase + doc `docs/plan-simulado-enem-aluno.md` |
+| Cross-cutting | **ONBR-02** (diagnóstico pós-onboarding) | Tarefa 6 encosta em onboarding |
+
+Tarefas abaixo citam o ID no `<name>` e repetem em *acceptance_criteria* quando o requisito é o critério principal.
+
+## Ondas e dependências (SMCK)
+
+| Wave | Requisitos | Entrega |
+|------|------------|---------|
+| **W1 — Fundação** | SMCK-01, SMCK-02, SMCK-03 | Schema + API + `buildMockExamPayload` testado |
+| **W2 — Produto** | SMCK-04, SMCK-05 | Web + mobile MVP (config → player → resultado) |
+| **W3 — Entrada e histórico** | SMCK-06, SMCK-07 | Onboarding + lista de sessões |
+| **Backlog** | SMCK-08 (Deferred) | Ranking/percentis — não entra no wave 1 |
+
+```mermaid
+flowchart TB
+  subgraph W1["Wave 1 — Fundação"]
+    SMCK01["SMCK-01\nSchema + RLS"]
+    SMCK02["SMCK-02\nEdges + answer-question"]
+    SMCK03["SMCK-03\nshared + Vitest"]
+  end
+  subgraph W2["Wave 2 — Clientes"]
+    SMCK04["SMCK-04\nWeb"]
+    SMCK05["SMCK-05\nMobile"]
+  end
+  subgraph W3["Wave 3 — Encosto"]
+    SMCK06["SMCK-06\nOnboarding"]
+    SMCK07["SMCK-07\nHistórico"]
+  end
+  SMCK08["SMCK-08\nRanking — deferred"]
+
+  SMCK01 --> SMCK02
+  SMCK02 --> SMCK04
+  SMCK03 --> SMCK04
+  SMCK04 --> SMCK05
+  SMCK04 --> SMCK06
+  SMCK05 --> SMCK06
+  SMCK02 --> SMCK07
+  SMCK04 --> SMCK07
+
+  classDef wave fill:#e8f4fc,stroke:#1565a0,stroke-width:2px
+  classDef defer fill:#f5f5f5,stroke:#999,stroke-dasharray: 5 5
+  class W1,W2,W3 wave
+  class SMCK08 defer
+```
+
+```mermaid
+sequenceDiagram
+  participant U as Aluno
+  participant App as Web / Mobile
+  participant S as buildMockExamPayload
+  participant API as Edge (practice-session-*)
+  participant AQ as answer-question
+  participant DB as Postgres
+
+  U->>App: Critérios + N questões
+  App->>S: Corpus + config
+  S-->>App: questionIds ordenados
+  App->>API: POST criar sessão
+  API->>DB: practice_sessions
+  API-->>App: sessionId
+  loop Cada questão
+    App->>AQ: resposta + sessionId
+    AQ->>DB: user_question_answers + performance
+  end
+  App->>API: PATCH completar + summary
+  API->>DB: completed_at + summary
+```
+
+## Matriz requisito ↔ tarefa
+
+| ID | Tarefa no `<tasks>` | Notas |
+|----|---------------------|--------|
+| **SMCK-01** | Task 1 | Migração + `session_id` + RLS |
+| **SMCK-02** | Task 2 | `practice-session-*` + validação de posse em `answer-question` |
+| **SMCK-03** | Task 3 | Tipos + `buildMockExamPayload` + Vitest |
+| **SMCK-04** | Task 4 | Web |
+| **SMCK-05** | Task 5 | Mobile |
+| **SMCK-06** | Task 6 | Manual — liga ONBR-02 |
+| **SMCK-07** | Task 7 | GET histórico + UI mínima |
+| **SMCK-08** | Task 8 | Manual — só documentar backlog |
 
 <context>
 @docs/plan-simulado-enem-aluno.md

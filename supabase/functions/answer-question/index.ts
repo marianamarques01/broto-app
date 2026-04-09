@@ -35,6 +35,9 @@ serve(async (req) => {
       typeof timeSpentSecRaw === 'number' && Number.isFinite(timeSpentSecRaw)
         ? Math.max(0, Math.floor(timeSpentSecRaw))
         : null
+    const sessionIdRaw = raw?.sessionId
+    const sessionId =
+      typeof sessionIdRaw === 'string' && sessionIdRaw.trim() ? sessionIdRaw.trim() : null
 
     if (!questionId) {
       return json(400, { error: 'questionId é obrigatório' }, cors)
@@ -42,11 +45,39 @@ serve(async (req) => {
 
     const admin = createServiceRoleClientUnsafe()
 
+    let sessionIdToStore: string | null = null
+    if (sessionId) {
+      const { data: sess, error: sessErr } = await admin
+        .from('practice_sessions')
+        .select('id, user_id, question_ids')
+        .eq('id', sessionId)
+        .maybeSingle()
+
+      if (sessErr) {
+        console.error('[answer-question] practice_sessions:', sessErr)
+        return json(500, { error: 'Erro ao validar sessão' }, cors)
+      }
+      if (!sess) {
+        return json(400, { error: 'Sessão inválida' }, cors)
+      }
+      const row = sess as { user_id?: string; question_ids?: unknown }
+      if (row.user_id !== user.id) {
+        return json(403, { error: 'Sessão de outro usuário' }, cors)
+      }
+      const ids = Array.isArray(row.question_ids) ? row.question_ids : []
+      const allowed = ids.some((x) => x === questionId)
+      if (!allowed) {
+        return json(400, { error: 'Questão não pertence à sessão' }, cors)
+      }
+      sessionIdToStore = sessionId
+    }
+
     const { error: insErr } = await admin.from('user_question_answers').insert({
       user_id: user.id,
       question_id: questionId,
       acertou: isCorrect,
       tempo_resposta: timeSpentSec,
+      session_id: sessionIdToStore,
     } as Record<string, unknown>)
 
     if (insErr) {
