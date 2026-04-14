@@ -138,9 +138,9 @@ export function HomeDashboardMetricsPlaceholder() {
                 <stop offset="100%" stopColor="var(--green-400)" stopOpacity="0" />
               </linearGradient>
               <linearGradient id={`${rid}-stroke`} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#5eead4" />
-                <stop offset="50%" stopColor="var(--green-400)" />
-                <stop offset="100%" stopColor="#34d399" />
+                <stop offset="0%" stopColor="var(--teal-300)" />
+                <stop offset="50%" stopColor="var(--teal-500)" />
+                <stop offset="100%" stopColor="var(--teal-400)" />
               </linearGradient>
               <filter
                 id={`${rid}-glow`}

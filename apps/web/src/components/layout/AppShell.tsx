@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
+import { BrotoIaFab } from '@/components/broto/BrotoIaFab'
 import { Sidebar } from './Sidebar'
 
 export function AppShell() {
@@ -32,6 +33,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+      <BrotoIaFab />
     </div>
   )
 }

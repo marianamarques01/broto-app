@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   Home,
@@ -31,6 +31,7 @@ type SidebarProps = {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const { signOut } = useAuth()
+  const location = useLocation()
 
   function handleSignOut() {
     signOut()
@@ -64,10 +65,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           <NavLink
             key={item.path}
             to={item.path}
-            end={item.path === '/' || item.path === '/study'}
-            className={({ isActive }) =>
-              `broto-sidebar__link${isActive ? ' broto-sidebar__link--active' : ''}`
-            }
+            end={item.path === '/'}
+            className={({ isActive }) => {
+              const studyActive =
+                item.path === '/study' &&
+                (location.pathname === '/study' ||
+                  (location.pathname.startsWith('/study/') &&
+                    !location.pathname.startsWith('/study/mock-exam')))
+              const active = item.path === '/study' ? studyActive : isActive
+              return `broto-sidebar__link${active ? ' broto-sidebar__link--active' : ''}`
+            }}
             onClick={onNavigate}
           >
             <item.icon size={20} className="broto-sidebar__link-icon" />

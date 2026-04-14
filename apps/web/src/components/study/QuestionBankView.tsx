@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { QuestionPlayer } from '@/components/questions/QuestionPlayer'
 import {
@@ -141,6 +142,9 @@ function QbankPagedList({
                     {formatQuestionBankId(selectedArea, row.year, row.index)}
                   </span>
                 </div>
+                <p className="broto-qbank-card-title">
+                  Questão {row.index} — ENEM {row.year}
+                </p>
                 <p className="broto-qbank-card-preview">{row.preview}</p>
                 <div className="broto-qbank-card-bottom">
                   <div className="broto-qbank-card-meta">
@@ -397,28 +401,19 @@ export function QuestionBankView({
     (isLinguagensArea && selectedTopico === IDIOMAS_TOPIC_ID && Boolean(selectedLanguage)) ||
     Boolean(difficulty)
 
+  const pageStyle = {
+    '--broto-qbank-area-accent': getAreaColor(selectedArea),
+  } as CSSProperties
+
   return (
-    <div className={embedded ? 'broto-qbank-embedded' : ''}>
+    <div
+      className={`broto-qbank-page${embedded ? ' broto-qbank-page--embedded' : ''}`}
+      style={pageStyle}
+    >
       <div className="broto-qbank-shell">
         <div className="broto-qbank-inner">
           {embedded && onBackToHub ? (
-            <button
-              type="button"
-              className="broto-qbank-embedded-back"
-              onClick={onBackToHub}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                marginBottom: 16,
-                padding: '6px 0',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.82rem',
-                color: 'var(--text-muted)',
-              }}
-            >
+            <button type="button" className="broto-qbank-embedded-back" onClick={onBackToHub}>
               <ArrowLeft size={14} aria-hidden />
               Voltar ao menu da área
             </button>
@@ -465,7 +460,10 @@ export function QuestionBankView({
                   <div className="broto-qbank-istat">
                     <div
                       className="broto-qbank-istat-val broto-qbank-istat-val--accent"
-                      style={{ color: answered > 0 ? 'var(--broto-qbank-t4)' : undefined }}
+                      style={{
+                        color:
+                          answered > 0 ? 'var(--broto-qbank-area-accent, var(--broto-qbank-t4))' : undefined,
+                      }}
                     >
                       {loadingProgress ? '…' : answered.toLocaleString('pt-BR')}
                     </div>

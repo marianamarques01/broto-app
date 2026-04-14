@@ -51,11 +51,12 @@ export const router = createBrowserRouter([
     ),
     children: [
       { path: '/', element: <Home /> },
-      { path: '/study/questions', element: <Navigate to="/study?bank=1" replace /> },
+      { path: '/study/questions', element: <Navigate to="/study/linguagens?hub=bank" replace /> },
       { path: '/study/mock-exam', element: <MockExamConfig /> },
       { path: '/study/mock-exam/history', element: <MockExamHistory /> },
       { path: '/study/mock-exam/play/:sessionId', element: <MockExamPlay /> },
       { path: '/study/mock-exam/result', element: <MockExamResult /> },
+      { path: '/study/:areaKey', element: <StudyArea /> },
       { path: '/study', element: <StudyArea /> },
       { path: '/study-area', element: <Navigate to="/study" replace /> },
       { path: '/progress', element: <Progress /> },
