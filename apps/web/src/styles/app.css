@@ -6325,6 +6325,26 @@ select.broto-select:focus {
   color: var(--text-secondary);
 }
 
+.broto-routine-tip__progress-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--routine-mint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.broto-routine-tip__progress-link:hover {
+  color: var(--text-primary);
+}
+
+.broto-routine-tip__progress-link:focus-visible {
+  outline: 2px solid var(--routine-mint);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 :root[data-theme="light"] .broto-routine-sess,
 :root[data-theme="light"] .broto-routine-week-row,
 :root[data-theme="light"] .broto-routine-kpi,
@@ -8521,6 +8541,11 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
   grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
   gap: 24px;
   align-items: start;
+}
+
+/* Âncoras /progress#consistencia e /progress#conquistas — scroll dentro de .broto-app__main */
+.broto-progress-anchor {
+  scroll-margin-top: calc(var(--topbar-h) + 24px);
 }
 
 /* —— Broto Hero Card (Progresso) —— redesign: hierarquia editorial, menos ruído —— */

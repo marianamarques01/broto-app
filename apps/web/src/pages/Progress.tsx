@@ -1,4 +1,5 @@
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useLocation } from 'react-router-dom'
 import { BrotoHeroCard } from '@/components/progress/BrotoHeroCard'
 import { AchievementsCollapsible } from '@/components/progress/AchievementsCollapsible'
 import { AreaPerformanceTable } from '@/components/progress/AreaPerformanceTable'
@@ -95,7 +96,10 @@ const ACHIEVEMENT_DEFS = [
   },
 ]
 
+const PROGRESS_HASH_ANCHORS = new Set(['consistencia', 'conquistas'])
+
 export function Progress() {
+  const location = useLocation()
   const performanceDayMap = useSyncExternalStore(
     subscribePerformanceHistory,
     getPerformanceDayMapSnapshot,
@@ -115,7 +119,6 @@ export function Progress() {
   const accuracyPct = progress?.accuracyPct ?? 0
   const totalAnswered = progress?.totalAnswered ?? 0
 
-  const streak = pet?.streak ?? 0
   const achievements = useMemo(
     () =>
       ACHIEVEMENT_DEFS.map((a) => ({
@@ -124,6 +127,20 @@ export function Progress() {
       })),
     [totalAnswered, accuracyPct],
   )
+
+  useLayoutEffect(() => {
+    if (location.pathname !== '/progress') return
+    const id = location.hash.slice(1)
+    if (!id || !PROGRESS_HASH_ANCHORS.has(id)) return
+    if (loadingProgress) return
+
+    const run = () => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(run)
+    })
+  }, [location.pathname, location.hash, loadingProgress])
 
   const estTotalStudyMin = Math.round(totalAnswered * 2.5)
   const estTotalHours = estTotalStudyMin / 60
@@ -162,13 +179,6 @@ export function Progress() {
         tone: 'var(--status-sky)',
       },
       {
-        id: 'streak',
-        label: 'Sequência',
-        value: streak > 0 ? `${streak} ${streak === 1 ? 'dia' : 'dias'}` : '—',
-        hint: streak > 0 ? 'dias seguidos' : 'comece hoje',
-        tone: 'var(--gold-accent)',
-      },
-      {
         id: 'study-time',
         label: 'Tempo estimado',
         value:
@@ -188,11 +198,12 @@ export function Progress() {
       estTotalStudyMin,
       hasData,
       loadingProgress,
-      streak,
       sumPeriodAnswered,
       totalAnswered,
     ],
   )
+
+  const streak = pet?.streak ?? 0
 
   return (
     <>

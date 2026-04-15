@@ -1,4 +1,4 @@
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { WeekStrip } from '@/components/routine/WeekStrip'
@@ -6,7 +6,6 @@ import { RoutineHeroHeader } from '@/components/routine/RoutineHeroHeader'
 import { RoutineSessionCards } from '@/components/routine/RoutineSessionCards'
 import { RoutineWeekBars } from '@/components/routine/RoutineWeekBars'
 import { RoutineBrotoTip } from '@/components/routine/RoutineBrotoTip'
-import { ConsistencyHeatmapCard } from '@/components/progress/ConsistencyHeatmapCard'
 import { useUser } from '@/hooks/useUser'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet } from '@/hooks/usePet'
@@ -15,12 +14,7 @@ import { BookOpen, Plus } from 'lucide-react'
 import { getAreaColor, getAreaIcon } from '@/lib/area-config'
 import { gerarRotina, getSegundaDaSemana, formatarSemana } from '@/lib/routine'
 import { buildRoutineSessions, countCompletedSessions } from '@/lib/routine-sessions'
-import {
-  getPerformanceBuckets,
-  getPerformanceDayMapSnapshot,
-  getPerformanceDayMapServerSnapshot,
-  subscribePerformanceHistory,
-} from '@/lib/performance-history'
+import { getPerformanceBuckets } from '@/lib/performance-history'
 
 const WD_UP = [
   'DOMINGO',
@@ -58,11 +52,6 @@ export function Routine() {
   const { progress, loading: loadingProgress } = useProgress()
   const { pet, loading: loadingPet } = usePet()
   const { daily } = useDailyMissionsState()
-  const performanceDayMap = useSyncExternalStore(
-    subscribePerformanceHistory,
-    getPerformanceDayMapSnapshot,
-    getPerformanceDayMapServerSnapshot,
-  )
 
   const [tab, setTab] = useState<RoutineTab>('hoje')
 
@@ -251,11 +240,6 @@ export function Routine() {
               </div>
 
               <RoutineWeekBars buckets={weekBuckets} targetMinPerDay={goalMin} />
-
-              <ConsistencyHeatmapCard
-                performanceDayMap={performanceDayMap}
-                totalAnswered={progress?.totalAnswered ?? 0}
-              />
 
               <RoutineBrotoTip areas={areas} />
             </aside>

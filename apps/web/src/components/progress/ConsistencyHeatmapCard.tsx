@@ -128,8 +128,8 @@ export function ConsistencyHeatmapCard({
 
   return (
     <section
-      id="progress-habit"
-      className="broto-perf-section broto-prog-heat-perf-section broto-prog-heat--github"
+      id="consistencia"
+      className="broto-perf-section broto-prog-heat-perf-section broto-prog-heat--github broto-progress-anchor"
       aria-labelledby="progress-habit-title"
     >
       <div className="broto-perf-external-head broto-prog-heat-perf-head">

@@ -29,7 +29,8 @@ export function AchievementsCollapsible({
 
   return (
     <section
-      className="broto-prog-card broto-prog-card--surface broto-progress-achievements"
+      id="conquistas"
+      className="broto-prog-card broto-prog-card--surface broto-progress-achievements broto-progress-anchor"
       aria-labelledby="progress-achievements-title"
     >
       <div className="broto-prog-card-head broto-prog-achievements-head">
