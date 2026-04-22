@@ -712,7 +712,7 @@ export function QuestionBankView({
 
                 <aside className="broto-qbank-side">
                   <div className="broto-qbank-side-card">
-                    <h3 className="broto-qbank-side-title">Seu progresso em {areaLabel}</h3>
+                    <h3 className="broto-qbank-side-title">Seu progresso</h3>
                     <ul className="broto-qbank-breakdown">
                       <li className="broto-qbank-bk-row">
                         <span className="broto-qbank-bk-dot broto-qbank-bk-dot--teal" />
@@ -751,25 +751,6 @@ export function QuestionBankView({
                         </span>
                       </li>
                     </ul>
-                    <div className="broto-qbank-mini-bars">
-                      {miniBarYears.map((y) => {
-                        const c = yearHistogram[y] ?? 0
-                        const h = maxBar > 0 ? Math.round((c / maxBar) * 100) : 8
-                        return (
-                          <div
-                            key={y}
-                            className="broto-qbank-mini-bar"
-                            style={{ height: `${Math.max(12, h)}%` }}
-                            title={`${y}: ${c} questões`}
-                          />
-                        )
-                      })}
-                    </div>
-                    <div className="broto-qbank-mini-labels">
-                      {miniBarYears.map((y) => (
-                        <span key={y}>{y}</span>
-                      ))}
-                    </div>
                   </div>
 
                   <div className="broto-qbank-side-card">

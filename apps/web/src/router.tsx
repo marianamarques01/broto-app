@@ -3,6 +3,7 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { AppShell } from '@/components/layout/AppShell'
 import { Login } from '@/pages/Login'
 import { Signup } from '@/pages/Signup'
+import { Landing } from '@/pages/Landing'
 import { Onboarding } from '@/pages/Onboarding'
 import { Home } from '@/pages/Home'
 import { StudyArea } from '@/pages/StudyArea'
@@ -40,6 +41,7 @@ function NotFound() {
 }
 
 export const router = createBrowserRouter([
+  { path: '/inicio', element: <Landing /> },
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <Signup /> },
   { path: '/onboarding', element: <Onboarding /> },
