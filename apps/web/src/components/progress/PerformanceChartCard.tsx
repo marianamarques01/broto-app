@@ -93,7 +93,7 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
                     Acerto geral no banco de questões: <strong>{globalAccuracy}%</strong>
                   </p>
                 ) : null}
-                <Link to="/study/questions" className="broto-btn-primary broto-btn-primary--inline">
+                <Link to="/study/linguagens?hub=bank" className="broto-btn-primary broto-btn-primary--inline">
                   Ir para questões
                 </Link>
               </div>
@@ -116,8 +116,8 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
                 >
                   <defs>
                     <linearGradient id="broto-perf-bar-grad" x1="0" y1="1" x2="0" y2="0">
-                      <stop offset="0%" stopColor="#059669" />
-                      <stop offset="100%" stopColor="#34d399" />
+                      <stop offset="0%" stopColor="var(--teal-700)" />
+                      <stop offset="100%" stopColor="var(--teal-500)" />
                     </linearGradient>
                   </defs>
                   {buckets.map((b, i) => {

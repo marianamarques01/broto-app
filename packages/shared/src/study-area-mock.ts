@@ -4,6 +4,7 @@
  */
 
 import type { MindMapNode } from './types/content'
+import type { TopicoStat } from './types/dashboard-progress'
 
 export type { MindMapNode } from './types/content'
 
@@ -391,6 +392,48 @@ Pratique converter situações do cotidiano em figuras geométricas. Muitas ques
 /** Simulate API delay */
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** Catálogo da trilha (slugs + rótulos), sem desempenho — alinhado ao `user-progress`. */
+export function getStudyTopicCatalog(areaKey: string): Array<{ value: string; label: string }> {
+  return (MOCK_TOPICS[areaKey] ?? []).map(({ value, label }) => ({ value, label }))
+}
+
+/** Mescla catálogo com `topic_performance` do usuário. Inclui tópicos só na API fora do catálogo. */
+export function mergeTopicCatalogWithStats(
+  catalog: Array<{ value: string; label: string }>,
+  topicos: TopicoStat[] | undefined,
+): TopicOption[] {
+  const map = new Map((topicos ?? []).map((t) => [t.value, t]))
+  const merged: TopicOption[] = catalog.map((t) => {
+    const s = map.get(t.value)
+    if (!s || s.totalAnswered < 1) {
+      return {
+        value: t.value,
+        label: t.label,
+        accuracy: null,
+        totalAnswered: s?.totalAnswered ?? 0,
+      }
+    }
+    return {
+      value: t.value,
+      label: t.label,
+      accuracy: Math.round(s.accuracyPct),
+      totalAnswered: s.totalAnswered,
+    }
+  })
+  const catValues = new Set(catalog.map((c) => c.value))
+  for (const s of topicos ?? []) {
+    if (!catValues.has(s.value)) {
+      merged.push({
+        value: s.value,
+        label: s.label,
+        accuracy: s.totalAnswered >= 1 ? Math.round(s.accuracyPct) : null,
+        totalAnswered: s.totalAnswered,
+      })
+    }
+  }
+  return merged
 }
 
 /** Get topics for an area (mock) */

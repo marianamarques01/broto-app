@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, type CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useRef, useCallback, useEffect, type CSSProperties } from 'react'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { TopBar, type StudyBreadcrumbParts } from '@/components/layout/TopBar'
 import { AREA_CONFIG, getAreaColor } from '@/lib/area-config'
 import {
@@ -19,21 +19,26 @@ import {
   Loader2,
   ClipboardList,
   ArrowDownUp,
+  Timer,
 } from 'lucide-react'
 import {
-  getMockTopics,
   getMockStudyPackage,
+  getStudyTopicCatalog,
+  mergeTopicCatalogWithStats,
   type StudyPackage,
   type StudyFlashcard,
   type TopicOption,
   type MindMapNode,
 } from '@/lib/study-area-mock'
 import { AREA_ACCENT_VARS, StudyAreaCardPattern } from '@/components/study/study-area-card-pattern'
+import { QuestionBankView } from '@/components/study/QuestionBankView'
+import { useProgress, type ProgressData, type AreaStat } from '@/hooks/useProgress'
 
 /* ─── Types ────────────────────────────────── */
 
 type Step = 'select' | 'loading' | 'study'
 type Tab = 'summary' | 'flashcards' | 'questions' | 'mindmap'
+type HubSurface = 'menu' | 'guided' | 'bank'
 
 const RING_R = 19
 const RING_C = 2 * Math.PI * RING_R
@@ -41,56 +46,31 @@ const RING_C = 2 * Math.PI * RING_R
 /** Áreas reais do ENEM — `sem_area` é só fallback de dados, não entra na grade. */
 const STUDY_AREA_CARD_KEYS = Object.keys(AREA_CONFIG).filter((k) => k !== 'sem_area')
 
-function computeTopicStats(topics: TopicOption[]) {
-  const totalAnswered = topics.reduce((s, t) => s + t.totalAnswered, 0)
-  const withData = topics.filter((t) => t.accuracy !== null)
-  let weightedAcc: number | null = null
-  if (withData.length > 0) {
-    const num = withData.reduce((s, t) => s + t.accuracy! * t.totalAnswered, 0)
-    const den = withData.reduce((s, t) => s + t.totalAnswered, 0)
-    weightedAcc = den > 0 ? Math.round(num / den) : null
+function areaBlockForKey(areas: AreaStat[] | undefined, areaKey: string): AreaStat | undefined {
+  return areas?.find((a) => a.value === areaKey)
+}
+
+function topicsForAreaKey(areaKey: string, areas: AreaStat[] | undefined): TopicOption[] {
+  const cat = getStudyTopicCatalog(areaKey)
+  const block = areaBlockForKey(areas, areaKey)
+  return mergeTopicCatalogWithStats(cat, block?.topicos)
+}
+
+function landingQuickStats(progress: ProgressData | undefined) {
+  const totalAnswered = progress?.totalAnswered ?? 0
+  if (!progress || totalAnswered < 1) {
+    return { totalAnswered, weightedAcc: null as number | null, lowest: null as number | null }
   }
+  const topicRows = progress.areas
+    .filter((a) => a.value !== 'outros')
+    .flatMap((a) => a.topicos)
+    .filter((t) => t.totalAnswered > 0)
   const lowest =
-    withData.length > 0 ? Math.min(...withData.map((t) => t.accuracy!)) : null
+    topicRows.length > 0 ? Math.round(Math.min(...topicRows.map((t) => t.accuracyPct))) : null
   return {
     totalAnswered,
-    weightedAcc,
+    weightedAcc: Math.round(progress.accuracyPct),
     lowest,
-    topicCount: topics.length,
-  }
-}
-
-function topicsForScope(areaKey: string | null): TopicOption[] {
-  if (areaKey) return getMockTopics(areaKey)
-  return STUDY_AREA_CARD_KEYS.flatMap((k) => getMockTopics(k))
-}
-
-function areaCardAverage(areaKey: string): number | null {
-  const topics = getMockTopics(areaKey)
-  const withData = topics.filter((t) => t.accuracy !== null)
-  if (withData.length === 0) return null
-  const num = withData.reduce((s, t) => s + t.accuracy! * t.totalAnswered, 0)
-  const den = withData.reduce((s, t) => s + t.totalAnswered, 0)
-  return den > 0 ? Math.round(num / den) : null
-}
-
-function getGlobalWeakest():
-  | { areaKey: string; topic: TopicOption; areaLabel: string }
-  | null {
-  let best: { areaKey: string; topic: TopicOption; acc: number } | null = null
-  for (const key of STUDY_AREA_CARD_KEYS) {
-    for (const t of getMockTopics(key)) {
-      if (t.accuracy === null) continue
-      if (!best || t.accuracy < best.acc) {
-        best = { areaKey: key, topic: t, acc: t.accuracy }
-      }
-    }
-  }
-  if (!best) return null
-  return {
-    areaKey: best.areaKey,
-    topic: best.topic,
-    areaLabel: AREA_CONFIG[best.areaKey]?.label ?? '',
   }
 }
 
@@ -165,44 +145,11 @@ function RingProgress({ pct, stroke, centerLabel }: { pct: number; stroke: strin
   )
 }
 
-/* ─── Area/Topic Selector ──────────────────── */
+/* ─── Landing: só escolha de área ─────────── */
 
-function AreaTopicSelector({
-  selectedArea,
-  onSelectArea,
-  onStart,
-}: {
-  selectedArea: string | null
-  onSelectArea: (key: string | null) => void
-  onStart: (areaKey: string, topico: TopicOption) => void
-}) {
-  const [sortWeakestFirst, setSortWeakestFirst] = useState(true)
-  const scopeTopics = topicsForScope(selectedArea)
-  const welcomeStats = computeTopicStats(scopeTopics)
-  const topics = selectedArea ? getMockTopics(selectedArea) : []
-
-  const sorted = [...topics].sort((a, b) => {
-    if (a.accuracy === null && b.accuracy === null) return 0
-    if (a.accuracy === null) return 1
-    if (b.accuracy === null) return -1
-    return sortWeakestFirst ? a.accuracy - b.accuracy : b.accuracy - a.accuracy
-  })
-
-  const weakestInArea = sorted.find((t) => t.accuracy !== null)
-  const globalPick = getGlobalWeakest()
-  const spotlight =
-    selectedArea && weakestInArea
-      ? {
-          areaKey: selectedArea,
-          topic: weakestInArea,
-          areaLabel: AREA_CONFIG[selectedArea]?.label ?? '',
-        }
-      : globalPick
-
-  const suggestedValue = selectedArea
-    ? weakestInArea?.value
-    : globalPick?.topic.value
-
+function StudyLandingPick({ progress }: { progress: ProgressData | undefined }) {
+  const navigate = useNavigate()
+  const welcomeStats = landingQuickStats(progress)
   const areaKeys = STUDY_AREA_CARD_KEYS
   const areaDelays = [100, 180, 260, 340]
 
@@ -216,7 +163,8 @@ function AreaTopicSelector({
             de <em>estudo</em>
           </h2>
           <p className="study-welcome__sub">
-            Selecione uma área e um tópico — preparamos resumo, flashcards, quiz e mapa mental pra você.
+            Cada área tem <strong>trilha por tópico</strong> e <strong>banco de questões</strong>. Para
+            treinar prova completa, use o <strong>simulado ENEM</strong> no card abaixo.
           </p>
         </div>
         <div className="study-quickstats" aria-label="Resumo de desempenho">
@@ -248,15 +196,16 @@ function AreaTopicSelector({
         {areaKeys.map((key, i) => {
           const cfg = AREA_CONFIG[key]
           const Icon = cfg.icon
-          const active = selectedArea === key
-          const avg = areaCardAverage(key)
-          const n = getMockTopics(key).length
+          const block = areaBlockForKey(progress?.areas, key)
+          const avg =
+            block != null && block.totalAnswered > 0 ? Math.round(block.accuracyPct) : null
+          const n = topicsForAreaKey(key, progress?.areas).length
           const av = AREA_ACCENT_VARS[key] ?? AREA_ACCENT_VARS.linguagens
           return (
             <button
               key={key}
               type="button"
-              className={`study-area-card${active ? ' study-area-card--active' : ''}`}
+              className="study-area-card"
               style={
                 {
                   '--study-area-accent': cfg.color,
@@ -266,7 +215,7 @@ function AreaTopicSelector({
                   animationDelay: `${areaDelays[i] ?? 340}ms`,
                 } as CSSProperties
               }
-              onClick={() => onSelectArea(active ? null : key)}
+              onClick={() => navigate(`/study/${key}`)}
             >
               <StudyAreaCardPattern areaKey={key} />
               <div className="study-area-card__glow" aria-hidden />
@@ -283,18 +232,124 @@ function AreaTopicSelector({
         })}
       </div>
 
+      <div className="study-simulado-label">Modo avaliação</div>
+      <Link
+        to="/study/mock-exam"
+        className="study-simulado-landing"
+        aria-label="Simulado ENEM — configurar prova com filtros e quantidade"
+      >
+        <div className="study-simulado-landing__icon">
+          <Timer size={22} strokeWidth={1.8} aria-hidden />
+        </div>
+        <div className="study-simulado-landing__body">
+          <h3 className="study-simulado-landing__title">Simulado ENEM</h3>
+          <p className="study-simulado-landing__desc">
+            Monte provas personalizadas com filtros por área, ano e quantidade — e acompanhe seu
+            desempenho como no dia da prova.
+          </p>
+        </div>
+        {/* <span className="study-simulado-landing__cta">
+          Configurar simulado
+          <ChevronRight size={15} strokeWidth={2.2} aria-hidden />
+        </span> */}
+                  <ChevronRight size={15} strokeWidth={2.2} aria-hidden />
+
+      </Link>
+    </div>
+  )
+}
+
+/* ─── Menu: o que fazer na área ───────────── */
+
+function StudyHubMenu({
+  areaKey,
+  topics,
+  onChooseBank,
+  onChangeArea,
+  onStartTopic,
+}: {
+  areaKey: string
+  topics: TopicOption[]
+  onChooseBank: () => void
+  onChangeArea: () => void
+  onStartTopic: (areaKey: string, topico: TopicOption) => void
+}) {
+  const cfg = AREA_CONFIG[areaKey]
+  const Icon = cfg?.icon ?? BookOpen
+  const [sortWeakestFirst, setSortWeakestFirst] = useState(true)
+
+  const sorted = [...topics].sort((a, b) => {
+    if (a.accuracy === null && b.accuracy === null) return 0
+    if (a.accuracy === null) return 1
+    if (b.accuracy === null) return -1
+    return sortWeakestFirst ? a.accuracy - b.accuracy : b.accuracy - a.accuracy
+  })
+
+  const weakestInArea = sorted.find((t) => t.accuracy !== null)
+  const spotlight =
+    weakestInArea != null
+      ? { topic: weakestInArea, areaLabel: cfg?.label ?? '' }
+      : null
+  const suggestedValue = weakestInArea?.value
+
+  return (
+    <div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 28,
+          flexWrap: 'wrap',
+          gap: 14,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: `${cfg?.color}18`,
+              border: `1px solid ${cfg?.color}33`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: cfg?.color,
+            }}
+          >
+            <Icon size={22} strokeWidth={1.8} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+              Área selecionada
+            </p>
+            <h2 style={{ margin: '2px 0 0', fontSize: '1.28rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {cfg?.label ?? ''}
+            </h2>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="study-sort-btn"
+          onClick={onChangeArea}
+          style={{ borderRadius: 'var(--radius-sm)' }}
+        >
+          Outras áreas
+        </button>
+      </div>
+
+      {/* ── Topics + AI spotlight embedded ── */}
       <div className="study-split">
         <div className="study-side">
           <div className="study-spotlight">
             <div className="study-spotlight__badge">✨ Recomendação IA</div>
             <h3 className="study-spotlight__title">
-              {spotlight ? spotlight.topic.label : 'Selecione uma área'}
+              {spotlight ? spotlight.topic.label : 'Pratique mais para ver sugestões'}
             </h3>
             <p className="study-spotlight__body">
               {spotlight
-                ? selectedArea
-                  ? `Seu ponto mais fraco em ${spotlight.areaLabel}, com ${spotlight.topic.accuracy}% de acerto e ${spotlight.topic.totalAnswered} questões. Foque aqui para subir sua nota mais rápido.`
-                  : `Seu ponto mais fraco entre todas as áreas: ${spotlight.topic.label} (${spotlight.topic.accuracy}% em ${spotlight.areaLabel}). Escolha a área acima ou comece agora pela sugestão.`
+                ? `Seu ponto mais fraco em ${spotlight.areaLabel}, com ${spotlight.topic.accuracy}% de acerto e ${spotlight.topic.totalAnswered} questões. Foque aqui para subir sua nota mais rápido.`
                 : 'Assim que você praticar mais questões, indicamos o melhor próximo passo automaticamente.'}
             </p>
             <button
@@ -303,7 +358,7 @@ function AreaTopicSelector({
               disabled={!spotlight}
               onClick={() => {
                 if (!spotlight) return
-                void onStart(spotlight.areaKey, spotlight.topic)
+                void onStartTopic(areaKey, spotlight.topic)
               }}
             >
               Estudar agora
@@ -311,50 +366,42 @@ function AreaTopicSelector({
             </button>
           </div>
 
-          <Link className="study-banco" to="/study/questions">
+          <button
+            type="button"
+            className="study-banco"
+            onClick={onChooseBank}
+            style={
+              {
+                textAlign: 'left',
+                marginTop: 14,
+                '--study-banco-accent': cfg?.color ?? '#2dd4a8',
+              } as CSSProperties
+            }
+          >
             <div className="study-banco__head">
               <div className="study-banco__icon">
                 <ClipboardList size={16} strokeWidth={1.8} aria-hidden />
               </div>
-              <h4 className="study-banco__title">Banco de Questões</h4>
+              <h4 className="study-banco__title">Banco de questões</h4>
             </div>
             <p className="study-banco__desc">
-              Pratique com filtros por ano, tópico e prova — fora do pacote guiado.
+              Pratique com filtros por ano, tópico e dificuldade — fora do pacote guiado.
             </p>
             <div className="study-banco__arrow">
-              Acessar
+              Abrir banco
               <ChevronRight size={14} strokeWidth={2} aria-hidden />
             </div>
-          </Link>
-
-          <Link className="study-banco" to="/study/mock-exam">
-            <div className="study-banco__head">
-              <div className="study-banco__icon">
-                <Brain size={16} strokeWidth={1.8} aria-hidden />
-              </div>
-              <h4 className="study-banco__title">Simulado ENEM</h4>
-            </div>
-            <p className="study-banco__desc">
-              Monte um simulado com quantidade e filtros personalizados e acompanhe o resultado.
-            </p>
-            <div className="study-banco__arrow">
-              Configurar
-              <ChevronRight size={14} strokeWidth={2} aria-hidden />
-            </div>
-          </Link>
+          </button>
         </div>
 
         <div className="study-topics">
           <div className="study-topics__header">
             <h2 className="study-topics__title">
-              {selectedArea
-                ? `Tópicos de ${AREA_CONFIG[selectedArea]?.label ?? ''}`
-                : 'Tópicos'}
+              Tópicos de {cfg?.label ?? ''}
             </h2>
             <button
               type="button"
               className="study-sort-btn"
-              disabled={!selectedArea}
               onClick={() => setSortWeakestFirst((v) => !v)}
             >
               <ArrowDownUp size={12} strokeWidth={2} aria-hidden />
@@ -362,51 +409,45 @@ function AreaTopicSelector({
             </button>
           </div>
 
-          {!selectedArea ? (
-            <div className="study-empty">
-              Selecione uma área acima para listar os tópicos e ordenar por desempenho.
-            </div>
-          ) : (
-            <div className="study-topics-grid">
-              {sorted.map((topic, idx) => {
-                const tier = topicTier(topic.accuracy)
-                const isSuggested = topic.value === suggestedValue && topic.accuracy !== null
-                const q =
-                  topic.totalAnswered === 1 ? '1 questão' : `${topic.totalAnswered} questões`
-                const staggerMs = 450 + idx * 60
-                return (
-                  <button
-                    key={topic.value}
-                    type="button"
-                    className={`study-topic-card${isSuggested ? ' study-topic-card--suggested' : ''}`}
-                    style={
-                      {
-                        animation: 'study-slide-up 0.4s ease-out both',
-                        animationDelay: `${staggerMs}ms`,
-                      } as CSSProperties
-                    }
-                    onClick={() => onStart(selectedArea, topic)}
-                  >
-                    <RingProgress
-                      pct={tier.displayPct}
-                      stroke={tier.ringColor}
-                      centerLabel={topic.accuracy === null ? '—' : `${tier.displayPct}%`}
-                    />
-                    <div className="study-topic-card__body">
-                      <p className="study-topic-card__name">{topic.label}</p>
-                      <div className="study-topic-card__meta">
-                        <span>{q}</span>
-                        <span className="study-topic-card__meta-sep" aria-hidden />
-                        <span>{tier.metaHint}</span>
-                      </div>
+          <div className="study-topics-grid">
+            {sorted.map((topic, idx) => {
+              const tier = topicTier(topic.accuracy)
+              const isSuggested = topic.value === suggestedValue && topic.accuracy !== null
+              const q =
+                topic.totalAnswered === 1 ? '1 questão' : `${topic.totalAnswered} questões`
+              const staggerMs = 450 + idx * 60
+              return (
+                <button
+                  key={topic.value}
+                  type="button"
+                  className={`study-topic-card${isSuggested ? ' study-topic-card--suggested' : ''}`}
+                  style={
+                    {
+                      animation: 'study-slide-up 0.4s ease-out both',
+                      animationDelay: `${staggerMs}ms`,
+                    } as CSSProperties
+                  }
+                  onClick={() => onStartTopic(areaKey, topic)}
+                >
+                  <RingProgress
+                    pct={tier.displayPct}
+                    stroke={tier.ringColor}
+                    centerLabel={topic.accuracy === null ? '—' : `${tier.displayPct}%`}
+                  />
+                  <div className="study-topic-card__body">
+                    <p className="study-topic-card__name">{topic.label}</p>
+                    <div className="study-topic-card__meta">
+                      <span>{q}</span>
+                      <span className="study-topic-card__meta-sep" aria-hidden />
+                      <span>{tier.metaHint}</span>
                     </div>
-                    <span className={`study-topic-card__tag ${tier.tagClass}`}>{tier.label}</span>
-                    <ChevronRight size={16} strokeWidth={2} className="study-topic-card__chev" aria-hidden />
-                  </button>
-                )
-              })}
-            </div>
-          )}
+                  </div>
+                  <span className={`study-topic-card__tag ${tier.tagClass}`}>{tier.label}</span>
+                  <ChevronRight size={16} strokeWidth={2} className="study-topic-card__chev" aria-hidden />
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
     </div>
@@ -1432,7 +1473,10 @@ function SessionSummaryView({
 /* ─── Main Page ────────────────────────────── */
 
 export function StudyArea() {
-  const [selectedArea, setSelectedArea] = useState<string | null>(null)
+  const { areaKey: areaKeyParam } = useParams<{ areaKey: string }>()
+  const navigate = useNavigate()
+  const { progress } = useProgress()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [loadingTopicLabel, setLoadingTopicLabel] = useState('…')
   const [step, setStep] = useState<Step>('select')
   const [activeTab, setActiveTab] = useState<Tab>('summary')
@@ -1447,15 +1491,49 @@ export function StudyArea() {
   const [showSummary, setShowSummary] = useState(false)
   const mainRef = useRef<HTMLDivElement>(null)
 
-  const areaColor = pkg ? getAreaColor(pkg.areaKey) : 'var(--green-500)'
-  const areaLabel = pkg ? (AREA_CONFIG[pkg.areaKey]?.label ?? '') : ''
+  useEffect(() => {
+    const bank = searchParams.get('bank')
+    const areaParam = searchParams.get('area')
+    if (bank !== '1') return
+    const keys = STUDY_AREA_CARD_KEYS
+    const area =
+      areaParam && keys.includes(areaParam) ? areaParam : keys[0] ?? null
+    const tid = window.setTimeout(() => {
+      if (area) {
+        navigate(`/study/${area}?hub=bank`, { replace: true })
+      } else {
+        setSearchParams({}, { replace: true })
+      }
+    }, 0)
+    return () => window.clearTimeout(tid)
+  }, [searchParams, setSearchParams, navigate])
 
   const scrollToTop = useCallback(() => {
     mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
+  const invalidAreaKey =
+    areaKeyParam != null &&
+    areaKeyParam !== '' &&
+    !STUDY_AREA_CARD_KEYS.includes(areaKeyParam)
+
+  const selectedArea =
+    areaKeyParam && STUDY_AREA_CARD_KEYS.includes(areaKeyParam) ? areaKeyParam : null
+
+  const hubTopics = selectedArea ? topicsForAreaKey(selectedArea, progress?.areas) : []
+
+  const hubSurface: HubSurface | null = !selectedArea
+    ? null
+    : searchParams.get('hub') === 'guided'
+      ? 'guided'
+      : searchParams.get('hub') === 'bank'
+        ? 'bank'
+        : 'menu'
+
+  const areaColor = pkg ? getAreaColor(pkg.areaKey) : 'var(--green-500)'
+  const areaLabel = pkg ? (AREA_CONFIG[pkg.areaKey]?.label ?? '') : ''
+
   async function handleStart(areaKey: string, topico: TopicOption) {
-    setSelectedArea(areaKey)
     setLoadingTopicLabel(topico.label)
     setStep('loading')
     setActiveTab('summary')
@@ -1463,7 +1541,13 @@ export function StudyArea() {
     setShowSummary(false)
 
     const data = await getMockStudyPackage(areaKey, topico.value)
-    setPkg(data)
+    setPkg({
+      ...data,
+      performance: {
+        accuracy: topico.accuracy ?? 0,
+        totalAnswered: topico.totalAnswered,
+      },
+    })
     setStep('study')
   }
 
@@ -1477,10 +1561,11 @@ export function StudyArea() {
   }
 
   function handleBack() {
+    const key = pkg?.areaKey
     setStep('select')
     setPkg(null)
     setShowSummary(false)
-    setSelectedArea(null)
+    if (key) navigate(`/study/${key}`)
   }
 
   const TABS: Tab[] = ['summary', 'flashcards', 'questions', 'mindmap']
@@ -1491,26 +1576,53 @@ export function StudyArea() {
       area: AREA_CONFIG[selectedArea]?.label ?? '',
       detail: 'preparando…',
     }
-  } else if (step === 'select' && selectedArea) {
+  } else if (step === 'select' && selectedArea && hubSurface === 'menu') {
     studyBreadcrumb = {
       area: AREA_CONFIG[selectedArea]?.label ?? '',
-      detail: `${getMockTopics(selectedArea).length} tópicos`,
+      detail: 'O que estudar',
+    }
+  } else if (step === 'select' && selectedArea && hubSurface === 'bank') {
+    studyBreadcrumb = {
+      area: AREA_CONFIG[selectedArea]?.label ?? '',
+      detail: 'Banco de questões',
     }
   } else if (pkg) {
     studyBreadcrumb = { area: areaLabel, detail: pkg.topicoLabel }
+  }
+
+  if (invalidAreaKey) {
+    return <Navigate to="/study" replace />
   }
 
   return (
     <>
       <TopBar variant="study" title="Área de Estudo" studyBreadcrumb={studyBreadcrumb} />
       <div className="broto-main-inner broto-main-inner--study" ref={mainRef}>
-        {step === 'select' && (
-          <AreaTopicSelector
-            selectedArea={selectedArea}
-            onSelectArea={setSelectedArea}
-            onStart={handleStart}
+        {step === 'select' && !selectedArea ? (
+          <StudyLandingPick progress={progress ?? undefined} />
+        ) : null}
+
+        {step === 'select' && selectedArea && hubSurface === 'menu' ? (
+          <StudyHubMenu
+            areaKey={selectedArea}
+            topics={hubTopics}
+            onChooseBank={() => navigate(`/study/${selectedArea}?hub=bank`)}
+            onChangeArea={() => navigate('/study')}
+            onStartTopic={handleStart}
           />
-        )}
+        ) : null}
+
+        {step === 'select' && selectedArea && hubSurface === 'guided' ? (
+          <Navigate to={`/study/${selectedArea}`} replace />
+        ) : null}
+
+        {step === 'select' && selectedArea && hubSurface === 'bank' ? (
+          <QuestionBankView
+            embedded
+            preferredArea={selectedArea}
+            onBackToHub={() => navigate(`/study/${selectedArea}`)}
+          />
+        ) : null}
 
         {step === 'loading' && pkg === null && (
           <PackageLoading areaKey={selectedArea ?? ''} topicoLabel={loadingTopicLabel} />

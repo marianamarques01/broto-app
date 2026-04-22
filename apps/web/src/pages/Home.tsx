@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet, FASE_LABEL } from '@/hooks/usePet'
@@ -14,8 +14,6 @@ import { DEFAULT_AREAS } from '@/lib/default-areas'
 import { HomeRightSidebar } from '@/components/home/HomeRightSidebar'
 import { HomePetBanner } from '@/components/home/HomePetBanner'
 import { AREA_ACCENT_VARS, StudyAreaCardPattern } from '@/components/study/study-area-card-pattern'
-import { BrotoChatModal } from '@/components/broto/BrotoChatModal'
-
 function plantStatusLine(fase: keyof typeof FASE_LABEL): string {
   const lines: Record<keyof typeof FASE_LABEL, string> = {
     semente: `Sua planta está na fase ${FASE_LABEL.semente} — cada questão rega o broto.`,
@@ -28,7 +26,6 @@ function plantStatusLine(fase: keyof typeof FASE_LABEL): string {
 }
 
 export function Home() {
-  const [brotoChatOpen, setBrotoChatOpen] = useState(false)
   const { user: profile, loading: loadingUser } = useUser()
   const { progress, loading: loadingProgress } = useProgress()
   const { pet, loading: loadingPet } = usePet()
@@ -99,7 +96,7 @@ export function Home() {
                         return (
                           <Link
                             key={area.value}
-                            to="/study"
+                            to={`/study/${area.value}`}
                             className="study-area-card broto-subject-area-card"
                             style={
                               {
@@ -144,24 +141,6 @@ export function Home() {
 
         <HomeRightSidebar diaHoje={diaHoje} horasPorDia={horasPorDia} />
       </div>
-
-      <div className="broto-fab-ia-wrap" role="presentation">
-        <span className="broto-fab-ia-ring" aria-hidden />
-        <span className="broto-fab-ia-glow" aria-hidden />
-        <button
-          type="button"
-          className="broto-fab-ia"
-          title="Conversar com o Broto (IA)"
-          aria-label="Conversar com o Broto (IA)"
-          aria-expanded={brotoChatOpen}
-          aria-controls="broto-chat-floating-panel"
-          onClick={() => setBrotoChatOpen(true)}
-        >
-          {'\u{1F331}'}
-        </button>
-      </div>
-
-      {brotoChatOpen ? <BrotoChatModal onClose={() => setBrotoChatOpen(false)} /> : null}
     </div>
   )
 }

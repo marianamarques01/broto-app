@@ -39,6 +39,39 @@ function readStore(): Store {
   }
 }
 
+/** Mapa dia ISO → contagens (para heatmap / consistência na web). */
+export function getPerformanceDayMap(): Record<string, { answered: number; correct: number }> {
+  return { ...readStore().days }
+}
+
+let cachedDayMapJson = ''
+let cachedDayMapSnapshot: Readonly<Record<string, { answered: number; correct: number }>> =
+  Object.freeze({})
+
+const EMPTY_DAY_MAP_SERVER = Object.freeze(
+  {} as Readonly<Record<string, { answered: number; correct: number }>>,
+)
+
+/**
+ * Snapshot estável para `useSyncExternalStore`: mesma referência enquanto o JSON do store não muda.
+ * Evita loop infinito de re-renders (objeto novo a cada getSnapshot).
+ */
+export function getPerformanceDayMapSnapshot(): Readonly<Record<string, { answered: number; correct: number }>> {
+  const store = readStore()
+  const json = JSON.stringify(store.days)
+  if (json !== cachedDayMapJson) {
+    cachedDayMapJson = json
+    cachedDayMapSnapshot = Object.freeze({ ...store.days })
+  }
+  return cachedDayMapSnapshot
+}
+
+export function getPerformanceDayMapServerSnapshot(): Readonly<
+  Record<string, { answered: number; correct: number }>
+> {
+  return EMPTY_DAY_MAP_SERVER
+}
+
 function writeStore(s: Store): void {
   if (typeof localStorage === 'undefined') return
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s))

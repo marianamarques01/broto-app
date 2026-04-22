@@ -171,6 +171,18 @@ export function Signup() {
             Entrar
           </Link>
         </p>
+        <p
+          style={{
+            textAlign: 'center',
+            marginTop: 14,
+            fontSize: '0.82rem',
+            color: 'var(--text-muted)',
+          }}
+        >
+          <Link to="/inicio" className="broto-link-accent">
+            Voltar ao início
+          </Link>
+        </p>
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Pressable, View, Text, StyleSheet } from 'react-native'
-import { useRouter } from 'expo-router'
+import { usePathname, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, {
   useSharedValue,
@@ -20,6 +20,7 @@ const GLOW_SIZE = 72
 
 export function BrotoChatFab() {
   const router = useRouter()
+  const pathname = usePathname()
   const insets = useSafeAreaInsets()
   const scale = useSharedValue(1)
   const breathe = useSharedValue(0)
@@ -50,6 +51,10 @@ export function BrotoChatFab() {
     opacity: interpolate(breathe.value, [0, 1], [0.1, 0.35]),
     transform: [{ scale: interpolate(breathe.value, [0, 1], [1, 1.2]) }],
   }))
+
+  if (pathname === '/broto-chat') {
+    return null
+  }
 
   return (
     <Animated.View

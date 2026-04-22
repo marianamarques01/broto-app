@@ -31,9 +31,9 @@ export function BrotoLoadingSplash() {
           >
             <defs>
               <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#10b981" stopOpacity="0.28" />
-                <stop offset="50%" stopColor="#10b981" stopOpacity="0.08" />
-                <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                <stop offset="0%" stopColor="var(--teal-500)" stopOpacity="0.28" />
+                <stop offset="50%" stopColor="var(--teal-500)" stopOpacity="0.08" />
+                <stop offset="100%" stopColor="var(--teal-500)" stopOpacity="0" />
               </radialGradient>
             </defs>
             <circle cx="80" cy="80" r="80" fill={`url(#${glowId})`} />
@@ -56,9 +56,9 @@ export function BrotoLoadingSplash() {
           >
             <defs>
               <linearGradient id={wordmarkId} x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#6ee7b7" />
-                <stop offset="40%" stopColor="#10b981" />
-                <stop offset="100%" stopColor="#fcd34d" />
+                <stop offset="0%" stopColor="var(--teal-300)" />
+                <stop offset="40%" stopColor="var(--teal-500)" />
+                <stop offset="100%" stopColor="var(--gold-accent)" />
               </linearGradient>
             </defs>
             <text

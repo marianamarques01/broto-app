@@ -187,8 +187,16 @@ async function searchQuestions(params: SearchParams): Promise<QuestionsResponse>
   }
 }
 
-export function useQuestionsFilters(options?: { enableQuestionFetch?: boolean }) {
+export function useQuestionsFilters(options?: {
+  enableQuestionFetch?: boolean
+  /** When set (embedded banco), `selectedArea` follows this value once `areas` is loaded. */
+  preferredArea?: string | null
+  /** Default true. Set false in embedded mode so the first catalog area is not forced. */
+  autoSelectFirstArea?: boolean
+}) {
   const enableQuestionFetch = options?.enableQuestionFetch !== false
+  const preferredArea = options?.preferredArea
+  const autoSelectFirstArea = options?.autoSelectFirstArea !== false
   const { organization } = useClass()
   const baseUrl = getBaseUrl(organization?.slug ?? null)
   const [areas, setAreas] = useState<Area[]>([])
@@ -221,6 +229,19 @@ export function useQuestionsFilters(options?: { enableQuestionFetch?: boolean })
   useEffect(() => {
     void loadInitialData()
   }, [loadInitialData])
+
+  useEffect(() => {
+    if (!areas.length) return
+    if (preferredArea != null && preferredArea !== '') {
+      if (areas.some((a) => a.value === preferredArea)) {
+        setSelectedArea(preferredArea)
+      }
+      return
+    }
+    if (autoSelectFirstArea) {
+      setSelectedArea((cur) => cur || areas[0]!.value)
+    }
+  }, [areas, preferredArea, autoSelectFirstArea])
 
   useEffect(() => {
     if (!selectedArea) {

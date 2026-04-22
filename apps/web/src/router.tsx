@@ -3,9 +3,9 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { AppShell } from '@/components/layout/AppShell'
 import { Login } from '@/pages/Login'
 import { Signup } from '@/pages/Signup'
+import { Landing } from '@/pages/Landing'
 import { Onboarding } from '@/pages/Onboarding'
 import { Home } from '@/pages/Home'
-import { Study } from '@/pages/Study'
 import { StudyArea } from '@/pages/StudyArea'
 import { Progress } from '@/pages/Progress'
 import { Routine } from '@/pages/Routine'
@@ -41,6 +41,7 @@ function NotFound() {
 }
 
 export const router = createBrowserRouter([
+  { path: '/inicio', element: <Landing /> },
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <Signup /> },
   { path: '/onboarding', element: <Onboarding /> },
@@ -52,11 +53,12 @@ export const router = createBrowserRouter([
     ),
     children: [
       { path: '/', element: <Home /> },
-      { path: '/study/questions', element: <Study /> },
+      { path: '/study/questions', element: <Navigate to="/study/linguagens?hub=bank" replace /> },
       { path: '/study/mock-exam', element: <MockExamConfig /> },
       { path: '/study/mock-exam/history', element: <MockExamHistory /> },
       { path: '/study/mock-exam/play/:sessionId', element: <MockExamPlay /> },
       { path: '/study/mock-exam/result', element: <MockExamResult /> },
+      { path: '/study/:areaKey', element: <StudyArea /> },
       { path: '/study', element: <StudyArea /> },
       { path: '/study-area', element: <Navigate to="/study" replace /> },
       { path: '/progress', element: <Progress /> },
