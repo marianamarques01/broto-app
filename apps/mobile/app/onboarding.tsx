@@ -29,11 +29,13 @@ import {
   Calculator,
   Brain,
   Check,
+  Leaf,
 } from 'lucide-react-native'
 import { colors, fonts, fontSize } from '@/theme/tokens'
 import { BrotoCtaButton } from '@/components/BrotoCtaButton'
 import { api } from '@/lib/api-client'
 import { refreshUser } from '@/hooks/useUser'
+import { refreshPet } from '@/hooks/usePet'
 import { useClass } from '@/hooks/useClass'
 import { getQuestionsStaticBaseUrl } from '@/lib/questions-static-base'
 import { formatMockExamFlowError } from '@/lib/mock-exam-flow-error'
@@ -46,7 +48,7 @@ import {
 
 /* ── Constants ──────────────────────────────────────────── */
 
-const TOTAL_STEPS = 6
+const TOTAL_STEPS = 7
 
 /** Simulado diagnostico: 20 questoes, 5 por area (valores = `areas.json` / `details.discipline`). */
 const ONBOARDING_DIAGNOSTIC_MOCK_CFG: StudentMockExamConfig = {
@@ -130,6 +132,7 @@ const HORARIOS: { value: Horario; label: string; Icon: typeof Sun }[] = [
 /* ── Types ──────────────────────────────────────────────── */
 
 interface OnboardingState {
+  brotoNome: string
   faculdade: string
   curso: string
   metaNota: number
@@ -240,7 +243,48 @@ function StepWelcome({ onContinue, onSkipAll }: { onContinue: () => void; onSkip
   )
 }
 
-/* ── Step 1: Objetivo ───────────────────────────────────── */
+/* ── Step 1: Nome do Broto ──────────────────────────────── */
+
+function StepBrotoNome({
+  data,
+  onChange,
+}: {
+  data: OnboardingState
+  onChange: (d: Partial<OnboardingState>) => void
+}) {
+  return (
+    <ScrollView
+      style={st.scrollStep}
+      contentContainerStyle={st.scrollContent}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
+      <StepHeader
+        icon={<Leaf size={28} color={colors.green[400]} />}
+        title="Como vamos chamar seu Broto?"
+        subtitle="De um nome ao seu mascote"
+      />
+      <Animated.View entering={FadeInUp.delay(200).duration(400)} style={st.fieldGroup}>
+        <Text style={st.fieldLabel}>Nome do Broto</Text>
+        <View style={st.inputWrap}>
+          <TextInput
+            style={st.input}
+            value={data.brotoNome}
+            onChangeText={(v) => onChange({ brotoNome: v.slice(0, 32) })}
+            placeholder="Ex.: Broto, Folhinha, Sementinha..."
+            placeholderTextColor={colors.text.muted40}
+            selectionColor={colors.green[500]}
+            maxLength={32}
+            autoComplete="off"
+          />
+        </View>
+        <Text style={st.fieldHint}>Ate 32 caracteres. Vazio = &quot;Broto&quot;.</Text>
+      </Animated.View>
+    </ScrollView>
+  )
+}
+
+/* ── Step 2: Objetivo ───────────────────────────────────── */
 
 function StepObjetivo({
   data,
@@ -657,6 +701,12 @@ function StepResumo({
 
       {/* Summary card */}
       <Animated.View entering={FadeInUp.delay(200).duration(400)} style={st.resumoCard}>
+        <View style={st.resumoRow}>
+          <Leaf size={16} color={colors.green[400]} />
+          <Text style={st.resumoText}>
+            Broto: {data.brotoNome.trim() || 'Broto'}
+          </Text>
+        </View>
         {(data.curso || data.faculdade) && (
           <View style={st.resumoRow}>
             <GraduationCap size={16} color={colors.green[400]} />
@@ -746,6 +796,18 @@ function StepResumo({
   )
 }
 
+function buildOnboardingBody(data: OnboardingState) {
+  return {
+    brotoNome: data.brotoNome.trim() || 'Broto',
+    faculdade: data.faculdade,
+    curso: data.curso,
+    metaNota: data.metaNota,
+    niveis: data.niveis,
+    horasPorDia: data.horasPorDia,
+    horarios: data.horarios,
+  }
+}
+
 /* ── Main Screen ────────────────────────────────────────── */
 
 export default function OnboardingScreen() {
@@ -759,6 +821,7 @@ export default function OnboardingScreen() {
   const [saveLoading, setSaveLoading] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [data, setData] = useState<OnboardingState>({
+    brotoNome: 'Broto',
     faculdade: '',
     curso: '',
     metaNota: 700,
@@ -777,22 +840,16 @@ export default function OnboardingScreen() {
     [],
   )
 
-  const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS))
+  const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1))
   const goBack = () => setStep((s) => Math.max(s - 1, 0))
 
   const handleFinish = useCallback(async () => {
     setSaveError(null)
     setSaveLoading(true)
     try {
-      await api.post('/api/user/onboarding', {
-        faculdade: data.faculdade,
-        curso: data.curso,
-        metaNota: data.metaNota,
-        niveis: data.niveis,
-        horasPorDia: data.horasPorDia,
-        horarios: data.horarios,
-      })
+      await api.post('/api/user/onboarding', buildOnboardingBody(data))
       await refreshUser()
+      await refreshPet()
       router.replace('/(tabs)')
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Erro ao salvar')
@@ -812,15 +869,9 @@ export default function OnboardingScreen() {
     const cfg = ONBOARDING_DIAGNOSTIC_MOCK_CFG
     setSimuladoLoading(true)
     try {
-      await api.post('/api/user/onboarding', {
-        faculdade: data.faculdade,
-        curso: data.curso,
-        metaNota: data.metaNota,
-        niveis: data.niveis,
-        horasPorDia: data.horasPorDia,
-        horarios: data.horarios,
-      })
+      await api.post('/api/user/onboarding', buildOnboardingBody(data))
       await refreshUser()
+      await refreshPet()
 
       const pool = await loadMockExamPool({
         baseUrl,
@@ -879,6 +930,7 @@ export default function OnboardingScreen() {
   const handleSkipAll = useCallback(async () => {
     try {
       await api.post('/api/user/onboarding', {
+        brotoNome: 'Broto',
         faculdade: '',
         curso: '',
         metaNota: 0,
@@ -887,6 +939,7 @@ export default function OnboardingScreen() {
         horarios: [],
       })
       await refreshUser()
+      await refreshPet()
     } catch {
       // segue para o app
     }
@@ -910,11 +963,12 @@ export default function OnboardingScreen() {
       <NavBar step={step} onBack={goBack} onSkip={goNext} showSkip={step < TOTAL_STEPS} />
 
       <View style={st.stepBody}>
-        {step === 1 && <StepObjetivo data={data} onChange={updateData} />}
-        {step === 2 && <StepMeta data={data} onChange={updateData} />}
-        {step === 3 && <StepNivel data={data} onChange={updateData} />}
-        {step === 4 && <StepDisponibilidade data={data} onChange={updateData} />}
-        {step === 5 && (
+        {step === 1 && <StepBrotoNome data={data} onChange={updateData} />}
+        {step === 2 && <StepObjetivo data={data} onChange={updateData} />}
+        {step === 3 && <StepMeta data={data} onChange={updateData} />}
+        {step === 4 && <StepNivel data={data} onChange={updateData} />}
+        {step === 5 && <StepDisponibilidade data={data} onChange={updateData} />}
+        {step === 6 && (
           <StepResumo
             data={data}
             onSimulado={handleSimulado}
@@ -927,8 +981,8 @@ export default function OnboardingScreen() {
         )}
       </View>
 
-      {/* Bottom CTA for steps 1-4 */}
-      {step >= 1 && step <= 4 && (
+      {/* Bottom CTA for steps 1-5 (antes do resumo) */}
+      {step >= 1 && step <= 5 && (
         <View style={[st.bottomCta, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <BrotoCtaButton
             onPress={goNext}

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { api, ApiError } from '@/lib/api-client'
 import type { UserProfile } from '@broto/shared'
@@ -6,6 +6,7 @@ import type { UserProfile } from '@broto/shared'
 type AuthContextType = {
   user: UserProfile | null
   loading: boolean
+  refreshUser: () => Promise<void>
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (email: string, password: string, nome: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
@@ -34,39 +35,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  const fetchProfile = useCallback(async (id: string) => {
+    setLoading(true)
+    try {
+      const { data } = await supabase
+        .from('users')
+        .select('id, nome, email, image, onboarding_done, data_enem, horas_disponiveis_por_dia')
+        .eq('id', id)
+        .single()
+
+      if (data) {
+        setUser({
+          id: data.id,
+          nome: data.nome,
+          email: data.email,
+          image: data.image ?? null,
+          onboardingDone: data.onboarding_done ?? false,
+          dataEnem: data.data_enem ?? null,
+          horasDisponiveisPorDia: data.horas_disponiveis_por_dia ?? 2,
+        })
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const refreshUser = useCallback(async () => {
+    if (!userId) return
+    await fetchProfile(userId)
+  }, [userId, fetchProfile])
+
   // When userId changes, fetch profile outside auth lock
   useEffect(() => {
     if (!userId) return
-
-    async function fetchProfile() {
-      setLoading(true)
-      try {
-        const { data } = await supabase
-          .from('users')
-          .select('id, nome, email, image, onboarding_done, data_enem, horas_disponiveis_por_dia')
-          .eq('id', userId!)
-          .single()
-
-        if (data) {
-          setUser({
-            id: data.id,
-            nome: data.nome,
-            email: data.email,
-            image: data.image ?? null,
-            onboardingDone: data.onboarding_done ?? false,
-            dataEnem: data.data_enem ?? null,
-            horasDisponiveisPorDia: data.horas_disponiveis_por_dia ?? 2,
-          })
-        }
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchProfile()
-  }, [userId])
+    void fetchProfile(userId)
+  }, [userId, fetchProfile])
 
   async function signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -113,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, refreshUser, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   )

@@ -44,14 +44,12 @@ export function Home() {
 
   const fase = pet?.fase ?? 'semente'
   const plantLine = plantStatusLine(fase)
-  const xpTotal = pet?.xp ?? 0
   const streak = pet?.streak ?? 0
   return (
     <div className="broto-home-dashboard">
       <HomeDashboardTopBar
         greeting={`Olá, ${firstName}`}
-        plantLine={loadingPet ? 'Carregando seu broto...' : plantLine}
-        xpTotal={xpTotal}
+        plantLine={loadingPet ? 'Carregando…' : plantLine}
         streak={streak}
       />
 

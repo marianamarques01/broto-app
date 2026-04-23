@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     fontFamily: fonts.sansSemiBold,
-    fontSize: fontSize.md,
+    fontSize: fontSize.base,
     color: colors.text.primary,
     marginBottom: space[2],
   },

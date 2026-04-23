@@ -13,7 +13,7 @@ import Animated, {
   Easing,
   interpolate,
 } from 'react-native-reanimated'
-import { colors } from '@/theme/tokens'
+import { colors, MOBILE_TAB_FAB_OFFSET } from '@/theme/tokens'
 
 const FAB_SIZE = 56
 const GLOW_SIZE = 72
@@ -63,7 +63,7 @@ export function BrotoChatFab() {
         {
           position: 'absolute',
           right: 16,
-          bottom: 80 + insets.bottom,
+          bottom: MOBILE_TAB_FAB_OFFSET + insets.bottom,
           zIndex: 100,
           width: GLOW_SIZE,
           height: GLOW_SIZE,

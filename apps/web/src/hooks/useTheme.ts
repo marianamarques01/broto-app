@@ -26,5 +26,9 @@ export function useTheme() {
     setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))
   }, [])
 
-  return { theme, toggleTheme }
+  const setExplicitTheme = useCallback((next: BrotoTheme) => {
+    setTheme(next)
+  }, [])
+
+  return { theme, toggleTheme, setTheme: setExplicitTheme }
 }

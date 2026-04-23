@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { View } from 'react-native'
 import { Tabs, useRouter } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import {
   House,
   BookOpenText,
@@ -14,10 +14,10 @@ import { useUser } from '@/hooks/useUser'
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
 import { TabIcon } from '@/components/TabIcon'
 import { BrotoChatFab } from '@/components/BrotoChatFab'
+import { MobileTabBar } from '@/components/MobileTabBar'
 
 export default function TabsLayout() {
   const router = useRouter()
-  const insets = useSafeAreaInsets()
   const { user, loading } = useUser()
 
   useEffect(() => {
@@ -31,15 +31,14 @@ export default function TabsLayout() {
     <View style={{ flex: 1 }}>
       <OrganizationSwitcher />
       <Tabs
+        initialRouteName="index"
+        tabBar={(props: BottomTabBarProps) => <MobileTabBar {...props} />}
         screenOptions={{
           headerShown: false,
           tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: '#031A11',
+            backgroundColor: 'transparent',
             borderTopWidth: 0,
-            paddingTop: 14,
-            paddingBottom: insets.bottom,
-            height: 70 + insets.bottom,
             elevation: 0,
             boxShadow: 'none',
           },
@@ -47,39 +46,70 @@ export default function TabsLayout() {
           tabBarInactiveTintColor: colors.text.muted,
         }}
       >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Inicio',
-            tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={House} />,
-          }}
-        />
+        {/** Ordem: Estudo + Progresso | Início | Rotina + Banco (mesmo padrão do print). */}
         <Tabs.Screen
           name="study"
           options={{
-            title: 'Estudar',
-            tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={BookOpenText} />,
-          }}
-        />
-        <Tabs.Screen
-          name="questions"
-          options={{
-            title: 'Área de Estudo',
-            tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={GraduationCap} />,
+            title: 'Estudo',
+            tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
+              <TabIcon
+                focused={focused}
+                Icon={BookOpenText}
+                activeColor={color}
+                indicator="bare"
+              />
+            ),
           }}
         />
         <Tabs.Screen
           name="progress"
           options={{
             title: 'Progresso',
-            tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={ChartDonut} />,
+            tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
+              <TabIcon
+                focused={focused}
+                Icon={ChartDonut}
+                activeColor={color}
+                indicator="bare"
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Início',
+            tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
+              <TabIcon focused={focused} Icon={House} activeColor={color} indicator="bare" />
+            ),
           }}
         />
         <Tabs.Screen
           name="routine"
           options={{
             title: 'Rotina',
-            tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={CalendarCheck} />,
+            tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
+              <TabIcon
+                focused={focused}
+                Icon={CalendarCheck}
+                activeColor={color}
+                indicator="bare"
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="questions"
+          options={{
+            title: 'Banco',
+            tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
+              <TabIcon
+                focused={focused}
+                Icon={GraduationCap}
+                activeColor={color}
+                indicator="bare"
+              />
+            ),
           }}
         />
       </Tabs>

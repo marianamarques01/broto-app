@@ -250,27 +250,474 @@ body::before {
   }
 }
 
-.broto-mobile-nav-toggle {
+/* Barra superior (tablet/mobile): vidro, acento verde, marca */
+.broto-app__chrome {
   display: none;
-  position: fixed;
-  bottom: 20px;
-  left: 16px;
-  z-index: 45;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-default);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-md);
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 200;
+  padding: 0 10px 0 6px;
+  padding-top: max(8px, env(safe-area-inset-top, 0px));
+  padding-bottom: 12px;
+  min-height: calc(50px + env(safe-area-inset-top, 0px));
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(45, 212, 168, 0.1), transparent 52%),
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-elevated) 55%, transparent) 0%, var(--bg-void) 100%);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--green-400) 0.1, transparent) inset,
+    0 10px 36px rgba(0, 0, 0, 0.18);
+}
+
+.broto-app__chrome::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--teal-500), transparent);
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 @media (max-width: 1024px) {
-  .broto-mobile-nav-toggle {
-    display: inline-flex;
+  .broto-app__chrome {
+    display: block;
+  }
+}
+
+.broto-app__chrome-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 2px 0 2px;
+  box-sizing: border-box;
+}
+
+.broto-app__chrome-end {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.broto-app__chrome-end::-webkit-scrollbar {
+  display: none;
+}
+
+.broto-app__chrome-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Pílulas e ícones no chrome — ligeiramente menores que no topbar da home */
+.broto-app__chrome .broto-topbar__metrics {
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.broto-app__chrome .broto-xp-pill,
+.broto-app__chrome .broto-streak-pill {
+  padding: 4px 9px;
+  font-size: 0.68rem;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.broto-app__chrome .broto-topbar__icon-btn {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.broto-app__chrome-menu {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  margin-right: -4px;
+  padding: 10px 8px 10px 12px;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  box-shadow: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.18s ease, opacity 0.18s ease;
+}
+
+.broto-app__chrome-menu:hover {
+  color: var(--text-primary);
+}
+
+.broto-app__chrome-menu:active {
+  opacity: 0.75;
+}
+
+.broto-app__chrome-menu:focus-visible {
+  outline: 2px solid var(--green-500);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.broto-app--nav-open .broto-app__chrome-menu {
+  color: var(--teal-300);
+  background: transparent;
+  box-shadow: none;
+}
+
+:root[data-theme="light"] .broto-app--nav-open .broto-app__chrome-menu {
+  color: var(--green-600);
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .broto-app__chrome-menu,
+  .broto-app__chrome-menu:active {
+    transition: none;
+  }
+}
+
+.broto-app__chrome-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 0 1 auto;
+  max-width: 42%;
+  padding-left: 4px;
+}
+
+.broto-app__chrome-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--green-400) 0.4, transparent));
+}
+
+.broto-app__chrome-title {
+  font-family: var(--font-logo);
+  font-weight: 700;
+  font-size: 1.26rem;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  user-select: none;
+  color: transparent;
+  background: linear-gradient(
+    120deg,
+    var(--text-primary) 0%,
+    var(--teal-300) 38%,
+    var(--green-500) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+:root[data-theme="light"] .broto-app__chrome-title {
+  background: linear-gradient(120deg, #0a3d2e 0%, var(--green-600) 55%, var(--teal-600) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Bottom tab bar (tablet/mobile) — entalhe SVG + início no centro */
+.broto-mtab {
+  --broto-mtab-surface-top: color-mix(in srgb, var(--bg-elevated) 82%, #000);
+  --broto-mtab-surface-bot: var(--bg-deep);
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 195;
+  pointer-events: none;
+  padding: 0;
+}
+
+:root[data-theme="light"] .broto-mtab {
+  --broto-mtab-surface-top: color-mix(in srgb, var(--bg-card) 95%, #fff);
+  --broto-mtab-surface-bot: var(--bg-deep);
+}
+
+@media (max-width: 1024px) {
+  .broto-mtab {
+    display: block;
+  }
+
+  .broto-app__main {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+}
+
+.broto-mtab__shell {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 78px;
+  pointer-events: none;
+  filter: drop-shadow(0 -4px 24px rgba(0, 0, 0, 0.38));
+}
+
+.broto-mtab__shape {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.broto-mtab__shape-path {
+  filter: none;
+}
+
+.broto-mtab__glow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 72%;
+  max-width: 360px;
+  height: 48px;
+  background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(20, 184, 147, 0.14), transparent 72%);
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+:root[data-theme="light"] .broto-mtab__glow {
+  background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(16, 185, 129, 0.1), transparent 72%);
+}
+
+.broto-mtab__list {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 96px minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  list-style: none;
+  margin: 0 auto;
+  max-width: 100%;
+  width: 100%;
+  padding: 10px 4px 0;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  min-height: 72px;
+  pointer-events: auto;
+  box-sizing: border-box;
+  column-gap: 2px;
+}
+
+.broto-mtab__item {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+
+.broto-mtab__item--center {
+  align-items: flex-start;
+  justify-content: center;
+  padding-bottom: 0;
+}
+
+.broto-mtab__link {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  width: 100%;
+  max-width: 86px;
+  padding: 10px 4px 6px;
+  text-decoration: none;
+  color: color-mix(in srgb, var(--text-secondary) 88%, var(--text-primary) 12%);
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.3, 0.64, 1);
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.broto-mtab__link-bg {
+  position: absolute;
+  inset: 2px 0 0;
+  border-radius: 16px;
+  background: transparent;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.broto-mtab__link--active .broto-mtab__link-bg {
+  background: color-mix(in srgb, var(--green-500) 0.16, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal-500) 0.25, transparent);
+}
+
+.broto-mtab__link--active {
+  color: var(--teal-300);
+}
+
+:root[data-theme="light"] .broto-mtab__link {
+  color: color-mix(in srgb, var(--text-secondary) 70%, #1a1a1a 30%);
+}
+
+:root[data-theme="light"] .broto-mtab__link--active {
+  color: var(--green-800);
+  font-weight: 700;
+}
+
+.broto-mtab__link:active:not(.broto-mtab__link--home) {
+  transform: scale(0.97);
+}
+
+.broto-mtab__icon {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  opacity: 0.95;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.broto-mtab__link--active .broto-mtab__icon:not(.broto-mtab__icon--home) {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--teal-400) 0.45, transparent));
+  transform: translateY(-0.5px);
+}
+
+.broto-mtab__label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  text-align: center;
+  color: inherit;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Botão Início — alinhado ao entalhe da barra */
+.broto-mtab__link--home {
+  position: relative;
+  z-index: 3;
+  width: 58px;
+  height: 58px;
+  max-width: none;
+  margin-top: -36px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--text-primary);
+  background:
+    radial-gradient(
+      120% 100% at 50% 0%,
+      color-mix(in srgb, var(--teal-500) 0.2, var(--bg-card)) 0%,
+      var(--bg-deep) 55%
+    );
+  border: 1.5px solid color-mix(in srgb, var(--teal-400) 0.45, var(--border-default));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--green-400) 0.12, transparent) inset,
+    0 3px 14px rgba(0, 0, 0, 0.45),
+    0 0 24px color-mix(in srgb, var(--green-500) 0.2, transparent);
+  transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.25s ease, border-color 0.2s ease;
+}
+
+.broto-mtab__link--home .broto-mtab__link-bg {
+  display: none;
+}
+
+.broto-mtab__home-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, transparent 42%);
+  pointer-events: none;
+}
+
+.broto-mtab__icon--home {
+  color: var(--teal-300);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--green-400) 0.35, transparent));
+}
+
+:root[data-theme="light"] .broto-mtab__icon--home {
+  color: var(--green-700);
+}
+
+.broto-mtab__link--home.broto-mtab__link--active {
+  border-color: color-mix(in srgb, var(--teal-500) 0.75, var(--border-strong));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--green-200) 0.2, transparent) inset,
+    0 5px 20px rgba(0, 0, 0, 0.25),
+    0 0 32px color-mix(in srgb, var(--green-500) 0.35, transparent);
+  transform: translateY(-1px);
+}
+
+.broto-mtab__link--home.broto-mtab__link--active .broto-mtab__icon--home {
+  color: var(--teal-300);
+  filter: drop-shadow(0 0 10px var(--teal-400));
+}
+
+:root[data-theme="light"] .broto-mtab__link--home.broto-mtab__link--active .broto-mtab__icon--home {
+  color: var(--green-800);
+}
+
+.broto-mtab__link--home:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.broto-mtab__link--home:active {
+  transform: scale(0.96);
+}
+
+.broto-mtab__link:focus-visible {
+  outline: 2px solid var(--teal-400);
+  outline-offset: 3px;
+  border-radius: 16px;
+  z-index: 4;
+}
+
+.broto-mtab__link--home:focus-visible {
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .broto-mtab__link,
+  .broto-mtab__link--active .broto-mtab__icon,
+  .broto-mtab__link--home {
+    transition: none;
+  }
+}
+
+@media (min-width: 1025px) {
+  .broto-mtab {
+    display: none !important;
   }
 }
 
@@ -283,6 +730,285 @@ body::before {
 @media (max-width: 768px) {
   .broto-main-inner {
     padding: 20px 16px 40px;
+  }
+}
+
+/* ── Settings (/settings) ── */
+
+.broto-settings {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.broto-settings__intro {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 22px 22px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+  background:
+    radial-gradient(ellipse 120% 80% at 12% 0%, rgba(16, 185, 129, 0.14), transparent 52%),
+    radial-gradient(ellipse 80% 60% at 92% 100%, rgba(245, 200, 66, 0.06), transparent 48%),
+    linear-gradient(165deg, var(--bg-card) 0%, color-mix(in srgb, var(--bg-deep) 92%, transparent) 100%);
+  box-shadow: var(--shadow-sm);
+}
+
+.broto-settings__intro-icon {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--green-400);
+  background: color-mix(in srgb, var(--green-600) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--green-500) 22%, transparent);
+}
+
+.broto-settings__title {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.broto-settings__lede {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 36rem;
+}
+
+.broto-settings__alert {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--gold-400) 35%, var(--border-default));
+  background: color-mix(in srgb, var(--gold-400) 8%, var(--bg-card));
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+}
+
+.broto-settings__panel {
+  padding: 20px 20px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.broto-settings__panel--broto {
+  background:
+    radial-gradient(ellipse 90% 80% at 0% 0%, rgba(16, 185, 129, 0.08), transparent 55%),
+    var(--bg-card);
+}
+
+.broto-settings__panel--danger {
+  border-color: color-mix(in srgb, var(--border-default) 70%, rgba(239, 68, 68, 0.22));
+  background: color-mix(in srgb, var(--bg-card) 92%, rgba(239, 68, 68, 0.04));
+}
+
+.broto-settings__panel-head {
+  margin-bottom: 16px;
+}
+
+.broto-settings__panel-title {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.broto-settings__panel-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.broto-settings__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .broto-settings__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 20px;
+  }
+}
+
+.broto-settings__field {
+  min-width: 0;
+}
+
+.broto-settings__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.broto-settings__label-icon {
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.broto-settings__hint {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.broto-settings__readout {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+}
+
+.broto-settings__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 2px;
+}
+
+.broto-settings__row-actions--wrap {
+  margin-top: 12px;
+}
+
+.broto-settings__inline-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.broto-settings__broto-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.broto-settings__broto-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--green-600) 20%, var(--bg-deep)), var(--bg-deep));
+  border: 1px solid var(--border-default);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.broto-settings__theme {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.broto-settings__theme-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border-default);
+  background: var(--bg-deep);
+  color: var(--text-secondary);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.broto-settings__theme-pill:hover {
+  border-color: color-mix(in srgb, var(--green-500) 30%, var(--border-default));
+  color: var(--text-primary);
+}
+
+.broto-settings__theme-pill--on {
+  border-color: color-mix(in srgb, var(--green-500) 45%, var(--border-default));
+  background: color-mix(in srgb, var(--green-600) 12%, var(--bg-deep));
+  color: var(--text-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--green-500) 20%, transparent);
+}
+
+.broto-settings__theme-note {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.broto-settings__placeholder {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-default);
+  background: var(--bg-deep);
+}
+
+.broto-settings__placeholder-icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.broto-settings__placeholder-title {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.broto-settings__placeholder-text {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.broto-settings__spin {
+  animation: broto-spin 0.75s linear infinite;
+}
+
+@keyframes broto-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -345,7 +1071,7 @@ body::before {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 42;
+  z-index: 130;
   width: var(--sidebar-collapsed-w);
   height: 100vh;
   padding: 20px 10px;
@@ -818,7 +1544,7 @@ body::before {
   display: none;
   position: fixed;
   inset: 0;
-  z-index: 41;
+  z-index: 120;
   background: rgba(0, 0, 0, 0.48);
   border: none;
   padding: 0;
@@ -1722,6 +2448,21 @@ a.study-area-card {
 .broto-home-dashboard > .broto-topbar--dashboard {
   padding-top: 14px;
   padding-bottom: 8px;
+}
+
+@media (max-width: 1024px) {
+  .broto-home-dashboard > .broto-topbar--dashboard {
+    padding-top: 22px;
+  }
+
+  /*
+   * Home + demais rotas: XP / sequência / notif / tema vêm do AppShell (AppChromeActions).
+   * Esconde a coluna duplicada no TopBar e a faixa do HomeDashboardTopBar.
+   */
+  .broto-app__main .broto-topbar__actions-cluster,
+  .broto-home-dashboard .broto-topbar--dashboard .broto-topbar__actions {
+    display: none;
+  }
 }
 
 .broto-home-dashboard__body {
@@ -3658,6 +4399,22 @@ a.study-area-card {
   line-height: 1.5;
 }
 
+.broto-perf-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  gap: 10px;
+  padding: 8px 0;
+  width: 100%;
+}
+
+.broto-perf-empty-state .broto-btn-secondary {
+  margin-top: 10px;
+}
+
 .broto-perf-card__skeleton {
   height: 200px;
   border-radius: var(--radius-md);
@@ -3886,6 +4643,22 @@ a.broto-subjects-questions-btn:focus-visible {
   justify-content: center;
 }
 
+/* Com bottom bar: regra após o bloco base; valores equilibrados (acima da barra, sem exagerar) */
+@media (max-width: 1024px) {
+  .broto-fab-ia-wrap {
+    bottom: calc(132px + env(safe-area-inset-bottom, 0px));
+    z-index: 500;
+  }
+}
+
+@media (max-width: 768px) {
+  .broto-fab-ia-wrap {
+    right: 16px;
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    z-index: 500;
+  }
+}
+
 .broto-fab-ia-ring {
   position: absolute;
   width: 72px;
@@ -3983,11 +4756,6 @@ button.broto-fab-ia {
 }
 
 @media (max-width: 768px) {
-  .broto-fab-ia-wrap {
-    right: 16px;
-    bottom: 16px;
-  }
-
   .broto-topbar__search {
     max-width: none;
     width: 100%;
@@ -8916,9 +9684,7 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
 /* ── Mobile responsive ── */
 
 @media (max-width: 768px) {
-  .broto-sidebar {
-    display: none;
-  }
+  /* Não use display:none em .broto-sidebar aqui: o rail colapsível é o drawer do menu. */
 
   .broto-app {
     flex-direction: column;

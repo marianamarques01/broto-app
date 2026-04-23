@@ -1,4 +1,6 @@
 export interface PetData {
+  /** Nome de exibição do Broto (mascote). */
+  nome: string
   nivel: number
   xp: number
   xpNextLevel: number

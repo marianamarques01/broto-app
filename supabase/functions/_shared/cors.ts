@@ -8,7 +8,8 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').filte
 
 const CORS_HEADERS_BASE = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  /** Inclui PATCH/PUT/DELETE para chamadas da API web (ex.: renomear Broto). */
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
 }
 
 /**

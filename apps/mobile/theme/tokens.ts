@@ -151,3 +151,7 @@ export const colors = {
     text: '#ffffff',
   },
 } as const
+
+/** Distância do fundo da tela ao FAB do Broto (acima do dock — ajustar com MobileTabBar). */
+/** Ajuste com o dock (botão Início + recorte) — alinha o chat Broto acima da barra */
+export const MOBILE_TAB_FAB_OFFSET = 112

@@ -101,25 +101,28 @@ export function createServiceRoleClientUnsafe(): SupabaseClient {
 export async function requireUser(
   req: Request,
 ): Promise<AuthzResult<{ user: AuthUser; supabaseAuthed: SupabaseClient }>> {
-  const authHeader = req.headers.get('Authorization')
-  const jwt = authHeader?.replace(/^Bearer\s+/i, '').trim()
+  const authHeader = req.headers.get('Authorization')?.trim()
 
-  // Reject missing token — never treat "Bearer <anon_jwt>" as a logged-in user (see api-clients).
-  if (!jwt) {
+  // Reject missing / malformed header — never treat "Bearer <anon_key>" as a user JWT (see api-clients).
+  if (!authHeader || !/^Bearer\s+\S+/i.test(authHeader)) {
     return { data: null, error: { status: 401, message: 'Authorization header required' } }
   }
 
-  // Edge: validate with explicit JWT + scoped client for any follow-up RLS calls.
+  /**
+   * Use the same pattern as Supabase Edge examples: pass the full `Authorization` value on the
+   * client and call `getUser()` with no args. `getUser(jwt)` with a raw string is brittle in Deno
+   * (false 401s → web api-client signs the user out on every action).
+   */
   const supabaseAuthed = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: `Bearer ${jwt}` } } },
+    { global: { headers: { Authorization: authHeader } } },
   )
 
   const {
     data: { user },
     error: authError,
-  } = await supabaseAuthed.auth.getUser(jwt)
+  } = await supabaseAuthed.auth.getUser()
 
   if (authError || !user) {
     return { data: null, error: { status: 401, message: 'Unauthorized' } }

@@ -4,6 +4,7 @@ export function PetCard() {
   const { pet, loading } = usePet()
 
   const fase = pet?.fase ?? 'semente'
+  const brotoNome = pet?.nome?.trim() || 'Broto'
   const nivel = pet?.nivel ?? 1
   const xp = pet?.xp ?? 0
   const xpInLevel = xp % 100
@@ -15,7 +16,7 @@ export function PetCard() {
           {loading ? '...' : FASE_EMOJI[fase]}
         </div>
         <div className="broto-pet-card__body">
-          <p className="broto-pet-card__eyebrow">Seu Broto</p>
+          <p className="broto-pet-card__eyebrow">{loading ? '…' : brotoNome}</p>
           <div className="broto-pet-card__title-row">
             <span className="broto-pet-card__phase">{loading ? '...' : FASE_LABEL[fase]}</span>
             <span className="broto-badge-level">Nv. {nivel}</span>

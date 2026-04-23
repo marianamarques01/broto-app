@@ -83,18 +83,21 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
             ) : null}
 
             {!hasAny && !seriesError ? (
-              <div style={{ padding: '8px 0 16px' }}>
-                <p className="broto-muted" style={{ margin: '0 0 12px', fontSize: '0.88rem' }}>
+              <div className="broto-perf-empty-state">
+                <p className="broto-muted" style={{ margin: 0, fontSize: '0.88rem' }}>
                   Ainda não há respostas registradas neste período. Pratique questões para ver seu
                   ritmo aqui.
                 </p>
                 {hasGlobalProgress ? (
-                  <p className="broto-perf-card__avg" style={{ marginBottom: 12 }}>
+                  <p className="broto-perf-card__avg" style={{ margin: 0 }}>
                     Acerto geral no banco de questões: <strong>{globalAccuracy}%</strong>
                   </p>
                 ) : null}
-                <Link to="/study/linguagens?hub=bank" className="broto-btn-primary broto-btn-primary--inline">
-                  Ir para questões
+                <Link
+                  to="/study/linguagens?hub=bank"
+                  className="broto-btn-secondary broto-btn-secondary--inline"
+                >
+                  Praticar no banco de questões
                 </Link>
               </div>
             ) : null}

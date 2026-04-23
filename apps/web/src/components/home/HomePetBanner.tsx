@@ -58,6 +58,7 @@ export function HomePetBanner() {
   const { pet, loading } = usePet()
 
   const fase = pet?.fase ?? 'semente'
+  const brotoNome = pet?.nome?.trim() || 'Broto'
   const nivel = pet?.nivel ?? 1
   const xp = pet?.xp ?? 0
   const xpInLevel = xp % 100
@@ -73,11 +74,11 @@ export function HomePetBanner() {
   return (
     <section
       className="broto-home-pet-banner broto-home-pet-banner--square"
-      aria-label="Seu Broto e indicadores de hoje"
+      aria-label={`${brotoNome} e indicadores de hoje`}
     >
       <div className="broto-home-pet-banner__square-inner">
         <header className="broto-home-pet-banner__block broto-home-pet-banner__block--identity">
-          <p className="broto-home-pet-banner__sq-kicker">Seu Broto</p>
+          <p className="broto-home-pet-banner__sq-kicker">{loading ? '…' : brotoNome}</p>
           <h2 className="broto-home-pet-banner__sq-phase">
             {loading ? '…' : FASE_LABEL[fase]}
           </h2>

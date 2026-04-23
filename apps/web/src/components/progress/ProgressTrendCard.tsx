@@ -123,21 +123,21 @@ export function ProgressTrendCard({
             ) : null}
 
             {!hasAny && !error ? (
-              <div style={{ padding: '8px 0 16px' }}>
-                <p className="broto-muted" style={{ margin: '0 0 12px', fontSize: '0.88rem' }}>
+              <div className="broto-perf-empty-state">
+                <p className="broto-muted" style={{ margin: 0, fontSize: '0.88rem' }}>
                   Ainda não há respostas neste período. Pratique questões para ver volume e acerto
                   juntos.
                 </p>
                 {globalAccuracyPct != null && totalAnswered > 0 ? (
-                  <p className="broto-perf-card__avg" style={{ marginBottom: 12 }}>
+                  <p className="broto-perf-card__avg" style={{ margin: 0 }}>
                     Acerto geral no banco: <strong>{globalAccuracyPct}%</strong>
                   </p>
                 ) : null}
                 <Link
                   to="/study/linguagens?hub=bank"
-                  className="broto-btn-primary broto-btn-primary--inline"
+                  className="broto-btn-secondary broto-btn-secondary--inline"
                 >
-                  Ir para questões
+                  Praticar no banco de questões
                 </Link>
               </div>
             ) : null}

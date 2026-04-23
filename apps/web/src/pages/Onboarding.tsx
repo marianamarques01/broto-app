@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useClass } from '@/hooks/useClass'
+import { refreshPet } from '@/hooks/usePet'
 import { refreshUser } from '@/hooks/useUser'
 import { api } from '@/lib/api-client'
 import { formatMockExamFlowError } from '@/lib/mock-exam-flow-error'
@@ -30,11 +31,12 @@ import {
   Brain,
   Check,
   Loader2,
+  Leaf,
 } from 'lucide-react'
 
 /* ── Constants ──────────────────────────────────────────── */
 
-const TOTAL_STEPS = 6
+const TOTAL_STEPS = 7
 
 /** Simulado diagnóstico pós-onboarding: 20 questões, 5 por área (valores = `areas.json` / `details.discipline`). */
 const ONBOARDING_DIAGNOSTIC_MOCK_CFG: StudentMockExamConfig = {
@@ -94,6 +96,8 @@ const HORARIOS: { value: Horario; label: string; Icon: typeof Sun }[] = [
 /* ── Types ──────────────────────────────────────────────── */
 
 interface OnboardingState {
+  /** Nome de exibição do mascote (Broto). */
+  brotoNome: string
   faculdade: string
   curso: string
   metaNota: number
@@ -169,7 +173,42 @@ function StepWelcome({
   )
 }
 
-/* ── Step 1: Objetivo ───────────────────────────────────── */
+/* ── Step 1: Nome do Broto ──────────────────────────────── */
+
+function StepBrotoNome({
+  data,
+  onChange,
+}: {
+  data: OnboardingState
+  onChange: (d: Partial<OnboardingState>) => void
+}) {
+  return (
+    <div className="onb-step-body">
+      <StepHeader
+        icon={<Leaf size={24} />}
+        title="Como vamos chamar seu Broto?"
+        subtitle="De um nome ao seu mascote — ele acompanha seu progresso na jornada"
+      />
+      <div className="onb-field">
+        <label className="broto-label" htmlFor="onb-broto-nome">
+          Nome do Broto
+        </label>
+        <input
+          id="onb-broto-nome"
+          className="broto-input"
+          value={data.brotoNome}
+          onChange={(e) => onChange({ brotoNome: e.target.value.slice(0, 32) })}
+          placeholder="Ex.: Broto, Folhinha, Sementinha..."
+          autoComplete="off"
+          maxLength={32}
+        />
+        <p className="onb-hint">Ate 32 caracteres. Se deixar em branco, usamos &quot;Broto&quot;.</p>
+      </div>
+    </div>
+  )
+}
+
+/* ── Step 2: Objetivo ───────────────────────────────────── */
 
 function StepObjetivo({
   data,
@@ -508,6 +547,12 @@ function StepResumo({
       <StepHeader icon={<Sparkles size={24} />} title="Tudo pronto!" subtitle="Veja seu resumo" />
 
       <div className="onb-resumo-card">
+        <div className="onb-resumo-row">
+          <Leaf size={16} />
+          <span>
+            Broto: <strong>{data.brotoNome.trim() || 'Broto'}</strong>
+          </span>
+        </div>
         {(data.curso || data.faculdade) && (
           <div className="onb-resumo-row">
             <GraduationCap size={16} />
@@ -600,6 +645,18 @@ function StepResumo({
   )
 }
 
+function buildOnboardingBody(data: OnboardingState) {
+  return {
+    brotoNome: data.brotoNome.trim() || 'Broto',
+    faculdade: data.faculdade,
+    curso: data.curso,
+    metaNota: data.metaNota,
+    niveis: data.niveis,
+    horasPorDia: data.horasPorDia,
+    horarios: data.horarios,
+  }
+}
+
 /* ── Main Component ─────────────────────────────────────── */
 
 export function Onboarding() {
@@ -613,6 +670,7 @@ export function Onboarding() {
   const [saveLoading, setSaveLoading] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [data, setData] = useState<OnboardingState>({
+    brotoNome: 'Broto',
     faculdade: '',
     curso: '',
     metaNota: 700,
@@ -631,22 +689,16 @@ export function Onboarding() {
     [],
   )
 
-  const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS))
+  const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1))
   const goBack = () => setStep((s) => Math.max(s - 1, 0))
 
   const handleFinish = useCallback(async () => {
     setSaveError(null)
     setSaveLoading(true)
     try {
-      await api.post('/api/user/onboarding', {
-        faculdade: data.faculdade,
-        curso: data.curso,
-        metaNota: data.metaNota,
-        niveis: data.niveis,
-        horasPorDia: data.horasPorDia,
-        horarios: data.horarios,
-      })
+      await api.post('/api/user/onboarding', buildOnboardingBody(data))
       await refreshUser()
+      await refreshPet()
       navigate('/')
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Erro ao salvar')
@@ -666,15 +718,9 @@ export function Onboarding() {
     const cfg = ONBOARDING_DIAGNOSTIC_MOCK_CFG
     setSimuladoLoading(true)
     try {
-      await api.post('/api/user/onboarding', {
-        faculdade: data.faculdade,
-        curso: data.curso,
-        metaNota: data.metaNota,
-        niveis: data.niveis,
-        horasPorDia: data.horasPorDia,
-        horarios: data.horarios,
-      })
+      await api.post('/api/user/onboarding', buildOnboardingBody(data))
       await refreshUser()
+      await refreshPet()
 
       const pool = await loadMockExamPool({
         baseUrl,
@@ -744,6 +790,7 @@ export function Onboarding() {
   const handleSkipAll = useCallback(async () => {
     try {
       await api.post('/api/user/onboarding', {
+        brotoNome: 'Broto',
         faculdade: '',
         curso: '',
         metaNota: 0,
@@ -752,6 +799,7 @@ export function Onboarding() {
         horarios: [],
       })
       await refreshUser()
+      await refreshPet()
     } catch {
       // ainda navega — usuario pode editar perfil depois
     }
@@ -783,11 +831,12 @@ export function Onboarding() {
         {/* Steps */}
         <div className="onb-step-container">
           {step === 0 && <StepWelcome nome={nome} onContinue={goNext} onSkipAll={handleSkipAll} />}
-          {step === 1 && <StepObjetivo data={data} onChange={updateData} />}
-          {step === 2 && <StepMeta data={data} onChange={updateData} />}
-          {step === 3 && <StepNivel data={data} onChange={updateData} />}
-          {step === 4 && <StepDisponibilidade data={data} onChange={updateData} />}
-          {step === 5 && (
+          {step === 1 && <StepBrotoNome data={data} onChange={updateData} />}
+          {step === 2 && <StepObjetivo data={data} onChange={updateData} />}
+          {step === 3 && <StepMeta data={data} onChange={updateData} />}
+          {step === 4 && <StepNivel data={data} onChange={updateData} />}
+          {step === 5 && <StepDisponibilidade data={data} onChange={updateData} />}
+          {step === 6 && (
             <StepResumo
               data={data}
               onSimulado={handleSimulado}
@@ -800,8 +849,8 @@ export function Onboarding() {
           )}
         </div>
 
-        {/* Bottom CTA for steps 1-4 */}
-        {step >= 1 && step <= 4 && (
+        {/* Bottom CTA for steps 1-5 (antes do resumo) */}
+        {step >= 1 && step <= 5 && (
           <div className="onb-bottom-cta">
             <button onClick={goNext} className="broto-btn-primary">
               Continuar <ChevronRight size={16} />

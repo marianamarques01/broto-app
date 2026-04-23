@@ -1,38 +1,34 @@
-import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
 import { BrotoIaFab } from '@/components/broto/BrotoIaFab'
+import { AppChromeActions } from './AppChromeActions'
+import { MobileTabBar } from './MobileTabBar'
 import { Sidebar } from './Sidebar'
 
 export function AppShell() {
-  const [navOpen, setNavOpen] = useState(false)
-
   return (
-    <div className={`broto-app${navOpen ? ' broto-app--nav-open' : ''}`}>
-      <button
-        type="button"
-        className="broto-mobile-nav-toggle"
-        aria-expanded={navOpen}
-        aria-label={navOpen ? 'Fechar menu' : 'Abrir menu'}
-        onClick={() => setNavOpen((o) => !o)}
-      >
-        {navOpen ? <X size={22} /> : <Menu size={22} />}
-      </button>
-      <button
-        type="button"
-        className="broto-app__nav-backdrop"
-        aria-label="Fechar menu"
-        tabIndex={-1}
-        onClick={() => setNavOpen(false)}
-      />
+    <div className="broto-app">
+      <header className="broto-app__chrome" aria-label="Navegação do app">
+        <div className="broto-app__chrome-inner">
+          <div className="broto-app__chrome-brand">
+            <span className="broto-app__chrome-mark" aria-hidden>
+              🌱
+            </span>
+            <span className="broto-app__chrome-title">broto</span>
+          </div>
+          <div className="broto-app__chrome-end">
+            <AppChromeActions />
+          </div>
+        </div>
+      </header>
       <div className="broto-app__body">
         <div className="broto-sidebar-rail">
-          <Sidebar onNavigate={() => setNavOpen(false)} />
+          <Sidebar />
         </div>
         <main className="broto-app__main">
           <Outlet />
         </main>
       </div>
+      <MobileTabBar />
       <BrotoIaFab />
     </div>
   )

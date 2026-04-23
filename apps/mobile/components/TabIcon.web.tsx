@@ -7,16 +7,16 @@ const containerBase = {
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
 }
-const indicatorBase = {
+const makeIndicator = (glowColor: string) => ({
   position: 'absolute' as const,
   top: -6,
   height: 2,
   width: 32,
   borderRadius: 1,
-  backgroundColor: colors.cta.gradientEnd,
-  boxShadow: '0px 2px 8px rgba(98, 189, 105, 0.45)',
+  backgroundColor: glowColor,
+  boxShadow: '0px 2px 10px rgba(52, 211, 153, 0.45)',
   elevation: 4,
-}
+})
 const iconBoxBase = {
   height: 40,
   width: 40,
@@ -25,12 +25,39 @@ const iconBoxBase = {
   justifyContent: 'center' as const,
 }
 
-export function TabIcon({ focused, Icon }: { focused: boolean; Icon: PhosphorIcon }) {
+export function TabIcon({
+  focused,
+  Icon,
+  activeColor = colors.cta.gradientEnd,
+  indicator = 'pill',
+}: {
+  focused: boolean
+  Icon: PhosphorIcon
+  activeColor?: string
+  indicator?: 'pill' | 'dot' | 'bare'
+}) {
+  if (indicator === 'bare') {
+    return (
+      <View
+        style={{
+          minHeight: 24,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Icon
+          size={22}
+          color={focused ? activeColor : colors.text.muted}
+          weight={focused ? 'fill' : 'regular'}
+        />
+      </View>
+    )
+  }
   return (
     <View style={containerBase}>
       <View
         style={[
-          indicatorBase,
+          makeIndicator(activeColor),
           { opacity: focused ? 1 : 0, transform: [{ scaleX: focused ? 1 : 0.3 }] },
         ]}
       />
@@ -38,14 +65,14 @@ export function TabIcon({ focused, Icon }: { focused: boolean; Icon: PhosphorIco
         style={[
           iconBoxBase,
           {
-            backgroundColor: focused ? 'rgba(98, 189, 105, 0.22)' : 'transparent',
+            backgroundColor: focused ? `${activeColor}38` : 'transparent',
             transform: [{ scale: focused ? 1.1 : 1 }],
           },
         ]}
       >
         <Icon
           size={24}
-          color={focused ? colors.cta.gradientEnd : colors.text.muted}
+          color={focused ? activeColor : colors.text.muted}
           weight={focused ? 'fill' : 'regular'}
         />
       </View>

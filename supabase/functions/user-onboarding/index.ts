@@ -14,6 +14,14 @@ function parseBody(raw: unknown): Record<string, unknown> | null {
   return raw as Record<string, unknown>
 }
 
+function isMissingPetsNomeError(err: { message?: string } | null | undefined): boolean {
+  const m = (err?.message ?? '').toLowerCase()
+  if (!m.includes('nome') || !m.includes('pets')) return false
+  if (m.includes('schema cache')) return true
+  if (m.includes('does not exist') || m.includes('undefined column')) return true
+  return false
+}
+
 serve(async (req) => {
   const cors = getCorsHeaders(req)
 
@@ -70,6 +78,9 @@ serve(async (req) => {
       }
     }
 
+    const brotoNomeRaw = typeof raw.brotoNome === 'string' ? raw.brotoNome.trim().slice(0, 32) : ''
+    const brotoNome = brotoNomeRaw.length > 0 ? brotoNomeRaw : 'Broto'
+
     const onboardingProfile = {
       faculdade,
       curso,
@@ -93,7 +104,61 @@ serve(async (req) => {
       return json(500, { error: 'Não foi possível salvar o onboarding' }, cors)
     }
 
-    return json(200, { ok: true, onboardingProfile }, cors)
+    const { data: petRow, error: petSelErr } = await admin
+      .from('pets')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (petSelErr) {
+      console.error('[user-onboarding] pet select', petSelErr)
+    } else if (petRow) {
+      const { error: petUpdErr } = await admin
+        .from('pets')
+        .update({ nome: brotoNome })
+        .eq('user_id', user.id)
+      if (petUpdErr) {
+        if (isMissingPetsNomeError(petUpdErr)) {
+          console.error('[user-onboarding] coluna pets.nome ausente', petUpdErr)
+          return json(
+            500,
+            {
+              error:
+                'Coluna pets.nome ausente no banco. Aplique a migração pets_broto_nome (ou supabase db push) e tente de novo.',
+            },
+            cors,
+          )
+        }
+        console.error('[user-onboarding] pet update', petUpdErr)
+        return json(500, { error: 'Não foi possível salvar o nome do Broto' }, cors)
+      }
+    } else {
+      let petInsErr = (
+        await admin.from('pets').insert({
+          user_id: user.id,
+          nome: brotoNome,
+        })
+      ).error
+      if (petInsErr && isMissingPetsNomeError(petInsErr)) {
+        petInsErr = (await admin.from('pets').insert({ user_id: user.id })).error
+      }
+      if (petInsErr) {
+        if (isMissingPetsNomeError(petInsErr)) {
+          console.error('[user-onboarding] coluna pets.nome ausente (insert)', petInsErr)
+          return json(
+            500,
+            {
+              error:
+                'Coluna pets.nome ausente no banco. Aplique a migração pets_broto_nome (ou supabase db push) e tente de novo.',
+            },
+            cors,
+          )
+        }
+        console.error('[user-onboarding] pet insert', petInsErr)
+        return json(500, { error: 'Não foi possível criar o registro do Broto' }, cors)
+      }
+    }
+
+    return json(200, { ok: true, onboardingProfile, brotoNome }, cors)
   } catch (err) {
     console.error('[user-onboarding]', err)
     return json(500, { error: String(err) }, cors)

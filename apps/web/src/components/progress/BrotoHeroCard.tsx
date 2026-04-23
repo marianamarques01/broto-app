@@ -128,6 +128,7 @@ export function BrotoHeroCard({
   const [rewardBurst, setRewardBurst] = useState(false)
 
   const fase = pet?.fase ?? 'semente'
+  const brotoNome = pet?.nome?.trim() || 'Broto'
   const nivel = pet?.nivel ?? 1
   const xp = pet?.xp ?? 0
   const xpInLevel = xp % 100
@@ -167,7 +168,7 @@ export function BrotoHeroCard({
   return (
     <section
       className={`broto-hero-card${rewardBurst ? ' broto-hero-card--burst' : ''}${metaMet ? ' broto-hero-card--meta-met' : ''}`}
-      aria-label="Seu Broto e evolução"
+      aria-label={`${brotoNome} e evolução`}
     >
       <div className="broto-hero-card__ambient" aria-hidden />
 
@@ -184,7 +185,7 @@ export function BrotoHeroCard({
 
         <div className="broto-hero-card__body">
           <header className="broto-hero-card__masthead">
-            <p className="broto-hero-card__eyebrow">Seu Broto</p>
+            <p className="broto-hero-card__eyebrow">{loadingPet ? '…' : brotoNome}</p>
             <div className="broto-hero-card__masthead-row">
               <h2 className="broto-hero-card__phase-title">
                 {loadingPet ? '…' : FASE_LABEL[fase]}

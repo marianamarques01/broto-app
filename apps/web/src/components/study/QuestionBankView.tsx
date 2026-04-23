@@ -260,7 +260,7 @@ export function QuestionBankView({
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [difficulty, setDifficulty] = useState<'' | 'facil' | 'medio' | 'dificil'>('')
-  const [sortRecent, setSortRecent] = useState(true)
+  const [sortRecent, setSortRecent] = useState(false)
 
   const [activeRow, setActiveRow] = useState<QuestionBankRow | null>(null)
   const [activeQuestion, setActiveQuestion] = useState<Question | null>(null)

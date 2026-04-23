@@ -1,17 +1,15 @@
 import { useTheme } from '@/hooks/useTheme'
-import { Bell, Flame, Moon, Sparkles, Sun } from 'lucide-react'
+import { Bell, Flame, Moon, Sun } from 'lucide-react'
 
 interface HomeDashboardTopBarProps {
   greeting: string
   plantLine: string
-  xpTotal: number
   streak: number
 }
 
 export function HomeDashboardTopBar({
   greeting,
   plantLine,
-  xpTotal,
   streak,
 }: HomeDashboardTopBarProps) {
   const { theme, toggleTheme } = useTheme()
@@ -25,11 +23,7 @@ export function HomeDashboardTopBar({
         </div>
       </div>
       <div className="broto-topbar__actions">
-        <div className="broto-topbar__metrics" aria-label="XP e sequência">
-          <span className="broto-xp-pill" title="XP total">
-            <Sparkles size={14} aria-hidden />
-            {xpTotal.toLocaleString('pt-BR')} XP
-          </span>
+        <div className="broto-topbar__metrics" aria-label="Sequência">
           {streak > 0 ? (
             <span className="broto-streak-pill" title="Dias seguidos estudando">
               <Flame size={14} aria-hidden />
