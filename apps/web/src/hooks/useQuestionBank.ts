@@ -1,4 +1,4 @@
-import type { Exam, Question, Topico } from '@broto/shared'
+import type { Exam, Question, QuestionBankRow, Topico } from '@broto/shared'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useClass } from '@/hooks/useClass'
 import { IDIOMAS_TOPIC_ID, LINGUAGENS_AREA_VALUE } from '@/hooks/useQuestionsFilters'
@@ -6,18 +6,7 @@ import { IDIOMAS_TOPIC_ID, LINGUAGENS_AREA_VALUE } from '@/hooks/useQuestionsFil
 const EXAM_YEAR_MIN = 2015
 const EXAM_YEAR_MAX = 2023
 
-export type QuestionBankRow = {
-  year: number
-  index: number
-  language: string | null
-  title: string
-  preview: string
-  discipline: string
-  topicoValue: string | null
-  topicoLabel: string
-  difficulty: 'facil' | 'medio' | 'dificil'
-  isNova: boolean
-}
+export type { QuestionBankRow }
 
 export type QuestionBankTopicSummary = {
   value: string
@@ -403,6 +392,7 @@ export function useQuestionBank(params: {
   return {
     baseUrl,
     loading,
+    allInArea,
     filtered,
     totalInArea,
     totalFiltered: filtered.length,

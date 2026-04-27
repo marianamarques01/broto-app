@@ -4,6 +4,7 @@ import { refreshProgress } from '@/hooks/useProgress'
 import { incrementDailyAreaAnswer } from '@/lib/daily-missions'
 import { bumpPerformanceDay } from '@/lib/performance-history'
 import { invalidatePerformanceSeries } from '@/hooks/usePerformanceSeries'
+import { invalidateRecentMistakes } from '@/lib/recent-mistakes-invalidate'
 import { runAfterAnswerSubmitted, type SubmitAnswerPayload } from '@broto/shared'
 
 export type { SubmitAnswerPayload } from '@broto/shared'
@@ -17,4 +18,5 @@ export async function submitAnswer(payload: SubmitAnswerPayload): Promise<void> 
     refreshProgress,
   })
   invalidatePerformanceSeries()
+  invalidateRecentMistakes()
 }

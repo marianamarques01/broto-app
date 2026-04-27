@@ -16,6 +16,15 @@ import type { Question } from '@broto/shared'
 import { getQuestionId } from '@broto/shared'
 import { getAreaColor } from '@/lib/area-config'
 import { useProgress } from '@/hooks/useProgress'
+import { usePet } from '@/hooks/usePet'
+import { useDailyMissionsState } from '@/hooks/useDailyMissionsState'
+import { useRecentMistakes } from '@/hooks/useRecentMistakes'
+import { useQuestionBankPriority } from '@/hooks/useQuestionBankPriority'
+import { StartPathsGrid } from '@/components/study/question-bank/StartPathsGrid'
+import { QuestionBankFocusBand } from '@/components/study/question-bank/QuestionBankFocusBand'
+import { TopicCarouselSection } from '@/components/study/question-bank/TopicCarouselSection'
+import { PerformanceDonutCard } from '@/components/study/question-bank/PerformanceDonutCard'
+import { WeakTopicsAside } from '@/components/study/question-bank/WeakTopicsAside'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -29,6 +38,29 @@ import {
 } from 'lucide-react'
 
 const PAGE_SIZE = 8
+
+const AREA_HERO: Record<string, { kicker: string; blurb: string }> = {
+  linguagens: {
+    kicker: 'Linguagens, Códigos e suas Tecnologias',
+    blurb:
+      'Interpretação, gramática, literatura e língua estrangeira — pratica com o catálogo completo e sugestões por prioridade.',
+  },
+  'ciencias-humanas': {
+    kicker: 'Ciências Humanas e suas Tecnologias',
+    blurb:
+      'História, geografia, filosofia e sociologia — organiza o estudo por temas e pelo teu desempenho.',
+  },
+  'ciencias-natureza': {
+    kicker: 'Ciências da Natureza e suas Tecnologias',
+    blurb:
+      'Biologia, química e física no estilo ENEM — refina com erros recentes e tópicos que precisam de reforço.',
+  },
+  matematica: {
+    kicker: 'Matemática e suas Tecnologias',
+    blurb:
+      'Raciocínio, geometria, álgebra e dados — treina com foco no que ainda não dominaste.',
+  },
+}
 
 function getAreaTabKey(areaValue: string): 'lang' | 'hum' | 'nat' | 'mat' {
   if (areaValue === 'linguagens') return 'lang'
@@ -256,11 +288,15 @@ export function QuestionBankView({
   })
 
   const { progress, loading: loadingProgress } = useProgress()
+  const { pet } = usePet()
+  const { daily } = useDailyMissionsState()
+  const { mistakes: recentMistakes, loading: loadingRecentMistakes } = useRecentMistakes()
 
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [difficulty, setDifficulty] = useState<'' | 'facil' | 'medio' | 'dificil'>('')
   const [sortRecent, setSortRecent] = useState(false)
+  const [exploreOpen, setExploreOpen] = useState(false)
 
   const [activeRow, setActiveRow] = useState<QuestionBankRow | null>(null)
   const [activeQuestion, setActiveQuestion] = useState<Question | null>(null)
@@ -277,10 +313,10 @@ export function QuestionBankView({
   const {
     baseUrl,
     loading: loadingBank,
+    allInArea,
     filtered,
     totalInArea,
     totalFiltered,
-    yearHistogram,
     topicSummaries,
   } = useQuestionBank({
     selectedArea,
@@ -306,8 +342,6 @@ export function QuestionBankView({
     areaStat && areaStat.totalAnswered > areaStat.totalCorrect
       ? areaStat.totalAnswered - areaStat.totalCorrect
       : 0
-  const accuracyLabel =
-    areaStat && areaStat.totalAnswered > 0 ? `${areaStat.accuracyPct}%` : '—'
   const pendingApprox = Math.max(0, totalInArea - answered)
 
   const listResetKey = useMemo(
@@ -336,21 +370,27 @@ export function QuestionBankView({
 
   const yearOptions = useMemo(() => [...exams].sort((a, b) => b.year - a.year), [exams])
 
-  const miniBarYears = useMemo(() => {
-    const ys = Object.keys(yearHistogram)
-      .map(Number)
-      .filter((y) => (yearHistogram[y] ?? 0) > 0)
-      .sort((a, b) => a - b)
-    return ys.length > 0 ? ys : yearOptions.map((e) => e.year).slice(0, 5)
-  }, [yearHistogram, yearOptions])
+  const priorityResult = useQuestionBankPriority({
+    areaKey: selectedArea,
+    areaLabel,
+    allInArea,
+    areaStat,
+    mistakes: recentMistakes,
+    catalogLoading: loadingBank,
+    mistakesLoading: loadingRecentMistakes,
+  })
 
-  const maxBar = useMemo(() => {
-    let m = 1
-    for (const y of miniBarYears) {
-      m = Math.max(m, yearHistogram[y] ?? 0)
-    }
-    return m
-  }, [miniBarYears, yearHistogram])
+  const topicCarouselItems = useMemo(() => {
+    return topicSummaries.slice(0, 20).map((t) => {
+      const stat = areaStat?.topicos.find((s) => s.value === t.value)
+      const done = stat?.totalAnswered ?? 0
+      const pct = t.count > 0 ? Math.min(100, Math.round((done / t.count) * 100)) : 0
+      return { value: t.value, label: t.label, count: t.count, progressPct: pct }
+    })
+  }, [topicSummaries, areaStat?.topicos])
+
+  const pctCatalogAnswered =
+    totalInArea > 0 ? Math.min(100, Math.round((answered / totalInArea) * 100)) : 0
 
   const clearPlayer = useCallback(() => {
     questionFetchGen.current += 1
@@ -395,6 +435,11 @@ export function QuestionBankView({
     [baseUrl],
   )
 
+  const handleStartPrimary = useCallback(() => {
+    const row = priorityResult?.primary?.targetRow
+    if (row) openRow(row)
+  }, [priorityResult?.primary?.targetRow, openRow])
+
   const hasFilterChips =
     Boolean(selectedYear) ||
     Boolean(selectedTopico) ||
@@ -426,94 +471,6 @@ export function QuestionBankView({
             </div>
           ) : (
             <>
-              <section className={`broto-qbank-intro${embedded ? ' broto-qbank-intro--compact' : ''}`}>
-                <div className="broto-qbank-intro-text">
-                  {embedded ? (
-                    <>
-                      <h2 className="broto-qbank-intro-title broto-qbank-intro-title--compact">
-                        Banco de questões — <em>{areaLabel}</em>
-                      </h2>
-                      <p className="broto-qbank-intro-desc">
-                        Filtre por ano e tópico. Pratique no seu ritmo, fora do pacote guiado.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <h2 className="broto-qbank-intro-title">
-                        Pratique com questões
-                        <br />
-                        do <em>ENEM</em>
-                      </h2>
-                      <p className="broto-qbank-intro-desc">
-                        Filtre por área, ano e tópico. Treine no seu ritmo, fora do pacote guiado.
-                      </p>
-                    </>
-                  )}
-                </div>
-                <div className="broto-qbank-intro-stats">
-                  <div className="broto-qbank-istat">
-                    <div className="broto-qbank-istat-val">
-                      {loadingBank || loadingProgress ? '…' : totalInArea.toLocaleString('pt-BR')}
-                    </div>
-                    <div className="broto-qbank-istat-label">Questões</div>
-                  </div>
-                  <div className="broto-qbank-istat">
-                    <div
-                      className="broto-qbank-istat-val broto-qbank-istat-val--accent"
-                      style={{
-                        color:
-                          answered > 0 ? 'var(--broto-qbank-area-accent, var(--broto-qbank-t4))' : undefined,
-                      }}
-                    >
-                      {loadingProgress ? '…' : answered.toLocaleString('pt-BR')}
-                    </div>
-                    <div className="broto-qbank-istat-label">Respondidas</div>
-                  </div>
-                  <div className="broto-qbank-istat">
-                    <div
-                      className="broto-qbank-istat-val broto-qbank-istat-val--muted"
-                      style={{
-                        color:
-                          areaStat && areaStat.totalAnswered > 0
-                            ? 'var(--broto-qbank-tx1)'
-                            : 'var(--broto-qbank-tx3)',
-                      }}
-                    >
-                      {loadingProgress ? '…' : accuracyLabel}
-                    </div>
-                    <div className="broto-qbank-istat-label">Acerto</div>
-                  </div>
-                </div>
-              </section>
-
-              {!embedded ? (
-                <Link
-                  className="broto-qbank-destaque broto-qbank-destaque--link"
-                  to="/study/mock-exam"
-                  aria-labelledby="broto-qbank-destaque-mock-title"
-                >
-                  <div className="broto-qbank-destaque__icon" aria-hidden>
-                    <Brain size={22} strokeWidth={1.75} />
-                  </div>
-                  <div className="broto-qbank-destaque__main">
-                    <h3 id="broto-qbank-destaque-mock-title" className="broto-qbank-destaque__title">
-                      Simulado ENEM
-                    </h3>
-                    <p className="broto-qbank-destaque__desc">
-                      Resolva várias questões em sequência, com correção e resumo ao final. Defina
-                      quantidade, anos, áreas e tópicos — ou ative o modo aleatório para treinar com
-                      sorteio do banco, no espírito da prova.
-                    </p>
-                  </div>
-                  <ChevronRight
-                    className="broto-qbank-destaque__chev"
-                    size={22}
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                </Link>
-              ) : null}
-
               {!embedded ? (
                 <div className="broto-qbank-area-tabs" role="tablist" aria-label="Áreas do ENEM">
                   {areas.map((area) => {
@@ -537,6 +494,183 @@ export function QuestionBankView({
                 </div>
               ) : null}
 
+              {error ? (
+                <div className="broto-error-banner broto-qbank-banner">
+                  <span>{error}</span>
+                  <button type="button" onClick={retry}>
+                    Tentar novamente
+                  </button>
+                </div>
+              ) : null}
+
+              <section
+                className={`broto-qbank-hero-band${embedded ? ' broto-qbank-hero-band--embedded' : ''}`}
+              >
+                <div className="broto-qbank-hero-band__head">
+                  <div className="broto-qbank-hero-band__text">
+                    {embedded ? (
+                      <h2 className="broto-qbank-hero-band__title broto-qbank-hero-band__title--compact">
+                        Prática guiada — <em>{areaLabel}</em>
+                      </h2>
+                    ) : (
+                      <h2 className="broto-qbank-hero-band__title">
+                        {AREA_HERO[selectedArea]?.kicker ?? areaLabel}
+                      </h2>
+                    )}
+                    {embedded ? (
+                      <p className="broto-qbank-hero-band__desc broto-qbank-hero-band__desc--below-head">
+                        O Broto sugere por onde começar. Explora o catálogo completo só quando quiseres.
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="broto-qbank-kpi-strip broto-qbank-kpi-strip--head" role="list">
+                    <div className="broto-qbank-kpi broto-qbank-kpi--head" role="listitem">
+                      <span className="broto-qbank-kpi__val broto-qbank-kpi__val--hero-primary">
+                        {loadingBank || loadingProgress
+                          ? '…'
+                          : totalInArea.toLocaleString('pt-BR')}
+                      </span>
+                      <span className="broto-qbank-kpi__label">Questões</span>
+                    </div>
+                    <div className="broto-qbank-kpi broto-qbank-kpi--head" role="listitem">
+                      <span className="broto-qbank-kpi__val broto-qbank-kpi__val--hero-sky">
+                        {loadingProgress
+                          ? '…'
+                          : totalInArea > 0
+                            ? `${pctCatalogAnswered}%`
+                            : '—'}
+                      </span>
+                      <span className="broto-qbank-kpi__label">Progresso</span>
+                    </div>
+                    <div className="broto-qbank-kpi broto-qbank-kpi--head" role="listitem">
+                      <span className="broto-qbank-kpi__val broto-qbank-kpi__val--hero-gold">
+                        {loadingProgress
+                          ? '…'
+                          : areaStat && areaStat.totalAnswered > 0
+                            ? `~${areaStat.accuracyPct}%`
+                            : '—'}
+                      </span>
+                      <span className="broto-qbank-kpi__label">Acerto</span>
+                    </div>
+                  </div>
+                </div>
+                {!embedded ? (
+                  <p className="broto-qbank-hero-band__desc">
+                    {AREA_HERO[selectedArea]?.blurb ??
+                      'Pratica com sugestões por prioridade e explora o catálogo quando quiseres.'}
+                  </p>
+                ) : null}
+              </section>
+
+              <div className="broto-qbank-start-with-performance">
+                <div className="broto-qbank-start-with-performance__main">
+                  {priorityResult ? (
+                    <StartPathsGrid
+                      tracks={priorityResult.tracks}
+                      onOpenRow={openRow}
+                      onExpandExplore={() => setExploreOpen(true)}
+                    />
+                  ) : (
+                    <div className="broto-qbank-skeletons" aria-hidden>
+                      <div className="broto-skeleton broto-qbank-skel-card" />
+                      <div className="broto-skeleton broto-qbank-skel-card" />
+                    </div>
+                  )}
+
+                  <QuestionBankFocusBand
+                    primary={priorityResult?.primary ?? null}
+                    loading={loadingBank || loadingRecentMistakes}
+                    onStart={handleStartPrimary}
+                    areaAccent={getAreaColor(selectedArea)}
+                    selectedArea={selectedArea}
+                    areaLabel={areaLabel}
+                    areas={progress?.areas}
+                    daily={daily}
+                    studyTodayByArea={pet?.studyTodayByArea}
+                  />
+
+                  {!embedded ? (
+                    <Link
+                      className="broto-qbank-destaque broto-qbank-destaque--link"
+                      to="/study/mock-exam"
+                      aria-labelledby="broto-qbank-destaque-mock-title"
+                    >
+                      <div className="broto-qbank-destaque__icon" aria-hidden>
+                        <Brain size={22} strokeWidth={1.75} />
+                      </div>
+                      <div className="broto-qbank-destaque__main">
+                        <h3
+                          id="broto-qbank-destaque-mock-title"
+                          className="broto-qbank-destaque__title"
+                        >
+                          Simulado ENEM
+                        </h3>
+                        <p className="broto-qbank-destaque__desc">
+                          Resolva várias questões em sequência, com correção e resumo ao final. Defina
+                          quantidade, anos, áreas e tópicos — ou ative o modo aleatório para treinar
+                          com sorteio do banco, no espírito da prova.
+                        </p>
+                      </div>
+                      <ChevronRight
+                        className="broto-qbank-destaque__chev"
+                        size={22}
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                    </Link>
+                  ) : null}
+
+                  <div className="broto-qbank-layout">
+                    <div className="broto-qbank-main-stack">
+                  {activeRow ? (
+                    <section className="broto-qbank-player-wrap">
+                      <div className="broto-qbank-player-head">
+                        <button
+                          type="button"
+                          className="broto-qbank-player-back"
+                          onClick={clearPlayer}
+                        >
+                          Voltar à lista
+                        </button>
+                        <span className="broto-qbank-player-id">
+                          {formatQuestionBankId(selectedArea, activeRow.year, activeRow.index)}
+                        </span>
+                      </div>
+                      {loadingQuestion || !activeQuestion ? (
+                        <div className="broto-skeleton" style={{ height: 220, borderRadius: 20 }} />
+                      ) : (
+                        <QuestionPlayer
+                          key={getQuestionId(activeQuestion)}
+                          question={activeQuestion}
+                          areaKey={selectedArea}
+                          onNext={clearPlayer}
+                        />
+                      )}
+                    </section>
+                  ) : null}
+
+                  <TopicCarouselSection
+                    items={topicCarouselItems}
+                    loading={loadingBank}
+                    onSelect={(value) => {
+                      const id = topicos.find((x) => x.value === value)?.id
+                      if (id) {
+                        setSelectedTopico(id)
+                        setExploreOpen(true)
+                      }
+                    }}
+                  />
+
+                  <details
+                    className="broto-qbank-explore"
+                    open={exploreOpen}
+                    onToggle={(e) => setExploreOpen((e.target as HTMLDetailsElement).open)}
+                  >
+                    <summary className="broto-qbank-explore-summary">
+                      Explorar o banco — filtros e lista completa
+                      <span className="broto-qbank-explore-hint">Opcional · para quem quer pesquisar</span>
+                    </summary>
+                    <div className="broto-qbank-explore-body">
               <div className="broto-qbank-filter-bar">
                 <div className="broto-qbank-search-wrap">
                   <Search size={16} className="broto-qbank-search-icon" aria-hidden />
@@ -647,44 +781,6 @@ export function QuestionBankView({
                 </div>
               ) : null}
 
-              {error ? (
-                <div className="broto-error-banner broto-qbank-banner">
-                  <span>{error}</span>
-                  <button type="button" onClick={retry}>
-                    Tentar novamente
-                  </button>
-                </div>
-              ) : null}
-
-              <div className="broto-qbank-layout">
-                <div>
-                  {activeRow ? (
-                    <section className="broto-qbank-player-wrap">
-                      <div className="broto-qbank-player-head">
-                        <button
-                          type="button"
-                          className="broto-qbank-player-back"
-                          onClick={clearPlayer}
-                        >
-                          Voltar à lista
-                        </button>
-                        <span className="broto-qbank-player-id">
-                          {formatQuestionBankId(selectedArea, activeRow.year, activeRow.index)}
-                        </span>
-                      </div>
-                      {loadingQuestion || !activeQuestion ? (
-                        <div className="broto-skeleton" style={{ height: 220, borderRadius: 20 }} />
-                      ) : (
-                        <QuestionPlayer
-                          key={getQuestionId(activeQuestion)}
-                          question={activeQuestion}
-                          areaKey={selectedArea}
-                          onNext={clearPlayer}
-                        />
-                      )}
-                    </section>
-                  ) : null}
-
                   <div className="broto-qbank-list-head">
                     <p className="broto-qbank-count">
                       Exibindo <strong>{totalFiltered.toLocaleString('pt-BR')}</strong> questões de{' '}
@@ -708,17 +804,35 @@ export function QuestionBankView({
                     selectedArea={selectedArea}
                     openRow={openRow}
                   />
+                    </div>
+                  </details>
+                    </div>
+                  </div>
                 </div>
 
-                <aside className="broto-qbank-side">
+                <div className="broto-qbank-start-with-performance__rail">
+                  <PerformanceDonutCard
+                    accuracyPct={areaStat?.accuracyPct ?? 0}
+                    totalAnswered={areaStat?.totalAnswered ?? 0}
+                    totalInArea={totalInArea}
+                    loading={loadingProgress || loadingBank}
+                    correct={correct}
+                    errors={errors}
+                    pendingApprox={pendingApprox}
+                  />
+                  <WeakTopicsAside topicos={areaStat?.topicos} loading={loadingProgress} />
                   <div className="broto-qbank-side-card">
-                    <h3 className="broto-qbank-side-title">Seu progresso</h3>
+                    <h3 className="broto-qbank-side-title">Resumo nesta área</h3>
                     <ul className="broto-qbank-breakdown">
                       <li className="broto-qbank-bk-row">
                         <span className="broto-qbank-bk-dot broto-qbank-bk-dot--teal" />
-                        <span className="broto-qbank-bk-label">Respondidas</span>
+                        <span className="broto-qbank-bk-label">Prática</span>
                         <span className="broto-qbank-bk-val">
-                          {loadingProgress ? '…' : answered.toLocaleString('pt-BR')}
+                          {loadingProgress
+                            ? '…'
+                            : answered > 0
+                              ? `${answered} questões feitas`
+                              : 'Ainda não iniciaste'}
                         </span>
                       </li>
                       <li className="broto-qbank-bk-row">
@@ -728,65 +842,33 @@ export function QuestionBankView({
                           {loadingProgress
                             ? '…'
                             : areaStat && areaStat.totalAnswered > 0
-                              ? correct.toLocaleString('pt-BR')
+                              ? `${correct} certas`
                               : '—'}
                         </span>
                       </li>
                       <li className="broto-qbank-bk-row">
                         <span className="broto-qbank-bk-dot broto-qbank-bk-dot--coral" />
-                        <span className="broto-qbank-bk-label">Erros</span>
+                        <span className="broto-qbank-bk-label">A corrigir</span>
                         <span className="broto-qbank-bk-val">
                           {loadingProgress
                             ? '…'
                             : areaStat && areaStat.totalAnswered > 0
-                              ? errors.toLocaleString('pt-BR')
+                              ? errors > 0
+                                ? `${errors} para rever`
+                                : 'Nada pendente'
                               : '—'}
                         </span>
                       </li>
                       <li className="broto-qbank-bk-row">
                         <span className="broto-qbank-bk-dot broto-qbank-bk-dot--muted" />
-                        <span className="broto-qbank-bk-label">Pendentes</span>
+                        <span className="broto-qbank-bk-label">Catálogo</span>
                         <span className="broto-qbank-bk-val">
-                          {loadingBank ? '…' : pendingApprox.toLocaleString('pt-BR')}
+                          {loadingBank ? '…' : `${pendingApprox} sem fazer (aprox.)`}
                         </span>
                       </li>
                     </ul>
                   </div>
-
-                  <div className="broto-qbank-side-card">
-                    <h3 className="broto-qbank-side-title">Tópicos disponíveis</h3>
-                    {topicSummaries.length === 0 ? (
-                      <p className="broto-qbank-side-empty">
-                        {loadingBank
-                          ? 'Carregando tópicos…'
-                          : 'Não há tópicos mapeados para os filtros atuais.'}
-                      </p>
-                    ) : (
-                      <ul className="broto-qbank-topic-list">
-                        {topicSummaries.map((t) => (
-                          <li key={t.value}>
-                            <button
-                              type="button"
-                              className="broto-qbank-topic-chip"
-                              onClick={() => {
-                                const id = topicos.find((x) => x.value === t.value)?.id
-                                if (id) setSelectedTopico(id)
-                              }}
-                            >
-                              <span className="broto-qbank-topic-chip-left">
-                                <span className={`broto-qbank-topic-dot ${t.dotClass}`} />
-                                <span className="broto-qbank-topic-name">{t.label}</span>
-                              </span>
-                              <span className="broto-qbank-topic-count">
-                                {t.count.toLocaleString('pt-BR')}
-                              </span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </aside>
+                </div>
               </div>
             </>
           )}
