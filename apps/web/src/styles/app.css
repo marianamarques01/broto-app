@@ -627,24 +627,30 @@ body::before {
 .broto-mtab__link--home {
   position: relative;
   z-index: 3;
-  width: 58px;
-  height: 58px;
+  width: 68px;
+  height: 68px;
   max-width: none;
-  margin-top: -36px;
+  margin-top: -70px;
   padding: 0;
   border-radius: 50%;
   color: var(--text-primary);
   background:
+    linear-gradient(145deg, rgba(94, 234, 212, 0.08) 0%, rgba(255, 255, 255, 0.015) 34%, transparent 58%),
     radial-gradient(
-      120% 100% at 50% 0%,
-      color-mix(in srgb, var(--teal-500) 0.2, var(--bg-card)) 0%,
-      var(--bg-deep) 55%
+      120% 120% at 50% 38%,
+      rgba(5, 23, 17, 0.88) 0%,
+      rgba(1, 9, 7, 0.96) 58%,
+      rgba(0, 3, 2, 0.98) 100%
     );
-  border: 1.5px solid color-mix(in srgb, var(--teal-400) 0.45, var(--border-default));
+  border: 1.5px solid color-mix(in srgb, var(--teal-400) 86%, var(--teal-300));
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--green-400) 0.12, transparent) inset,
-    0 3px 14px rgba(0, 0, 0, 0.45),
-    0 0 24px color-mix(in srgb, var(--green-500) 0.2, transparent);
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 0 1px color-mix(in srgb, var(--teal-300) 0.1, transparent) inset,
+    0 7px 20px rgba(0, 0, 0, 0.62),
+    0 0 14px color-mix(in srgb, var(--teal-400) 0.68, transparent),
+    0 0 34px color-mix(in srgb, var(--teal-500) 0.36, transparent),
+    0 0 58px color-mix(in srgb, var(--green-500) 0.14, transparent);
+  backdrop-filter: blur(14px) saturate(145%);
   transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.25s ease, border-color 0.2s ease;
 }
 
@@ -656,35 +662,36 @@ body::before {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, transparent 42%);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, transparent 34%),
+    radial-gradient(circle at 50% 50%, transparent 50%, rgba(20, 184, 147, 0.09) 100%);
   pointer-events: none;
 }
 
-.broto-mtab__icon--home {
-  color: var(--teal-300);
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--green-400) 0.35, transparent));
-}
-
-:root[data-theme="light"] .broto-mtab__icon--home {
-  color: var(--green-700);
+.broto-mtab__home-emoji {
+  position: relative;
+  z-index: 1;
+  font-size: 1.85rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--green-400) 0.45, transparent));
+  transform: translateY(-3px);
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .broto-mtab__link--home.broto-mtab__link--active {
-  border-color: color-mix(in srgb, var(--teal-500) 0.75, var(--border-strong));
+  border-color: var(--teal-400);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--green-200) 0.2, transparent) inset,
-    0 5px 20px rgba(0, 0, 0, 0.25),
-    0 0 32px color-mix(in srgb, var(--green-500) 0.35, transparent);
+    0 1px 0 rgba(255, 255, 255, 0.07) inset,
+    0 0 0 1px color-mix(in srgb, var(--teal-300) 0.14, transparent) inset,
+    0 7px 20px rgba(0, 0, 0, 0.52),
+    0 0 18px color-mix(in srgb, var(--teal-400) 0.78, transparent),
+    0 0 42px color-mix(in srgb, var(--teal-500) 0.42, transparent),
+    0 0 68px color-mix(in srgb, var(--green-500) 0.18, transparent);
   transform: translateY(-1px);
 }
 
-.broto-mtab__link--home.broto-mtab__link--active .broto-mtab__icon--home {
-  color: var(--teal-300);
+.broto-mtab__link--home.broto-mtab__link--active .broto-mtab__home-emoji {
   filter: drop-shadow(0 0 10px var(--teal-400));
-}
-
-:root[data-theme="light"] .broto-mtab__link--home.broto-mtab__link--active .broto-mtab__icon--home {
-  color: var(--green-800);
 }
 
 .broto-mtab__link--home:hover {
@@ -1487,6 +1494,32 @@ body::before {
 
 .broto-streak-pill--muted {
   opacity: 0.7;
+}
+
+.broto-enem-pill {
+  display: none;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(180, 255, 205, 0.92);
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.24);
+}
+
+@media (min-width: 620px) {
+  .broto-enem-pill {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+}
+
+:root[data-theme='light'] .broto-enem-pill {
+  color: rgb(21, 107, 88);
+  background: rgba(45, 160, 120, 0.12);
+  border-color: rgba(45, 140, 110, 0.28);
 }
 
 .broto-topbar--study {
@@ -2446,8 +2479,8 @@ a.study-area-card {
 
 /* Aproxima o bloco principal do header (saudação + linha do broto) */
 .broto-home-dashboard > .broto-topbar--dashboard {
-  padding-top: 14px;
-  padding-bottom: 8px;
+  padding-top: 10px;
+  padding-bottom: 6px;
 }
 
 @media (max-width: 1024px) {
@@ -2468,12 +2501,12 @@ a.study-area-card {
 .broto-home-dashboard__body {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   align-items: stretch;
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 8px 16px 100px;
+  padding: 4px 16px 100px;
   box-sizing: border-box;
 }
 
@@ -2481,8 +2514,8 @@ a.study-area-card {
   .broto-home-dashboard__body {
     flex-direction: row;
     align-items: flex-start;
-    gap: 28px;
-    padding-top: 14px;
+    gap: 24px;
+    padding-top: 6px;
     padding-left: 24px;
     padding-right: 24px;
   }
@@ -2731,6 +2764,143 @@ a.study-area-card {
 }
 
 /* Timeline */
+.broto-home-start-now {
+  --tl-accent: var(--green-400);
+  position: relative;
+  margin-bottom: 14px;
+  padding: 16px;
+  border-radius: 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--tl-accent) 24%, transparent), transparent 34%),
+    linear-gradient(145deg, color-mix(in srgb, var(--tl-accent) 10%, var(--bg-card)), var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--tl-accent) 34%, var(--border-subtle));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--tl-accent) 8%, transparent),
+    0 14px 36px rgba(0, 0, 0, 0.18),
+    0 0 28px color-mix(in srgb, var(--tl-accent) 10%, transparent);
+}
+
+.broto-home-start-now::after {
+  content: '';
+  position: absolute;
+  inset: auto 14px 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--tl-accent) 55%, transparent), transparent);
+  opacity: 0.75;
+}
+
+.broto-home-start-now__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-400);
+}
+
+.broto-home-start-now__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.broto-home-start-now__icon {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 12px;
+  color: var(--tl-accent);
+  background: color-mix(in srgb, var(--tl-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tl-accent) 18%, transparent);
+}
+
+.broto-home-start-now__title {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.24;
+  font-weight: 650;
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
+}
+
+.broto-home-start-now__growth {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 10px 11px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.broto-home-start-now__pet {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tl-accent) 12%, transparent);
+  font-size: 1rem;
+}
+
+.broto-home-start-now__growth-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.broto-home-start-now__energy-track,
+.broto-home-tl__growth-track {
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.broto-home-start-now__energy-fill,
+.broto-home-tl__growth-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--tl-accent), var(--gold-400));
+}
+
+.broto-home-start-now__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px 14px;
+  border-radius: 999px;
+  color: #06251c;
+  background: linear-gradient(135deg, var(--green-400), var(--teal-400));
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(45, 212, 168, 0.16);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.broto-home-start-now__cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(45, 212, 168, 0.22);
+}
+
 .broto-home-tl__head {
   display: flex;
   align-items: flex-start;
@@ -2757,6 +2927,21 @@ a.study-area-card {
   text-transform: capitalize;
   max-width: 200px;
   line-height: 1.3;
+}
+
+.broto-home-tl__broto-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: rgba(45, 212, 168, 0.07);
+  border: 1px solid rgba(45, 212, 168, 0.14);
+  font-size: 0.66rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .broto-home-tl__select {
@@ -2855,6 +3040,15 @@ a.study-area-card {
   border-color: color-mix(in srgb, var(--tl-accent) 40%, transparent);
 }
 
+.broto-home-tl__card--future {
+  opacity: 0.72;
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+}
+
+.broto-home-tl__card--done {
+  background: color-mix(in srgb, var(--green-400) 4%, var(--bg-surface));
+}
+
 /* Barra vertical colorida à esquerda do card */
 .broto-home-tl__accent-bar {
   flex: 0 0 3px;
@@ -2951,18 +3145,32 @@ a.study-area-card {
   line-height: 1.4;
 }
 
-.broto-home-tl__card-footer {
-  display: flex;
+.broto-home-tl__growth {
+  display: grid;
+  grid-template-columns: auto minmax(54px, 1fr);
   align-items: center;
   gap: 8px;
   margin-top: 8px;
 }
 
-.broto-home-tl__card-time {
-  font-size: 0.6rem;
+.broto-home-tl__growth-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-  opacity: 0.8;
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.broto-home-tl__growth-track {
+  height: 4px;
+}
+
+.broto-home-tl__card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .broto-home-tl__badge {
@@ -2988,9 +3196,30 @@ a.study-area-card {
 }
 
 .broto-home-tl__badge--pending {
-  background: rgba(148, 163, 184, 0.08);
-  color: var(--text-muted);
+  background: rgba(45, 212, 168, 0.08);
+  color: var(--green-400);
+  border: 1px solid rgba(45, 212, 168, 0.16);
+}
+
+.broto-home-tl__show-more {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 12px;
   border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.broto-home-tl__show-more:hover {
+  color: var(--text-primary);
+  border-color: rgba(45, 212, 168, 0.22);
+  background: rgba(45, 212, 168, 0.06);
 }
 
 .broto-home-tl__now-split {
@@ -3057,7 +3286,8 @@ a.study-area-card {
 }
 
 .broto-topbar--dashboard .broto-xp-pill,
-.broto-topbar--dashboard .broto-streak-pill {
+.broto-topbar--dashboard .broto-streak-pill,
+.broto-topbar--dashboard .broto-enem-pill {
   font-size: 0.82rem;
   padding: 7px 15px;
 }
@@ -3435,7 +3665,11 @@ a.study-area-card {
   display: none !important;
 }
 
-/* Home: card Broto quadrado + Acesso rápido na mesma linha; coluna única abaixo */
+/* Home: card Broto logo abaixo do banner — coluna única, menos respiro */
+.broto-dashboard-grid--pet-banner {
+  gap: 12px;
+}
+
 @media (min-width: 1100px) {
   .broto-dashboard-grid--pet-banner {
     grid-template-columns: minmax(0, 1fr);
@@ -3457,6 +3691,18 @@ a.study-area-card {
     grid-template-columns: minmax(292px, 336px) minmax(0, 1fr);
     gap: 22px;
     align-items: stretch;
+  }
+
+  .broto-dashboard-hero--solo {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 12px;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--square {
+    max-width: 400px;
+    width: 100%;
+    margin-inline: auto;
   }
 }
 
@@ -3964,6 +4210,341 @@ a.study-area-card {
 
 .broto-home-pet-banner__sq-metric-unit--word {
   margin-left: 0.28em;
+}
+
+/* Home: painel semanal ao lado do Broto */
+.broto-weekly-progress-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  height: 100%;
+  min-height: 360px;
+  padding: 20px;
+  border-radius: 30px;
+  border: 1px solid rgba(45, 212, 168, 0.16);
+  background:
+    radial-gradient(ellipse 70% 70% at 8% 10%, rgba(45, 212, 168, 0.11), transparent 54%),
+    radial-gradient(ellipse 60% 55% at 88% 4%, rgba(94, 234, 212, 0.07), transparent 54%),
+    linear-gradient(155deg, rgba(11, 31, 24, 0.98) 0%, rgba(8, 20, 16, 0.98) 54%, rgba(6, 13, 11, 0.98) 100%);
+  box-shadow:
+    0 16px 46px -34px rgba(45, 212, 168, 0.5),
+    var(--shadow-md),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.broto-weekly-progress-card::before,
+.broto-weekly-progress-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.broto-weekly-progress-card::before {
+  background:
+    linear-gradient(90deg, rgba(45, 212, 168, 0.06), transparent 42%),
+    radial-gradient(circle at 0 100%, rgba(20, 184, 147, 0.07), transparent 34%);
+}
+
+.broto-weekly-progress-card::after {
+  border: 1px solid rgba(94, 234, 212, 0.06);
+  box-shadow: inset 0 0 48px rgba(45, 212, 168, 0.035);
+}
+
+.broto-weekly-progress-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.broto-weekly-progress-card__intro {
+  min-width: 0;
+}
+
+.broto-weekly-progress-card__title {
+  margin: 0 0 6px;
+  font-size: clamp(1rem, 1.8vw, 1.24rem);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  color: rgba(248, 252, 249, 0.96);
+  line-height: 1.2;
+}
+
+.broto-weekly-progress-card__subtitle {
+  margin: 0;
+  color: rgba(210, 230, 216, 0.68);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.broto-weekly-progress-card__insights {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 168, 0.18);
+  background: rgba(5, 23, 17, 0.48);
+  color: var(--teal-300);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.broto-weekly-progress-card__insights:hover:not(:disabled) {
+  border-color: rgba(94, 234, 212, 0.32);
+  background: rgba(8, 32, 24, 0.68);
+  transform: translateY(-1px);
+}
+
+.broto-weekly-progress-card__insights:disabled {
+  cursor: default;
+  opacity: 0.82;
+  transform: none;
+}
+
+.broto-weekly-progress-card__insights:focus-visible {
+  outline: 2px solid rgba(94, 234, 212, 0.55);
+  outline-offset: 3px;
+}
+
+.broto-weekly-progress-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.broto-weekly-progress-card__metric {
+  min-width: 0;
+  min-height: 136px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    rgba(3, 16, 12, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 12px 26px -24px rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.broto-weekly-progress-card__metric-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.broto-weekly-progress-card__metric-label {
+  color: rgba(220, 238, 226, 0.54);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.broto-weekly-progress-card__metric-value {
+  color: rgba(248, 252, 249, 0.98);
+  font-size: clamp(1.16rem, 2vw, 1.55rem);
+  font-weight: 720;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.broto-weekly-progress-card__metric-comparison {
+  color: rgba(172, 204, 185, 0.64);
+  font-size: 0.68rem;
+  font-weight: 550;
+  line-height: 1.28;
+}
+
+.broto-weekly-progress-card__mini-line {
+  width: 100%;
+  height: 44px;
+  overflow: visible;
+}
+
+.broto-weekly-progress-card__mini-line-fill {
+  fill: rgba(45, 212, 168, 0.1);
+}
+
+.broto-weekly-progress-card__donut {
+  width: 50px;
+  height: 50px;
+  align-self: center;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+
+.broto-weekly-progress-card__donut-track,
+.broto-weekly-progress-card__donut-fill {
+  fill: none;
+  stroke-width: 6;
+}
+
+.broto-weekly-progress-card__donut-track {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.broto-weekly-progress-card__donut-fill {
+  stroke: var(--teal-300);
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 7px rgba(45, 212, 168, 0.38));
+}
+
+.broto-weekly-progress-card__flame,
+.broto-weekly-progress-card__clock {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.broto-weekly-progress-card__flame {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: #f59e0b;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.04) 64%);
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.25));
+}
+
+.broto-weekly-progress-card__clock {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  color: var(--teal-300);
+}
+
+.broto-weekly-progress-card__clock .broto-weekly-progress-card__donut {
+  position: absolute;
+  inset: 2px;
+  width: 50px;
+  height: 50px;
+}
+
+.broto-weekly-progress-card__clock > svg:not(.broto-weekly-progress-card__donut) {
+  position: relative;
+  z-index: 1;
+}
+
+.broto-weekly-progress-card__areas {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.broto-weekly-progress-card__areas-title {
+  margin: 0;
+  color: rgba(248, 252, 249, 0.88);
+  font-size: 0.86rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.broto-weekly-progress-card__area-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 11px 24px;
+}
+
+.broto-weekly-progress-card__area {
+  min-width: 0;
+}
+
+.broto-weekly-progress-card__area-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+  color: rgba(216, 234, 222, 0.68);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.broto-weekly-progress-card__area-top strong {
+  color: rgba(248, 252, 249, 0.9);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.broto-weekly-progress-card__area-track {
+  display: block;
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.broto-weekly-progress-card__area-fill {
+  display: block;
+  width: var(--weekly-area-percent);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--weekly-area-color) 62%, transparent),
+    var(--weekly-area-color)
+  );
+  box-shadow: 0 0 10px color-mix(in srgb, var(--weekly-area-color) 28%, transparent);
+}
+
+@media (min-width: 940px) {
+  .broto-weekly-progress-card__area-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1500px) {
+  .broto-weekly-progress-card {
+    padding: 22px 24px 23px;
+  }
+
+  .broto-weekly-progress-card__metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .broto-weekly-progress-card {
+    min-height: 0;
+    padding: 18px;
+    border-radius: 26px;
+  }
+
+  .broto-weekly-progress-card__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .broto-weekly-progress-card__insights {
+    width: fit-content;
+  }
+
+  .broto-weekly-progress-card__metrics {
+    grid-template-columns: 1fr;
+  }
 }
 
 .broto-stats-card {
@@ -4542,6 +5123,614 @@ a.broto-subjects-questions-btn:focus-visible {
   min-height: 140px;
 }
 
+/* ── Home dashboard — grid de insights (desempenho, foco, rotina, trajetória) ── */
+
+.broto-home-insights {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+  margin-top: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 980px) {
+  .broto-home-insights {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+.broto-dash-card {
+  position: relative;
+  padding: 20px 20px 18px;
+  border-radius: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.045) inset,
+    0 12px 40px -24px rgba(0, 0, 0, 0.45);
+  transition: border-color 0.22s ease, box-shadow 0.22s ease;
+  min-width: 0;
+}
+
+.broto-dash-card:hover {
+  border-color: color-mix(in srgb, var(--green-400) 18%, var(--border-subtle));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 16px 48px -20px rgba(45, 212, 168, 0.1);
+}
+
+@supports not (color-mix(in srgb, white 50%, black)) {
+  .broto-dash-card:hover {
+    border-color: rgba(45, 212, 168, 0.2);
+  }
+}
+
+.broto-dash-card__label {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.broto-dash-card__subblur {
+  margin: 0 0 12px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.broto-dash-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.broto-dash-card__head--split {
+  align-items: center;
+}
+
+.broto-dash-card__head-icon {
+  flex-shrink: 0;
+  color: rgba(52, 211, 153, 0.55);
+}
+
+.broto-dash-card__see-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: var(--green-400);
+  text-decoration: none;
+  transition: opacity 0.18s ease;
+}
+
+.broto-dash-card__see-all:hover {
+  opacity: 0.92;
+}
+
+.broto-dash-card__hint {
+  margin: 14px 0 10px;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  line-height: 1.38;
+}
+
+.broto-dash-card__inline-link,
+.broto-dash-card__outline-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.broto-dash-card__inline-link {
+  color: var(--green-400);
+  padding: 4px 0;
+  width: max-content;
+}
+
+.broto-dash-card__inline-link:hover {
+  opacity: 0.9;
+  transform: translateX(2px);
+}
+
+.broto-dash-card__outline-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--green-400) 32%, transparent);
+  background: rgba(45, 212, 168, 0.06);
+  color: var(--green-400);
+}
+
+.broto-dash-card__outline-btn:hover {
+  background: rgba(45, 212, 168, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Desempenho — anel + barras por área */
+.broto-dash-perf {
+  display: grid;
+  grid-template-columns: minmax(0, 120px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 520px) {
+  .broto-dash-perf {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .broto-dash-perf__areas {
+    width: 100%;
+  }
+
+  .broto-dash-perf__area-row {
+    width: 100%;
+  }
+
+  .broto-dash-perf__ring-caption {
+    text-align: center;
+    margin-inline: auto;
+    max-width: 18ch;
+  }
+}
+
+.broto-home-insights__ring-wrap {
+  position: relative;
+  width: 112px;
+  height: 112px;
+}
+
+.broto-home-insights__ring-svg {
+  display: block;
+}
+
+.broto-home-insights__ring-track {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.broto-home-insights__ring-prog {
+  transition: stroke-dasharray 0.6s cubic-bezier(0.34, 1.05, 0.64, 1);
+}
+
+.broto-home-insights__ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.broto-home-insights__ring-pct {
+  font-family: var(--font-logo), Outfit, DM Sans, system-ui, sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.08;
+  color: var(--text-primary);
+}
+
+.broto-home-insights__ring-sub {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.broto-dash-perf__ring-caption {
+  margin: 8px 0 0;
+  font-size: 0.71rem;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 130px;
+}
+
+.broto-dash-perf__areas {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.broto-dash-perf__area-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.broto-dash-perf__area-ic {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #062016;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.broto-dash-perf__area-ic[style*='--a'] {
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--a, #2dd4a8) 65%, transparent) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  color: inherit;
+}
+
+.broto-dash-perf__area-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.broto-dash-perf__area-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.broto-dash-perf__area-name {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.broto-dash-perf__area-pct {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.broto-dash-perf__bar-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.broto-dash-perf__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.broto-dash-skeleton--ring {
+  width: 112px;
+  height: 112px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+}
+
+/* Cartão foco */
+.broto-dash-focus__panel {
+  position: relative;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--focus-accent, var(--green-400)) 38%, rgba(255, 255, 255, 0.08));
+  background: radial-gradient(circle at 30% -10%, rgba(255, 255, 255, 0.04), transparent 52%),
+    rgba(0, 0, 0, 0.15);
+}
+
+.broto-dash-focus__hint {
+  margin: 0 0 10px;
+  font-size: 0.71rem;
+  font-weight: 600;
+  color: rgba(250, 220, 120, 0.78);
+}
+
+.broto-dash-focus__topic {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.28;
+  color: var(--text-primary);
+}
+
+.broto-dash-focus__tag {
+  display: inline-block;
+  margin: 12px 0 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(254, 240, 192, 0.95);
+  border: 1px solid rgba(253, 230, 138, 0.45);
+}
+
+.broto-dash-focus__sub {
+  margin: 0 0 14px;
+  font-size: 0.76rem;
+  line-height: 1.41;
+  color: var(--text-muted);
+}
+
+.broto-dash-focus__stats {
+  margin: 0 0 14px;
+  font-size: 0.73rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.broto-dash-focus__stats strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.broto-dash-focus__cta {
+  width: 100%;
+  justify-content: center;
+  margin-top: 2px;
+  border-radius: 14px !important;
+  padding: 10px 16px !important;
+  gap: 8px !important;
+}
+
+:root[data-theme="light"] .broto-dash-card {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.75) inset,
+    0 12px 32px -28px rgba(15, 40, 32, 0.25);
+}
+
+/* Rotina — 7 dias */
+.broto-dash-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.broto-dash-week__day {
+  position: relative;
+  min-height: 58px;
+  padding: 6px 2px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.broto-dash-week__abbr {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.broto-dash-week__hint {
+  font-size: 0.55rem;
+  line-height: 1.2;
+  color: var(--text-muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
+.broto-dash-week__day--today {
+  border-color: rgba(52, 211, 153, 0.55);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.12);
+}
+
+.broto-dash-week__day--past .broto-dash-week__abbr {
+  color: var(--text-muted);
+}
+
+.broto-dash-week__check {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  color: rgba(52, 211, 153, 0.95);
+}
+
+.broto-dash-week__day--skel {
+  min-height: 58px;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  animation: broto-dash-skel-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes broto-dash-skel-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.88;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .broto-dash-week__day--skel {
+    animation: none;
+    opacity: 0.65;
+  }
+}
+
+/* Trajetória / ranking */
+.broto-dash-recent {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.broto-dash-recent__empty {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 10px 2px;
+  line-height: 1.4;
+  grid-column: 1 / -1;
+}
+
+.broto-dash-recent__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.broto-dash-recent__icon {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #06140f;
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--a, #2dd4a8) 58%, rgba(255, 255, 255, 0.12)) 0%,
+    rgba(0, 0, 0, 0.12) 100%
+  );
+}
+
+.broto-dash-recent__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.broto-dash-recent__name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.broto-dash-recent__meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Home dashboard — composição desktop alinhada à referência enviada */
+@media (min-width: 1040px) {
+  .broto-home-dashboard__body {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+    padding-top: 6px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .broto-home-dashboard__main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .broto-home-right-sidebar {
+    width: 352px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    align-self: flex-start;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .broto-home-right-sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .broto-home-dashboard__main .broto-main-inner--dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    align-items: stretch;
+    max-width: none;
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .broto-dashboard-grid--pet-banner,
+  .broto-dashboard-hero--solo {
+    display: contents !important;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--square {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    max-width: none;
+    min-height: 280px;
+    margin-inline: 0;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner__square-inner {
+    display: grid;
+    grid-template-columns: minmax(128px, 0.82fr) minmax(0, 1.18fr);
+    grid-template-rows: auto 1fr auto;
+    column-gap: 28px;
+    row-gap: 10px;
+    min-height: 280px;
+    padding: 24px 28px 22px;
+    aspect-ratio: unset;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner__block--identity {
+    grid-column: 2;
+    grid-row: 1;
+    margin-bottom: 0;
+    text-align: left;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner__block--progress {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    padding-block: 0;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner__block--stats {
+    grid-column: 2;
+    grid-row: 3;
+    margin-top: 0;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+}
+
 .broto-dashboard-subjects .broto-continue-studies {
   margin-top: 0;
 }
@@ -4643,19 +5832,10 @@ a.broto-subjects-questions-btn:focus-visible {
   justify-content: center;
 }
 
-/* Com bottom bar: regra após o bloco base; valores equilibrados (acima da barra, sem exagerar) */
+/* No mobile, a navegação inferior já leva ao Broto. */
 @media (max-width: 1024px) {
   .broto-fab-ia-wrap {
-    bottom: calc(132px + env(safe-area-inset-bottom, 0px));
-    z-index: 500;
-  }
-}
-
-@media (max-width: 768px) {
-  .broto-fab-ia-wrap {
-    right: 16px;
-    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
-    z-index: 500;
+    display: none;
   }
 }
 
@@ -7793,6 +8973,54 @@ a.broto-btn-ghost {
 
 :root[data-theme="light"] .broto-home-pet-banner__ring-progress {
   filter: drop-shadow(0 0 4px rgba(74, 120, 95, 0.22));
+}
+
+:root[data-theme="light"] .broto-weekly-progress-card {
+  border-color: rgba(15, 118, 88, 0.14);
+  background:
+    radial-gradient(ellipse 70% 70% at 8% 10%, rgba(20, 184, 147, 0.1), transparent 54%),
+    radial-gradient(ellipse 60% 55% at 88% 4%, rgba(94, 234, 212, 0.08), transparent 54%),
+    linear-gradient(155deg, #edf5ef 0%, #f8faf8 54%, #ffffff 100%);
+  box-shadow:
+    0 12px 34px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(15, 23, 42, 0.055);
+}
+
+:root[data-theme="light"] .broto-weekly-progress-card__title,
+:root[data-theme="light"] .broto-weekly-progress-card__areas-title,
+:root[data-theme="light"] .broto-weekly-progress-card__metric-value,
+:root[data-theme="light"] .broto-weekly-progress-card__area-top strong {
+  color: var(--text-primary);
+}
+
+:root[data-theme="light"] .broto-weekly-progress-card__subtitle,
+:root[data-theme="light"] .broto-weekly-progress-card__metric-comparison,
+:root[data-theme="light"] .broto-weekly-progress-card__area-top {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="light"] .broto-weekly-progress-card__metric-label {
+  color: var(--text-muted);
+}
+
+:root[data-theme="light"] .broto-weekly-progress-card__insights {
+  background: rgba(255, 255, 255, 0.68);
+  border-color: rgba(13, 155, 122, 0.18);
+  color: var(--green-700);
+}
+
+:root[data-theme="light"] .broto-weekly-progress-card__metric {
+  border-color: rgba(15, 23, 42, 0.07);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.54)),
+    rgba(255, 255, 255, 0.5);
+}
+
+:root[data-theme="light"] .broto-weekly-progress-card__donut-track,
+:root[data-theme="light"] .broto-weekly-progress-card__area-track {
+  stroke: rgba(15, 23, 42, 0.08);
+  background: rgba(15, 23, 42, 0.08);
 }
 
 :root[data-theme="light"] .broto-dashboard-subjects-head .broto-section-label {
