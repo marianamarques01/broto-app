@@ -63,7 +63,15 @@ See: .planning/PROJECT.md
 
 - Nenhum bloqueador técnico declarado para o merge do trabalho de consolidação; CI local: `format:check`, `typecheck`, `build`, `test` (shared) verdes na última verificação da sprint.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260506-sjk | Criar card de progresso semanal no dashboard Broto Web | 2026-05-06 | 4695069d | [260506-sjk-criar-card-de-progresso-semanal-no-dashb](./quick/260506-sjk-criar-card-de-progresso-semanal-no-dashb/) |
+
 ## Session Continuity
+
+Last activity: 2026-05-06 - Completed quick task 260506-sjk: Criar card de progresso semanal no dashboard Broto Web
 
 Last session: 2026-04-05
 Stopped at: Documentação GSD alinhada ao estado entregue no código (fases 2–4)
