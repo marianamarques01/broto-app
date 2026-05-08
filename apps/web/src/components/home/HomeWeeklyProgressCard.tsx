@@ -1,4 +1,4 @@
-import { useId, type CSSProperties } from 'react'
+import { useId } from 'react'
 import { BarChart3, Clock, Flame } from 'lucide-react'
 
 type WeeklyMetricKind = 'line' | 'donut' | 'flame' | 'clock'
@@ -12,15 +12,8 @@ interface WeeklyMetric {
   points?: number[]
 }
 
-interface WeeklyAreaPerformance {
-  label: string
-  percent: number
-  color: string
-}
-
 const WEEKLY_PROGRESS_MOCK: {
   metrics: WeeklyMetric[]
-  areas: WeeklyAreaPerformance[]
 } = {
   metrics: [
     {
@@ -50,12 +43,6 @@ const WEEKLY_PROGRESS_MOCK: {
       kind: 'clock',
       progress: 74,
     },
-  ],
-  areas: [
-    { label: 'Linguagens', percent: 72, color: 'var(--teal-400)' },
-    { label: 'Ciências Humanas', percent: 60, color: 'var(--gold-400)' },
-    { label: 'Ciências da Natureza', percent: 48, color: 'var(--status-violet)' },
-    { label: 'Matemática', percent: 55, color: 'var(--status-sky)' },
   ],
 }
 
@@ -196,38 +183,6 @@ export function HomeWeeklyProgressCard() {
         ))}
       </div>
 
-      <div className="broto-weekly-progress-card__areas">
-        <h3 className="broto-weekly-progress-card__areas-title">Desempenho por área</h3>
-        <div className="broto-weekly-progress-card__area-grid">
-          {WEEKLY_PROGRESS_MOCK.areas.map((area) => (
-            <div
-              className="broto-weekly-progress-card__area"
-              key={area.label}
-              style={
-                {
-                  '--weekly-area-color': area.color,
-                  '--weekly-area-percent': `${area.percent}%`,
-                } as CSSProperties
-              }
-            >
-              <div className="broto-weekly-progress-card__area-top">
-                <span>{area.label}</span>
-                <strong>{area.percent}%</strong>
-              </div>
-              <span
-                className="broto-weekly-progress-card__area-track"
-                role="progressbar"
-                aria-label={`${area.label}: ${area.percent}%`}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={area.percent}
-              >
-                <span className="broto-weekly-progress-card__area-fill" />
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
     </section>
   )
 }

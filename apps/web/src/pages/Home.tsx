@@ -9,6 +9,7 @@ import { DEFAULT_AREAS } from '@/lib/default-areas'
 import { HomeRightSidebar } from '@/components/home/HomeRightSidebar'
 import { HomePetBanner } from '@/components/home/HomePetBanner'
 import { HomeWeeklyProgressCard } from '@/components/home/HomeWeeklyProgressCard'
+import { HomeAreaPerformanceCard } from '@/components/home/HomeAreaPerformanceCard'
 function plantStatusLine(fase: keyof typeof FASE_LABEL): string {
   const lines: Record<keyof typeof FASE_LABEL, string> = {
     semente: `Sua planta está na fase ${FASE_LABEL.semente} — cada questão rega o broto.`,
@@ -54,9 +55,11 @@ export function Home() {
               <div className="broto-dashboard-hero">
                 <HomePetBanner />
                 <div className="broto-dashboard-hero__aside">
-                  <HomeWeeklyProgressCard />
+                  <HomeAreaPerformanceCard />
                 </div>
               </div>
+
+              <HomeWeeklyProgressCard />
 
               {/* Card legado do Broto: mantido no DOM, oculto via CSS (substituído pelo banner) */}
               <div className="broto-pet-card-legacy" aria-hidden>

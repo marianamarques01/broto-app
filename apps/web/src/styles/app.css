@@ -4212,13 +4212,13 @@ a.study-area-card {
   margin-left: 0.28em;
 }
 
-/* Home: painel semanal ao lado do Broto */
+/* Home: painel semanal abaixo do Broto */
 .broto-weekly-progress-card {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  height: 100%;
-  min-height: 360px;
+  grid-column: 1 / -1;
+  min-height: 0;
   padding: 20px;
   border-radius: 30px;
   border: 1px solid rgba(45, 212, 168, 0.16);
@@ -4326,7 +4326,6 @@ a.study-area-card {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  margin-bottom: 18px;
 }
 
 .broto-weekly-progress-card__metric {
@@ -4447,31 +4446,78 @@ a.study-area-card {
   z-index: 1;
 }
 
-.broto-weekly-progress-card__areas {
+.broto-area-performance-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  height: 100%;
+  min-height: 280px;
+  padding: 20px;
+  border-radius: 30px;
+  border: 1px solid rgba(45, 212, 168, 0.15);
+  background:
+    radial-gradient(ellipse 80% 80% at 10% 0%, rgba(45, 212, 168, 0.1), transparent 52%),
+    linear-gradient(155deg, rgba(10, 30, 23, 0.96) 0%, rgba(7, 18, 14, 0.98) 100%);
+  box-shadow:
+    0 16px 42px -34px rgba(45, 212, 168, 0.45),
+    var(--shadow-md),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  justify-content: center;
+  gap: 18px;
 }
 
-.broto-weekly-progress-card__areas-title {
-  margin: 0;
-  color: rgba(248, 252, 249, 0.88);
-  font-size: 0.86rem;
-  font-weight: 650;
-  letter-spacing: -0.01em;
+.broto-area-performance-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(circle at 96% 12%, rgba(94, 234, 212, 0.08), transparent 34%);
+  pointer-events: none;
 }
 
-.broto-weekly-progress-card__area-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 11px 24px;
-}
-
-.broto-weekly-progress-card__area {
+.broto-area-performance-card__head {
   min-width: 0;
 }
 
-.broto-weekly-progress-card__area-top {
+.broto-area-performance-card__eyebrow {
+  margin: 0 0 6px;
+  color: rgba(94, 234, 212, 0.65);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.broto-area-performance-card__title {
+  margin: 0;
+  color: rgba(248, 252, 249, 0.88);
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.broto-area-performance-card__subtitle {
+  margin: 7px 0 0;
+  color: rgba(210, 230, 216, 0.62);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.broto-area-performance-card__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.broto-area-performance-card__area {
+  min-width: 0;
+}
+
+.broto-area-performance-card__area-top {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -4482,37 +4528,41 @@ a.study-area-card {
   font-weight: 600;
 }
 
-.broto-weekly-progress-card__area-top strong {
+.broto-area-performance-card__area-top strong {
   color: rgba(248, 252, 249, 0.9);
   font-weight: 750;
   font-variant-numeric: tabular-nums;
 }
 
-.broto-weekly-progress-card__area-track {
+.broto-area-performance-card__track {
   display: block;
   width: 100%;
-  height: 7px;
+  height: 8px;
   border-radius: 999px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.08);
 }
 
-.broto-weekly-progress-card__area-fill {
+.broto-area-performance-card__fill {
   display: block;
-  width: var(--weekly-area-percent);
+  width: var(--area-performance-percent);
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--weekly-area-color) 62%, transparent),
-    var(--weekly-area-color)
+    color-mix(in srgb, var(--area-performance-color) 62%, transparent),
+    var(--area-performance-color)
   );
-  box-shadow: 0 0 10px color-mix(in srgb, var(--weekly-area-color) 28%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--area-performance-color) 28%, transparent);
 }
 
 @media (min-width: 940px) {
-  .broto-weekly-progress-card__area-grid {
+  .broto-area-performance-card__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .broto-dashboard-hero__aside .broto-area-performance-card__grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -4527,7 +4577,8 @@ a.study-area-card {
 }
 
 @media (max-width: 560px) {
-  .broto-weekly-progress-card {
+  .broto-weekly-progress-card,
+  .broto-area-performance-card {
     min-height: 0;
     padding: 18px;
     border-radius: 26px;
@@ -8975,7 +9026,8 @@ a.broto-btn-ghost {
   filter: drop-shadow(0 0 4px rgba(74, 120, 95, 0.22));
 }
 
-:root[data-theme="light"] .broto-weekly-progress-card {
+:root[data-theme="light"] .broto-weekly-progress-card,
+:root[data-theme="light"] .broto-area-performance-card {
   border-color: rgba(15, 118, 88, 0.14);
   background:
     radial-gradient(ellipse 70% 70% at 8% 10%, rgba(20, 184, 147, 0.1), transparent 54%),
@@ -8988,18 +9040,20 @@ a.broto-btn-ghost {
 }
 
 :root[data-theme="light"] .broto-weekly-progress-card__title,
-:root[data-theme="light"] .broto-weekly-progress-card__areas-title,
 :root[data-theme="light"] .broto-weekly-progress-card__metric-value,
-:root[data-theme="light"] .broto-weekly-progress-card__area-top strong {
+:root[data-theme="light"] .broto-area-performance-card__title,
+:root[data-theme="light"] .broto-area-performance-card__area-top strong {
   color: var(--text-primary);
 }
 
 :root[data-theme="light"] .broto-weekly-progress-card__subtitle,
 :root[data-theme="light"] .broto-weekly-progress-card__metric-comparison,
-:root[data-theme="light"] .broto-weekly-progress-card__area-top {
+:root[data-theme="light"] .broto-area-performance-card__subtitle,
+:root[data-theme="light"] .broto-area-performance-card__area-top {
   color: var(--text-secondary);
 }
 
+:root[data-theme="light"] .broto-area-performance-card__eyebrow,
 :root[data-theme="light"] .broto-weekly-progress-card__metric-label {
   color: var(--text-muted);
 }
@@ -9018,7 +9072,7 @@ a.broto-btn-ghost {
 }
 
 :root[data-theme="light"] .broto-weekly-progress-card__donut-track,
-:root[data-theme="light"] .broto-weekly-progress-card__area-track {
+:root[data-theme="light"] .broto-area-performance-card__track {
   stroke: rgba(15, 23, 42, 0.08);
   background: rgba(15, 23, 42, 0.08);
 }
