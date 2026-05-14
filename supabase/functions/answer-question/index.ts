@@ -1,6 +1,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
+import {
+  applyAnswerToStudyToday,
+  computeMissionBonusXp,
+  fetchStudyTodayByArea,
+  missionAreasForUser,
+} from '../_shared/daily-mission-bonus.ts'
 
 /** +10 XP por resposta, +5 se acertou (alinhado ao spec em docs/broto-f4-area-de-estudo.md). */
 const XP_PER_ANSWER = 10
@@ -72,6 +78,8 @@ serve(async (req) => {
       sessionIdToStore = sessionId
     }
 
+    const studyTodayBefore = await fetchStudyTodayByArea(admin, user.id)
+
     const { error: insErr } = await admin.from('user_question_answers').insert({
       user_id: user.id,
       question_id: questionId,
@@ -131,6 +139,15 @@ serve(async (req) => {
       }
     }
 
+    const missionAreas = await missionAreasForUser(admin, user.id)
+    const studyTodayAfter = applyAnswerToStudyToday(studyTodayBefore, topico, isCorrect)
+    const { bonusXp: missionBonusXp, completedIndexes: missionCompletedIndexes } =
+      computeMissionBonusXp({
+        before: studyTodayBefore,
+        after: studyTodayAfter,
+        missionAreas,
+      })
+
     const { data: pet, error: petSelErr } = await admin
       .from('pets')
       .select('xp, nivel')
@@ -144,7 +161,7 @@ serve(async (req) => {
 
     const prevXp = Number((pet as { xp?: number } | null)?.xp) || 0
     const xpGained = XP_PER_ANSWER + (isCorrect ? XP_BONUS_CORRECT : 0)
-    const newXp = prevXp + xpGained
+    const newXp = prevXp + xpGained + missionBonusXp
     const newNivel = nivelFromXp(newXp)
 
     const { error: petUpErr } = await admin
@@ -195,7 +212,17 @@ serve(async (req) => {
       }
     }
 
-    return json(200, { success: true, xpGained, newLevel: newNivel }, cors)
+    return json(
+      200,
+      {
+        success: true,
+        xpGained,
+        missionBonusXp,
+        missionCompletedIndexes,
+        newLevel: newNivel,
+      },
+      cors,
+    )
   } catch (err) {
     console.error('[answer-question]', err)
     return json(500, { error: String(err) }, cors)
