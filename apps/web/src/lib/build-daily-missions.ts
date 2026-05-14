@@ -2,6 +2,8 @@ import { AREA_CONFIG } from '@/lib/area-config'
 import type { AreaStat } from '@/hooks/useProgress'
 import type { DailyMissionsState } from '@broto/shared'
 
+/** Regras de missões/XP: manter alinhadas a `supabase/functions/_shared/daily-mission-bonus.ts`. */
+
 const DEFAULT_MISSION_AREAS = ['matematica', 'linguagens', 'ciencias-humanas'] as const
 
 function areaLabel(key: string) {

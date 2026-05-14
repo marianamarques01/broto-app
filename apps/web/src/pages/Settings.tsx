@@ -4,7 +4,6 @@ import { usePet, refreshPet } from '@/hooks/usePet'
 import { useTheme } from '@/hooks/useTheme'
 import { api } from '@/lib/api-client'
 import { supabase } from '@/lib/supabase'
-import { FASE_EMOJI, type PetData } from '@broto/shared'
 import { useCallback, useEffect, useId, useState } from 'react'
 import {
   Bell,
@@ -21,6 +20,8 @@ import {
 } from 'lucide-react'
 
 const HORAS_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+const SETTINGS_BROTO_EMOJI = '\u{1F331}'
 
 function mapSupabasePetsNomeMissing(msg: string): string {
   const m = msg.toLowerCase()
@@ -45,7 +46,6 @@ function formatDataEnem(iso: string | null | undefined): string {
 export function Settings() {
   const { user, signOut, refreshUser } = useAuth()
   const { pet, loading: loadingPet } = usePet()
-  const faseBroto: PetData['fase'] = pet?.fase ?? 'semente'
   const { theme, setTheme } = useTheme()
   const idPrefix = useId()
   const localMsgId = `${idPrefix}-local-msg`
@@ -269,7 +269,7 @@ export function Settings() {
 
             <div className="broto-settings__broto-row">
               <div className="broto-settings__broto-avatar" aria-hidden>
-                {FASE_EMOJI[faseBroto]}
+                {SETTINGS_BROTO_EMOJI}
               </div>
               <div className="broto-settings__field" style={{ flex: 1, minWidth: 0 }}>
                 <label className="broto-settings__label" htmlFor={`${idPrefix}-broto-nome`}>

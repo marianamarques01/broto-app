@@ -1,6 +1,7 @@
 /**
- * Mock data for the Study Area feature (Área de Estudo).
- * Will be replaced by real API calls to NotebookLM in Phase 1.
+ * Conteúdo estático da Área de Estudo (ENEM), versionado no repositório.
+ * Contrato consumido pelo app web: resumo, flashcards, questões de prática, mapa mental.
+ * MVP: sem chamadas a NotebookLM neste fluxo — troca de fonte para API/LM fica pós-MVP mantendo o contrato.
  */
 
 import type { MindMapNode } from './types/content'
