@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Zap } from 'lucide-react'
+import { Sparkles, Zap } from 'lucide-react'
 import { getAreaColor, getAreaIcon } from '@/lib/area-config'
 import type { RoutineSession } from '@/lib/routine-sessions'
 
@@ -27,6 +27,21 @@ function StatusPill({ session }: { session: RoutineSession }) {
 }
 
 export function RoutineSessionCards({ sessions }: RoutineSessionCardsProps) {
+  if (sessions.length === 0) {
+    return (
+      <div className="broto-routine-empty" role="status">
+        <div className="broto-routine-empty__glyph" aria-hidden>
+          <Sparkles size={26} strokeWidth={2.25} />
+        </div>
+        <h3 className="broto-routine-empty__title">Nada agendado ainda</h3>
+        <p className="broto-routine-empty__text">
+          Quando o plano vier do servidor ou das missões, os blocos aparecem aqui. Enquanto isso,
+          abra uma sessão rápida no banco para manter o ritmo.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <ul className="broto-routine-sess-list">
       {sessions.map((s) => {

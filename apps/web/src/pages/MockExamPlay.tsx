@@ -9,10 +9,12 @@ import {
   buildPracticeSessionSummary,
   fetchMockExamQuestions,
   getQuestionId,
+  timeLimitMinutesFromPracticeConfig,
   type MockExamAnswerResult,
   type Question,
 } from '@broto/shared'
 import { Clock, LogOut } from 'lucide-react'
+import { trackMvpFunnelStep } from '@/lib/mvp-funnel'
 
 function formatElapsed(totalSec: number): string {
   const h = Math.floor(totalSec / 3600)
@@ -26,6 +28,7 @@ function formatElapsed(totalSec: number): string {
 type SessionGetRes = {
   sessionId?: string
   questionIds?: string[]
+  config?: unknown
 }
 
 function initialQuestionIds(state: { questions?: Question[]; questionIds?: string[] } | undefined): string[] {
@@ -42,8 +45,10 @@ export function MockExamPlay() {
   const baseUrl = getQuestionsStaticBaseUrl(organization?.slug ?? null)
 
   const state = location.state as
-    | { questions?: Question[]; sessionId?: string; questionIds?: string[] }
+    | { questions?: Question[]; sessionId?: string; questionIds?: string[]; config?: unknown }
     | undefined
+
+  const skipQuestionFetchRef = useRef(!!(state?.questions?.length))
 
   const [questions, setQuestions] = useState<Question[] | null>(state?.questions ?? null)
   const [sessionId, setSessionId] = useState<string | null>(state?.sessionId ?? routeSessionId ?? null)
@@ -53,7 +58,11 @@ export function MockExamPlay() {
   const [topicByQuestionId, setTopicByQuestionId] = useState<Record<string, string | undefined>>({})
   const resultsRef = useRef<MockExamAnswerResult[]>([])
   const [elapsedSec, setElapsedSec] = useState(0)
-  const startTimeRef = useRef(Date.now())
+  const startTimeRef = useRef(0)
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(() =>
+    timeLimitMinutesFromPracticeConfig(state?.config),
+  )
+  const finishingRef = useRef(false)
 
   useEffect(() => {
     startTimeRef.current = Date.now()
@@ -62,6 +71,11 @@ export function MockExamPlay() {
     }, 1000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    if (!sessionId) return
+    trackMvpFunnelStep('first_mock_exam_started', { sessionId })
+  }, [sessionId])
 
   const missingRouteBootstrap = useMemo(() => {
     return !routeSessionId && !(state?.questions?.length)
@@ -91,21 +105,26 @@ export function MockExamPlay() {
   }, [baseUrl, questionIds])
 
   useEffect(() => {
-    if (questions && questions.length > 0) return
-    if (!routeSessionId || !baseUrl) return
+    if (!routeSessionId) return
     let cancelled = false
     void (async () => {
       try {
         const data = await api.post<SessionGetRes>('/api/practice-session/get', {
           sessionId: routeSessionId,
         })
-        const ids = Array.isArray(data.questionIds) ? data.questionIds.map(String) : []
         if (cancelled) return
+        setSessionId(data.sessionId ?? routeSessionId)
+        const tl = timeLimitMinutesFromPracticeConfig(data.config)
+        setTimeLimitMinutes((prev) => prev ?? tl)
+
+        if (skipQuestionFetchRef.current) return
+        if (!baseUrl) return
+
+        const ids = Array.isArray(data.questionIds) ? data.questionIds.map(String) : []
         if (ids.length === 0) {
           setLoadError('Não foi possível recuperar a lista de questões.')
           return
         }
-        setSessionId(data.sessionId ?? routeSessionId)
         setQuestionIds(ids)
         const loaded = await fetchMockExamQuestions(baseUrl, ids)
         if (cancelled) return
@@ -121,33 +140,42 @@ export function MockExamPlay() {
     return () => {
       cancelled = true
     }
-  }, [questions, routeSessionId, baseUrl])
+  }, [routeSessionId, baseUrl])
 
   const onAnswerRecorded = useCallback((r: MockExamAnswerResult) => {
     resultsRef.current = [...resultsRef.current, r]
   }, [])
 
+  const finalizeExam = useCallback(() => {
+    const list = questions
+    const sid = sessionId
+    if (!list || !sid || finishingRef.current) return
+    finishingRef.current = true
+    const summary = buildPracticeSessionSummary(resultsRef.current, list, topicByQuestionId)
+    void api.patch('/api/practice-session/complete', { sessionId: sid, summary }).catch(() => {})
+    navigate(`/study/mock-exam/result?sessionId=${encodeURIComponent(sid)}`, {
+      state: { summary, sessionId: sid },
+    })
+  }, [questions, sessionId, navigate, topicByQuestionId])
+
+  useEffect(() => {
+    if (timeLimitMinutes == null || !questions?.length || !sessionId) return
+    const limitSec = timeLimitMinutes * 60
+    if (elapsedSec < limitSec) return
+    finalizeExam()
+  }, [elapsedSec, timeLimitMinutes, questions, sessionId, finalizeExam])
+
   const handleNext = useCallback(() => {
+    if (finishingRef.current) return
     const list = questions
     const sid = sessionId
     if (!list || !sid) return
     if (index >= list.length - 1) {
-      const summary = buildPracticeSessionSummary(
-        resultsRef.current,
-        list,
-        topicByQuestionId,
-      )
-      void api
-        .patch('/api/practice-session/complete', { sessionId: sid, summary })
-        .catch(() => {})
-      navigate(
-        `/study/mock-exam/result?sessionId=${encodeURIComponent(sid)}`,
-        { state: { summary, sessionId: sid } },
-      )
+      finalizeExam()
       return
     }
     setIndex((i) => i + 1)
-  }, [questions, sessionId, index, navigate, topicByQuestionId])
+  }, [questions, sessionId, index, finalizeExam])
 
   const q = questions?.[index]
   const progressLabel =
@@ -156,11 +184,13 @@ export function MockExamPlay() {
   if (missingRouteBootstrap) {
     return (
       <div className="broto-page broto-page--study">
-        <TopBar title="Simulado" variant="study" />
+        <TopBar title="Sessão ENEM" variant="study" />
         <div className="broto-main-inner" style={{ padding: 24 }}>
-          <p style={{ color: 'var(--red-400)' }}>Sessão inválida. Comece um novo simulado.</p>
+          <p style={{ color: 'var(--red-400)' }}>
+            Sessão inválida. Comece uma nova na página da sessão.
+          </p>
           <Link to="/study/mock-exam" className="broto-btn-primary" style={{ marginTop: 16, display: 'inline-block' }}>
-            Novo simulado
+            Nova sessão
           </Link>
         </div>
       </div>
@@ -170,7 +200,7 @@ export function MockExamPlay() {
   if (!baseUrl && !(questions && questions.length)) {
     return (
       <div className="broto-page broto-page--study">
-        <TopBar title="Simulado" variant="study" />
+        <TopBar title="Sessão ENEM" variant="study" />
         <div className="broto-main-inner" style={{ padding: 24 }}>
           <p style={{ color: 'var(--red-400)' }}>
             Configuração incompleta (URL do Supabase). Não é possível carregar questões.
@@ -186,11 +216,11 @@ export function MockExamPlay() {
   if (loadError) {
     return (
       <div className="broto-page broto-page--study">
-        <TopBar title="Simulado" variant="study" />
+        <TopBar title="Sessão ENEM" variant="study" />
         <div className="broto-main-inner" style={{ padding: 24 }}>
           <p style={{ color: 'var(--red-400)' }}>{loadError}</p>
           <Link to="/study/mock-exam" className="broto-btn-primary" style={{ marginTop: 16, display: 'inline-block' }}>
-            Novo simulado
+            Nova sessão
           </Link>
         </div>
       </div>
@@ -200,7 +230,7 @@ export function MockExamPlay() {
   if (!q || !sessionId) {
     return (
       <div className="broto-page broto-page--study">
-        <TopBar title="Simulado" variant="study" />
+        <TopBar title="Sessão ENEM" variant="study" />
         <div className="broto-main-inner" style={{ padding: 24 }}>
           <p className="broto-muted">Carregando...</p>
         </div>
@@ -211,10 +241,13 @@ export function MockExamPlay() {
   const areaKey = q.discipline ?? 'outros'
   const totalQ = questions?.length ?? 0
   const progressPct = totalQ > 0 ? ((index + 1) / totalQ) * 100 : 0
+  const limitSec = timeLimitMinutes != null ? timeLimitMinutes * 60 : null
+  const remainingSec = limitSec != null ? Math.max(0, limitSec - elapsedSec) : null
+  const timerWarn = remainingSec != null && remainingSec > 0 && remainingSec <= 300
 
   return (
     <div className="broto-page broto-page--study">
-      <TopBar title="Simulado ENEM" subtitle={progressLabel} variant="study" />
+      <TopBar title="Sessão ENEM" subtitle={progressLabel} variant="study" />
       <div className="broto-main-inner" style={{ maxWidth: 800, margin: '0 auto', padding: '16px 18px' }}>
         <div className="broto-mock-exam-progress">
           <div
@@ -228,10 +261,26 @@ export function MockExamPlay() {
             <span className="broto-mock-exam-status__counter">
               Questão {index + 1} de {totalQ}
             </span>
-            <span className="broto-mock-exam-status__timer">
-              <Clock size={14} />
-              {formatElapsed(elapsedSec)}
-            </span>
+            <div className="broto-mock-exam-status__timers">
+              {remainingSec != null ? (
+                <>
+                  <span
+                    className={`broto-mock-exam-status__timer broto-mock-exam-status__timer--countdown${timerWarn ? ' broto-mock-exam-status__timer--warn' : ''}`}
+                  >
+                    <Clock size={14} />
+                    Restante {formatElapsed(remainingSec)}
+                  </span>
+                  <span className="broto-mock-exam-status__timer-elapsed">
+                    Decorrido {formatElapsed(elapsedSec)}
+                  </span>
+                </>
+              ) : (
+                <span className="broto-mock-exam-status__timer">
+                  <Clock size={14} />
+                  {formatElapsed(elapsedSec)}
+                </span>
+              )}
+            </div>
           </div>
           <Link to="/study/mock-exam" className="broto-mock-exam-exit-link">
             <LogOut size={14} />

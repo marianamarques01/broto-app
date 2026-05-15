@@ -16,6 +16,8 @@ export interface HomeTimelineEvent {
   /** Minutos desde 00:00 no fuso local (fim exclusivo ou inclusivo — ver utilitário de layout). */
   endMinutes: number
   status: HomeTimelineEventStatus
+  /** Missões futuras dependentes de uma missão anterior não devem parecer acionáveis. */
+  locked?: boolean
   /** Slug da área associada (ex.: 'linguagens', 'matematica'). Usado para cor/ícone na timeline. */
   areaSlug?: string
   /** XP total da missão ao concluir (badge raio + valor). */
@@ -28,14 +30,12 @@ export interface BuildHomeTimelineParams {
   horasPorDia: number
   questoesHoje: number
   dailyQuestionsGoal: number
-  dia:
-    | {
-        ehDescanso: boolean
-        areaLabel: string | null
-        areaSlug: string | null
-        duracaoMin: number
-      }
-    | null
+  dia: {
+    ehDescanso: boolean
+    areaLabel: string | null
+    areaSlug: string | null
+    duracaoMin: number
+  } | null
   missions: Array<{
     title: string
     subtitle: string

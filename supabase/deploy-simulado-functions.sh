@@ -20,6 +20,7 @@ FUNCS=(
   practice-session-list
   practice-session-complete
   answer-question
+  user-reset-practice
 )
 
 for fn in "${FUNCS[@]}"; do

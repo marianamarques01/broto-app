@@ -13,6 +13,10 @@ interface QuestionPlayerProps {
   question: Question
   areaKey: string
   onNext: () => void
+  /** Fecha sessão/modal mantendo respostas já enviadas (ex.: voltar ao banco). */
+  onSaveExit?: () => void
+  /** Sobrescreve o texto do botão principal após responder (ex.: última da fila → "Fechar"). */
+  nextCtaLabel?: string
   sessionId?: string
   onAnswerRecorded?: (payload: {
     questionId: string
@@ -53,6 +57,8 @@ export function QuestionPlayer({
   question,
   areaKey,
   onNext,
+  onSaveExit,
+  nextCtaLabel,
   sessionId,
   onAnswerRecorded,
 }: QuestionPlayerProps) {
@@ -279,7 +285,26 @@ export function QuestionPlayer({
       </div>
 
       {answered && (
-        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end' }}>
+        <div
+          style={{
+            marginTop: 24,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            flexWrap: 'wrap',
+            gap: 10,
+          }}
+        >
+          {onSaveExit ? (
+            <button
+              type="button"
+              onClick={onSaveExit}
+              disabled={submitting}
+              className="broto-btn-secondary broto-btn-secondary--inline"
+              style={{ padding: '12px 22px', fontSize: '0.88rem' }}
+            >
+              Salvar
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={handleNext}
@@ -287,8 +312,8 @@ export function QuestionPlayer({
             className="broto-btn-primary broto-btn-primary--inline"
             style={{ padding: '12px 22px', fontSize: '0.88rem', gap: 8 }}
           >
-            Próxima
-            <ArrowRight size={16} />
+            {nextCtaLabel ?? 'Próxima'}
+            <ArrowRight size={16} aria-hidden />
           </button>
         </div>
       )}

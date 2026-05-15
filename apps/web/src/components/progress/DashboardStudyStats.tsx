@@ -6,7 +6,7 @@ import { useUser } from '@/hooks/useUser'
 import { gerarRotina } from '@/lib/routine'
 import { DEFAULT_AREAS } from '@/lib/default-areas'
 
-const META_QUESTOES_DIA = 3
+const META_QUESTOES_DIA = 5
 
 type DashboardStudyStatsProps = {
   /** Classe extra no `<section>` (ex.: margem na página de progresso) */

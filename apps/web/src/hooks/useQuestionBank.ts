@@ -30,6 +30,11 @@ function getBaseUrl(_orgSlug?: string | null): string {
   return base
 }
 
+/** Base URL dos JSON estáticos do banco (detalhes das questões). */
+export function getQuestionBankStaticBaseUrl(): string {
+  return getBaseUrl(null)
+}
+
 const topicMappingCache = new Map<string, Record<string, string>>()
 const examDetailsCache = new Map<
   string,

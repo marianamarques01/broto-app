@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { trackMvpFunnelStep } from '@/lib/mvp-funnel'
 import { User, Mail, Lock } from 'lucide-react'
 
 const FIREFLIES = [
@@ -34,6 +35,7 @@ export function Signup() {
       setLoading(false)
       return
     }
+    trackMvpFunnelStep('signup_success')
     navigate('/onboarding')
   }
 

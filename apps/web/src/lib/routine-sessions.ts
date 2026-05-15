@@ -84,7 +84,7 @@ export function buildRoutineSessions(
     missions[0].done,
     missions[1].done,
     missions[2].done,
-    missions[2].done && (byArea[fourthKey]?.answered ?? 0) >= 3,
+    missions[2].done && (byArea[fourthKey]?.answered ?? 0) >= 5,
   ]
 
   const locked = [

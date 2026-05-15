@@ -59,7 +59,7 @@ export default function MockExamResultScreen() {
                     setSummary(data.summary)
                     setLoadError(null)
                 } else if (data.completedAt == null) {
-                    setLoadError('Este simulado ainda esta em andamento.')
+                    setLoadError('Esta sessao ainda esta em andamento.')
                 } else {
                     setLoadError('O resumo desta sessao nao esta disponivel.')
                 }
@@ -110,7 +110,7 @@ export default function MockExamResultScreen() {
                 <Link href="/mock-exam" asChild>
                     <Pressable style={styles.backRow}>
                         <ChevronLeft size={22} color={colors.green[400]} />
-                        <Text style={styles.backText}>Novo simulado</Text>
+                        <Text style={styles.backText}>Nova sessão</Text>
                     </Pressable>
                 </Link>
 

@@ -61,17 +61,21 @@ export function buildHomeTimelineEvents(p: BuildHomeTimelineParams): HomeTimelin
     id: 'study-main',
     kind: 'study',
     iconEmoji: '\u{1F4DA}',
-    title: descanso
-      ? 'Dia de descanso'
-      : area
-        ? `Sessão: ${area}`
-        : 'Sessão de estudo',
+    title: descanso ? 'Dia de descanso' : area ? `Sessão: ${area}` : 'Sessão de estudo',
     subtitle: descanso
       ? 'Sem bloco principal hoje — relaxe e volte amanhã.'
       : `Plano de ~${duracao || studyDur} min na sua rotina`,
     startMinutes: studyStart,
     endMinutes: studyEnd,
-    status: studyStatus(descanso, p.questoesHoje, p.dailyQuestionsGoal, p.nowMinutes, studyStart, studyEnd),
+    status: studyStatus(
+      descanso,
+      p.questoesHoje,
+      p.dailyQuestionsGoal,
+      p.nowMinutes,
+      studyStart,
+      studyEnd,
+    ),
+    locked: descanso,
     areaSlug: p.dia?.areaSlug ?? undefined,
   })
 
@@ -88,6 +92,7 @@ export function buildHomeTimelineEvents(p: BuildHomeTimelineParams): HomeTimelin
       startMinutes: s,
       endMinutes: e,
       status: missionStatus(m.done, m.locked, p.nowMinutes, s, e),
+      locked: m.locked,
       areaSlug: m.areaSlug,
       xpTotal: m.xpTotal,
     })

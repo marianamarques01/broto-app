@@ -50,7 +50,7 @@ import {
 
 const TOTAL_STEPS = 7
 
-/** Simulado diagnostico: 20 questoes, 5 por area (valores = `areas.json` / `details.discipline`). */
+/** Sessao diagnostica pos-onboarding (tipo mini simulado): 20 questoes, 5 por area (valores = `areas.json` / `details.discipline`). */
 const ONBOARDING_DIAGNOSTIC_MOCK_CFG: StudentMockExamConfig = {
   nQuestoes: 20,
   randomMode: false,
@@ -696,7 +696,7 @@ function StepResumo({
       <StepHeader
         icon={<Sparkles size={28} color={colors.gold[400]} />}
         title="Tudo pronto!"
-        subtitle="Veja seu resumo"
+        subtitle="Experimente primeiro a sessão diagnóstica — curta, no estilo simulado, para calibrar o plano"
       />
 
       {/* Summary card */}
@@ -751,11 +751,10 @@ function StepResumo({
       <Animated.View entering={FadeInUp.delay(500).duration(400)} style={st.simuladoCard}>
         <View style={st.simuladoHeader}>
           <Brain size={24} color={colors.gold[400]} />
-          <Text style={st.simuladoTitle}>Simulado diagnostico</Text>
+          <Text style={st.simuladoTitle}>Sessao diagnostica</Text>
         </View>
         <Text style={st.simuladoDesc}>
-          5 questoes de cada area (~15 min).{'\n'}
-          Com isso, seu plano fica ainda mais preciso!
+          Mini simulado: 5 questoes de cada area (~15 min). Ajuda a calibrar seu plano; nao e a prova completa.
         </Text>
         {simuladoError ? (
           <Text style={[st.simuladoDesc, { color: colors.red[400], marginBottom: 8 }]}>
@@ -764,7 +763,7 @@ function StepResumo({
         ) : null}
         <BrotoCtaButton
           onPress={() => void onSimulado()}
-          title="Fazer simulado"
+          title="Fazer sessao agora"
           leftIcon={<Brain size={18} color="#fff" />}
           compact
           loading={simuladoLoading}
@@ -788,7 +787,7 @@ function StepResumo({
           {saveLoading ? (
             <ActivityIndicator color={colors.text.muted} />
           ) : (
-            <Text style={st.startWithoutText}>Comecar sem simulado</Text>
+            <Text style={st.startWithoutText}>Comecar sem sessao diagnostica</Text>
           )}
         </Pressable>
       </Animated.View>

@@ -135,7 +135,7 @@ export function ConsistencyHeatmapCard({
       <div className="broto-perf-external-head broto-prog-heat-perf-head">
         <div className="broto-section-heading-row">
           <h2 id="progress-habit-title" className="broto-perf-card__title">
-            Dias em que você praticou
+            Constância no calendário
           </h2>
         </div>
         <p className="broto-prog-heat-gh-summary" aria-live="polite">

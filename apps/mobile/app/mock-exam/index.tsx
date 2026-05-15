@@ -10,7 +10,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Link, useRouter } from 'expo-router'
-import { ChevronLeft, History, ClipboardList } from 'lucide-react-native'
+import { ArrowRight, ChevronLeft, History, ClipboardList } from 'lucide-react-native'
 import {
     IDIOMAS_TOPIC_ID,
     LANGUAGE_OPTIONS,
@@ -28,8 +28,11 @@ import {
     loadMockExamPool,
     MOCK_EXAM_N_MAX,
     MOCK_EXAM_N_MIN,
+    MOCK_EXAM_TIME_LIMIT_MINUTES_MAX,
+    MOCK_EXAM_TIME_LIMIT_MINUTES_MIN,
     MOCK_EXAM_YEAR_MAX,
     MOCK_EXAM_YEAR_MIN,
+    clampMockExamTimeLimitMinutes,
     type StudentMockExamConfig,
 } from '@broto/shared'
 import { colors, fonts } from '@/theme/tokens'
@@ -70,6 +73,15 @@ export default function MockExamConfigScreen() {
     const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([])
     const [submitError, setSubmitError] = useState<string | null>(null)
     const [submitting, setSubmitting] = useState(false)
+    const suggestedTimeLimit = useMemo(
+        () =>
+            clampMockExamTimeLimitMinutes(Math.max(30, Math.round(clampMockExamN(nQuestoes) * 1.5))),
+        [nQuestoes],
+    )
+    const [timeLimitEnabled, setTimeLimitEnabled] = useState(false)
+    const [timeLimitMinutes, setTimeLimitMinutes] = useState(() =>
+        clampMockExamTimeLimitMinutes(Math.max(30, Math.round(20 * 1.5))),
+    )
 
     const toggleArea = (value: string) => {
         setSelectedAreas((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]))
@@ -136,6 +148,9 @@ export default function MockExamConfigScreen() {
             years: selectedYears,
             language: selectedLanguage,
             expandLinguagensIdiomas: randomMode ? false : expandLinguagensIdiomas,
+            ...(timeLimitEnabled
+                ? { timeLimitMinutes: clampMockExamTimeLimitMinutes(timeLimitMinutes) }
+                : {}),
         }
     }, [
         nQuestoes,
@@ -146,6 +161,8 @@ export default function MockExamConfigScreen() {
         selectedYears,
         selectedLanguage,
         expandLinguagensIdiomas,
+        timeLimitEnabled,
+        timeLimitMinutes,
     ])
 
     const handleStart = async () => {
@@ -213,6 +230,7 @@ export default function MockExamConfigScreen() {
     }
 
     const nQ = clampMockExamN(nQuestoes)
+    const tLim = clampMockExamTimeLimitMinutes(timeLimitMinutes)
 
     if (loading) {
         return (
@@ -235,7 +253,7 @@ export default function MockExamConfigScreen() {
                         <ChevronLeft size={22} color={colors.text.secondary} />
                     </Pressable>
                 </Link>
-                <Text style={styles.headerTitle}>Simulado ENEM</Text>
+                <Text style={styles.headerTitle}>Sessão ENEM</Text>
                 <Link href="/mock-exam/history" asChild>
                     <Pressable style={styles.headerBtn}>
                         <History size={22} color={colors.green[400]} />
@@ -252,6 +270,11 @@ export default function MockExamConfigScreen() {
                     <Text style={styles.err}>{error}</Text>
                 ) : null}
                 {submitError ? <Text style={styles.err}>{submitError}</Text> : null}
+
+                <Text style={[styles.subHint, { marginBottom: -4 }]}>
+                    Bloco personalizado no estilo de um simulado — voce escolhe quantas questoes e se usa cronometro;
+                    nao e a prova completa de 90 itens.
+                </Text>
 
                 <View style={styles.card}>
                     <View style={styles.rowBetween}>
@@ -366,8 +389,69 @@ export default function MockExamConfigScreen() {
                     </ScrollView>
                 </View>
 
+                <View style={styles.card}>
+                    <View style={styles.rowBetween}>
+                        <View style={{ flex: 1, paddingRight: 12 }}>
+                            <Text style={styles.cardTitle}>Limite de tempo</Text>
+                            <Text style={[styles.subHint, { marginTop: 6 }]}>
+                                Ao zerar o cronometro, a sessao encerra com o que voce ja respondeu.
+                            </Text>
+                        </View>
+                        <Switch
+                            value={timeLimitEnabled}
+                            onValueChange={(on) => {
+                                setTimeLimitEnabled(on)
+                                if (on) setTimeLimitMinutes(suggestedTimeLimit)
+                            }}
+                            trackColor={{ false: colors.bg.elevated, true: colors.green[700] }}
+                            thumbColor={timeLimitEnabled ? colors.green[400] : colors.text.muted}
+                        />
+                    </View>
+                    {timeLimitEnabled ? (
+                        <>
+                            <Text style={[styles.sectionLabel, { marginTop: 14 }]}>
+                                Minutos totais: {tLim}
+                            </Text>
+                            <View style={styles.stepper}>
+                                <Pressable
+                                    style={styles.stepBtn}
+                                    onPress={() =>
+                                        setTimeLimitMinutes((m) =>
+                                            clampMockExamTimeLimitMinutes(m - 5),
+                                        )
+                                    }
+                                    disabled={tLim <= MOCK_EXAM_TIME_LIMIT_MINUTES_MIN}
+                                >
+                                    <Text style={styles.stepBtnText}>-</Text>
+                                </Pressable>
+                                <Text style={styles.stepVal}>{tLim}</Text>
+                                <Pressable
+                                    style={styles.stepBtn}
+                                    onPress={() =>
+                                        setTimeLimitMinutes((m) =>
+                                            clampMockExamTimeLimitMinutes(m + 5),
+                                        )
+                                    }
+                                    disabled={tLim >= MOCK_EXAM_TIME_LIMIT_MINUTES_MAX}
+                                >
+                                    <Text style={styles.stepBtnText}>+</Text>
+                                </Pressable>
+                            </View>
+                            <Text style={[styles.subHint, { marginTop: 10 }]}>
+                                Entre {MOCK_EXAM_TIME_LIMIT_MINUTES_MIN} e{' '}
+                                {MOCK_EXAM_TIME_LIMIT_MINUTES_MAX} minutos.
+                            </Text>
+                        </>
+                    ) : null}
+                </View>
+
                 <BrotoCtaButton
-                    title={submitting ? 'Montando...' : 'Iniciar simulado'}
+                    title={submitting ? 'Montando...' : 'Iniciar sessão'}
+                    leftIcon={
+                        submitting ? undefined : (
+                            <ArrowRight size={18} color={colors.cta.text} strokeWidth={2.2} />
+                        )
+                    }
                     onPress={() => void handleStart()}
                     loading={submitting}
                     disabled={!baseUrl}
@@ -455,6 +539,7 @@ const styles = StyleSheet.create({
     },
     chipText: { fontFamily: fonts.sans, fontSize: 13, color: colors.text.muted },
     chipTextOn: { color: colors.green[300], fontFamily: fonts.sansSemiBold },
+    subHint: { fontFamily: fonts.sans, fontSize: 12, color: colors.text.muted, lineHeight: 17 },
     stepper: { flexDirection: 'row', alignItems: 'center', gap: 20 },
     stepBtn: {
         width: 44,

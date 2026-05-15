@@ -23,6 +23,7 @@ export function WeakTopicsAside({ topicos, loading }: WeakTopicsAsideProps) {
   }
 
   const rows = [...(topicos ?? [])]
+    .filter((t) => !t.value.startsWith('__area__:'))
     .filter((t) => t.totalAnswered >= 1)
     .sort((a, b) => a.accuracyPct - b.accuracyPct)
     .slice(0, 6)
@@ -32,7 +33,7 @@ export function WeakTopicsAside({ topicos, loading }: WeakTopicsAsideProps) {
       <div className="broto-qbank-side-card">
         <h3 className="broto-qbank-side-title">Tópicos em destaque</h3>
         <p className="broto-qbank-side-empty">
-          Pratica mais um pouco para identificarmos o que precisa de atenção.
+          Pratique mais um pouco para identificarmos o que precisa de atenção.
         </p>
       </div>
     )

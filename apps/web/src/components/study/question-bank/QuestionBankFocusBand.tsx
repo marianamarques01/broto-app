@@ -1,10 +1,10 @@
 import type { QuestionBankPrimaryAction, QuestionBankTrackId } from '@broto/shared'
 import type { DailyMissionsState } from '@broto/shared'
 import type { AreaStat } from '@/hooks/useProgress'
-import { buildDailyMissions } from '@/lib/build-daily-missions'
+import { buildDailyMissions, DAILY_MISSION_VOLUME_QUEST_GOAL, parseDailyMissionQuestionCount } from '@/lib/build-daily-missions'
 import { Crosshair } from 'lucide-react'
 
-const DEFAULT_GOAL = 3
+const DEFAULT_GOAL = DAILY_MISSION_VOLUME_QUEST_GOAL
 
 const TRACK_PILL: Record<QuestionBankTrackId, string> = {
   mistakes: 'Erros recentes',
@@ -50,12 +50,10 @@ export function QuestionBankFocusBand({
   const mission =
     missions.find((m) => m.areaKey === selectedArea) ?? missions[0] ?? null
   const answered = mergedAnsweredToday(selectedArea, daily, studyTodayByArea)
+  const parsedGoal =
+    mission?.areaKey === selectedArea ? parseDailyMissionQuestionCount(mission.title) : null
   const goal =
-    mission?.areaKey === selectedArea && mission.title.includes('3 questões')
-      ? 3
-      : mission?.areaKey === selectedArea && mission.title.includes('2 questões')
-        ? 2
-        : DEFAULT_GOAL
+    parsedGoal && parsedGoal > 0 ? parsedGoal : DEFAULT_GOAL
   const pct = goal > 0 ? Math.min(100, Math.round((answered / goal) * 100)) : 0
 
   if (loading) {

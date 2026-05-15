@@ -40,26 +40,22 @@ function TopicRow({
   areas: AreaStat[]
 }) {
   const isForte = variant === 'forte'
-  const color = isForte ? 'var(--green-400)' : 'var(--red-400)'
   const Icon = isForte ? TrendingUp : TrendingDown
   const areaKey = areaKeyForTopic(areas, topic.value)
 
   return (
     <div className="broto-prog-topic-chip-wrapper">
       <div
-        className={`broto-topic-chip broto-topic-chip--${variant}`}
-        style={{ alignItems: 'center' }}
+        className={`broto-topic-chip broto-topic-chip--${variant} broto-progress-topic-row`}
       >
-        <Icon size={16} style={{ color, flexShrink: 0 }} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)' }}>
-            {topic.label}
-          </div>
-          <div style={{ fontSize: '0.68rem', marginTop: 2, color: 'var(--text-muted)' }}>
+        <Icon size={16} className="broto-progress-topic-row__icon" aria-hidden />
+        <div className="broto-progress-topic-row__body">
+          <div className="broto-progress-topic-row__title">{topic.label}</div>
+          <div className="broto-progress-topic-row__meta">
             {topic.totalAnswered} questões
           </div>
         </div>
-        <span style={{ fontSize: 14, fontWeight: 700, color }}>{topic.accuracyPct}%</span>
+        <span className="broto-progress-topic-row__pct">{topic.accuracyPct}%</span>
       </div>
       <Link
         to={`/study/${areaKey}?hub=bank`}
@@ -83,15 +79,21 @@ export function TopicFocusPanel({ areas }: TopicFocusPanelProps) {
       aria-labelledby="progress-topics-title"
     >
       <div className="broto-perf-external-head">
-        <div className="broto-section-heading-row">
-          <h2 id="progress-topics-title" className="broto-perf-card__title">
-            Foco por tópico
-          </h2>
+        <div className="broto-section-heading-row broto-section-heading-row--progress-stack">
+          <div className="broto-progress-heading-stack">
+            <h2 id="progress-topics-title" className="broto-perf-card__title">
+              Foco por tópico
+            </h2>
+            <p className="broto-progress-block-lede">
+              Tópicos com pelo menos 3 questões — úteis para revisão rápida antes de uma sessão tipo
+              simulado.
+            </p>
+          </div>
         </div>
       </div>
       <div className="broto-perf-card">
-        <p className="broto-perf-card__subtitle">
-          Com base em tópicos com pelo menos 3 questões respondidas.
+        <p className="broto-perf-card__subtitle broto-perf-card__subtitle--tight">
+          Legenda: pelo menos 3 questões no tópico para entrar na lista.
         </p>
         <div className="broto-prog-topics broto-progress-topic-cols">
         {fortes.length > 0 ? (
@@ -99,7 +101,7 @@ export function TopicFocusPanel({ areas }: TopicFocusPanelProps) {
             <h3 className="broto-prog-topic-heading broto-prog-topic-heading--forte">
               <TrendingUp size={14} /> Pontos fortes
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="broto-prog-topic-stack">
               {fortes.map((t) => (
                 <TopicRow key={t.value} topic={t} variant="forte" areas={areas} />
               ))}
@@ -111,7 +113,7 @@ export function TopicFocusPanel({ areas }: TopicFocusPanelProps) {
             <h3 className="broto-prog-topic-heading broto-prog-topic-heading--fraco">
               <TrendingDown size={14} /> A melhorar
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="broto-prog-topic-stack">
               {fracos.map((t) => (
                 <TopicRow key={t.value} topic={t} variant="fraco" areas={areas} />
               ))}

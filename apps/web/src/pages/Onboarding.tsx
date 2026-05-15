@@ -7,6 +7,7 @@ import { refreshUser } from '@/hooks/useUser'
 import { api } from '@/lib/api-client'
 import { formatMockExamFlowError } from '@/lib/mock-exam-flow-error'
 import { getQuestionsStaticBaseUrl } from '@/lib/questions-static-base'
+import { trackMvpFunnelStep } from '@/lib/mvp-funnel'
 import {
   buildMockExamPayload,
   fetchMockExamQuestions,
@@ -38,7 +39,7 @@ import {
 
 const TOTAL_STEPS = 7
 
-/** Simulado diagnóstico pós-onboarding: 20 questões, 5 por área (valores = `areas.json` / `details.discipline`). */
+/** Sessão diagnóstica pós-onboarding (tipo simulado curto): 20 questões, 5 por área (valores = `areas.json` / `details.discipline`). */
 const ONBOARDING_DIAGNOSTIC_MOCK_CFG: StudentMockExamConfig = {
   nQuestoes: 20,
   randomMode: false,
@@ -544,7 +545,43 @@ function StepResumo({
 
   return (
     <div className="onb-step-body">
-      <StepHeader icon={<Sparkles size={24} />} title="Tudo pronto!" subtitle="Veja seu resumo" />
+      <StepHeader
+        icon={<Sparkles size={24} />}
+        title="Tudo pronto!"
+        subtitle="Comece pela sessão diagnóstica — curta e no estilo simulado; é o melhor jeito de calibrar seu plano"
+      />
+
+      <div className="onb-simulado-card">
+        <div className="onb-simulado-card__header">
+          <Brain size={24} />
+          <span>Sessão diagnóstica (recomendado)</span>
+        </div>
+        <p className="onb-simulado-card__desc">
+          Como um mini simulado: 20 questões, 5 por área (~15 min). Assim você enxerga forças e
+          fraquezas de cara — não é a prova completa.
+        </p>
+        {simuladoError ? (
+          <p className="onb-hint" style={{ color: 'var(--red-400)', marginBottom: 8 }}>
+            {simuladoError}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => void onSimulado()}
+          className="broto-btn-primary"
+          disabled={simuladoLoading || saveLoading}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+        >
+          {simuladoLoading ? (
+            <Loader2 size={16} style={{ animation: 'broto-rotate 0.7s linear infinite' }} />
+          ) : (
+            <Brain size={16} />
+          )}
+          Fazer sessão agora
+        </button>
+      </div>
+
+      <hr className="onb-divider" />
 
       <div className="onb-resumo-card">
         <div className="onb-resumo-row">
@@ -589,37 +626,6 @@ function StepResumo({
         ))}
       </div>
 
-      <hr className="onb-divider" />
-
-      <div className="onb-simulado-card">
-        <div className="onb-simulado-card__header">
-          <Brain size={24} />
-          <span>Simulado diagnostico</span>
-        </div>
-        <p className="onb-simulado-card__desc">
-          5 questoes de cada area (~15 min). Com isso, seu plano fica ainda mais preciso!
-        </p>
-        {simuladoError ? (
-          <p className="onb-hint" style={{ color: 'var(--red-400)', marginBottom: 8 }}>
-            {simuladoError}
-          </p>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => void onSimulado()}
-          className="broto-btn-primary"
-          disabled={simuladoLoading || saveLoading}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
-        >
-          {simuladoLoading ? (
-            <Loader2 size={16} style={{ animation: 'broto-rotate 0.7s linear infinite' }} />
-          ) : (
-            <Brain size={16} />
-          )}
-          Fazer simulado
-        </button>
-      </div>
-
       {saveError ? (
         <p className="onb-hint" style={{ color: 'var(--red-400)', marginTop: 8 }}>
           {saveError}
@@ -638,7 +644,7 @@ function StepResumo({
             Salvando...
           </span>
         ) : (
-          'Comecar sem simulado'
+          'Ir para o início sem sessão diagnóstica'
         )}
       </button>
     </div>
@@ -699,7 +705,8 @@ export function Onboarding() {
       await api.post('/api/user/onboarding', buildOnboardingBody(data))
       await refreshUser()
       await refreshPet()
-      navigate('/')
+      trackMvpFunnelStep('onboarding_complete', { via: 'finish_no_mock' })
+      navigate('/?cta=primeiro-simulado')
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Erro ao salvar')
     } finally {
@@ -721,6 +728,7 @@ export function Onboarding() {
       await api.post('/api/user/onboarding', buildOnboardingBody(data))
       await refreshUser()
       await refreshPet()
+      trackMvpFunnelStep('onboarding_complete', { via: 'mock_exam_flow' })
 
       const pool = await loadMockExamPool({
         baseUrl,
@@ -800,10 +808,11 @@ export function Onboarding() {
       })
       await refreshUser()
       await refreshPet()
+      trackMvpFunnelStep('onboarding_complete', { via: 'skip_wizard' })
     } catch {
       // ainda navega — usuario pode editar perfil depois
     }
-    navigate('/')
+    navigate('/?cta=primeiro-simulado')
   }, [navigate])
 
   const nome = user?.nome?.split(' ')[0] ?? ''

@@ -7,7 +7,6 @@ import { Landing } from '@/pages/Landing'
 import { Onboarding } from '@/pages/Onboarding'
 import { Home } from '@/pages/Home'
 import { StudyArea } from '@/pages/StudyArea'
-import { Progress } from '@/pages/Progress'
 import { Routine } from '@/pages/Routine'
 import { JoinClass } from '@/pages/JoinClass'
 import { BrotoPage } from '@/pages/BrotoPage'
@@ -61,7 +60,7 @@ export const router = createBrowserRouter([
       { path: '/study/:areaKey', element: <StudyArea /> },
       { path: '/study', element: <StudyArea /> },
       { path: '/study-area', element: <Navigate to="/study" replace /> },
-      { path: '/progress', element: <Progress /> },
+      { path: '/progress', element: <Navigate to="/" replace /> },
       { path: '/routine', element: <Routine /> },
       { path: '/join-class', element: <JoinClass /> },
       { path: '/broto', element: <BrotoPage /> },

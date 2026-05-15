@@ -22,7 +22,7 @@ function bumpStat(
 }
 
 /**
- * Agrega resultado do simulado para persistir em `practice_sessions.summary` e exibir na UI.
+ * Agrega resultado da sessão de prática para persistir em `practice_sessions.summary` e exibir na UI.
  */
 export function buildPracticeSessionSummary(
   results: MockExamAnswerResult[],

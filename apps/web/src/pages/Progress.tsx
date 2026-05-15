@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { BrotoHeroCard } from '@/components/progress/BrotoHeroCard'
 import { AchievementsCollapsible } from '@/components/progress/AchievementsCollapsible'
 import { AreaPerformanceTable } from '@/components/progress/AreaPerformanceTable'
@@ -19,82 +19,7 @@ import {
   subscribePerformanceHistory,
 } from '@/lib/performance-history'
 import { DEFAULT_AREAS } from '@/lib/default-areas'
-import {
-  Target,
-  Trophy,
-  BookOpen,
-  Star,
-  Award,
-  Crown,
-  Medal,
-} from 'lucide-react'
-
-const ACHIEVEMENT_DEFS = [
-  {
-    id: 'first-question',
-    label: 'Primeira Questão',
-    desc: 'Respondeu sua primeira questão',
-    icon: Star,
-    color: '#2dd4a8',
-    check: (t: number) => t >= 1,
-  },
-  {
-    id: '10-questions',
-    label: '10 Questões',
-    desc: 'Respondeu 10 questões',
-    icon: BookOpen,
-    color: '#60a5fa',
-    check: (t: number) => t >= 10,
-  },
-  {
-    id: '50-questions',
-    label: '50 Questões',
-    desc: 'Respondeu 50 questões',
-    icon: Target,
-    color: '#a78bfa',
-    check: (t: number) => t >= 50,
-  },
-  {
-    id: '100-questions',
-    label: 'Centurião',
-    desc: '100 questões respondidas',
-    icon: Trophy,
-    color: '#f5c842',
-    check: (t: number) => t >= 100,
-  },
-  {
-    id: '250-questions',
-    label: 'Maratonista',
-    desc: '250 questões respondidas',
-    icon: Crown,
-    color: '#fb7e6a',
-    check: (t: number) => t >= 250,
-  },
-  {
-    id: '500-questions',
-    label: 'Mestre ENEM',
-    desc: '500 questões respondidas',
-    icon: Medal,
-    color: '#f5c842',
-    check: (t: number) => t >= 500,
-  },
-  {
-    id: '70-accuracy',
-    label: 'Precisão 70%',
-    desc: 'Taxa de acerto acima de 70%',
-    icon: Award,
-    color: '#2dd4a8',
-    check: (_t: number, acc: number, total: number) => total >= 10 && acc >= 70,
-  },
-  {
-    id: '80-accuracy',
-    label: 'Precisão 80%',
-    desc: 'Taxa de acerto acima de 80%',
-    icon: Award,
-    color: '#f5c842',
-    check: (_t: number, acc: number, total: number) => total >= 20 && acc >= 80,
-  },
-]
+import { buildAchievementRows } from '@/lib/achievements'
 
 const PROGRESS_HASH_ANCHORS = new Set(['consistencia', 'conquistas'])
 
@@ -120,11 +45,7 @@ export function Progress() {
   const totalAnswered = progress?.totalAnswered ?? 0
 
   const achievements = useMemo(
-    () =>
-      ACHIEVEMENT_DEFS.map((a) => ({
-        ...a,
-        unlocked: a.check(totalAnswered, accuracyPct, totalAnswered),
-      })),
+    () => buildAchievementRows(totalAnswered, accuracyPct),
     [totalAnswered, accuracyPct],
   )
 
@@ -156,26 +77,26 @@ export function Progress() {
         id: 'accuracy',
         label: 'Acerto geral',
         value: hasData ? `${accuracyPct}%` : '—',
-        hint: hasData ? 'no banco de questões' : 'pratique para ver',
+        hint: hasData ? 'média no banco de questões' : 'pratique para ver a taxa',
         tone: 'var(--teal-400)',
       },
       {
         id: 'total',
-        label: 'Questões',
+        label: 'Questões feitas',
         value: totalAnswered.toLocaleString('pt-BR'),
-        hint: 'respondidas no total',
+        hint: 'total respondidas',
         tone: 'var(--text-primary)',
       },
       {
         id: 'period',
-        label: 'Neste período',
+        label: 'No período filtrado',
         value: String(sumPeriodAnswered),
         hint:
           chartPeriod === 'week'
-            ? 'no filtro semana'
+            ? 'últimos dias (gráfico)'
             : chartPeriod === 'month'
-              ? 'no filtro mês'
-              : 'no filtro geral',
+              ? 'últimas semanas (gráfico)'
+              : 'visão ampla (gráfico)',
         tone: 'var(--status-sky)',
       },
       {
@@ -187,7 +108,7 @@ export function Progress() {
             : estTotalHours >= 1
               ? `${estTotalHours.toFixed(1).replace('.', ',')} h`
               : `${estTotalStudyMin} min`,
-        hint: '~2,5 min / questão',
+        hint: '~2,5 min por questão',
         tone: 'var(--text-secondary)',
       },
     ],
@@ -205,23 +126,68 @@ export function Progress() {
 
   const streak = pet?.streak ?? 0
 
+  const pageLede = loadingProgress
+    ? 'Carregando seu histórico de estudos…'
+    : !hasData
+      ? 'Comece pelo banco de questões: aqui o Broto mostra como seus números evoluem ao longo do tempo.'
+      : 'Um retrato do que você já construiu no ENEM — ritmo, foco e constância, no mesmo lugar.'
+
   return (
     <>
       <TopBar variant="study" title="Progresso" />
       <div className="broto-main-inner broto-main-inner--study broto-prog-page broto-progress-page">
+        <header className="broto-progress-page-head">
+          <h1 className="broto-sr-only">Progresso</h1>
+          <div className="broto-progress-page-head__row">
+            <div className="broto-progress-page-head__copy">
+              <p className="broto-progress-page-kicker">Sua jornada no Broto</p>
+              <p className="broto-progress-page-lede">{pageLede}</p>
+            </div>
+            {!loadingProgress && !hasData ? (
+              <Link
+                to="/study/linguagens?hub=bank"
+                className="broto-btn-secondary broto-progress-page-head__cta"
+              >
+                Ir ao banco
+              </Link>
+            ) : null}
+          </div>
+          {loadingProgress ? (
+            <p className="broto-progress-page-status" role="status" aria-live="polite">
+              Sincronizando dados…
+            </p>
+          ) : null}
+        </header>
+
         <div className="broto-progress-layout">
           <div className="broto-progress-main">
-            <BrotoHeroCard
-              pet={pet}
-              loadingPet={loadingPet}
-              accuracyPct={accuracyPct}
-              totalAnswered={totalAnswered}
-              hasData={hasData}
-              performanceDayMap={performanceDayMap}
-            />
-            <ProgressKpiStrip items={kpiItems} loading={loadingProgress} />
+            <div className="broto-progress-hero-zone">
+              <BrotoHeroCard
+                pet={pet}
+                loadingPet={loadingPet}
+                accuracyPct={accuracyPct}
+                totalAnswered={totalAnswered}
+                hasData={hasData}
+                performanceDayMap={performanceDayMap}
+              />
+            </div>
 
-            <AreaPerformanceTable areas={areas} loading={loadingProgress} />
+            <section
+              id="progress-kpis"
+              className="broto-progress-slab broto-progress-slab--overview"
+              aria-labelledby="progress-overview-heading"
+            >
+              <div className="broto-progress-slab__head">
+                <h2 id="progress-overview-heading" className="broto-progress-slab__title">
+                  Visão geral
+                </h2>
+                <p className="broto-progress-slab__lede">
+                  Indicadores consolidados do seu histórico — o filtro do gráfico abaixo influencia a
+                  coluna “período”.
+                </p>
+              </div>
+              <ProgressKpiStrip items={kpiItems} loading={loadingProgress} asDiv />
+            </section>
 
             <ProgressTrendCard
               period={chartPeriod}
@@ -233,7 +199,10 @@ export function Progress() {
               totalAnswered={totalAnswered}
             />
 
-            <TopicFocusPanel areas={areas} />
+            <div className="broto-progress-detail-grid">
+              <AreaPerformanceTable areas={areas} loading={loadingProgress} />
+              <TopicFocusPanel areas={areas} />
+            </div>
 
             <ConsistencyHeatmapCard
               performanceDayMap={performanceDayMap}
@@ -241,14 +210,19 @@ export function Progress() {
             />
           </div>
 
-          <aside className="broto-progress-aside">
-            <DailyStreakCard
-              streak={streak}
-              questoesHoje={pet?.questoesHoje ?? 0}
-              loading={loadingPet}
-              performanceDayMap={performanceDayMap}
-            />
-            <AchievementsCollapsible achievements={achievements} initialVisible={4} />
+          <aside className="broto-progress-aside" aria-label="Hábito e conquistas">
+            <div className="broto-progress-aside-block">
+              <p className="broto-progress-aside-kicker">Ritmo semanal</p>
+              <DailyStreakCard
+                streak={streak}
+                questoesHoje={pet?.questoesHoje ?? 0}
+                loading={loadingPet}
+                performanceDayMap={performanceDayMap}
+              />
+            </div>
+            <div className="broto-progress-aside-block broto-progress-aside-block--achievements">
+              <AchievementsCollapsible achievements={achievements} initialVisible={4} />
+            </div>
           </aside>
         </div>
       </div>

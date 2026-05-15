@@ -43,8 +43,8 @@ const VALUE_ITEMS = [
   },
   {
     icon: Target,
-    title: 'Simulado e acompanhamento',
-    text: 'Teste o formato da prova e veja seu progresso ao longo do tempo.',
+    title: 'Sessões no estilo prova',
+    text: 'Monte blocos tipo simulado e acompanhe seu progresso ao longo do tempo.',
   },
 ] as const
 

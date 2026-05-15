@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
+import { AREA_ROLLUP_PREFIX } from '../_shared/enem-topic-area.ts'
 
 /** topico_value (slug) → área ENEM + rótulo do tópico (alinhado ao app) */
 const TOPICO: Record<string, { area: string; label: string }> = {
@@ -24,6 +25,22 @@ const TOPICO: Record<string, { area: string; label: string }> = {
   probabilidade: { area: 'matematica', label: 'Probabilidade e Estatística' },
   porcentagem: { area: 'matematica', label: 'Porcentagem e Razão' },
   combinatoria: { area: 'matematica', label: 'Análise Combinatória' },
+  [`${AREA_ROLLUP_PREFIX}linguagens`]: {
+    area: 'linguagens',
+    label: 'Prática registada nesta área',
+  },
+  [`${AREA_ROLLUP_PREFIX}ciencias-humanas`]: {
+    area: 'ciencias-humanas',
+    label: 'Prática registada nesta área',
+  },
+  [`${AREA_ROLLUP_PREFIX}ciencias-natureza`]: {
+    area: 'ciencias-natureza',
+    label: 'Prática registada nesta área',
+  },
+  [`${AREA_ROLLUP_PREFIX}matematica`]: {
+    area: 'matematica',
+    label: 'Prática registada nesta área',
+  },
 }
 
 const AREA_ORDER: { value: string; label: string }[] = [

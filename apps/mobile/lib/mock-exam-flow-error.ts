@@ -1,6 +1,6 @@
 import { ApiError } from '@broto/shared'
 
-/** Mensagem amigável para falhas do fluxo do simulado (mobile). */
+/** Mensagem amigável para falhas do fluxo da sessão ENEM no mobile (tipo simulado). */
 export function formatMockExamFlowError(err: unknown): string {
     if (err instanceof ApiError) return err.message
 
@@ -16,5 +16,5 @@ export function formatMockExamFlowError(err: unknown): string {
         )
     }
 
-    return raw || 'Erro ao montar simulado'
+    return raw || 'Erro ao montar sessão'
 }

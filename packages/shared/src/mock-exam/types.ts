@@ -20,6 +20,11 @@ export interface StudentMockExamConfig {
    * sem idioma específico, o corpus inclui inglês e espanhol (como o web).
    */
   expandLinguagensIdiomas: boolean
+  /**
+   * Tempo máximo para concluir a sessão de prática (minutos). Omitido ou `null` = sem limite
+   * (cronômetro só conta tempo decorrido).
+   */
+  timeLimitMinutes?: number | null
 }
 
 export interface MockExamPoolEntry {

@@ -87,7 +87,7 @@ export function MockExamResult() {
           setSummary(raw)
           setLoadError(null)
         } else if (data.completedAt == null) {
-          setLoadError('Este simulado ainda está em andamento. Continue de onde parou.')
+          setLoadError('Esta sessão ainda está em andamento. Continue de onde parou.')
         } else {
           setLoadError('O resumo desta sessão não está disponível.')
         }
@@ -128,12 +128,12 @@ export function MockExamResult() {
               className="broto-btn-primary"
               style={{ marginTop: 16, display: 'inline-block' }}
             >
-              Ir para o simulado
+              Ir para a sessão
             </Link>
           ) : null}
           <div style={{ marginTop: 12 }}>
             <Link to="/study/mock-exam/history" className="broto-btn-ghost broto-btn-ghost--inline">
-              Histórico de simulados
+              Histórico de sessões
             </Link>
           </div>
         </div>
@@ -148,7 +148,7 @@ export function MockExamResult() {
         <div className="broto-main-inner" style={{ padding: 24 }}>
           <p className="broto-muted">Nenhum resultado para exibir.</p>
           <Link to="/study/mock-exam" className="broto-btn-primary" style={{ marginTop: 16, display: 'inline-block' }}>
-            Configurar simulado
+            Configurar sessão
           </Link>
           <div style={{ marginTop: 12 }}>
             <Link to="/study/mock-exam/history" className="broto-btn-ghost broto-btn-ghost--inline">
@@ -165,7 +165,7 @@ export function MockExamResult() {
 
   return (
     <div className="broto-page broto-page--study">
-      <TopBar title="Resultado do simulado" variant="study" />
+      <TopBar title="Resultado da sessão" variant="study" />
       <div className="broto-main-inner" style={{ maxWidth: 720, margin: '0 auto', padding: '20px 18px' }}>
         <div className="broto-mock-exam-score-hero broto-fade-in">
           <div className="broto-mock-exam-score-ring">
@@ -288,7 +288,7 @@ export function MockExamResult() {
 
         <div className="broto-mock-exam-actions">
           <Link to="/study/mock-exam" className="broto-btn-secondary broto-btn-secondary--inline">
-            <RotateCcw size={16} /> Novo simulado
+            <RotateCcw size={16} /> Nova sessão
           </Link>
           <Link to="/study/mock-exam/history" className="broto-btn-ghost broto-btn-ghost--inline">
             <History size={16} /> Histórico

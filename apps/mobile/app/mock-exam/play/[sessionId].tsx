@@ -7,6 +7,7 @@ import {
     buildPracticeSessionSummary,
     fetchMockExamQuestions,
     getQuestionId,
+    timeLimitMinutesFromPracticeConfig,
     type MockExamAnswerResult,
     type Question,
 } from '@broto/shared'
@@ -30,6 +31,7 @@ function formatElapsed(totalSec: number): string {
 type SessionGetRes = {
     sessionId?: string
     questionIds?: string[]
+    config?: unknown
 }
 
 export default function MockExamPlayScreen() {
@@ -48,6 +50,8 @@ export default function MockExamPlayScreen() {
     const [elapsedSec, setElapsedSec] = useState(0)
     const startTimeRef = useRef(0)
     const questionStartMs = useRef(0)
+    const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null)
+    const finishingRef = useRef(false)
 
     useEffect(() => {
         startTimeRef.current = Date.now()
@@ -99,6 +103,7 @@ export default function MockExamPlayScreen() {
                     return
                 }
                 setSessionId(data.sessionId ?? sid)
+                setTimeLimitMinutes(timeLimitMinutesFromPracticeConfig(data.config))
                 setQuestionIds(ids)
                 const loaded = await fetchMockExamQuestions(baseUrl, ids)
                 if (cancelled) return
@@ -147,32 +152,51 @@ export default function MockExamPlayScreen() {
         [sessionId, onAnswerRecorded],
     )
 
+    const finalizeExam = useCallback(() => {
+        const list = questions
+        const sid = sessionId
+        if (!list || !sid || finishingRef.current) return
+        finishingRef.current = true
+        const summary = buildPracticeSessionSummary(resultsRef.current, list, topicByQuestionId)
+        void api.patch('/api/practice-session/complete', { sessionId: sid, summary }).catch(() => {})
+        router.replace({
+            pathname: '/mock-exam/result',
+            params: { sessionId: sid },
+        })
+    }, [questions, sessionId, router, topicByQuestionId])
+
     const handleNext = useCallback(() => {
+        if (finishingRef.current) return
         const list = questions
         const sid = sessionId
         if (!list || !sid) return
         if (index >= list.length - 1) {
-            const summary = buildPracticeSessionSummary(resultsRef.current, list, topicByQuestionId)
-            void api.patch('/api/practice-session/complete', { sessionId: sid, summary }).catch(() => {})
-            router.replace({
-                pathname: '/mock-exam/result',
-                params: { sessionId: sid },
-            })
+            finalizeExam()
             return
         }
         setIndex((i) => i + 1)
-    }, [questions, sessionId, index, router, topicByQuestionId])
+    }, [questions, sessionId, index, finalizeExam])
+
+    useEffect(() => {
+        if (timeLimitMinutes == null || !questions?.length || !sessionId) return
+        const limitSec = timeLimitMinutes * 60
+        if (elapsedSec < limitSec) return
+        finalizeExam()
+    }, [elapsedSec, timeLimitMinutes, questions, sessionId, finalizeExam])
 
     const totalQ = questions?.length ?? 0
     const progressLabel = totalQ > 0 ? `${index + 1} / ${totalQ}` : ''
     const progressPct = totalQ > 0 ? ((index + 1) / totalQ) * 100 : 0
+    const limitSec = timeLimitMinutes != null ? timeLimitMinutes * 60 : null
+    const remainingSec = limitSec != null ? Math.max(0, limitSec - elapsedSec) : null
+    const timerWarn = remainingSec != null && remainingSec > 0 && remainingSec <= 300
 
     if (!routeSessionId || String(routeSessionId).trim() === '') {
         return (
             <SafeAreaView style={styles.screen} edges={['top']}>
                 <Text style={styles.err}>Sessao invalida.</Text>
                 <Pressable style={styles.linkBtn} onPress={() => router.replace('/mock-exam')}>
-                    <Text style={styles.linkText}>Novo simulado</Text>
+                    <Text style={styles.linkText}>Nova sessão</Text>
                 </Pressable>
             </SafeAreaView>
         )
@@ -192,7 +216,7 @@ export default function MockExamPlayScreen() {
                 <FireflyBackground count={5} runKey={1} opacity={0.85} />
                 <Text style={styles.err}>{loadError}</Text>
                 <Pressable style={styles.linkBtn} onPress={() => router.replace('/mock-exam')}>
-                    <Text style={styles.linkText}>Novo simulado</Text>
+                    <Text style={styles.linkText}>Nova sessão</Text>
                 </Pressable>
             </SafeAreaView>
         )
@@ -213,7 +237,7 @@ export default function MockExamPlayScreen() {
         <SafeAreaView style={styles.screen} edges={['top']}>
             <FireflyBackground count={6} runKey={2} opacity={0.85} />
             <View style={styles.topBar}>
-                <Text style={styles.title}>Simulado ENEM</Text>
+                <Text style={styles.title}>Sessão ENEM</Text>
                 <Text style={styles.sub}>{progressLabel}</Text>
             </View>
 
@@ -224,9 +248,33 @@ export default function MockExamPlayScreen() {
             <View style={styles.statusRow}>
                 <View style={styles.statusLeft}>
                     <Text style={styles.counter}>Questao {index + 1} de {totalQ}</Text>
-                    <View style={styles.timerRow}>
-                        <Clock size={14} color={colors.text.muted} />
-                        <Text style={styles.timer}>{formatElapsed(elapsedSec)}</Text>
+                    <View style={styles.timerCol}>
+                        {remainingSec != null ? (
+                            <>
+                                <View style={styles.timerRow}>
+                                    <Clock
+                                        size={14}
+                                        color={timerWarn ? colors.gold[400] : colors.green[400]}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.timerRemaining,
+                                            timerWarn && styles.timerRemainingWarn,
+                                        ]}
+                                    >
+                                        Restante {formatElapsed(remainingSec)}
+                                    </Text>
+                                </View>
+                                <Text style={styles.timerElapsed}>
+                                    Decorrido {formatElapsed(elapsedSec)}
+                                </Text>
+                            </>
+                        ) : (
+                            <View style={styles.timerRow}>
+                                <Clock size={14} color={colors.text.muted} />
+                                <Text style={styles.timer}>{formatElapsed(elapsedSec)}</Text>
+                            </View>
+                        )}
                     </View>
                 </View>
                 <Pressable
@@ -281,9 +329,17 @@ const styles = StyleSheet.create({
         borderBottomColor: colors.border.subtle,
     },
     statusLeft: { gap: 4 },
+    timerCol: { gap: 2 },
     counter: { fontFamily: fonts.sansSemiBold, color: colors.text.primary, fontSize: 14 },
     timerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     timer: { fontFamily: fonts.sans, fontSize: 13, color: colors.text.muted },
+    timerRemaining: {
+        fontFamily: fonts.sansSemiBold,
+        fontSize: 13,
+        color: colors.green[400],
+    },
+    timerRemainingWarn: { color: colors.gold[400] },
+    timerElapsed: { fontFamily: fonts.sans, fontSize: 12, color: colors.text.muted, opacity: 0.88 },
     exitBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8 },
     exitText: { fontFamily: fonts.sansSemiBold, fontSize: 13, color: colors.text.secondary },
     scroll: { paddingBottom: 32 },

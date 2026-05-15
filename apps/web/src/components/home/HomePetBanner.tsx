@@ -2,7 +2,7 @@ import { useId } from 'react'
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
 
 /** Alinhado a Home.tsx e DashboardStudyStats (meta gamificada do dia). */
-const META_QUESTOES_DIA = 3
+const META_QUESTOES_DIA = 5
 
 function PetXpRing({ pct, size }: { pct: number; size: number }) {
   const rawId = useId()
@@ -67,6 +67,8 @@ export function HomePetBanner() {
   const streak = pet?.streak ?? 0
   const metaCount = Math.min(questoesHoje, META_QUESTOES_DIA)
   const hitPct = questoesHoje > 0 ? Math.round((acertosHoje / questoesHoje) * 100) : null
+  const metaPct = loading ? 0 : Math.round((metaCount / META_QUESTOES_DIA) * 100)
+  const xpPct = loading ? 0 : Math.min(100, Math.max(0, xpInLevel))
 
   /** Diâmetro do anel XP — anel mais justo ao emoji (tamanho do emoji só no CSS). */
   const ringSize = 108
@@ -78,11 +80,42 @@ export function HomePetBanner() {
     >
       <div className="broto-home-pet-banner__square-inner">
         <header className="broto-home-pet-banner__block broto-home-pet-banner__block--identity">
-          <p className="broto-home-pet-banner__sq-kicker">{loading ? '…' : brotoNome}</p>
-          <h2 className="broto-home-pet-banner__sq-phase">
-            {loading ? '…' : FASE_LABEL[fase]}
-          </h2>
+          <p className="broto-home-pet-banner__sq-kicker">{loading ? '…' : FASE_LABEL[fase]}</p>
+          <h2 className="broto-home-pet-banner__sq-name">{loading ? '…' : brotoNome}</h2>
         </header>
+
+        {/* Desktop web (≥1040px): micro-barras espelham meta e XP sem texto editorial */}
+        <div
+          className="broto-home-pet-banner__block broto-home-pet-banner__block--aside-hint"
+          aria-hidden
+        >
+          <div className="broto-home-pet-banner__micro-strip">
+            <div className="broto-home-pet-banner__micro-head">
+              <span className="broto-home-pet-banner__micro-label">Meta do dia</span>
+              <span className="broto-home-pet-banner__micro-nums">
+                {loading ? '…' : `${metaCount}/${META_QUESTOES_DIA}`}
+              </span>
+            </div>
+            <div className="broto-home-pet-banner__micro-track">
+              <span
+                className="broto-home-pet-banner__micro-fill broto-home-pet-banner__micro-fill--meta"
+                style={{ width: `${metaPct}%` }}
+              />
+            </div>
+            <div className="broto-home-pet-banner__micro-head">
+              <span className="broto-home-pet-banner__micro-label">XP no nível</span>
+              <span className="broto-home-pet-banner__micro-nums">
+                {loading ? '…' : `${xpInLevel}/100`}
+              </span>
+            </div>
+            <div className="broto-home-pet-banner__micro-track">
+              <span
+                className="broto-home-pet-banner__micro-fill broto-home-pet-banner__micro-fill--xp"
+                style={{ width: `${xpPct}%` }}
+              />
+            </div>
+          </div>
+        </div>
 
         <div className="broto-home-pet-banner__block broto-home-pet-banner__block--progress">
           <div

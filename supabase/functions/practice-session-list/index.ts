@@ -32,7 +32,7 @@ serve(async (req) => {
 
     const { data: rows, error } = await admin
       .from('practice_sessions')
-      .select('id, created_at, completed_at, kind, question_ids, summary')
+      .select('id, created_at, completed_at, kind, question_ids, summary, config')
       .eq('user_id', user.id)
       .eq('kind', 'student_mock')
       .order('created_at', { ascending: false })
@@ -51,6 +51,7 @@ serve(async (req) => {
         createdAt: String(row.created_at ?? ''),
         completedAt: row.completed_at != null ? String(row.completed_at) : null,
         summary: row.summary ?? null,
+        config: row.config ?? null,
         questionCount: n,
       }
     })

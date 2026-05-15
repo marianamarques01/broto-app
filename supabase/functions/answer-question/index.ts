@@ -7,6 +7,7 @@ import {
   fetchStudyTodayByArea,
   missionAreasForUser,
 } from '../_shared/daily-mission-bonus.ts'
+import { isEnemAreaKey, rollupTopicPerformanceSlug } from '../_shared/enem-topic-area.ts'
 
 /** +10 XP por resposta, +5 se acertou (alinhado ao spec em docs/broto-f4-area-de-estudo.md). */
 const XP_PER_ANSWER = 10
@@ -44,6 +45,8 @@ serve(async (req) => {
     const sessionIdRaw = raw?.sessionId
     const sessionId =
       typeof sessionIdRaw === 'string' && sessionIdRaw.trim() ? sessionIdRaw.trim() : null
+    const rawAreaKey = typeof raw?.areaKey === 'string' ? raw.areaKey.trim() : ''
+    const validatedAnswerAreaKey = rawAreaKey && isEnemAreaKey(rawAreaKey) ? rawAreaKey : null
 
     if (!questionId) {
       return json(400, { error: 'questionId é obrigatório' }, cors)
@@ -80,13 +83,16 @@ serve(async (req) => {
 
     const studyTodayBefore = await fetchStudyTodayByArea(admin, user.id)
 
-    const { error: insErr } = await admin.from('user_question_answers').insert({
+    const insertRow: Record<string, unknown> = {
       user_id: user.id,
       question_id: questionId,
       acertou: isCorrect,
       tempo_resposta: timeSpentSec,
       session_id: sessionIdToStore,
-    } as Record<string, unknown>)
+      answer_area_key: validatedAnswerAreaKey,
+    }
+
+    const { error: insErr } = await admin.from('user_question_answers').insert(insertRow)
 
     if (insErr) {
       console.error('[answer-question] insert user_question_answers:', insErr)
@@ -103,17 +109,21 @@ serve(async (req) => {
       console.error('[answer-question] question_topic_mapping:', mapErr)
     }
 
-    const topico =
+    const mappedTopico =
       Array.isArray(mapRows) && mapRows.length > 0
-        ? (mapRows[0] as { topico_value?: string }).topico_value
+        ? String((mapRows[0] as { topico_value?: string }).topico_value ?? '').trim() || undefined
         : undefined
 
-    if (topico) {
+    const effectiveTopico =
+      mappedTopico ??
+      (validatedAnswerAreaKey ? rollupTopicPerformanceSlug(validatedAnswerAreaKey) : undefined)
+
+    if (effectiveTopico) {
       const { data: existing } = await admin
         .from('topic_performance')
         .select('total_answered, total_correct')
         .eq('user_id', user.id)
-        .eq('topico_value', topico)
+        .eq('topico_value', effectiveTopico)
         .maybeSingle()
 
       const ta = (Number((existing as { total_answered?: number } | null)?.total_answered) || 0) + 1
@@ -125,7 +135,7 @@ serve(async (req) => {
       const { error: tpErr } = await admin.from('topic_performance').upsert(
         {
           user_id: user.id,
-          topico_value: topico,
+          topico_value: effectiveTopico,
           total_answered: ta,
           total_correct: tc,
           accuracy_pct: acc,
@@ -140,7 +150,7 @@ serve(async (req) => {
     }
 
     const missionAreas = await missionAreasForUser(admin, user.id)
-    const studyTodayAfter = applyAnswerToStudyToday(studyTodayBefore, topico, isCorrect)
+    const studyTodayAfter = applyAnswerToStudyToday(studyTodayBefore, effectiveTopico, isCorrect)
     const { bonusXp: missionBonusXp, completedIndexes: missionCompletedIndexes } =
       computeMissionBonusXp({
         before: studyTodayBefore,

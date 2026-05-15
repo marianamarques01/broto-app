@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { type KeyboardEvent, useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { WeekStrip } from '@/components/routine/WeekStrip'
 import { RoutineHeroHeader } from '@/components/routine/RoutineHeroHeader'
 import { RoutineSessionCards } from '@/components/routine/RoutineSessionCards'
+import { RoutineAreaPerformance } from '@/components/routine/RoutineAreaPerformance'
 import { RoutineWeekBars } from '@/components/routine/RoutineWeekBars'
 import { RoutineBrotoTip } from '@/components/routine/RoutineBrotoTip'
 import { useUser } from '@/hooks/useUser'
@@ -47,6 +48,12 @@ function formatRoutineDateLine(d: Date): string {
 
 type RoutineTab = 'hoje' | 'semana' | 'personalizar'
 
+const ROUTINE_TABS = [
+  { id: 'hoje' as const, label: 'Hoje' },
+  { id: 'semana' as const, label: 'Semana' },
+  { id: 'personalizar' as const, label: 'Personalizar' },
+]
+
 export function Routine() {
   const { user, loading: loadingUser } = useUser()
   const { progress, loading: loadingProgress } = useProgress()
@@ -54,6 +61,46 @@ export function Routine() {
   const { daily } = useDailyMissionsState()
 
   const [tab, setTab] = useState<RoutineTab>('hoje')
+
+  const focusTabAt = useCallback((next: RoutineTab) => {
+    setTab(next)
+    requestAnimationFrame(() => {
+      document.getElementById(`routine-tab-${next}`)?.focus()
+    })
+  }, [])
+
+  function handleRoutineTabKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    const keys = ROUTINE_TABS.map((t) => t.id)
+    const i = keys.indexOf(tab)
+    if (i < 0) return
+
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown': {
+        e.preventDefault()
+        focusTabAt(keys[(i + 1) % keys.length])
+        break
+      }
+      case 'ArrowLeft':
+      case 'ArrowUp': {
+        e.preventDefault()
+        focusTabAt(keys[(i - 1 + keys.length) % keys.length])
+        break
+      }
+      case 'Home': {
+        e.preventDefault()
+        focusTabAt(keys[0])
+        break
+      }
+      case 'End': {
+        e.preventDefault()
+        focusTabAt(keys[keys.length - 1])
+        break
+      }
+      default:
+        break
+    }
+  }
 
   const loading = loadingUser || loadingProgress
   const horasPorDia = user?.horasDisponiveisPorDia ?? 2
@@ -100,53 +147,82 @@ export function Routine() {
       <TopBar variant="study" title="Rotina" />
       <div className="broto-main-inner broto-main-inner--study broto-routine-page">
         {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div className="broto-skeleton" style={{ height: 140 }} />
-            <div className="broto-skeleton" style={{ height: 320 }} />
+          <div className="broto-routine-skeleton" aria-busy="true" aria-live="polite">
+            <div className="broto-routine-skeleton__hero broto-skeleton" />
+            <div className="broto-routine-skeleton__tabs broto-skeleton" />
+            <div className="broto-routine-skeleton__panel broto-skeleton" />
+            <span className="broto-routine-sr-only">Carregando sua rotina…</span>
           </div>
         ) : (
           <div className="broto-routine-layout">
             <div className="broto-routine-primary">
               <RoutineHeroHeader dateLine={dateLine} completed={completed} total={totalSess} />
 
-              <div className="broto-routine-tabs" role="tablist" aria-label="Visão da rotina">
-                {(
-                  [
-                    { id: 'hoje' as const, label: 'Hoje' },
-                    { id: 'semana' as const, label: 'Semana' },
-                    { id: 'personalizar' as const, label: 'Personalizar' },
-                  ] as const
-                ).map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={tab === t.id}
-                    className={`broto-routine-tab${tab === t.id ? ' broto-routine-tab--active' : ''}`}
-                    onClick={() => setTab(t.id)}
-                  >
-                    {t.label}
-                  </button>
-                ))}
+              <div className="broto-routine-toolbar">
+                <p className="broto-routine-toolbar__hint" id="routine-tabs-desc">
+                  Passe rápido por hoje, visão semanal ou ajustes do plano inteligente.
+                </p>
+                <nav
+                  className="broto-routine-tabs"
+                  role="tablist"
+                  aria-label="Visão da rotina"
+                  aria-describedby="routine-tabs-desc"
+                  onKeyDown={handleRoutineTabKeyDown}
+                >
+                  {ROUTINE_TABS.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      role="tab"
+                      id={`routine-tab-${t.id}`}
+                      aria-selected={tab === t.id}
+                      aria-controls={`routine-tabpanel-${t.id}`}
+                      tabIndex={tab === t.id ? 0 : -1}
+                      className={`broto-routine-tab${tab === t.id ? ' broto-routine-tab--active' : ''}`}
+                      onClick={() => setTab(t.id)}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </nav>
               </div>
 
-              {tab === 'hoje' && (
-                <div className="broto-routine-panel broto-fade-in">
+              <div
+                className={`broto-routine-panel-shell${tab !== 'personalizar' ? ' broto-routine-panel-shell--surface' : ' broto-routine-panel-shell--personal'}`}
+              >
+                <div
+                  id="routine-tabpanel-hoje"
+                  role="tabpanel"
+                  aria-labelledby="routine-tab-hoje"
+                  hidden={tab !== 'hoje'}
+                  className={`broto-routine-panel${tab === 'hoje' ? ' broto-fade-in' : ''}`}
+                >
                   <RoutineSessionCards sessions={sessions} />
                   <Link to="/study" className="broto-routine-add">
                     <Plus size={18} strokeWidth={2.25} aria-hidden />
                     Adicionar sessão
                   </Link>
                 </div>
-              )}
 
-              {tab === 'semana' && (
-                <div className="broto-routine-panel broto-routine-panel--week broto-fade-in">
+                <div
+                  id="routine-tabpanel-semana"
+                  role="tabpanel"
+                  aria-labelledby="routine-tab-semana"
+                  hidden={tab !== 'semana'}
+                  className={`broto-routine-panel broto-routine-panel--week${tab === 'semana' ? ' broto-fade-in' : ''}`}
+                >
+                  <div className="broto-routine-week-plan">
                   <div className="broto-routine-week-head">
-                    <span className="broto-routine-week-head__label">{semanaLabel}</span>
-                    <span className="broto-routine-week-head__hint">{horasPorDia} h/dia planejadas</span>
+                      <span className="broto-routine-week-head__eyebrow">Plano por dia</span>
+                      <div className="broto-routine-week-head__row">
+                        <span className="broto-routine-week-head__label">{semanaLabel}</span>
+                        <span className="broto-routine-week-head__hint">{horasPorDia} h/dia planejadas</span>
+                      </div>
                   </div>
-                  <WeekStrip rotina={rotina} />
+                    <div className="broto-routine-week-strip-wrap">
+                      <WeekStrip rotina={rotina} />
+                    </div>
+                  </div>
                   <div className="broto-routine-week-days">
                     {rotina.map((dia) => {
                       const Icon = dia.area ? getAreaIcon(dia.area.value) : BookOpen
@@ -188,16 +264,23 @@ export function Routine() {
                     })}
                   </div>
                 </div>
-              )}
 
-              {tab === 'personalizar' && (
-                <div className="broto-routine-panel broto-routine-panel--personal broto-fade-in">
-                  <h2 className="broto-routine-personal__title">Sua rotina inteligente</h2>
-                  <p className="broto-routine-personal__copy">
-                    Priorizamos áreas com menor acerto e respeitamos suas horas por dia. O plano é
-                    montado neste aparelho com base no seu progresso — em breve poderemos sincronizar
-                    rotinas personalizadas na nuvem e sugestões da IA.
-                  </p>
+                <div
+                  id="routine-tabpanel-personalizar"
+                  role="tabpanel"
+                  aria-labelledby="routine-tab-personalizar"
+                  hidden={tab !== 'personalizar'}
+                  className={`broto-routine-panel broto-routine-panel--personal${tab === 'personalizar' ? ' broto-fade-in' : ''}`}
+                >
+                  <div className="broto-routine-personal__intro">
+                    <span className="broto-routine-personal__eyebrow">Como montamos sua semana</span>
+                    <h2 className="broto-routine-personal__title">Sua rotina inteligente</h2>
+                    <p className="broto-routine-personal__copy">
+                      Priorizamos áreas com menor acerto e respeitamos suas horas por dia. O plano é
+                      montado neste aparelho com base no seu progresso — em breve poderemos sincronizar
+                      rotinas personalizadas na nuvem e sugestões da IA.
+                    </p>
+                  </div>
                   <div className="broto-routine-personal__card">
                     <span className="broto-routine-personal__card-label">Disponibilidade diária</span>
                     <strong className="broto-routine-personal__card-value">
@@ -210,11 +293,25 @@ export function Routine() {
                       Ir para configurações
                     </Link>
                   </div>
+                  <div className="broto-routine-personal__callouts">
+                    <div className="broto-routine-personal__callout">
+                      <span className="broto-routine-personal__callout-label">Critérios</span>
+                      <span className="broto-routine-personal__callout-text">
+                        Matérias mais frágeis aparecem mais cedo nos blocos.
+                      </span>
+                    </div>
+                    <div className="broto-routine-personal__callout">
+                      <span className="broto-routine-personal__callout-label">Descansos</span>
+                      <span className="broto-routine-personal__callout-text">
+                        Respeitamos dias de descanso na grade semanal.
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
 
-            <aside className="broto-routine-aside">
+            <aside className="broto-routine-aside" aria-label="Resumo e desempenho">
               <div className="broto-routine-kpis">
                 <div className="broto-routine-kpi">
                   <span className="broto-routine-kpi__value">
@@ -240,6 +337,8 @@ export function Routine() {
               </div>
 
               <RoutineWeekBars buckets={weekBuckets} targetMinPerDay={goalMin} />
+
+              <RoutineAreaPerformance areas={areas} />
 
               <RoutineBrotoTip areas={areas} />
             </aside>

@@ -1,17 +1,17 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { BarChart3, CalendarCheck, GraduationCap, Home, MessageCircle } from 'lucide-react'
+import { CalendarCheck, ClipboardList, GraduationCap, MessageCircle, type LucideIcon } from 'lucide-react'
 
-const TAB_ITEMS: {
+type MobileTabItem = {
   path: string
   label: string
   shortLabel: string
-  icon: typeof Home
   end?: boolean
-  center?: boolean
-}[] = [
+} & ({ icon: LucideIcon; center?: false } | { emoji: string; center: true })
+
+const TAB_ITEMS: MobileTabItem[] = [
   { path: '/study', label: 'Área de estudo', shortLabel: 'Estudo', icon: GraduationCap },
-  { path: '/progress', label: 'Progresso', shortLabel: 'Progresso', icon: BarChart3 },
-  { path: '/', label: 'Início', shortLabel: 'Início', icon: Home, end: true, center: true },
+  { path: '/study/mock-exam', label: 'Sessão ENEM', shortLabel: 'Sessão', icon: ClipboardList },
+  { path: '/', label: 'Início', shortLabel: 'Início', emoji: '🌱', end: true, center: true },
   { path: '/routine', label: 'Rotina', shortLabel: 'Rotina', icon: CalendarCheck },
   { path: '/broto', label: 'Broto AI', shortLabel: 'Broto', icon: MessageCircle },
 ]
@@ -23,8 +23,13 @@ export function MobileTabBar() {
   function isStudyPathActive(): boolean {
     return (
       location.pathname === '/study' ||
-      (location.pathname.startsWith('/study/') && !location.pathname.startsWith('/study/mock-exam'))
+      (location.pathname.startsWith('/study/') &&
+        !location.pathname.startsWith('/study/mock-exam'))
     )
+  }
+
+  function isMockExamPathActive(): boolean {
+    return location.pathname.startsWith('/study/mock-exam')
   }
 
   return (
@@ -51,7 +56,7 @@ export function MobileTabBar() {
           <path
             className="broto-mtab__shape-path"
             fill="url(#broto-mtab-fill)"
-            d="M0,72 L0,20 C0,8 10,5 22,5 L168,5 C184,5 194,12 204,22 C214,32 226,38 240,38 C254,38 266,32 276,22 C286,12 296,5 312,5 L458,5 C470,5 480,8 480,20 L480,72 Z"
+            d="M0,72 L0,20 C0,8 10,5 22,5 L168,5 C184,5 194,22 204,38 C214,52 226,58 240,58 C254,58 266,52 276,38 C286,22 296,5 312,5 L458,5 C470,5 480,8 480,20 L480,72 Z"
           />
           <path
             className="broto-mtab__shape-edge"
@@ -59,7 +64,7 @@ export function MobileTabBar() {
             stroke="url(#broto-mtab-stroke)"
             strokeWidth="1"
             vectorEffect="non-scaling-stroke"
-            d="M22,5 L168,5 C184,5 194,12 204,22 C214,32 226,38 240,38 C254,38 266,32 276,22 C286,12 296,5 312,5 L458,5"
+            d="M22,5 L168,5 C184,5 194,22 204,38 C214,52 226,58 240,58 C254,58 266,52 276,38 C286,22 296,5 312,5 L458,5"
           />
         </svg>
         <div className="broto-mtab__glow" />
@@ -77,7 +82,14 @@ export function MobileTabBar() {
                 end={item.end}
                 className={({ isActive }) => {
                   const studyActive = item.path === '/study' && isStudyPathActive()
-                  const active = item.path === '/study' ? studyActive : isActive
+                  const mockActive =
+                    item.path === '/study/mock-exam' && isMockExamPathActive()
+                  const active =
+                    item.path === '/study'
+                      ? studyActive
+                      : item.path === '/study/mock-exam'
+                        ? mockActive
+                        : isActive
                   const base = isCenter ? 'broto-mtab__link broto-mtab__link--home' : 'broto-mtab__link'
                   return active ? `${base} broto-mtab__link--active` : base
                 }}
@@ -87,12 +99,9 @@ export function MobileTabBar() {
                 {isCenter ? (
                   <>
                     <span className="broto-mtab__home-shine" aria-hidden />
-                    <item.icon
-                      className="broto-mtab__icon broto-mtab__icon--home"
-                      size={27}
-                      strokeWidth={2.15}
-                      aria-hidden
-                    />
+                    <span className="broto-mtab__home-emoji" aria-hidden>
+                      {item.emoji}
+                    </span>
                   </>
                 ) : (
                   <>

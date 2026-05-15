@@ -77,6 +77,15 @@ function writeStore(s: Store): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s))
 }
 
+/** Zera o histórico diário local (heatmap); use após resetar prática na conta no servidor. */
+export function clearPerformanceHistoryLocal(): void {
+  if (typeof localStorage === 'undefined') return
+  localStorage.removeItem(STORAGE_KEY)
+  cachedDayMapJson = ''
+  cachedDayMapSnapshot = Object.freeze({})
+  notify()
+}
+
 export function bumpPerformanceDay(isCorrect: boolean): void {
   const k = todayLocalISO()
   const store = readStore()

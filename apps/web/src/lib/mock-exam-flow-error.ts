@@ -1,7 +1,7 @@
 import { ApiError } from '@broto/shared'
 
 /**
- * Mensagem única para falhas comuns do fluxo do simulado (storage público + Edge Functions).
+ * Mensagem única para falhas comuns do fluxo da sessão ENEM (tipo simulado; storage público + Edge Functions).
  * "NetworkError" / "Failed to fetch" costumam ser CORS, offline ou URL errada — não só "sem internet".
  */
 export function formatMockExamFlowError(err: unknown): string {
@@ -22,5 +22,5 @@ export function formatMockExamFlowError(err: unknown): string {
     )
   }
 
-  return raw || 'Erro ao montar simulado'
+  return raw || 'Erro ao montar sessão'
 }

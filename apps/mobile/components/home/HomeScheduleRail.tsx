@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect } from 'react'
+import { useCallback, useMemo, useState, useEffect, type RefObject } from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { useRouter } from 'expo-router'
 import { ChevronLeft, ChevronRight, Zap } from 'lucide-react-native'
@@ -16,7 +16,7 @@ import { colors, fonts, radii, space } from '@/theme/tokens'
 import { useStudyActivityDays, localDayKey } from '@/hooks/use-study-activity-days'
 import { FadeInSection } from '@/components/AnimatedEntry'
 
-const DAILY_GOAL = 3
+const DAILY_GOAL = 5
 
 const MESES = [
     'janeiro',
@@ -86,6 +86,7 @@ export function HomeScheduleRail({
     missionItems,
     focusDia,
     progressAreas,
+    missionsAnchorRef,
 }: {
     horasPorDia: number
     questoesHoje: number
@@ -105,6 +106,7 @@ export function HomeScheduleRail({
         duracaoMin: number
     } | null
     progressAreas: AreaStat[] | undefined
+    missionsAnchorRef?: RefObject<View | null>
 }) {
     const router = useRouter()
     const today = new Date()
@@ -204,6 +206,106 @@ export function HomeScheduleRail({
     return (
         <FadeInSection delay={320}>
             <View style={{ width: '100%', marginTop: space[8], marginBottom: space[6] }}>
+                {/* Missões de hoje — logo abaixo do card do Broto na Home */}
+                <View
+                    ref={missionsAnchorRef}
+                    collapsable={false}
+                    style={{
+                        backgroundColor: colors.bg.card,
+                        borderRadius: radii.lg,
+                        borderWidth: 1,
+                        borderColor: colors.border.subtle,
+                        padding: space[4],
+                        marginBottom: space[4],
+                    }}
+                >
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            marginBottom: space[4],
+                            gap: space[2],
+                        }}
+                    >
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                            <Text
+                                style={{
+                                    fontSize: 17,
+                                    fontFamily: fonts.sansSemiBold,
+                                    color: colors.text.primary,
+                                }}
+                            >
+                                Missões de hoje
+                            </Text>
+                            <Text
+                                style={{
+                                    marginTop: 4,
+                                    fontSize: 12,
+                                    fontFamily: fonts.sans,
+                                    color: colors.text.muted,
+                                    textTransform: 'capitalize',
+                                }}
+                            >
+                                {longDate}
+                            </Text>
+                        </View>
+                    </View>
+
+                    <ScrollFilterRow filter={filter} onChange={setFilter} />
+
+                    <View style={{ marginTop: space[3] }}>
+                        {listItems.map((item, idx) =>
+                            item.type === 'now' ? (
+                                <View
+                                    key={`now-${idx}`}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: 10,
+                                        marginVertical: 6,
+                                    }}
+                                >
+                                    <View
+                                        style={{
+                                            paddingHorizontal: 10,
+                                            paddingVertical: 4,
+                                            borderRadius: 999,
+                                            backgroundColor: 'rgba(16,185,129,0.18)',
+                                            borderWidth: 1,
+                                            borderColor: 'rgba(16,185,129,0.45)',
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 11,
+                                                fontFamily: fonts.sansBold,
+                                                color: colors.green[400],
+                                            }}
+                                        >
+                                            {formatClock(nowMinutes())}
+                                        </Text>
+                                    </View>
+                                    <View
+                                        style={{
+                                            flex: 1,
+                                            borderTopWidth: 1,
+                                            borderStyle: 'dashed',
+                                            borderColor: colors.border.subtle,
+                                        }}
+                                    />
+                                </View>
+                            ) : (
+                                <TimelineCard
+                                    key={item.ev.id}
+                                    ev={item.ev}
+                                    isActive={item.ev.id === activeId}
+                                />
+                            ),
+                        )}
+                    </View>
+                </View>
+
                 <Text
                     style={{
                         fontSize: 12,
@@ -225,7 +327,6 @@ export function HomeScheduleRail({
                         borderWidth: 1,
                         borderColor: colors.border.subtle,
                         padding: space[4],
-                        marginBottom: space[4],
                     }}
                 >
                     <View
@@ -404,103 +505,6 @@ export function HomeScheduleRail({
                             Adicionar meta
                         </Text>
                     </Pressable>
-                </View>
-
-                {/* Timeline */}
-                <View
-                    style={{
-                        backgroundColor: colors.bg.card,
-                        borderRadius: radii.lg,
-                        borderWidth: 1,
-                        borderColor: colors.border.subtle,
-                        padding: space[4],
-                    }}
-                >
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            marginBottom: space[4],
-                            gap: space[2],
-                        }}
-                    >
-                        <View style={{ flex: 1, minWidth: 0 }}>
-                            <Text
-                                style={{
-                                    fontSize: 17,
-                                    fontFamily: fonts.sansSemiBold,
-                                    color: colors.text.primary,
-                                }}
-                            >
-                                Missões de hoje
-                            </Text>
-                            <Text
-                                style={{
-                                    marginTop: 4,
-                                    fontSize: 12,
-                                    fontFamily: fonts.sans,
-                                    color: colors.text.muted,
-                                    textTransform: 'capitalize',
-                                }}
-                            >
-                                {longDate}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <ScrollFilterRow filter={filter} onChange={setFilter} />
-
-                    <View style={{ marginTop: space[3] }}>
-                        {listItems.map((item, idx) =>
-                            item.type === 'now' ? (
-                                <View
-                                    key={`now-${idx}`}
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        gap: 10,
-                                        marginVertical: 6,
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            paddingHorizontal: 10,
-                                            paddingVertical: 4,
-                                            borderRadius: 999,
-                                            backgroundColor: 'rgba(16,185,129,0.18)',
-                                            borderWidth: 1,
-                                            borderColor: 'rgba(16,185,129,0.45)',
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                fontSize: 11,
-                                                fontFamily: fonts.sansBold,
-                                                color: colors.green[400],
-                                            }}
-                                        >
-                                            {formatClock(nowMinutes())}
-                                        </Text>
-                                    </View>
-                                    <View
-                                        style={{
-                                            flex: 1,
-                                            borderTopWidth: 1,
-                                            borderStyle: 'dashed',
-                                            borderColor: colors.border.subtle,
-                                        }}
-                                    />
-                                </View>
-                            ) : (
-                                <TimelineCard
-                                    key={item.ev.id}
-                                    ev={item.ev}
-                                    isActive={item.ev.id === activeId}
-                                />
-                            ),
-                        )}
-                    </View>
                 </View>
             </View>
         </FadeInSection>

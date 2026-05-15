@@ -3,6 +3,6 @@ export interface SubmitAnswerPayload {
   isCorrect: boolean
   areaKey?: string
   timeSpentSec?: number
-  /** Quando presente, grava vínculo com `practice_sessions` (simulado). */
+  /** Quando presente, grava vínculo com `practice_sessions` (sessão tipo simulado). */
   sessionId?: string
 }

@@ -3,7 +3,11 @@
  * `apps/web/src/lib/build-daily-missions.ts`. Manter regras sincronizadas.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { areaKeyFromTopico } from './enem-topic-area.ts'
+import {
+  areaKeyForPracticeAnswer,
+  areaKeyFromTopico,
+  AREA_ROLLUP_PREFIX,
+} from './enem-topic-area.ts'
 
 type ServiceClient = ReturnType<typeof createClient>
 
@@ -36,6 +40,22 @@ const TOPICO: Record<string, { area: string; label: string }> = {
   probabilidade: { area: 'matematica', label: 'Probabilidade e Estatística' },
   porcentagem: { area: 'matematica', label: 'Porcentagem e Razão' },
   combinatoria: { area: 'matematica', label: 'Análise Combinatória' },
+  [`${AREA_ROLLUP_PREFIX}linguagens`]: {
+    area: 'linguagens',
+    label: 'Prática registada nesta área',
+  },
+  [`${AREA_ROLLUP_PREFIX}ciencias-humanas`]: {
+    area: 'ciencias-humanas',
+    label: 'Prática registada nesta área',
+  },
+  [`${AREA_ROLLUP_PREFIX}ciencias-natureza`]: {
+    area: 'ciencias-natureza',
+    label: 'Prática registada nesta área',
+  },
+  [`${AREA_ROLLUP_PREFIX}matematica`]: {
+    area: 'matematica',
+    label: 'Prática registada nesta área',
+  },
 }
 
 const AREA_ORDER: { value: string }[] = [
@@ -68,7 +88,7 @@ export async function fetchStudyTodayByArea(
 ): Promise<StudyTodayByArea> {
   const { data: todayRows, error: todayErr } = await admin
     .from('user_question_answers')
-    .select('question_id, acertou')
+    .select('question_id, acertou, answer_area_key')
     .eq('user_id', userId)
     .gte('created_at', startOfUtcDayIso())
 
@@ -77,7 +97,11 @@ export async function fetchStudyTodayByArea(
     return {}
   }
 
-  const answers = (todayRows ?? []) as { question_id: string; acertou: boolean }[]
+  const answers = (todayRows ?? []) as {
+    question_id: string
+    acertou: boolean
+    answer_area_key?: string | null
+  }[]
   const qids = [...new Set(answers.map((a) => a.question_id))]
   const topicByQid = new Map<string, string | null>()
   if (qids.length > 0) {
@@ -98,8 +122,10 @@ export async function fetchStudyTodayByArea(
 
   const studyTodayByArea: StudyTodayByArea = {}
   for (const a of answers) {
-    const topico = topicByQid.get(a.question_id) ?? null
-    const area = areaKeyFromTopico(topico)
+    const area = areaKeyForPracticeAnswer({
+      topicoSlug: topicByQid.get(a.question_id) ?? undefined,
+      clientAreaKey: a.answer_area_key,
+    })
     const cur = studyTodayByArea[area] ?? { answered: 0, correct: 0 }
     cur.answered += 1
     if (a.acertou) cur.correct += 1
@@ -177,8 +203,9 @@ function missionCompletionFlags(
   const a2 = areaSnapshot(by, ma[2])
   const acc2 = a2.answered === 0 ? null : Math.round((a2.correct / a2.answered) * 100)
 
-  const m0 = a0.answered >= 3
-  const m1 = a1.answered >= 2 && a0.answered >= 3
+  /** Volume missões – alinhado a `DAILY_MISSION_VOLUME_QUEST_GOAL` em `build-daily-missions.ts`. */
+  const m0 = a0.answered >= 5
+  const m1 = a1.answered >= 5 && a0.answered >= 5
   const m2 = a2.answered >= 5 && (acc2 ?? 0) >= 70
   return [m0, m1, m2]
 }

@@ -44,6 +44,11 @@ export interface TopicOption {
   label: string
   accuracy: number | null
   totalAnswered: number
+  /**
+   * Etapas da trilha guiada já concluídas (estado local do cliente — ex.: localStorage na web).
+   * Usado no hub para refletir progresso mesmo sem dados no servidor.
+   */
+  journeyStagesCompleted?: number
 }
 
 export const MOCK_TOPICS: Record<string, TopicOption[]> = {

@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Link, useRouter } from 'expo-router'
-import type { PracticeSessionSummary } from '@broto/shared'
+import { formatPracticeSessionAreasLabel, type PracticeSessionSummary } from '@broto/shared'
 import { api } from '@/lib/api-client'
 import { colors, fonts } from '@/theme/tokens'
 import { ChevronLeft } from 'lucide-react-native'
@@ -20,6 +20,7 @@ type SessionListItem = {
     createdAt: string
     completedAt: string | null
     summary: unknown
+    config: unknown
     questionCount: number
 }
 
@@ -75,7 +76,7 @@ export default function MockExamHistoryScreen() {
                         <ChevronLeft size={22} color={colors.text.secondary} />
                     </Pressable>
                 </Link>
-                <Text style={styles.title}>Simulados anteriores</Text>
+                <Text style={styles.title}>Sessões anteriores</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -90,18 +91,20 @@ export default function MockExamHistoryScreen() {
                 {error ? <Text style={styles.err}>{error}</Text> : null}
 
                 {!loading && sessions.length === 0 ? (
-                    <Text style={styles.muted}>Nenhum simulado ainda.</Text>
+                    <Text style={styles.muted}>Nenhuma sessão ainda.</Text>
                 ) : null}
 
                 {sessions.map((s) => {
                     const sum = s.summary
                     const pct = isPracticeSessionSummary(sum) ? sum.percentualGeral : null
                     const done = !!s.completedAt
+                    const areasLabel = formatPracticeSessionAreasLabel(s.config, s.summary)
                     return (
                         <View key={s.sessionId} style={styles.card}>
                             <Text style={styles.cardMeta}>{formatWhen(s.createdAt)}</Text>
                             <Text style={styles.cardSub}>
-                                {s.questionCount} questoes · {done ? 'Concluido' : 'Em andamento'}
+                                {s.questionCount} questoes · {areasLabel} ·{' '}
+                                {done ? 'Concluido' : 'Em andamento'}
                             </Text>
                             {pct != null ? (
                                 <Text style={styles.pct}>{pct}% acertos</Text>

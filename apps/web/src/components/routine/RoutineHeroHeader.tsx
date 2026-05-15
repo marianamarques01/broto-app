@@ -25,18 +25,25 @@ export function RoutineHeroHeader({ dateLine, completed, total }: RoutineHeroHea
           aria-valuenow={pct}
           aria-valuemin={0}
           aria-valuemax={100}
+          aria-valuetext={`${completed} de ${total} sessões concluídas (${pct}%)`}
         >
           <span className="broto-routine-hero__bar-fill" style={{ width: `${pct}%` }} />
         </div>
       </div>
       <div className="broto-routine-hero__ring" aria-hidden>
-        <svg width="112" height="112" viewBox="0 0 112 112">
+        <svg
+          width={112}
+          height={112}
+          viewBox="0 0 112 112"
+          className="broto-routine-hero__svg"
+          aria-hidden
+        >
           <circle
             cx="56"
             cy="56"
             r={r}
             fill="none"
-            stroke="rgba(255,255,255,0.08)"
+            stroke="var(--routine-ring-track, rgba(255,255,255,0.08))"
             strokeWidth="8"
           />
           <circle

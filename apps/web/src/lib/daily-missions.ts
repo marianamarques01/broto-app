@@ -1,4 +1,4 @@
-import { createDailyMissions, type AreaKey } from '@broto/shared'
+import { createDailyMissions, type AreaKey, DAILY_MISSIONS_STORAGE_KEY } from '@broto/shared'
 import { localStorageAdapter } from '@/lib/adapters/local-storage-adapter'
 
 export type { AreaKey, DailyMissionsState } from '@broto/shared'
@@ -24,4 +24,11 @@ export async function incrementDailyAreaAnswer(params: { areaKey: AreaKey; isCor
   const next = await missions.incrementDailyAreaAnswer(params)
   notifyDailyMissions()
   return next
+}
+
+/** Zera só o estado local das missões (ex.: após resetar histórico de prática na conta). */
+export function clearDailyMissionsLocal(): void {
+  if (typeof localStorage === 'undefined') return
+  localStorage.removeItem(DAILY_MISSIONS_STORAGE_KEY)
+  notifyDailyMissions()
 }

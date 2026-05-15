@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef } from 'react'
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native'
+import { useState, useCallback, useRef, useMemo } from 'react'
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Modal } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import {
@@ -11,17 +11,16 @@ import {
   XCircle,
   Sparkles,
   Brain,
-  HelpCircle,
   RotateCcw,
-  Map,
-  BookOpen,
   Trophy,
   Zap,
   GraduationCap,
+  Eye,
+  EyeOff,
 } from 'lucide-react-native'
 import { colors, fonts } from '@/theme/tokens'
 import { AREA_CONFIG, getAreaConfig } from '@/theme/area-config'
-import { FadeInSection, StaggerItem, AnimatedBar } from '@/components/AnimatedEntry'
+import { FadeInSection, StaggerItem } from '@/components/AnimatedEntry'
 import { BrotoCtaButton } from '@/components/BrotoCtaButton'
 import {
   getMockTopics,
@@ -31,16 +30,16 @@ import {
   type TopicOption,
   type MindMapNode,
 } from '@/lib/study-area-mock'
+import type { StudyJourneyTab } from '@broto/shared'
+import {
+  STUDY_JOURNEY_STAGES,
+  studyJourneyCompletedCount,
+  brotoCelebrateLine,
+  computeStickyAction,
+} from '@broto/shared'
 
 type Step = 'select' | 'loading' | 'study'
-type Tab = 'summary' | 'flashcards' | 'questions' | 'mindmap'
-const TABS: Tab[] = ['summary', 'flashcards', 'questions', 'mindmap']
-const TAB_LABELS: Record<Tab, string> = {
-  summary: 'Resumo',
-  flashcards: 'Cards',
-  questions: 'Quiz',
-  mindmap: 'Mapa',
-}
+type Tab = StudyJourneyTab
 
 /* ─── Area/Topic Selector ──────────────────── */
 
@@ -309,78 +308,70 @@ function AreaTopicSelector({
   )
 }
 
-/* ─── Tab Bar ──────────────────────────────── */
+/* ─── Trilha do Broto (mobile) ───────────────── */
 
-function TabBar({
+function StudyTrailVerticalMobile({
   activeTab,
   completed,
   areaColor,
-  onTabChange,
+  onSelectTab,
 }: {
   activeTab: Tab
   completed: Record<Tab, boolean>
   areaColor: string
-  onTabChange: (t: Tab) => void
+  onSelectTab: (t: Tab) => void
 }) {
-  const done = TABS.filter((t) => completed[t]).length
-  const pct = Math.round((done / TABS.length) * 100)
   return (
-    <View style={{ marginBottom: 20 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <View
-          style={{
-            flex: 1,
-            height: 6,
-            borderRadius: 999,
-            backgroundColor: 'rgba(255,255,255,0.32)',
-            borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.16)',
-            overflow: 'hidden',
-          }}
-        >
-          <View
-            style={{
-              width: `${pct}%`,
-              height: '100%',
-              borderRadius: 999,
-              backgroundColor: areaColor,
-            }}
-          />
-        </View>
-        <Text style={{ fontSize: 12, fontFamily: fonts.sansBold, color: areaColor }}>{pct}%</Text>
-      </View>
-      <View style={{ flexDirection: 'row', gap: 6 }}>
-        {TABS.map((tab) => {
-          const active = activeTab === tab
-          const isDone = completed[tab]
-          return (
-            <Pressable key={tab} onPress={() => onTabChange(tab)} style={{ flex: 1 }}>
-              <View
-                style={{
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingVertical: 10,
-                  borderRadius: 12,
-                  borderWidth: active ? 1.5 : 1,
-                  borderColor: active ? areaColor : colors.border.default,
-                  backgroundColor: active ? areaColor + '15' : colors.bg.card,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontFamily: active ? fonts.sansSemiBold : fonts.sansMedium,
-                    color: active ? areaColor : isDone ? colors.green[400] : colors.text.secondary,
-                  }}
-                >
-                  {isDone && !active ? '✓ ' : ''}
-                  {TAB_LABELS[tab]}
+    <View style={{ gap: 8, marginBottom: 18 }}>
+      <Text
+        style={{
+          fontSize: 11,
+          fontFamily: fonts.sansSemiBold,
+          color: colors.text.muted,
+          textTransform: 'uppercase',
+          letterSpacing: 1,
+        }}
+      >
+        Caminho
+      </Text>
+      {STUDY_JOURNEY_STAGES.map((stage) => {
+        const active = activeTab === stage.tab
+        const done = completed[stage.tab]
+        return (
+          <Pressable key={stage.tab} onPress={() => onSelectTab(stage.tab)}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                paddingVertical: 12,
+                paddingHorizontal: 14,
+                borderRadius: 14,
+                borderWidth: active ? 1.5 : 1,
+                borderColor: active ? areaColor : colors.border.default,
+                backgroundColor: active ? areaColor + '12' : colors.bg.card,
+              }}
+            >
+              <View style={{ width: 28, alignItems: 'center' }}>
+                {done ? (
+                  <CheckCircle2 size={17} color={colors.green[400]} />
+                ) : (
+                  <Text style={{ color: colors.text.muted, fontSize: 14 }}>○</Text>
+                )}
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ fontSize: 15, fontFamily: fonts.sansBold, color: colors.text.primary }}>
+                  {stage.title}
+                </Text>
+                <Text style={{ fontSize: 12, fontFamily: fonts.sans, color: colors.text.secondary }}>
+                  {stage.oneLiner}
                 </Text>
               </View>
-            </Pressable>
-          )
-        })}
-      </View>
+              <ChevronRight size={16} color={colors.text.muted} />
+            </View>
+          </Pressable>
+        )
+      })}
     </View>
   )
 }
@@ -509,7 +500,7 @@ function SummaryTab({
 
         <BrotoCtaButton
           compact
-          title="CONTINUAR PARA FLASHCARDS"
+          title="CONCLUIR LEITURA E SEGUIR"
           onPress={onDone}
           rightIcon={<ArrowRight size={16} color={colors.cta.text} />}
         />
@@ -705,7 +696,7 @@ function FlashcardsTab({
         {allDone && (
           <BrotoCtaButton
             compact
-            title="CONTINUAR PARA QUIZ"
+            title="SEGUIR PARA APLICAR"
             onPress={onDone}
             rightIcon={<ArrowRight size={16} color={colors.cta.text} />}
           />
@@ -719,7 +710,7 @@ function FlashcardsTab({
 
 function QuestionsTab({
   questions,
-  areaColor,
+  areaColor: _areaColor,
   onDone,
 }: {
   questions: StudyPackage['practiceQuestions']
@@ -925,7 +916,8 @@ function MindMapTab({
   function toggle(id: string) {
     setExpanded((p) => {
       const n = new Set(p)
-      n.has(id) ? n.delete(id) : n.add(id)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
       return n
     })
   }
@@ -1027,7 +1019,7 @@ function MindMapTab({
         </Pressable>
         <BrotoCtaButton
           compact
-          title="CONCLUIR SESSAO"
+          title="FECHAR TRILHA"
           onPress={onDone}
           rightIcon={<Trophy size={16} color={colors.cta.text} />}
         />
@@ -1045,6 +1037,7 @@ function SessionDone({
   flashcards,
   areaColor,
   onBack,
+  completed,
 }: {
   pkg: StudyPackage
   correct: number
@@ -1052,8 +1045,16 @@ function SessionDone({
   flashcards: number
   areaColor: string
   onBack: () => void
+  completed: Record<Tab, boolean>
 }) {
   const xp = 50 + correct * 10
+  const trailHuman = STUDY_JOURNEY_STAGES.filter((s) => completed[s.tab])
+    .map((s) => s.title)
+    .join(' → ')
+  const lastDoneTab = [...STUDY_JOURNEY_STAGES]
+    .reverse()
+    .find((s) => completed[s.tab])?.tab
+  const brotoClose = lastDoneTab ? brotoCelebrateLine(lastDoneTab) : 'Orgulho do Broto: você chegou até aqui com calma.'
   return (
     <FadeInSection delay={0}>
       <View style={{ alignItems: 'center', paddingVertical: 32 }}>
@@ -1080,15 +1081,40 @@ function SessionDone({
             fontSize: 14,
             fontFamily: fonts.sans,
             color: colors.text.secondary,
-            marginTop: 6,
+            marginTop: 8,
             textAlign: 'center',
+            paddingHorizontal: 12,
           }}
         >
-          Voce completou o estudo de{' '}
-          <Text style={{ color: areaColor, fontFamily: fonts.sansSemiBold }}>
-            {pkg.topicoLabel}
-          </Text>
+          Você completou a trilha de{' '}
+          <Text style={{ fontFamily: fonts.sansSemiBold, color: areaColor }}>{pkg.topicoLabel}</Text>
         </Text>
+        <Text
+          style={{
+            fontSize: 13,
+            fontFamily: fonts.sans,
+            color: colors.text.secondary,
+            marginTop: 12,
+            textAlign: 'center',
+            lineHeight: 20,
+            paddingHorizontal: 16,
+          }}
+        >
+          {brotoClose}
+        </Text>
+        {trailHuman ? (
+          <Text
+            style={{
+              marginTop: 10,
+              fontSize: 12,
+              fontFamily: fonts.sansSemiBold,
+              color: colors.text.muted,
+              textAlign: 'center',
+            }}
+          >
+            Etapas: {trailHuman}
+          </Text>
+        ) : null}
 
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 24, width: '100%' }}>
           {[
@@ -1172,7 +1198,10 @@ export default function StudyAreaScreen() {
   })
   const [qResult, setQResult] = useState({ correct: 0, total: 0 })
   const [showDone, setShowDone] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
+  const [gentleStopOpen, setGentleStopOpen] = useState(false)
   const scrollRef = useRef<ScrollView>(null)
+  const stageAnchorY = useRef(0)
 
   const areaColor = pkg ? getAreaConfig(pkg.areaKey).color : colors.green[500]
   const areaLabel = pkg ? getAreaConfig(pkg.areaKey).label : ''
@@ -1184,6 +1213,8 @@ export default function StudyAreaScreen() {
     setActiveTab('summary')
     setCompleted({ summary: false, flashcards: false, questions: false, mindmap: false })
     setShowDone(false)
+    setFocusMode(false)
+    setGentleStopOpen(false)
     const data = await getMockStudyPackage(areaKey, topic.value)
     setPkg(data)
     setStep('study')
@@ -1192,15 +1223,45 @@ export default function StudyAreaScreen() {
   function markDone(tab: Tab) {
     setCompleted((p) => ({ ...p, [tab]: true }))
   }
-  function goToTab(tab: Tab) {
-    setActiveTab(tab)
-    scrollToTop()
-  }
+  const goToTab = useCallback(
+    (tab: Tab) => {
+      setActiveTab(tab)
+      scrollToTop()
+    },
+    [scrollToTop],
+  )
   function handleBack() {
     setStep('select')
     setPkg(null)
     setShowDone(false)
+    setFocusMode(false)
+    setGentleStopOpen(false)
   }
+
+  const estimateInput = useMemo(
+    () => ({
+      flashcardsLen: pkg?.flashcards.length ?? 0,
+      practiceQuestionsLen: pkg?.practiceQuestions.length ?? 0,
+      bankRowCount: null as number | null,
+    }),
+    [pkg],
+  )
+
+  const stickyAction = useMemo(
+    () => computeStickyAction(activeTab, completed, estimateInput),
+    [activeTab, completed, estimateInput],
+  )
+
+  const handleStickyPrimary = useCallback(() => {
+    if (stickyAction.advanceTab) {
+      goToTab(stickyAction.advanceTab)
+    } else {
+      const y = Math.max(0, stageAnchorY.current - 8)
+      scrollRef.current?.scrollTo({ y, animated: true })
+    }
+  }, [stickyAction, goToTab])
+
+  const doneCount = studyJourneyCompletedCount(completed)
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#02140D' }} edges={['top']}>
@@ -1232,16 +1293,18 @@ export default function StudyAreaScreen() {
         </Text>
       </View>
 
-      <ScrollView
-        ref={scrollRef}
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 16,
-          paddingBottom: 40 + insets.bottom,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          ref={scrollRef}
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 16,
+            paddingBottom:
+              step === 'study' && pkg && !showDone ? 128 + insets.bottom : 40 + insets.bottom,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
         {step === 'select' && <AreaTopicSelector onStart={handleStart} />}
 
         {step === 'loading' && (
@@ -1257,13 +1320,129 @@ export default function StudyAreaScreen() {
 
         {step === 'study' && pkg && !showDone && (
           <>
-            <TabBar
-              activeTab={activeTab}
-              completed={completed}
-              areaColor={areaColor}
-              onTabChange={goToTab}
-            />
-            {activeTab === 'summary' && (
+            {!focusMode ? (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 }}>
+                <Pressable
+                  onPress={() => setFocusMode(true)}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingVertical: 8,
+                    paddingHorizontal: 12,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: colors.border.default,
+                  }}
+                >
+                  <Eye size={15} color={colors.text.secondary} />
+                  <Text style={{ fontSize: 12, fontFamily: fonts.sansSemiBold, color: colors.text.secondary }}>
+                    Modo foco
+                  </Text>
+                </Pressable>
+                <Pressable onPress={() => setGentleStopOpen(true)} style={{ padding: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontFamily: fonts.sansSemiBold,
+                      color: colors.text.muted,
+                      textDecorationLine: 'underline',
+                    }}
+                  >
+                    Parar com calma
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => setFocusMode(false)}
+                style={{
+                  alignSelf: 'flex-start',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginBottom: 12,
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: areaColor + '44',
+                }}
+              >
+                <EyeOff size={15} color={areaColor} />
+                <Text style={{ fontSize: 12, fontFamily: fonts.sansSemiBold, color: areaColor }}>
+                  Sair do modo foco
+                </Text>
+              </Pressable>
+            )}
+
+            {!focusMode && (
+              <View style={{ marginBottom: 18 }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontFamily: fonts.sansSemiBold,
+                    color: colors.text.muted,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    marginBottom: 4,
+                  }}
+                >
+                  Trilha do Broto · {areaLabel}
+                </Text>
+                <Text style={{ fontSize: 20, fontFamily: fonts.sansBold, color: colors.text.primary }}>
+                  {pkg.topicoLabel}
+                </Text>
+                <Text
+                  style={{
+                    marginTop: 8,
+                    fontSize: 13,
+                    fontFamily: fonts.sans,
+                    color: colors.text.secondary,
+                    lineHeight: 20,
+                  }}
+                >
+                  Quatro passos leves — constância emocional, não pressa.
+                </Text>
+              </View>
+            )}
+
+            {!focusMode && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ fontSize: 12, fontFamily: fonts.sansSemiBold, color: colors.text.secondary, marginBottom: 8 }}>
+                  Trilha: {doneCount} de {STUDY_JOURNEY_STAGES.length} etapas
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {STUDY_JOURNEY_STAGES.map((s, i) => (
+                    <View
+                      key={s.tab}
+                      style={{
+                        flex: 1,
+                        height: 8,
+                        borderRadius: 999,
+                        backgroundColor: i < doneCount ? areaColor : 'rgba(255,255,255,0.12)',
+                      }}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {!focusMode && (
+              <StudyTrailVerticalMobile
+                activeTab={activeTab}
+                completed={completed}
+                areaColor={areaColor}
+                onSelectTab={goToTab}
+              />
+            )}
+
+            <View
+              onLayout={(e) => {
+                stageAnchorY.current = e.nativeEvent.layout.y
+              }}
+            >
+              {activeTab === 'summary' && (
               <SummaryTab
                 summary={pkg.summary}
                 areaColor={areaColor}
@@ -1305,6 +1484,7 @@ export default function StudyAreaScreen() {
                 }}
               />
             )}
+            </View>
           </>
         )}
 
@@ -1316,9 +1496,148 @@ export default function StudyAreaScreen() {
             flashcards={pkg.flashcards.length}
             areaColor={areaColor}
             onBack={handleBack}
+            completed={completed}
           />
         )}
       </ScrollView>
+
+        {step === 'study' && pkg && !showDone && (
+          <View
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              paddingHorizontal: 16,
+              paddingTop: 10,
+              paddingBottom: insets.bottom + 6,
+              backgroundColor: '#031A11',
+              borderTopWidth: 1,
+              borderTopColor: colors.border.subtle,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: fonts.sansSemiBold,
+                color: colors.text.primary,
+                marginBottom: stickyAction.sub ? 2 : 8,
+              }}
+              numberOfLines={2}
+            >
+              {stickyAction.title}
+            </Text>
+            {stickyAction.sub ? (
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontFamily: fonts.sans,
+                  color: colors.text.muted,
+                  marginBottom: 8,
+                  lineHeight: 16,
+                }}
+                numberOfLines={3}
+              >
+                {stickyAction.sub}
+              </Text>
+            ) : null}
+            {focusMode ? (
+              <Pressable
+                onPress={() => setFocusMode(false)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  marginBottom: 10,
+                  paddingVertical: 11,
+                  paddingHorizontal: 14,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: areaColor + '55',
+                  backgroundColor: areaColor + '12',
+                }}
+              >
+                <EyeOff size={17} color={areaColor} />
+                <Text style={{ fontSize: 13, fontFamily: fonts.sansSemiBold, color: areaColor }}>
+                  Sair do modo foco
+                </Text>
+              </Pressable>
+            ) : null}
+            <BrotoCtaButton
+              compact
+              title={stickyAction.buttonText.toUpperCase()}
+              onPress={handleStickyPrimary}
+              rightIcon={<ChevronRight size={16} color={colors.cta.text} />}
+            />
+          </View>
+        )}
+      </View>
+
+      <Modal
+        visible={gentleStopOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setGentleStopOpen(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            justifyContent: 'center',
+            padding: 24,
+          }}
+          onPress={() => setGentleStopOpen(false)}
+        >
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            style={{
+              borderRadius: 20,
+              padding: 20,
+              backgroundColor: colors.bg.card,
+              borderWidth: 1,
+              borderColor: colors.border.default,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontFamily: fonts.sansBold, color: colors.text.primary }}>
+              Pausa com dignidade
+            </Text>
+            <Text style={{ marginTop: 12, fontSize: 14, color: colors.text.secondary, lineHeight: 22 }}>
+              Parar também é treino. Nesta sessão: {studyJourneyCompletedCount(completed)} etapa(s). Quando voltar,
+              eu te espero aqui.
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
+              <Pressable
+                onPress={() => setGentleStopOpen(false)}
+                style={{
+                  paddingVertical: 10,
+                  paddingHorizontal: 14,
+                }}
+              >
+                <Text style={{ fontSize: 14, fontFamily: fonts.sansSemiBold, color: colors.text.secondary }}>
+                  Continuar
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setGentleStopOpen(false)
+                  handleBack()
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontFamily: fonts.sansBold,
+                    color: colors.green[400],
+                  }}
+                >
+                  Sair
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   )
 }

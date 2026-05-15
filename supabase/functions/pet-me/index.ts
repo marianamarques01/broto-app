@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
-import { areaKeyFromTopico } from '../_shared/enem-topic-area.ts'
+import { areaKeyForPracticeAnswer } from '../_shared/enem-topic-area.ts'
 import { createServiceRoleClientUnsafe, requireUser } from '../_shared/authz.ts'
 
 type Fase = 'semente' | 'muda' | 'planta' | 'flor' | 'especial'
@@ -192,7 +192,7 @@ serve(async (req) => {
 
     const { data: todayRows, error: todayErr } = await supabaseAdmin
       .from('user_question_answers')
-      .select('question_id, acertou, tempo_resposta')
+      .select('question_id, acertou, tempo_resposta, answer_area_key')
       .eq('user_id', user.id)
       .gte('created_at', start.toISOString())
 
@@ -205,6 +205,7 @@ serve(async (req) => {
       question_id: string
       acertou: boolean
       tempo_resposta: number | null
+      answer_area_key?: string | null
     }[]
     const questoesHoje = answers.length
     const acertosHoje = answers.filter((r) => r.acertou === true).length
@@ -233,8 +234,10 @@ serve(async (req) => {
 
     const studyTodayByArea: Record<string, { answered: number; correct: number }> = {}
     for (const a of answers) {
-      const topico = topicByQid.get(a.question_id) ?? null
-      const area = areaKeyFromTopico(topico)
+      const area = areaKeyForPracticeAnswer({
+        topicoSlug: topicByQid.get(a.question_id) ?? undefined,
+        clientAreaKey: a.answer_area_key,
+      })
       const cur = studyTodayByArea[area] ?? { answered: 0, correct: 0 }
       cur.answered += 1
       if (a.acertou) cur.correct += 1

@@ -35,10 +35,10 @@ export function ProgressTrendCard({
 
   const subtitle =
     period === 'week'
-      ? 'Barras = questões no período · Linha = taxa de acerto (UTC).'
+      ? 'Barras: quantidade de questões · Linha: taxa de acerto (UTC).'
       : period === 'month'
-        ? 'Barras = questões agregadas por semana · Linha = acerto no período.'
-        : 'Barras = questões por mês · Linha = acerto no período.'
+        ? 'Barras: questões por semana · Linha: acerto agregado no período.'
+        : 'Barras: questões por mês · Linha: acerto agregado no período.'
 
   const n = Math.max(buckets.length, 1)
   const gap = 6
@@ -82,7 +82,7 @@ export function ProgressTrendCard({
       <div className="broto-perf-external-head">
         <div className="broto-section-heading-row">
           <h2 id="broto-progress-trend-title" className="broto-perf-card__title">
-            Tendência e volume
+            Volume e acerto no período
           </h2>
         </div>
         <div className="broto-perf-card__filters" role="group" aria-label="Período do gráfico">
@@ -123,10 +123,10 @@ export function ProgressTrendCard({
             ) : null}
 
             {!hasAny && !error ? (
-              <div className="broto-perf-empty-state">
-                <p className="broto-muted" style={{ margin: 0, fontSize: '0.88rem' }}>
-                  Ainda não há respostas neste período. Pratique questões para ver volume e acerto
-                  juntos.
+              <div className="broto-perf-empty-state broto-perf-empty-state--progress-trend">
+                <p className="broto-progress-empty-lead">
+                  Nada registrado neste recorte ainda. Resolva algumas questões e volte para ver
+                  volume e acerto lado a lado.
                 </p>
                 {globalAccuracyPct != null && totalAnswered > 0 ? (
                   <p className="broto-perf-card__avg" style={{ margin: 0 }}>

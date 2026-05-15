@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { usePet, refreshPet } from '@/hooks/usePet'
 import { useTheme } from '@/hooks/useTheme'
 import { api } from '@/lib/api-client'
+import { resetPracticeHistoryFromServer } from '@/lib/reset-practice-history'
 import { supabase } from '@/lib/supabase'
 import { useCallback, useEffect, useId, useState } from 'react'
 import {
@@ -16,6 +17,7 @@ import {
   Mail,
   Moon,
   Pencil,
+  RotateCw,
   Sun,
 } from 'lucide-react'
 
@@ -61,6 +63,7 @@ export function Settings() {
 
   const [brotoNome, setBrotoNome] = useState('Broto')
   const [savingBroto, setSavingBroto] = useState(false)
+  const [resettingPractice, setResettingPractice] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -145,6 +148,31 @@ export function Settings() {
       setFormError(mapSupabasePetsNomeMissing(raw))
     } finally {
       setSavingBroto(false)
+    }
+  }
+
+  async function handleResetPracticeHistory() {
+    if (
+      !window.confirm(
+        'Apagar na conta todas as respostas do banco e o desempenho por tópico?\n\n' +
+          'Isto também zera contagens locais do dia nas missões e no histórico de consistência neste navegador. XP e nível do Broto na conta não mudam.',
+      )
+    )
+      return
+    setFormError(null)
+    setResettingPractice(true)
+    try {
+      await resetPracticeHistoryFromServer()
+      setLocalMsg(
+        'Histórico de prática zerado nas questões. As próximas respostas contam de novo nos gráficos.',
+      )
+      window.setTimeout(() => setLocalMsg(null), 4200)
+    } catch (e) {
+      setFormError(
+        e instanceof Error ? e.message : 'Não foi possível zerar o histórico. Tenta de novo mais tarde.',
+      )
+    } finally {
+      setResettingPractice(false)
     }
   }
 
@@ -358,9 +386,26 @@ export function Settings() {
               <h2 className="broto-settings__panel-title" id={`${idPrefix}-panel-data`}>
                 Dados e sessão
               </h2>
-              <p className="broto-settings__panel-desc">Cache local, histórico leve e saída da conta.</p>
+              <p className="broto-settings__panel-desc">
+                Zerar histórico de questões na conta (servidor), limpar cache só neste aparelho e saída da
+                sessão.
+              </p>
             </div>
             <div className="broto-settings__row-actions broto-settings__row-actions--wrap">
+              <button
+                type="button"
+                className="broto-btn-secondary broto-btn-secondary--inline"
+                onClick={() => void handleResetPracticeHistory()}
+                disabled={resettingPractice}
+                aria-disabled={resettingPractice}
+              >
+                {resettingPractice ? (
+                  <Loader2 className="broto-settings__spin" size={16} />
+                ) : (
+                  <RotateCw size={16} aria-hidden />
+                )}
+                {resettingPractice ? 'Zerando…' : 'Zerar histórico do banco de questões'}
+              </button>
               <button type="button" className="broto-btn-secondary broto-btn-secondary--inline" onClick={handleClearLocal}>
                 <Eraser size={16} aria-hidden />
                 Limpar dados locais

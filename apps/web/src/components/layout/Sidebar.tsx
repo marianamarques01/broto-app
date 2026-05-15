@@ -2,7 +2,6 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   Home,
-  BarChart3,
   CalendarCheck,
   MessageCircle,
   LogOut,
@@ -15,7 +14,6 @@ import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
 const NAV_ITEMS = [
   { path: '/', label: 'Inicio', icon: Home },
   { path: '/study', label: 'Área de Estudo', icon: GraduationCap },
-  { path: '/progress', label: 'Progresso', icon: BarChart3 },
   { path: '/routine', label: 'Rotina', icon: CalendarCheck },
   { path: '/broto', label: 'Broto AI', icon: MessageCircle },
 ]

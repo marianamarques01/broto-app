@@ -6,6 +6,17 @@ import type { DailyMissionsState } from '@broto/shared'
 
 const DEFAULT_MISSION_AREAS = ['matematica', 'linguagens', 'ciencias-humanas'] as const
 
+/** Meta mínima de questões por missão de volume (primeiras duas); também fallback na UI do banco. */
+export const DAILY_MISSION_VOLUME_QUEST_GOAL = 5
+
+/** Extrai N de títulos como "5 questões de Matemática…" para barras de progresso. */
+export function parseDailyMissionQuestionCount(title: string): number | null {
+  const m = /^(\d+)\s+questões\b/i.exec(title.trim())
+  if (!m) return null
+  const n = Number(m[1])
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
 function areaLabel(key: string) {
   return AREA_CONFIG[key]?.label ?? 'Questões'
 }
@@ -69,20 +80,20 @@ export function buildDailyMissions(
   }
 
   const m0 = {
-    title: `3 questões de ${areaLabel(missionAreas[0])}`,
+    title: `${DAILY_MISSION_VOLUME_QUEST_GOAL} questões de ${areaLabel(missionAreas[0])}`,
     subtitle: 'Área com maior oportunidade',
     xp: 30,
     areaKey: missionAreas[0],
-    done: areaAnswered(missionAreas[0]) >= 3,
+    done: areaAnswered(missionAreas[0]) >= DAILY_MISSION_VOLUME_QUEST_GOAL,
     locked: false,
   }
   const m1 = {
-    title: `2 questões de ${areaLabel(missionAreas[1])}`,
+    title: `${DAILY_MISSION_VOLUME_QUEST_GOAL} questões de ${areaLabel(missionAreas[1])}`,
     subtitle: 'Continue progredindo',
     xp: 20,
     areaKey: missionAreas[1],
-    done: areaAnswered(missionAreas[1]) >= 2,
-    locked: areaAnswered(missionAreas[0]) < 3,
+    done: areaAnswered(missionAreas[1]) >= DAILY_MISSION_VOLUME_QUEST_GOAL,
+    locked: areaAnswered(missionAreas[0]) < DAILY_MISSION_VOLUME_QUEST_GOAL,
   }
   const m2 = {
     title: 'Atingir 70% de acerto',

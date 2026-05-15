@@ -13,6 +13,7 @@ import {
   type QuestionBankRow,
 } from '@/hooks/useQuestionBank'
 import type { Question } from '@broto/shared'
+import type { QuestionBankPriorityResult } from '@broto/shared'
 import { getQuestionId } from '@broto/shared'
 import { getAreaColor } from '@/lib/area-config'
 import { useProgress } from '@/hooks/useProgress'
@@ -25,6 +26,8 @@ import { QuestionBankFocusBand } from '@/components/study/question-bank/Question
 import { TopicCarouselSection } from '@/components/study/question-bank/TopicCarouselSection'
 import { PerformanceDonutCard } from '@/components/study/question-bank/PerformanceDonutCard'
 import { WeakTopicsAside } from '@/components/study/question-bank/WeakTopicsAside'
+import { MockExamConfigurator } from '@/components/mock-exam/MockExamConfigurator'
+import { StudyPackageSimuladoSessionCard } from '@/components/study/StudyPackageSimuladoSessionCard'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -38,6 +41,40 @@ import {
 } from 'lucide-react'
 
 const PAGE_SIZE = 8
+
+const GUIDED_PRACTICE_MAX = 5
+
+function buildGuidedPracticeRowsForPrimary(
+  primary: NonNullable<QuestionBankPriorityResult['primary']>,
+  priorityResult: QuestionBankPriorityResult,
+  allInArea: QuestionBankRow[],
+  max: number,
+): QuestionBankRow[] {
+  const row = primary.targetRow
+  if (!row) return []
+  const track = priorityResult.tracks.find((t) => t.id === primary.trackId)
+  const trackRows = track?.rows ?? []
+
+  if (primary.trackId === 'mistakes') {
+    const fromTrack = trackRows.slice(0, max)
+    return fromTrack.length > 0 ? fromTrack : [row]
+  }
+
+  const sameTopic = trackRows.filter((r) => r.topicoValue === row.topicoValue)
+  const keys = new Set(sameTopic.map((r) => getQuestionId(r)))
+  const out: QuestionBankRow[] = [...sameTopic]
+  if (out.length >= max) return out.slice(0, max)
+
+  const pool = allInArea
+    .filter((r) => r.topicoValue === row.topicoValue && !keys.has(getQuestionId(r)))
+    .sort((a, b) => b.year - a.year || a.index - b.index)
+  for (const p of pool) {
+    if (out.length >= max) break
+    out.push(p)
+    keys.add(getQuestionId(p))
+  }
+  return out.length > 0 ? out : [row]
+}
 
 const AREA_HERO: Record<string, { kicker: string; blurb: string }> = {
   linguagens: {
@@ -257,12 +294,19 @@ export type QuestionBankViewProps = {
   /** ENEM area slug; required when `embedded` is true. */
   preferredArea?: string
   onBackToHub?: () => void
+  /**
+   * Quando definido (ex.: hub do banco dentro de Estudo), o CTA “Continuar” do foco abre o pacote
+   * guiado do tópico da sugestão em vez de abrir a questão em linha.
+   * `practiceRows` são questões reais do catálogo para a aba “Questões” persistirem respostas.
+   */
+  onOpenStudyPackageForRow?: (row: QuestionBankRow, practiceRows: QuestionBankRow[]) => void
 }
 
 export function QuestionBankView({
   embedded = false,
   preferredArea,
   onBackToHub,
+  onOpenStudyPackageForRow,
 }: QuestionBankViewProps) {
   const {
     areas,
@@ -421,7 +465,6 @@ export function QuestionBankView({
       setActiveQuestion(null)
       setLoadingQuestion(true)
       setActiveRow(row)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
       void fetchQuestionDetailForBank(baseUrl, row.year, row.index, row.language)
         .then((q) => {
           if (gen !== questionFetchGen.current) return
@@ -435,16 +478,72 @@ export function QuestionBankView({
     [baseUrl],
   )
 
+  const advanceBankModalQuestion = useCallback(() => {
+    if (!activeRow) return
+    const curId = getQuestionId(activeRow)
+    const idx = filtered.findIndex((r) => getQuestionId(r) === curId)
+    if (idx !== -1 && idx < filtered.length - 1) {
+      openRow(filtered[idx + 1]!)
+      return
+    }
+    clearPlayer()
+  }, [activeRow, filtered, openRow, clearPlayer])
+
+  const bankModalNextLabel = useMemo(() => {
+    if (!activeRow) return 'Próxima'
+    const curId = getQuestionId(activeRow)
+    const idx = filtered.findIndex((r) => getQuestionId(r) === curId)
+    if (idx !== -1 && idx < filtered.length - 1) return 'Próxima'
+    return 'Fechar'
+  }, [activeRow, filtered])
+
   const handleStartPrimary = useCallback(() => {
-    const row = priorityResult?.primary?.targetRow
-    if (row) openRow(row)
-  }, [priorityResult?.primary?.targetRow, openRow])
+    const primary = priorityResult?.primary
+    const row = primary?.targetRow
+    if (!row || !priorityResult) return
+    if (onOpenStudyPackageForRow && row.topicoValue) {
+      const practiceRows = buildGuidedPracticeRowsForPrimary(
+        primary,
+        priorityResult,
+        allInArea,
+        GUIDED_PRACTICE_MAX,
+      )
+      onOpenStudyPackageForRow(row, practiceRows)
+      return
+    }
+    openRow(row)
+  }, [priorityResult, onOpenStudyPackageForRow, openRow, allInArea])
 
   const hasFilterChips =
     Boolean(selectedYear) ||
     Boolean(selectedTopico) ||
     (isLinguagensArea && selectedTopico === IDIOMAS_TOPIC_ID && Boolean(selectedLanguage)) ||
     Boolean(difficulty)
+
+  const selectedTopicoCatalog = useMemo(() => {
+    if (!selectedTopico) return null
+    return topicos.find((t) => t.id === selectedTopico) ?? null
+  }, [selectedTopico, topicos])
+
+  const [simuladoModalOpen, setSimuladoModalOpen] = useState(false)
+
+  useEffect(() => {
+    if (!simuladoModalOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSimuladoModalOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [simuladoModalOpen])
+
+  useEffect(() => {
+    if (!activeRow) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') clearPlayer()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [activeRow, clearPlayer])
 
   const pageStyle = {
     '--broto-qbank-area-accent': getAreaColor(selectedArea),
@@ -519,7 +618,7 @@ export function QuestionBankView({
                     )}
                     {embedded ? (
                       <p className="broto-qbank-hero-band__desc broto-qbank-hero-band__desc--below-head">
-                        O Broto sugere por onde começar. Explora o catálogo completo só quando quiseres.
+                        O Broto sugere por onde começar. Explora o catálogo completo só quando quiser.
                       </p>
                     ) : null}
                   </div>
@@ -557,7 +656,7 @@ export function QuestionBankView({
                 {!embedded ? (
                   <p className="broto-qbank-hero-band__desc">
                     {AREA_HERO[selectedArea]?.blurb ??
-                      'Pratica com sugestões por prioridade e explora o catálogo quando quiseres.'}
+                      'Pratica com sugestões por prioridade e explora o catálogo quando quiser.'}
                   </p>
                 ) : null}
               </section>
@@ -589,6 +688,18 @@ export function QuestionBankView({
                     studyTodayByArea={pet?.studyTodayByArea}
                   />
 
+                  {embedded && selectedTopicoCatalog?.value ? (
+                    <div style={{ marginTop: 14 }}>
+                      <StudyPackageSimuladoSessionCard
+                        areaKey={selectedArea}
+                        topicoValue={selectedTopicoCatalog.value}
+                        topicoLabel={selectedTopicoCatalog.label}
+                        areaColor={getAreaColor(selectedArea)}
+                        onOpenModal={() => setSimuladoModalOpen(true)}
+                      />
+                    </div>
+                  ) : null}
+
                   {!embedded ? (
                     <Link
                       className="broto-qbank-destaque broto-qbank-destaque--link"
@@ -603,12 +714,12 @@ export function QuestionBankView({
                           id="broto-qbank-destaque-mock-title"
                           className="broto-qbank-destaque__title"
                         >
-                          Simulado ENEM
+                          Sessão ENEM
                         </h3>
                         <p className="broto-qbank-destaque__desc">
-                          Resolva várias questões em sequência, com correção e resumo ao final. Defina
-                          quantidade, anos, áreas e tópicos — ou ative o modo aleatório para treinar
-                          com sorteio do banco, no espírito da prova.
+                          Monte um bloco no <strong>estilo de um simulado</strong>: várias questões em sequência,
+                          com correção e resumo ao final. Você define quantidade, anos, áreas e tópicos — ou usa
+                          o modo aleatório — sem precisar cobrir as 90 questões da prova inteira.
                         </p>
                       </div>
                       <ChevronRight
@@ -622,33 +733,6 @@ export function QuestionBankView({
 
                   <div className="broto-qbank-layout">
                     <div className="broto-qbank-main-stack">
-                  {activeRow ? (
-                    <section className="broto-qbank-player-wrap">
-                      <div className="broto-qbank-player-head">
-                        <button
-                          type="button"
-                          className="broto-qbank-player-back"
-                          onClick={clearPlayer}
-                        >
-                          Voltar à lista
-                        </button>
-                        <span className="broto-qbank-player-id">
-                          {formatQuestionBankId(selectedArea, activeRow.year, activeRow.index)}
-                        </span>
-                      </div>
-                      {loadingQuestion || !activeQuestion ? (
-                        <div className="broto-skeleton" style={{ height: 220, borderRadius: 20 }} />
-                      ) : (
-                        <QuestionPlayer
-                          key={getQuestionId(activeQuestion)}
-                          question={activeQuestion}
-                          areaKey={selectedArea}
-                          onNext={clearPlayer}
-                        />
-                      )}
-                    </section>
-                  ) : null}
-
                   <TopicCarouselSection
                     items={topicCarouselItems}
                     loading={loadingBank}
@@ -874,6 +958,75 @@ export function QuestionBankView({
           )}
         </div>
       </div>
+
+      {activeRow ? (
+        <div
+          role="presentation"
+          className="broto-study-simulado-modal-backdrop broto-qbank-question-modal-backdrop"
+          onClick={clearPlayer}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="broto-qbank-question-modal-title"
+            className="broto-qbank-question-modal-shell"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="broto-qbank-question-modal-title" className="broto-sr-only">
+              Resolver questão {formatQuestionBankId(selectedArea, activeRow.year, activeRow.index)}
+            </h2>
+            <section className="broto-qbank-player-wrap broto-qbank-player-wrap--modal">
+              <div className="broto-qbank-player-head">
+                <button type="button" className="broto-qbank-player-back" onClick={clearPlayer}>
+                  Fechar
+                </button>
+                <span className="broto-qbank-player-id">
+                  {formatQuestionBankId(selectedArea, activeRow.year, activeRow.index)}
+                </span>
+              </div>
+              {loadingQuestion || !activeQuestion ? (
+                <div className="broto-skeleton" style={{ height: 220, borderRadius: 20 }} />
+              ) : (
+                <QuestionPlayer
+                  key={getQuestionId(activeQuestion)}
+                  question={activeQuestion}
+                  areaKey={selectedArea}
+                  onNext={advanceBankModalQuestion}
+                  onSaveExit={clearPlayer}
+                  nextCtaLabel={bankModalNextLabel}
+                />
+              )}
+            </section>
+          </div>
+        </div>
+      ) : null}
+
+      {simuladoModalOpen && embedded && selectedTopicoCatalog?.value ? (
+        <div
+          role="presentation"
+          className="broto-study-simulado-modal-backdrop"
+          onClick={() => setSimuladoModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="qbank-simulado-modal-title"
+            className="broto-study-simulado-modal-panel"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="qbank-simulado-modal-title" className="broto-sr-only">
+              Configurar sessão ENEM (estilo simulado)
+            </h2>
+            <MockExamConfigurator
+              variant="modal"
+              presetArea={selectedArea}
+              presetTopicoValue={selectedTopicoCatalog.value}
+              presetTopicoLabelHint={selectedTopicoCatalog.label}
+              onClose={() => setSimuladoModalOpen(false)}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

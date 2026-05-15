@@ -1,17 +1,44 @@
-import { useState, useRef, useCallback, useEffect, type CSSProperties } from 'react'
-import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
+import type { Question, StudyJourneyTab } from '@broto/shared'
+import {
+  getQuestionId,
+  studyJourneyCompletedCount,
+  studyJourneyNextIncompleteTab,
+  STUDY_JOURNEY_STAGES,
+  STUDY_JOURNEY_TABS,
+  brotoCelebrateLine,
+} from '@broto/shared'
+import { QuestionPlayer } from '@/components/questions/QuestionPlayer'
+import {
+  fetchQuestionDetailForBank,
+  getQuestionBankStaticBaseUrl,
+  type QuestionBankRow,
+} from '@/hooks/useQuestionBank'
+import {
+  Link,
+  Navigate,
+  useBlocker,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom'
 import { TopBar, type StudyBreadcrumbParts } from '@/components/layout/TopBar'
 import { AREA_CONFIG, getAreaColor } from '@/lib/area-config'
 import {
-  BookOpen,
   ChevronRight,
   ChevronDown,
   RotateCcw,
   CheckCircle2,
   XCircle,
   Brain,
-  HelpCircle,
-  Map,
   ArrowRight,
   ArrowLeft,
   Trophy,
@@ -20,6 +47,7 @@ import {
   ClipboardList,
   ArrowDownUp,
   Timer,
+  BookOpen,
 } from 'lucide-react'
 import {
   getMockStudyPackage,
@@ -30,14 +58,32 @@ import {
   type TopicOption,
   type MindMapNode,
 } from '@/lib/study-area-mock'
+import {
+  StudyPackageLeaveDialog,
+  GrowthTrail,
+  HumanTrailProgress,
+  StickyContextCta,
+  StudyBackLink,
+  StudyPackageJourneyGrid,
+  StudySanctuaryHeader,
+} from '@/components/study/StudyPackageJourney'
+/** Conteúdo só via pacote estático em `@broto/shared` — sem NotebookLM/runtime LM nesta rota (MVP). */
 import { AREA_ACCENT_VARS, StudyAreaCardPattern } from '@/components/study/study-area-card-pattern'
 import { QuestionBankView } from '@/components/study/QuestionBankView'
+import { StudyPackageSimuladoSessionCard } from '@/components/study/StudyPackageSimuladoSessionCard'
+import { MockExamConfigurator } from '@/components/mock-exam/MockExamConfigurator'
 import { useProgress, type ProgressData, type AreaStat } from '@/hooks/useProgress'
+import type { BlockerFunction } from 'react-router-dom'
+import {
+  clearStudyPackageSessionDraft,
+  loadStudyPackageSessionDraft,
+  saveStudyPackageSessionDraft,
+} from '@/lib/study-package-session-storage'
 
 /* ─── Types ────────────────────────────────── */
 
 type Step = 'select' | 'loading' | 'study'
-type Tab = 'summary' | 'flashcards' | 'questions' | 'mindmap'
+type Tab = StudyJourneyTab
 type HubSurface = 'menu' | 'guided' | 'bank'
 
 const RING_R = 19
@@ -50,10 +96,17 @@ function areaBlockForKey(areas: AreaStat[] | undefined, areaKey: string): AreaSt
   return areas?.find((a) => a.value === areaKey)
 }
 
+const STUDY_TOPIC_JOURNEY_TOTAL = STUDY_JOURNEY_TABS.length
+
 function topicsForAreaKey(areaKey: string, areas: AreaStat[] | undefined): TopicOption[] {
   const cat = getStudyTopicCatalog(areaKey)
   const block = areaBlockForKey(areas, areaKey)
-  return mergeTopicCatalogWithStats(cat, block?.topicos)
+  const merged = mergeTopicCatalogWithStats(cat, block?.topicos)
+  return merged.map((t) => {
+    const draft = loadStudyPackageSessionDraft(areaKey, t.value)
+    const jc = draft ? studyJourneyCompletedCount(draft.completed) : 0
+    return jc > 0 ? { ...t, journeyStagesCompleted: jc } : t
+  })
 }
 
 function landingQuickStats(progress: ProgressData | undefined) {
@@ -74,7 +127,10 @@ function landingQuickStats(progress: ProgressData | undefined) {
   }
 }
 
-function topicTier(accuracy: number | null): {
+function topicTier(
+  accuracy: number | null,
+  journeyStagesCompleted = 0,
+): {
   label: string
   tagClass: string
   ringColor: string
@@ -82,6 +138,25 @@ function topicTier(accuracy: number | null): {
   metaHint: string
 } {
   if (accuracy === null) {
+    if (journeyStagesCompleted > 0) {
+      const displayPct = Math.round((journeyStagesCompleted / STUDY_TOPIC_JOURNEY_TOTAL) * 100)
+      if (journeyStagesCompleted >= STUDY_TOPIC_JOURNEY_TOTAL) {
+        return {
+          label: 'Trilha ok',
+          tagClass: 'study-topic-card__tag--manter',
+          ringColor: 'var(--teal-400)',
+          displayPct,
+          metaHint: 'Pratique questões no banco para medir acerto',
+        }
+      }
+      return {
+        label: 'Em estudo',
+        tagClass: 'study-topic-card__tag--reforcar',
+        ringColor: 'var(--gold-400)',
+        displayPct,
+        metaHint: 'Progresso no pacote guiado (fora do banco)',
+      }
+    }
     return {
       label: 'Novo',
       tagClass: 'study-topic-card__tag--novo',
@@ -117,7 +192,15 @@ function topicTier(accuracy: number | null): {
   }
 }
 
-function RingProgress({ pct, stroke, centerLabel }: { pct: number; stroke: string; centerLabel: string }) {
+function RingProgress({
+  pct,
+  stroke,
+  centerLabel,
+}: {
+  pct: number
+  stroke: string
+  centerLabel: string
+}) {
   const off = RING_C - (pct / 100) * RING_C
   return (
     <div className="study-ring-wrap">
@@ -163,8 +246,10 @@ function StudyLandingPick({ progress }: { progress: ProgressData | undefined }) 
             de <em>estudo</em>
           </h2>
           <p className="study-welcome__sub">
-            Cada área tem <strong>trilha por tópico</strong> e <strong>banco de questões</strong>. Para
-            treinar prova completa, use o <strong>simulado ENEM</strong> no card abaixo.
+            Cada área tem <strong>trilha por tópico</strong> e <strong>banco de questões</strong>.
+            Para treinar em bloco no <strong>estilo de um simulado</strong> (cronômetro opcional,
+            quantidade à sua escolha — não é a prova inteira), use a <strong>sessão ENEM</strong> no
+            card abaixo.
           </p>
         </div>
         <div className="study-quickstats" aria-label="Resumo de desempenho">
@@ -232,28 +317,26 @@ function StudyLandingPick({ progress }: { progress: ProgressData | undefined }) 
         })}
       </div>
 
-      <div className="study-simulado-label">Modo avaliação</div>
+      <div className="study-simulado-label">Sessão (estilo simulado)</div>
       <Link
         to="/study/mock-exam"
         className="study-simulado-landing"
-        aria-label="Simulado ENEM — configurar prova com filtros e quantidade"
+        aria-label="Sessão ENEM — montar bloco tipo simulado com filtros e quantidade"
       >
         <div className="study-simulado-landing__icon">
           <Timer size={22} strokeWidth={1.8} aria-hidden />
         </div>
         <div className="study-simulado-landing__body">
-          <h3 className="study-simulado-landing__title">Simulado ENEM</h3>
+          <h3 className="study-simulado-landing__title">Sessão ENEM</h3>
           <p className="study-simulado-landing__desc">
-            Monte provas personalizadas com filtros por área, ano e quantidade — e acompanhe seu
-            desempenho como no dia da prova.
+            Monte um bloco personalizado no <strong>estilo de um simulado</strong> (filtros por
+            área, ano e quantidade; tempo limite opcional). Você não fica preso ao formato inteiro
+            da prova.
           </p>
         </div>
-        {/* <span className="study-simulado-landing__cta">
-          Configurar simulado
-          <ChevronRight size={15} strokeWidth={2.2} aria-hidden />
-        </span> */}
-                  <ChevronRight size={15} strokeWidth={2.2} aria-hidden />
-
+        <span className="study-simulado-landing__trailing-chev" aria-hidden>
+          <ChevronRight size={15} strokeWidth={2.2} />
+        </span>
       </Link>
     </div>
   )
@@ -287,9 +370,7 @@ function StudyHubMenu({
 
   const weakestInArea = sorted.find((t) => t.accuracy !== null)
   const spotlight =
-    weakestInArea != null
-      ? { topic: weakestInArea, areaLabel: cfg?.label ?? '' }
-      : null
+    weakestInArea != null ? { topic: weakestInArea, areaLabel: cfg?.label ?? '' } : null
   const suggestedValue = weakestInArea?.value
 
   return (
@@ -321,10 +402,24 @@ function StudyHubMenu({
             <Icon size={22} strokeWidth={1.8} />
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                color: 'var(--text-muted)',
+              }}
+            >
               Área selecionada
             </p>
-            <h2 style={{ margin: '2px 0 0', fontSize: '1.28rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+            <h2
+              style={{
+                margin: '2px 0 0',
+                fontSize: '1.28rem',
+                fontWeight: 700,
+                color: 'var(--text-primary)',
+              }}
+            >
               {cfg?.label ?? ''}
             </h2>
           </div>
@@ -396,9 +491,7 @@ function StudyHubMenu({
 
         <div className="study-topics">
           <div className="study-topics__header">
-            <h2 className="study-topics__title">
-              Tópicos de {cfg?.label ?? ''}
-            </h2>
+            <h2 className="study-topics__title">Tópicos de {cfg?.label ?? ''}</h2>
             <button
               type="button"
               className="study-sort-btn"
@@ -411,10 +504,17 @@ function StudyHubMenu({
 
           <div className="study-topics-grid">
             {sorted.map((topic, idx) => {
-              const tier = topicTier(topic.accuracy)
+              const jc = topic.journeyStagesCompleted ?? 0
+              const tier = topicTier(topic.accuracy, jc)
               const isSuggested = topic.value === suggestedValue && topic.accuracy !== null
-              const q =
-                topic.totalAnswered === 1 ? '1 questão' : `${topic.totalAnswered} questões`
+              const activityLine =
+                topic.totalAnswered >= 1
+                  ? `${topic.totalAnswered === 1 ? '1 questão' : `${topic.totalAnswered} questões`}${
+                      jc > 0 ? ` · Trilha ${jc}/${STUDY_TOPIC_JOURNEY_TOTAL}` : ''
+                    }`
+                  : jc > 0
+                    ? `Trilha · ${jc}/${STUDY_TOPIC_JOURNEY_TOTAL}`
+                    : '0 questões'
               const staggerMs = 450 + idx * 60
               return (
                 <button
@@ -432,18 +532,25 @@ function StudyHubMenu({
                   <RingProgress
                     pct={tier.displayPct}
                     stroke={tier.ringColor}
-                    centerLabel={topic.accuracy === null ? '—' : `${tier.displayPct}%`}
+                    centerLabel={
+                      topic.accuracy !== null || jc > 0 ? `${tier.displayPct}%` : '—'
+                    }
                   />
                   <div className="study-topic-card__body">
                     <p className="study-topic-card__name">{topic.label}</p>
                     <div className="study-topic-card__meta">
-                      <span>{q}</span>
+                      <span>{activityLine}</span>
                       <span className="study-topic-card__meta-sep" aria-hidden />
                       <span>{tier.metaHint}</span>
                     </div>
                   </div>
                   <span className={`study-topic-card__tag ${tier.tagClass}`}>{tier.label}</span>
-                  <ChevronRight size={16} strokeWidth={2} className="study-topic-card__chev" aria-hidden />
+                  <ChevronRight
+                    size={16}
+                    strokeWidth={2}
+                    className="study-topic-card__chev"
+                    aria-hidden
+                  />
                 </button>
               )
             })}
@@ -496,126 +603,18 @@ function PackageLoading({ areaKey, topicoLabel }: { areaKey: string; topicoLabel
   )
 }
 
-/* ─── Session Progress Bar ─────────────────── */
-
-function SessionProgress({
-  current,
-  tabs,
-  activeTab,
-  onTabChange,
-  areaColor,
-}: {
-  current: Record<Tab, boolean>
-  tabs: Tab[]
-  activeTab: Tab
-  onTabChange: (t: Tab) => void
-  areaColor: string
-}) {
-  const done = tabs.filter((t) => current[t]).length
-  const pct = Math.round((done / tabs.length) * 100)
-  const ICONS: Record<Tab, typeof BookOpen> = {
-    summary: BookOpen,
-    flashcards: RotateCcw,
-    questions: HelpCircle,
-    mindmap: Map,
-  }
-  const LABELS: Record<Tab, string> = {
-    summary: 'Resumo',
-    flashcards: 'Flashcards',
-    questions: 'Quiz',
-    mindmap: 'Mapa Mental',
-  }
-
-  return (
-    <div style={{ marginBottom: 24 }}>
-      {/* Progress bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <div
-          style={{
-            flex: 1,
-            height: 6,
-            borderRadius: 999,
-            background: 'rgba(255,255,255,0.28)',
-            boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              width: `${pct}%`,
-              height: '100%',
-              borderRadius: 999,
-              background: `linear-gradient(90deg, ${areaColor}, ${areaColor}cc)`,
-              transition: 'width 0.4s ease',
-              boxShadow: `0 0 12px ${areaColor}40`,
-            }}
-          />
-        </div>
-        <span
-          style={{
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            color: areaColor,
-            minWidth: 36,
-            textAlign: 'right',
-          }}
-        >
-          {pct}%
-        </span>
-      </div>
-
-      {/* Tab buttons */}
-      <div style={{ display: 'flex', gap: 6 }}>
-        {tabs.map((tab) => {
-          const Icon = ICONS[tab]
-          const active = activeTab === tab
-          const completed = current[tab]
-          return (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => onTabChange(tab)}
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 7,
-                padding: '10px 8px',
-                borderRadius: 'var(--radius-sm)',
-                border: active ? `1.5px solid ${areaColor}` : '1px solid var(--border-default)',
-                background: active ? `${areaColor}12` : 'var(--bg-card)',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                fontSize: '0.78rem',
-                fontWeight: active ? 600 : 500,
-                color: active
-                  ? areaColor
-                  : completed
-                    ? 'var(--green-400)'
-                    : 'var(--text-secondary)',
-              }}
-            >
-              {completed && !active ? <CheckCircle2 size={14} /> : <Icon size={14} />}
-              {LABELS[tab]}
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 /* ─── Summary Section ──────────────────────── */
 
 function SummarySection({
   summary,
   areaColor,
   onDone,
+  simuladoCard,
 }: {
   summary: StudyPackage['summary']
   areaColor: string
   onDone: () => void
+  simuladoCard?: ReactNode
 }) {
   return (
     <div>
@@ -731,13 +730,15 @@ function SummarySection({
         ))}
       </div>
 
+      {simuladoCard ? <div style={{ marginTop: 18 }}>{simuladoCard}</div> : null}
+
       <button
         type="button"
         onClick={onDone}
         className="broto-btn-primary"
         style={{ marginTop: 20, justifyContent: 'center' }}
       >
-        Continuar para Flashcards <ArrowRight size={18} />
+        Continuar leitura e seguir <ArrowRight size={18} />
       </button>
     </div>
   )
@@ -945,21 +946,149 @@ function FlashcardDeck({
           className="broto-btn-primary"
           style={{ marginTop: 20, justifyContent: 'center' }}
         >
-          Continuar para Quiz <ArrowRight size={18} />
+          Continuar para fixação <ArrowRight size={18} />
         </button>
       )}
     </div>
   )
 }
 
-/* ─── Practice Questions ───────────────────── */
+/* ─── Practice Questions (banco real; persiste respostas) ─── */
+
+function GuidedBankPracticeQuestions({
+  areaKey,
+  rows,
+  onDone,
+  simuladoCard,
+}: {
+  areaKey: string
+  rows: QuestionBankRow[]
+  onDone: (correct: number, total: number) => void
+  simuladoCard?: ReactNode
+}) {
+  const baseUrl = getQuestionBankStaticBaseUrl()
+  const [idx, setIdx] = useState(0)
+  const [question, setQuestion] = useState<Question | null>(null)
+  const [loadingQ, setLoadingQ] = useState(true)
+  const [stats, setStats] = useState({ correct: 0, answered: 0 })
+  const correctRef = useRef(0)
+  const fetchGen = useRef(0)
+
+  const row = rows[idx]
+
+  useEffect(() => {
+    correctRef.current = 0
+    setStats({ correct: 0, answered: 0 })
+    setIdx(0)
+  }, [rows])
+
+  useEffect(() => {
+    if (!baseUrl || !row) {
+      setQuestion(null)
+      setLoadingQ(false)
+      return
+    }
+    fetchGen.current += 1
+    const gen = fetchGen.current
+    setLoadingQ(true)
+    setQuestion(null)
+    void fetchQuestionDetailForBank(baseUrl, row.year, row.index, row.language).then((q) => {
+      if (gen !== fetchGen.current) return
+      setQuestion(q)
+      setLoadingQ(false)
+    })
+  }, [baseUrl, row])
+
+  const goNext = useCallback(() => {
+    if (idx >= rows.length - 1) {
+      onDone(correctRef.current, rows.length)
+    } else {
+      setIdx((i) => i + 1)
+    }
+  }, [idx, rows.length, onDone])
+
+  if (!baseUrl) {
+    return (
+      <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+        Não foi possível carregar o banco de questões.
+      </p>
+    )
+  }
+
+  return (
+    <div>
+      {simuladoCard ? <div style={{ marginBottom: 20 }}>{simuladoCard}</div> : null}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 16,
+        }}
+      >
+        <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+          Questão {idx + 1} de {rows.length}
+        </span>
+        <span
+          style={{
+            fontSize: '0.72rem',
+            fontWeight: 600,
+            padding: '4px 10px',
+            borderRadius: 999,
+            background: 'var(--green-glow)',
+            color: 'var(--green-400)',
+          }}
+        >
+          {stats.correct}/{stats.answered} corretas
+        </span>
+      </div>
+      {loadingQ ? (
+        <div className="broto-skeleton" style={{ height: 220, borderRadius: 20 }} />
+      ) : !question ? (
+        <div
+          style={{
+            padding: 20,
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-default)',
+            background: 'var(--bg-card)',
+          }}
+        >
+          <p style={{ margin: '0 0 12px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+            Não foi possível carregar esta questão.
+          </p>
+          <button type="button" className="broto-btn-primary" onClick={goNext}>
+            {idx >= rows.length - 1 ? 'Continuar' : 'Pular questão'}
+          </button>
+        </div>
+      ) : (
+        <QuestionPlayer
+          key={getQuestionId(question)}
+          question={question}
+          areaKey={areaKey}
+          onNext={goNext}
+          onAnswerRecorded={({ isCorrect }) => {
+            if (isCorrect) correctRef.current += 1
+            setStats((s) => ({
+              correct: s.correct + (isCorrect ? 1 : 0),
+              answered: s.answered + 1,
+            }))
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+/* ─── Practice Questions (conteúdo estático do pacote) ───── */
 
 function PracticeQuestions({
   questions,
   onDone,
+  simuladoCard,
 }: {
   questions: StudyPackage['practiceQuestions']
   onDone: (correct: number, total: number) => void
+  simuladoCard?: ReactNode
 }) {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
@@ -990,6 +1119,7 @@ function PracticeQuestions({
 
   return (
     <div>
+      {simuladoCard ? <div style={{ marginBottom: 20 }}>{simuladoCard}</div> : null}
       <div
         style={{
           display: 'flex',
@@ -1294,7 +1424,7 @@ function MindMapView({
         className="broto-btn-primary"
         style={{ marginTop: 16, justifyContent: 'center' }}
       >
-        Concluir sessao <Trophy size={18} />
+        Fechar trilha <Trophy size={18} />
       </button>
     </div>
   )
@@ -1315,6 +1445,7 @@ function SessionSummaryView({
   flashcardsCount,
   areaColor,
   onBack,
+  completed,
 }: {
   pkg: StudyPackage
   questionsCorrect: number
@@ -1322,8 +1453,16 @@ function SessionSummaryView({
   flashcardsCount: number
   areaColor: string
   onBack: () => void
+  completed: Record<Tab, boolean>
 }) {
   const xp = 50 + questionsCorrect * 10
+  const trailHuman = STUDY_JOURNEY_STAGES.filter((s) => completed[s.tab])
+    .map((s) => s.title)
+    .join(' → ')
+  const lastDoneTab = [...STUDY_JOURNEY_STAGES].reverse().find((s) => completed[s.tab])?.tab
+  const brotoClose = lastDoneTab
+    ? brotoCelebrateLine(lastDoneTab)
+    : 'Orgulho do Broto: você chegou até aqui com calma.'
   return (
     <div
       style={{
@@ -1361,8 +1500,31 @@ function SessionSummaryView({
         Sessao concluida!
       </h2>
       <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-        Voce completou o estudo de <strong style={{ color: areaColor }}>{pkg.topicoLabel}</strong>
+        Você completou a trilha de <strong style={{ color: areaColor }}>{pkg.topicoLabel}</strong>
       </p>
+      <p
+        style={{
+          margin: '14px 0 0',
+          fontSize: '0.88rem',
+          lineHeight: 1.55,
+          color: 'var(--text-secondary)',
+          maxWidth: 420,
+        }}
+      >
+        {brotoClose}
+      </p>
+      {trailHuman ? (
+        <p
+          style={{
+            margin: '12px 0 0',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            color: 'var(--text-muted)',
+          }}
+        >
+          Etapas: {trailHuman}
+        </p>
+      ) : null}
 
       {/* Stats */}
       <div
@@ -1481,6 +1643,8 @@ export function StudyArea() {
   const [step, setStep] = useState<Step>('select')
   const [activeTab, setActiveTab] = useState<Tab>('summary')
   const [pkg, setPkg] = useState<StudyPackage | null>(null)
+  /** Filas do banco quando o fluxo vem do “Foco de hoje” — questões ENEM reais com submit. */
+  const [guidedBankRows, setGuidedBankRows] = useState<QuestionBankRow[] | null>(null)
   const [completed, setCompleted] = useState<Record<Tab, boolean>>({
     summary: false,
     flashcards: false,
@@ -1489,15 +1653,27 @@ export function StudyArea() {
   })
   const [questionsResult, setQuestionsResult] = useState({ correct: 0, total: 0 })
   const [showSummary, setShowSummary] = useState(false)
+  const [simuladoModalOpen, setSimuladoModalOpen] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false)
   const mainRef = useRef<HTMLDivElement>(null)
+  const stageMainRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!simuladoModalOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSimuladoModalOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [simuladoModalOpen])
 
   useEffect(() => {
     const bank = searchParams.get('bank')
     const areaParam = searchParams.get('area')
     if (bank !== '1') return
     const keys = STUDY_AREA_CARD_KEYS
-    const area =
-      areaParam && keys.includes(areaParam) ? areaParam : keys[0] ?? null
+    const area = areaParam && keys.includes(areaParam) ? areaParam : (keys[0] ?? null)
     const tid = window.setTimeout(() => {
       if (area) {
         navigate(`/study/${area}?hub=bank`, { replace: true })
@@ -1513,9 +1689,7 @@ export function StudyArea() {
   }, [])
 
   const invalidAreaKey =
-    areaKeyParam != null &&
-    areaKeyParam !== '' &&
-    !STUDY_AREA_CARD_KEYS.includes(areaKeyParam)
+    areaKeyParam != null && areaKeyParam !== '' && !STUDY_AREA_CARD_KEYS.includes(areaKeyParam)
 
   const selectedArea =
     areaKeyParam && STUDY_AREA_CARD_KEYS.includes(areaKeyParam) ? areaKeyParam : null
@@ -1533,14 +1707,50 @@ export function StudyArea() {
   const areaColor = pkg ? getAreaColor(pkg.areaKey) : 'var(--green-500)'
   const areaLabel = pkg ? (AREA_CONFIG[pkg.areaKey]?.label ?? '') : ''
 
-  async function handleStart(areaKey: string, topico: TopicOption) {
+  const simuladoStudyCard = useMemo(() => {
+    if (!pkg) return undefined
+    return (
+      <StudyPackageSimuladoSessionCard
+        areaKey={pkg.areaKey}
+        topicoValue={pkg.topicoValue}
+        topicoLabel={pkg.topicoLabel}
+        areaColor={areaColor}
+        onOpenModal={() => setSimuladoModalOpen(true)}
+      />
+    )
+  }, [pkg, areaColor])
+
+  async function handleStart(
+    areaKey: string,
+    topico: TopicOption,
+    bankPracticeRows?: QuestionBankRow[] | null,
+  ) {
+    setSimuladoModalOpen(false)
     setLoadingTopicLabel(topico.label)
     setStep('loading')
     setActiveTab('summary')
     setCompleted({ summary: false, flashcards: false, questions: false, mindmap: false })
     setShowSummary(false)
+    setFocusMode(false)
+    setLeaveDialogOpen(false)
+    setGuidedBankRows(bankPracticeRows && bankPracticeRows.length > 0 ? bankPracticeRows : null)
 
     const data = await getMockStudyPackage(areaKey, topico.value)
+    const blank: Record<Tab, boolean> = {
+      summary: false,
+      flashcards: false,
+      questions: false,
+      mindmap: false,
+    }
+    const draft = loadStudyPackageSessionDraft(areaKey, topico.value)
+    let nextCompleted = { ...blank }
+    let nextTab: Tab = 'summary'
+    if (draft) {
+      nextCompleted = { ...blank, ...draft.completed }
+      nextTab = studyJourneyNextIncompleteTab(nextCompleted) ?? draft.activeTab
+    }
+    setCompleted(nextCompleted)
+    setActiveTab(nextTab)
     setPkg({
       ...data,
       performance: {
@@ -1555,20 +1765,126 @@ export function StudyArea() {
     setCompleted((prev) => ({ ...prev, [tab]: true }))
   }
 
-  function goToTab(tab: Tab) {
-    setActiveTab(tab)
-    scrollToTop()
-  }
+  const goToTab = useCallback(
+    (tab: Tab) => {
+      setActiveTab(tab)
+      scrollToTop()
+    },
+    [scrollToTop],
+  )
 
-  function handleBack() {
+  const handleBack = useCallback(() => {
     const key = pkg?.areaKey
+    setSimuladoModalOpen(false)
     setStep('select')
     setPkg(null)
+    setGuidedBankRows(null)
     setShowSummary(false)
+    setFocusMode(false)
+    setLeaveDialogOpen(false)
     if (key) navigate(`/study/${key}`)
-  }
+  }, [pkg?.areaKey, navigate])
 
-  const TABS: Tab[] = ['summary', 'flashcards', 'questions', 'mindmap']
+  const needsExitGuard = useMemo(
+    () =>
+      step === 'study' &&
+      pkg != null &&
+      !showSummary &&
+      studyJourneyNextIncompleteTab(completed) !== null,
+    [step, pkg, showSummary, completed],
+  )
+
+  const shouldBlockNavigation = useCallback<BlockerFunction>(
+    ({ currentLocation, nextLocation }) => {
+      if (!needsExitGuard) return false
+      if (
+        currentLocation.pathname === nextLocation.pathname &&
+        currentLocation.search === nextLocation.search &&
+        currentLocation.hash === nextLocation.hash
+      ) {
+        return false
+      }
+      return true
+    },
+    [needsExitGuard],
+  )
+
+  const blocker = useBlocker(shouldBlockNavigation)
+
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      setLeaveDialogOpen(true)
+    }
+  }, [blocker.state])
+
+  /** Persistência contínua: o hub lê este rascunho; antes só gravava ao “Salvar e sair”. */
+  useEffect(() => {
+    if (step !== 'study' || !pkg) return
+    saveStudyPackageSessionDraft(pkg.areaKey, pkg.topicoValue, { completed, activeTab })
+  }, [step, pkg, completed, activeTab])
+
+  useEffect(() => {
+    if (!needsExitGuard) return
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [needsExitGuard])
+
+  const requestStudyHubBack = useCallback(() => {
+    if (needsExitGuard) {
+      setLeaveDialogOpen(true)
+    } else {
+      handleBack()
+    }
+  }, [needsExitGuard, handleBack])
+
+  const handleLeaveDialogContinue = useCallback(() => {
+    setLeaveDialogOpen(false)
+    if (blocker.state === 'blocked') {
+      blocker.reset()
+    }
+  }, [blocker])
+
+  const handleLeaveSaveAndExit = useCallback(() => {
+    if (pkg) {
+      saveStudyPackageSessionDraft(pkg.areaKey, pkg.topicoValue, { completed, activeTab })
+    }
+    setLeaveDialogOpen(false)
+    if (blocker.state === 'blocked') {
+      blocker.proceed()
+    } else {
+      handleBack()
+    }
+  }, [pkg, completed, activeTab, blocker, handleBack])
+
+  const handleLeaveDiscardAndExit = useCallback(() => {
+    if (pkg) {
+      clearStudyPackageSessionDraft(pkg.areaKey, pkg.topicoValue)
+    }
+    setLeaveDialogOpen(false)
+    if (blocker.state === 'blocked') {
+      blocker.proceed()
+    } else {
+      handleBack()
+    }
+  }, [pkg, blocker, handleBack])
+
+  const sessionStickyCopy = useMemo(() => {
+    const label = pkg?.topicoLabel?.trim() ? pkg.topicoLabel : 'este tópico'
+    const topicTitle = pkg?.topicoLabel?.trim() || 'tópico'
+    return {
+      title: 'Sessão no estilo ENEM',
+      sub: `Monte um bloco focado em ${label} — quantidade de questões e ano à tua escolha.`,
+      buttonText: `Fazer sessão de ${topicTitle}`,
+    }
+  }, [pkg?.topicoLabel])
+
+  const handleSessionStickyPrimary = useCallback(() => {
+    setSimuladoModalOpen(true)
+  }, [])
 
   let studyBreadcrumb: StudyBreadcrumbParts | undefined
   if (step === 'loading' && selectedArea) {
@@ -1621,6 +1937,17 @@ export function StudyArea() {
             embedded
             preferredArea={selectedArea}
             onBackToHub={() => navigate(`/study/${selectedArea}`)}
+            onOpenStudyPackageForRow={(row, practiceRows) => {
+              if (!selectedArea) return
+              const topico = hubTopics.find((t) => t.value === row.topicoValue) ?? {
+                value: row.topicoValue ?? '',
+                label: row.topicoLabel?.trim() ? row.topicoLabel : (row.topicoValue ?? 'Tópico'),
+                accuracy: null,
+                totalAnswered: 0,
+              }
+              if (!topico.value) return
+              void handleStart(selectedArea, topico, practiceRows)
+            }}
           />
         ) : null}
 
@@ -1630,78 +1957,114 @@ export function StudyArea() {
 
         {step === 'study' && pkg && !showSummary && (
           <>
-            {/* Back button */}
-            <button
-              type="button"
-              onClick={handleBack}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                marginBottom: 16,
-                padding: '6px 0',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.82rem',
-                color: 'var(--text-muted)',
-              }}
+            <div
+              className={`study-package-journey${focusMode ? ' study-package-journey--focus' : ''}`}
             >
-              <ArrowLeft size={14} /> Voltar para selecao
-            </button>
+              <StudyBackLink onClick={requestStudyHubBack} />
 
-            <SessionProgress
-              current={completed}
-              tabs={TABS}
-              activeTab={activeTab}
-              onTabChange={goToTab}
-              areaColor={areaColor}
+              <StudySanctuaryHeader
+                topicLabel={pkg.topicoLabel}
+                areaLabel={areaLabel}
+                focusMode={focusMode}
+                onToggleFocus={() => setFocusMode((v) => !v)}
+                areaColor={areaColor}
+              />
+              <HumanTrailProgress
+                completedCount={studyJourneyCompletedCount(completed)}
+                areaColor={areaColor}
+              />
+
+              <StudyPackageJourneyGrid
+                focusMode={focusMode}
+                aside={
+                  <GrowthTrail
+                    activeTab={activeTab}
+                    completed={completed}
+                    onSelectTab={goToTab}
+                    areaColor={areaColor}
+                  />
+                }
+                main={
+                  <div id="study-stage-main" ref={stageMainRef} className="study-stage-main">
+                    {activeTab === 'summary' && (
+                      <SummarySection
+                        summary={pkg.summary}
+                        areaColor={areaColor}
+                        onDone={() => {
+                          markDone('summary')
+                          goToTab('flashcards')
+                        }}
+                      />
+                    )}
+
+                    {activeTab === 'flashcards' && (
+                      <FlashcardDeck
+                        cards={pkg.flashcards}
+                        areaColor={areaColor}
+                        onDone={() => {
+                          markDone('flashcards')
+                          goToTab('questions')
+                        }}
+                      />
+                    )}
+
+                    {activeTab === 'questions' &&
+                      (guidedBankRows && guidedBankRows.length > 0 ? (
+                        <GuidedBankPracticeQuestions
+                          areaKey={pkg.areaKey}
+                          rows={guidedBankRows}
+                          simuladoCard={simuladoStudyCard}
+                          onDone={(correct, total) => {
+                            markDone('questions')
+                            setQuestionsResult({ correct, total })
+                            goToTab('mindmap')
+                          }}
+                        />
+                      ) : (
+                        <PracticeQuestions
+                          questions={pkg.practiceQuestions}
+                          simuladoCard={simuladoStudyCard}
+                          onDone={(correct, total) => {
+                            markDone('questions')
+                            setQuestionsResult({ correct, total })
+                            goToTab('mindmap')
+                          }}
+                        />
+                      ))}
+
+                    {activeTab === 'mindmap' && (
+                      <MindMapView
+                        mindMap={pkg.mindMap}
+                        areaColor={areaColor}
+                        onDone={() => {
+                          markDone('mindmap')
+                          clearStudyPackageSessionDraft(pkg.areaKey, pkg.topicoValue)
+                          setShowSummary(true)
+                          scrollToTop()
+                        }}
+                      />
+                    )}
+                  </div>
+                }
+              />
+
+              <StickyContextCta
+                title={sessionStickyCopy.title}
+                sub={sessionStickyCopy.sub}
+                buttonText={sessionStickyCopy.buttonText}
+                areaColor={areaColor}
+                onClick={handleSessionStickyPrimary}
+              />
+            </div>
+
+            <StudyPackageLeaveDialog
+              open={leaveDialogOpen}
+              completedCount={studyJourneyCompletedCount(completed)}
+              stageCount={STUDY_JOURNEY_STAGES.length}
+              onContinue={handleLeaveDialogContinue}
+              onSaveAndLeave={handleLeaveSaveAndExit}
+              onDiscardAndLeave={handleLeaveDiscardAndExit}
             />
-
-            {activeTab === 'summary' && (
-              <SummarySection
-                summary={pkg.summary}
-                areaColor={areaColor}
-                onDone={() => {
-                  markDone('summary')
-                  goToTab('flashcards')
-                }}
-              />
-            )}
-
-            {activeTab === 'flashcards' && (
-              <FlashcardDeck
-                cards={pkg.flashcards}
-                areaColor={areaColor}
-                onDone={() => {
-                  markDone('flashcards')
-                  goToTab('questions')
-                }}
-              />
-            )}
-
-            {activeTab === 'questions' && (
-              <PracticeQuestions
-                questions={pkg.practiceQuestions}
-                onDone={(correct, total) => {
-                  markDone('questions')
-                  setQuestionsResult({ correct, total })
-                  goToTab('mindmap')
-                }}
-              />
-            )}
-
-            {activeTab === 'mindmap' && (
-              <MindMapView
-                mindMap={pkg.mindMap}
-                areaColor={areaColor}
-                onDone={() => {
-                  markDone('mindmap')
-                  setShowSummary(true)
-                  scrollToTop()
-                }}
-              />
-            )}
           </>
         )}
 
@@ -1713,9 +2076,37 @@ export function StudyArea() {
             flashcardsCount={pkg.flashcards.length}
             areaColor={areaColor}
             onBack={handleBack}
+            completed={completed}
           />
         )}
       </div>
+
+      {simuladoModalOpen && pkg ? (
+        <div
+          role="presentation"
+          className="broto-study-simulado-modal-backdrop"
+          onClick={() => setSimuladoModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="study-simulado-modal-title"
+            className="broto-study-simulado-modal-panel"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="study-simulado-modal-title" className="broto-sr-only">
+              Configurar sessão ENEM (estilo simulado)
+            </h2>
+            <MockExamConfigurator
+              variant="modal"
+              presetArea={pkg.areaKey}
+              presetTopicoValue={pkg.topicoValue}
+              presetTopicoLabelHint={pkg.topicoLabel}
+              onClose={() => setSimuladoModalOpen(false)}
+            />
+          </div>
+        </div>
+      ) : null}
     </>
   )
 }

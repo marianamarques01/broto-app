@@ -42,10 +42,15 @@ export function AreaPerformanceTable({ areas, loading }: AreaPerformanceTablePro
       aria-labelledby="progress-areas-title"
     >
       <div className="broto-perf-external-head">
-        <div className="broto-section-heading-row">
-          <h2 id="progress-areas-title" className="broto-perf-card__title">
-            Desempenho por área
-          </h2>
+        <div className="broto-section-heading-row broto-section-heading-row--progress-stack">
+          <div className="broto-progress-heading-stack">
+            <h2 id="progress-areas-title" className="broto-perf-card__title">
+              Desempenho por área
+            </h2>
+            <p className="broto-progress-block-lede broto-progress-block-lede--nowrap">
+              Veja onde você mais acerta e onde vale priorizar estudo — cada linha leva ao banco na área certa.
+            </p>
+          </div>
         </div>
         <label className="broto-progress-table-sort">
           <span className="broto-sr-only">Ordenar por</span>

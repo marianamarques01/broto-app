@@ -1,8 +1,16 @@
-import { View, Text, ScrollView, RefreshControl, StyleSheet } from 'react-native'
+import {
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+  StyleSheet,
+  Pressable,
+  findNodeHandle,
+} from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useMemo, useCallback, useState, useEffect } from 'react'
-import { Flame, BookOpen, Target } from 'lucide-react-native'
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react'
+import { Flame, BookOpen, Target, ClipboardList } from 'lucide-react-native'
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
 import { useProgress } from '@/hooks/useProgress'
 import { useUser } from '@/hooks/useUser'
@@ -53,12 +61,28 @@ interface Mission {
 // ─── Main screen ──────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const insets = useSafeAreaInsets()
+  const scrollRef = useRef<ScrollView>(null)
+  const scrollContentRef = useRef<View>(null)
+  const missionsAnchorRef = useRef<View>(null)
   const { pet, loading, refresh: refreshPet } = usePet()
   const { progress, refresh: refreshProgress } = useProgress()
   const { user } = useUser()
   const [refreshing, setRefreshing] = useState(false)
   const [daily, setDaily] = useState<DailyMissionsState | null>(null)
   const [dailyMissionsError, setDailyMissionsError] = useState<string | null>(null)
+
+  const scrollToMissionsHoje = useCallback(() => {
+    const contentNode = scrollContentRef.current ? findNodeHandle(scrollContentRef.current) : null
+    const anchor = missionsAnchorRef.current
+    if (contentNode == null || anchor == null) return
+    anchor.measureLayout(
+      contentNode,
+      (_x, y) => {
+        scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: true })
+      },
+      () => {},
+    )
+  }, [])
 
   const xp = pet?.xp ?? 0
   const xpInLevel = xp % 100
@@ -124,20 +148,20 @@ export default function HomeScreen() {
 
     return [
       {
-        title: `3 questões de ${areaLabel(missionAreas[0])}`,
+        title: `5 questões de ${areaLabel(missionAreas[0])}`,
         subtitle: 'Area com maior oportunidade',
         xp: 30,
         areaKey: missionAreas[0],
-        done: areaAnswered(missionAreas[0]) >= 3,
+        done: areaAnswered(missionAreas[0]) >= 5,
         locked: false,
       },
       {
-        title: `2 questões de ${areaLabel(missionAreas[1])}`,
+        title: `5 questões de ${areaLabel(missionAreas[1])}`,
         subtitle: 'Continue progredindo',
         xp: 20,
         areaKey: missionAreas[1],
-        done: areaAnswered(missionAreas[1]) >= 2,
-        locked: areaAnswered(missionAreas[0]) < 3,
+        done: areaAnswered(missionAreas[1]) >= 5,
+        locked: areaAnswered(missionAreas[0]) < 5,
       },
       {
         title: 'Atingir 70% de acerto',
@@ -258,6 +282,7 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
@@ -276,6 +301,7 @@ export default function HomeScreen() {
           paddingBottom: 40 + insets.bottom,
         }}
       >
+        <View ref={scrollContentRef} collapsable={false}>
         {/* ── Greeting ── */}
         <View style={{ width: '100%', marginBottom: 16 }}>
           <FadeInSection delay={0}>
@@ -450,7 +476,7 @@ export default function HomeScreen() {
                     style={dividerStyle}
                   />
                   <View style={{ flexDirection: 'row', gap: 8 }}>
-                    {STAT_ICONS.map(({ key, Icon, iconColor }, i) => (
+                    {STAT_ICONS.slice(0, 2).map(({ key, Icon, iconColor }, i) => (
                       <View
                         key={key}
                         style={{
@@ -485,6 +511,71 @@ export default function HomeScreen() {
                         </Text>
                       </View>
                     ))}
+                    <View style={{ flex: 1 }}>
+                      <Pressable
+                        onPress={scrollToMissionsHoje}
+                        accessibilityRole="button"
+                        accessibilityLabel="Ir para missões de hoje"
+                        style={({ pressed }) => ({
+                          marginBottom: 6,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                          paddingVertical: 7,
+                          paddingHorizontal: 8,
+                          borderRadius: radii.sm,
+                          backgroundColor: pressed
+                            ? 'rgba(16, 185, 129, 0.2)'
+                            : 'rgba(16, 185, 129, 0.12)',
+                          borderWidth: 1,
+                          borderColor: 'rgba(16, 185, 129, 0.35)',
+                        })}
+                      >
+                        <ClipboardList size={14} color={colors.green[400]} />
+                        <Text
+                          style={{
+                            fontSize: 10,
+                            fontFamily: fonts.sansBold,
+                            color: colors.green[400],
+                          }}
+                          numberOfLines={1}
+                        >
+                          Missões de hoje
+                        </Text>
+                      </Pressable>
+                      <View
+                        style={{
+                          alignItems: 'center',
+                          paddingVertical: 8,
+                          borderRadius: radii.sm,
+                          backgroundColor: 'rgba(0, 0, 0, 0.15)',
+                        }}
+                      >
+                        <View style={{ marginBottom: 4 }}>
+                          <Target size={16} color={STAT_ICONS[2].iconColor} />
+                        </View>
+                        <Text
+                          style={{
+                            fontSize: 15,
+                            fontFamily: fonts.sansMedium,
+                            color: colors.text.primary,
+                          }}
+                        >
+                          {statsValues[2].value}
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontFamily: fonts.sansMedium,
+                            color: colors.text.muted,
+                            marginTop: 2,
+                          }}
+                        >
+                          {statsValues[2].label}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
               </View>
@@ -517,7 +608,9 @@ export default function HomeScreen() {
           missionItems={missionTimeline}
           focusDia={scheduleFocus}
           progressAreas={progress?.areas}
+          missionsAnchorRef={missionsAnchorRef}
         />
+        </View>
       </ScrollView>
     </SafeAreaView>
   )

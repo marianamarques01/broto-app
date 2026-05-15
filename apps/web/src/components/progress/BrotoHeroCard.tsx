@@ -3,7 +3,7 @@ import type { PetData } from '@broto/shared'
 import { FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
 import { Gift } from 'lucide-react'
 
-const META_QUESTOES_DIA = 3
+const META_QUESTOES_DIA = 5
 const STREAK_WEEK_GOAL = 7
 
 const FASE_ORDER: PetData['fase'][] = ['semente', 'muda', 'planta', 'flor', 'especial']
@@ -187,7 +187,7 @@ export function BrotoHeroCard({
           <header className="broto-hero-card__masthead">
             <p className="broto-hero-card__eyebrow">{loadingPet ? '…' : brotoNome}</p>
             <div className="broto-hero-card__masthead-row">
-              <h2 className="broto-hero-card__phase-title">
+              <p className="broto-hero-card__phase-title">
                 {loadingPet ? '…' : FASE_LABEL[fase]}
                 <span className="broto-hero-card__level-sep" aria-hidden>
                   ·
@@ -195,7 +195,7 @@ export function BrotoHeroCard({
                 <span className="broto-hero-card__level-num">
                   nv. {loadingPet ? '…' : nivel}
                 </span>
-              </h2>
+              </p>
               <span className="broto-hero-card__mood-chip" title={emotional.moodLabel}>
                 <span className="broto-hero-card__mood-chip-emoji" aria-hidden>
                   {emotional.moodEmoji}

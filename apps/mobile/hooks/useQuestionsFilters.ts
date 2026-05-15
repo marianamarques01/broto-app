@@ -262,7 +262,7 @@ interface QuestionsFiltersActions {
 }
 
 export function useQuestionsFilters(options?: {
-  /** Quando true, não busca lista de questões ao mudar área (ex.: tela de montar simulado). */
+  /** Quando true, não busca lista de questões ao mudar área (ex.: tela de montar sessão ENEM). */
   skipQuestionFetch?: boolean
 }): QuestionsFiltersState & QuestionsFiltersActions {
   const skipQuestionFetch = options?.skipQuestionFetch ?? false
