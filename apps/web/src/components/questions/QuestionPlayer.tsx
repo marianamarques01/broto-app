@@ -3,26 +3,37 @@ import DOMPurify from 'dompurify'
 import type { Question } from '@broto/shared'
 import {
   getQuestionId,
+  parseEnemAreaKey,
   questionFieldMarkdownToHtml,
   questionFieldNeedsHtmlRendering,
 } from '@broto/shared'
 import { submitAnswer } from '@/lib/answer-question'
-import { ArrowRight, CheckCircle2, XCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, XCircle } from 'lucide-react'
 
 interface QuestionPlayerProps {
   question: Question
-  areaKey: string
+  /** Slug ENEM válido; omitir quando desconhecido (o servidor usa `question_topic_mapping`). */
+  areaKey?: string
   onNext: () => void
+  /** Volta à questão anterior (ex.: simulado). */
+  onPrevious?: () => void
+  /** `true` na primeira questão — botão Anterior desabilitado. */
+  previousDisabled?: boolean
   /** Fecha sessão/modal mantendo respostas já enviadas (ex.: voltar ao banco). */
   onSaveExit?: () => void
   /** Sobrescreve o texto do botão principal após responder (ex.: última da fila → "Fechar"). */
   nextCtaLabel?: string
+  /** Desabilita o CTA "Próxima" (ex.: última questão com respostas pendentes). */
+  nextDisabled?: boolean
   sessionId?: string
   onAnswerRecorded?: (payload: {
     questionId: string
     isCorrect: boolean
     timeSpentSec: number
+    selectedLetter: string
+    correctLetter: string | null
   }) => void
+  revealAnswerOnSelect?: boolean
 }
 
 const purifyQuestionHtml = (raw: string) =>
@@ -57,10 +68,14 @@ export function QuestionPlayer({
   question,
   areaKey,
   onNext,
+  onPrevious,
+  previousDisabled = false,
   onSaveExit,
   nextCtaLabel,
+  nextDisabled = false,
   sessionId,
   onAnswerRecorded,
+  revealAnswerOnSelect = true,
 }: QuestionPlayerProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [answered, setAnswered] = useState(false)
@@ -103,10 +118,11 @@ export function QuestionPlayer({
     const isCorrect = letter === correct
     const timeSpentSec = Math.max(0, Math.round((Date.now() - questionStartMs.current) / 1000))
     try {
+      const areaSlug = parseEnemAreaKey(areaKey)
       await submitAnswer({
         questionId: getQuestionId(question),
         isCorrect,
-        areaKey,
+        ...(areaSlug ? { areaKey: areaSlug } : {}),
         timeSpentSec,
         sessionId,
       })
@@ -114,6 +130,8 @@ export function QuestionPlayer({
         questionId: getQuestionId(question),
         isCorrect,
         timeSpentSec,
+        selectedLetter: letter,
+        correctLetter: correct,
       })
     } catch {
       // fail silently
@@ -213,7 +231,9 @@ export function QuestionPlayer({
           let textColor = 'var(--text-primary)'
           let icon = null
 
-          if (answered) {
+          const showAnswerFeedback = answered && revealAnswerOnSelect
+
+          if (showAnswerFeedback) {
             if (alt.letter === correct) {
               bg = 'rgba(16, 185, 129, 0.1)'
               borderColor = 'var(--green-500)'
@@ -225,6 +245,9 @@ export function QuestionPlayer({
               textColor = 'var(--red-400)'
               icon = <XCircle size={18} style={{ color: 'var(--red-500)', flexShrink: 0 }} />
             }
+          } else if (answered && alt.letter === selected) {
+            bg = 'var(--green-glow)'
+            borderColor = 'var(--green-500)'
           } else if (alt.letter === selected) {
             bg = 'var(--green-glow)'
             borderColor = 'var(--green-500)'
@@ -260,13 +283,13 @@ export function QuestionPlayer({
                   height: 24,
                   borderRadius: 6,
                   background:
-                    answered && alt.letter === correct
+                    showAnswerFeedback && alt.letter === correct
                       ? 'var(--green-500)'
-                      : answered && alt.letter === selected
+                      : showAnswerFeedback && alt.letter === selected
                         ? 'var(--red-500)'
                         : 'rgba(16, 185, 129, 0.1)',
                   color:
-                    answered && (alt.letter === correct || alt.letter === selected)
+                    showAnswerFeedback && (alt.letter === correct || alt.letter === selected)
                       ? '#fff'
                       : 'var(--text-secondary)',
                   display: 'flex',
@@ -284,38 +307,69 @@ export function QuestionPlayer({
         })}
       </div>
 
-      {answered && (
-        <div
-          style={{
-            marginTop: 24,
-            display: 'flex',
-            justifyContent: 'flex-end',
-            flexWrap: 'wrap',
-            gap: 10,
-          }}
-        >
-          {onSaveExit ? (
-            <button
-              type="button"
-              onClick={onSaveExit}
-              disabled={submitting}
-              className="broto-btn-secondary broto-btn-secondary--inline"
-              style={{ padding: '12px 22px', fontSize: '0.88rem' }}
+      {(answered || onPrevious != null) && (
+        <>
+          {answered && !revealAnswerOnSelect ? (
+            <p
+              style={{
+                marginTop: 24,
+                marginBottom: 0,
+                fontSize: '0.82rem',
+                color: 'var(--text-muted)',
+              }}
             >
-              Salvar
-            </button>
+              Resposta salva. Você verá a correção no resultado final.
+            </p>
           ) : null}
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={submitting}
-            className="broto-btn-primary broto-btn-primary--inline"
-            style={{ padding: '12px 22px', fontSize: '0.88rem', gap: 8 }}
+          <div
+            style={{
+              marginTop: answered && !revealAnswerOnSelect ? 12 : 24,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              flexWrap: 'wrap',
+            }}
           >
-            {nextCtaLabel ?? 'Próxima'}
-            <ArrowRight size={16} aria-hidden />
-          </button>
-        </div>
+            {onPrevious != null ? (
+              <button
+                type="button"
+                onClick={onPrevious}
+                disabled={submitting || previousDisabled}
+                className="broto-btn-secondary broto-btn-secondary--inline"
+                style={{ padding: '12px 22px', fontSize: '0.88rem', gap: 8 }}
+              >
+                <ArrowLeft size={16} aria-hidden />
+                Anterior
+              </button>
+            ) : null}
+            <div style={{ flex: 1, minWidth: 8 }} aria-hidden />
+            {answered ? (
+              <>
+                {onSaveExit ? (
+                  <button
+                    type="button"
+                    onClick={onSaveExit}
+                    disabled={submitting}
+                    className="broto-btn-secondary broto-btn-secondary--inline"
+                    style={{ padding: '12px 22px', fontSize: '0.88rem' }}
+                  >
+                    Salvar
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={submitting || nextDisabled}
+                  className="broto-btn-primary broto-btn-primary--inline"
+                  style={{ padding: '12px 22px', fontSize: '0.88rem', gap: 8 }}
+                >
+                  {nextCtaLabel ?? 'Próxima'}
+                  <ArrowRight size={16} aria-hidden />
+                </button>
+              </>
+            ) : null}
+          </div>
+        </>
       )}
     </div>
   )

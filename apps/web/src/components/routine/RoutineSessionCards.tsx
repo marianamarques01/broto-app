@@ -113,7 +113,7 @@ export function RoutineSessionCards({ sessions }: RoutineSessionCardsProps) {
 
         return (
           <li key={s.id} className={className}>
-            <Link to={`/study/${s.areaKey}?hub=bank`} className="broto-routine-sess__link">
+            <Link to={`/study/${s.areaKey}`} className="broto-routine-sess__link">
               {inner}
             </Link>
           </li>

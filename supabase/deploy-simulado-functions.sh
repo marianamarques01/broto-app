@@ -17,6 +17,9 @@ cd "$ROOT"
 FUNCS=(
   practice-session-create
   practice-session-get
+  practice-session-progress
+  practice-session-abandon
+  practice-session-delete
   practice-session-list
   practice-session-complete
   answer-question

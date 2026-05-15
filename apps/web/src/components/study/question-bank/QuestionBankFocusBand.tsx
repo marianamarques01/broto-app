@@ -1,8 +1,11 @@
-import type { QuestionBankPrimaryAction, QuestionBankTrackId } from '@broto/shared'
-import type { DailyMissionsState } from '@broto/shared'
+import type {
+  DailyMissionsState,
+  QuestionBankPrimaryAction,
+  QuestionBankTrackId,
+} from '@broto/shared'
 import type { AreaStat } from '@/hooks/useProgress'
 import { buildDailyMissions, DAILY_MISSION_VOLUME_QUEST_GOAL, parseDailyMissionQuestionCount } from '@/lib/build-daily-missions'
-import { Crosshair } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 const DEFAULT_GOAL = DAILY_MISSION_VOLUME_QUEST_GOAL
 
@@ -58,7 +61,11 @@ export function QuestionBankFocusBand({
 
   if (loading) {
     return (
-      <section className="broto-qbank-focus" aria-busy="true" aria-label="A carregar foco de hoje">
+      <section
+        className="study-spotlight broto-qbank-focus broto-qbank-focus--loading"
+        aria-busy="true"
+        aria-label="A carregar foco de hoje"
+      >
         <div className="broto-qbank-focus-skel broto-skeleton" />
       </section>
     )
@@ -66,7 +73,10 @@ export function QuestionBankFocusBand({
 
   if (!primary) {
     return (
-      <section className="broto-qbank-focus broto-qbank-focus--empty" aria-live="polite">
+      <section
+        className="study-spotlight broto-qbank-focus broto-qbank-focus--empty"
+        aria-live="polite"
+      >
         <p className="broto-qbank-focus-empty-msg">Carrega o banco para veres o foco personalizado.</p>
       </section>
     )
@@ -76,37 +86,17 @@ export function QuestionBankFocusBand({
   const pill = TRACK_PILL[primary.trackId] ?? TRACK_PILL.freeExplore
 
   return (
-    <section
-      className="broto-qbank-focus"
-      style={{ borderColor: `${areaAccent}33` }}
-      aria-label="Foco de hoje"
-    >
-      <div
-        className="broto-qbank-focus__icon broto-qbank-focus__icon--target"
-        style={{ color: areaAccent }}
-        aria-hidden
-      >
-        <Crosshair size={22} strokeWidth={1.75} />
+    <section className="study-spotlight broto-qbank-focus" aria-label="Foco de hoje">
+      <div className="broto-qbank-focus__badge-row">
+        <div className="study-spotlight__badge">✨ Foco de hoje</div>
+        <span className="study-spotlight__badge broto-qbank-focus__track-badge">{pill}</span>
       </div>
-      <div className="broto-qbank-focus__main">
-        <div className="broto-qbank-focus__topline">
-          <span className="broto-qbank-focus__eyebrow">Foco de hoje</span>
-          <span
-            className="broto-qbank-focus__pill"
-            style={{
-              color: areaAccent,
-              borderColor: `${areaAccent}40`,
-              background: `${areaAccent}12`,
-            }}
-          >
-            {pill}
-          </span>
-        </div>
-        <h3 className="broto-qbank-focus__headline" id="broto-qbank-focus-title" aria-describedby={descId}>
-          {primary.headline}
-        </h3>
-        <div className="broto-qbank-focus__progress">
-          <span className="broto-qbank-focus__progress-label">Meta do dia</span>
+      <h3 className="study-spotlight__title" id="broto-qbank-focus-title" aria-describedby={descId}>
+        {primary.headline}
+      </h3>
+      <div className="study-spotlight__body broto-qbank-focus__body">
+        <div className="broto-qbank-focus__daily-row">
+          <span className="broto-qbank-focus__daily-label">Meta do dia</span>
           <div
             className="broto-qbank-focus__bar-wrap"
             role="progressbar"
@@ -120,23 +110,21 @@ export function QuestionBankFocusBand({
           <span className="broto-qbank-focus__count" aria-hidden>
             {answered}/{goal}
           </span>
+          <button
+            type="button"
+            className="study-spotlight__cta broto-qbank-focus__cta-row"
+            onClick={onStart}
+            disabled={!primary.targetRow}
+          >
+            Continuar
+            <ArrowRight size={14} strokeWidth={2} aria-hidden />
+          </button>
         </div>
-        <p id={descId} className="broto-sr-only">
-          {primary.subline} {primary.trustLine}
-          {mission ? ` ${mission.title}` : ''}
-        </p>
       </div>
-      <div className="broto-qbank-focus__actions">
-        <button
-          type="button"
-          className="broto-qbank-focus__cta"
-          style={{ background: areaAccent }}
-          onClick={onStart}
-          disabled={!primary.targetRow}
-        >
-          Continuar
-        </button>
-      </div>
+      <p id={descId} className="broto-sr-only">
+        {primary.subline} {primary.trustLine}
+        {mission ? ` ${mission.title}` : ''}
+      </p>
     </section>
   )
 }

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { View, Text, useWindowDimensions } from 'react-native'
+import { View, Text, useWindowDimensions, Pressable } from 'react-native'
 import RenderHtml from 'react-native-render-html'
-import { CheckCircle, XCircle, ChevronRight } from 'lucide-react-native'
+import { CheckCircle, XCircle, ChevronRight, ChevronLeft } from 'lucide-react-native'
 import { OptionButton, type OptionState } from './OptionButton'
 import type { Question } from '@broto/shared'
 import {
@@ -19,6 +19,8 @@ interface QuestionPlayerProps {
   /** A questão passada é sempre a do enunciado exibido (evita fechar captura sobre estado do pai). */
   onAnswer: (question: Question, answer: string, isCorrect: boolean) => void
   onNext?: () => void
+  onPrevious?: () => void
+  previousDisabled?: boolean
 }
 
 export function QuestionPlayer({
@@ -27,6 +29,8 @@ export function QuestionPlayer({
   totalQuestions,
   onAnswer,
   onNext,
+  onPrevious,
+  previousDisabled = false,
 }: QuestionPlayerProps) {
   const { width } = useWindowDimensions()
   const [selected, setSelected] = useState<string | null>(null)
@@ -214,14 +218,36 @@ export function QuestionPlayer({
         </View>
       )}
 
-      {/* Next */}
-      {answered && onNext && (
-        <BrotoCtaButton
-          compact
-          title="Próxima questão"
-          onPress={onNext}
-          rightIcon={<ChevronRight size={18} color={colors.cta.text} />}
-        />
+      {(onPrevious != null || (answered && onNext)) && (
+        <View className="flex-row gap-2">
+          {onPrevious != null && (
+            <Pressable
+              onPress={onPrevious}
+              disabled={previousDisabled}
+              className="flex-1 flex-row items-center justify-center gap-1 rounded-2xl border-2 py-3.5 px-3"
+              style={{
+                borderColor: colors.border.default,
+                backgroundColor: colors.bg.surface,
+                opacity: previousDisabled ? 0.45 : 1,
+              }}
+            >
+              <ChevronLeft size={18} color={colors.text.secondary} />
+              <Text className="text-sm font-semibold" style={{ color: colors.text.primary }}>
+                Anterior
+              </Text>
+            </Pressable>
+          )}
+          {answered && onNext && (
+            <View style={{ flex: onPrevious != null ? 1 : undefined, alignSelf: 'stretch', flexGrow: 1 }}>
+              <BrotoCtaButton
+                compact
+                title="Próxima questão"
+                onPress={onNext}
+                rightIcon={<ChevronRight size={18} color={colors.cta.text} />}
+              />
+            </View>
+          )}
+        </View>
       )}
 
       {answered && !onNext && (

@@ -42,19 +42,19 @@ const TOPICO: Record<string, { area: string; label: string }> = {
   combinatoria: { area: 'matematica', label: 'Análise Combinatória' },
   [`${AREA_ROLLUP_PREFIX}linguagens`]: {
     area: 'linguagens',
-    label: 'Prática registada nesta área',
+    label: 'Prática registrada nesta área',
   },
   [`${AREA_ROLLUP_PREFIX}ciencias-humanas`]: {
     area: 'ciencias-humanas',
-    label: 'Prática registada nesta área',
+    label: 'Prática registrada nesta área',
   },
   [`${AREA_ROLLUP_PREFIX}ciencias-natureza`]: {
     area: 'ciencias-natureza',
-    label: 'Prática registada nesta área',
+    label: 'Prática registrada nesta área',
   },
   [`${AREA_ROLLUP_PREFIX}matematica`]: {
     area: 'matematica',
-    label: 'Prática registada nesta área',
+    label: 'Prática registrada nesta área',
   },
 }
 

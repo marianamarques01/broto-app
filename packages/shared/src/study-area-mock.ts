@@ -4,6 +4,7 @@
  * MVP: sem chamadas a NotebookLM neste fluxo — troca de fonte para API/LM fica pós-MVP mantendo o contrato.
  */
 
+import { isAreaRollupTopicValue } from './enem-area-key'
 import type { MindMapNode } from './types/content'
 import type { TopicoStat } from './types/dashboard-progress'
 
@@ -410,7 +411,11 @@ export function mergeTopicCatalogWithStats(
   catalog: Array<{ value: string; label: string }>,
   topicos: TopicoStat[] | undefined,
 ): TopicOption[] {
-  const map = new Map((topicos ?? []).map((t) => [t.value, t]))
+  const map = new Map(
+    (topicos ?? [])
+      .filter((t) => !isAreaRollupTopicValue(t.value))
+      .map((t) => [t.value, t]),
+  )
   const merged: TopicOption[] = catalog.map((t) => {
     const s = map.get(t.value)
     if (!s || s.totalAnswered < 1) {
@@ -430,6 +435,7 @@ export function mergeTopicCatalogWithStats(
   })
   const catValues = new Set(catalog.map((c) => c.value))
   for (const s of topicos ?? []) {
+    if (isAreaRollupTopicValue(s.value)) continue
     if (!catValues.has(s.value)) {
       merged.push({
         value: s.value,

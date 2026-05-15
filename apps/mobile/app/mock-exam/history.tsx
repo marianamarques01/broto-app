@@ -6,13 +6,14 @@ import {
     Pressable,
     StyleSheet,
     ActivityIndicator,
+    Alert,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Link, useRouter } from 'expo-router'
 import { formatPracticeSessionAreasLabel, type PracticeSessionSummary } from '@broto/shared'
 import { api } from '@/lib/api-client'
 import { colors, fonts } from '@/theme/tokens'
-import { ChevronLeft } from 'lucide-react-native'
+import { ChevronLeft, Trash2 } from 'lucide-react-native'
 import FireflyBackground from '@/components/FireflyBackground'
 
 type SessionListItem = {
@@ -47,6 +48,7 @@ export default function MockExamHistoryScreen() {
     const [sessions, setSessions] = useState<SessionListItem[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [busy, setBusy] = useState(false)
 
     const load = useCallback(async () => {
         setError(null)
@@ -67,6 +69,67 @@ export default function MockExamHistoryScreen() {
         void load()
     }, [load])
 
+    const promptClearAll = useCallback(() => {
+        if (sessions.length === 0 || busy) return
+        Alert.alert(
+            'Limpar histórico',
+            'Todas as sessões serão removidas. Não dá para desfazer.',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Limpar tudo',
+                    style: 'destructive',
+                    onPress: () => {
+                        void (async () => {
+                            setBusy(true)
+                            setError(null)
+                            try {
+                                await api.post('/api/practice-session/delete', { deleteAll: true })
+                                setSessions([])
+                            } catch (e) {
+                                setError(e instanceof Error ? e.message : 'Nao foi possivel limpar')
+                            } finally {
+                                setBusy(false)
+                            }
+                        })()
+                    },
+                },
+            ],
+        )
+    }, [sessions.length, busy])
+
+    const promptDeleteOne = useCallback(
+        (sessionId: string) => {
+            if (busy) return
+            Alert.alert(
+                'Excluir sessão?',
+                'O bloco sai do histórico. Sessões em andamento não poderão ser retomadas por aqui.',
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Excluir',
+                        style: 'destructive',
+                        onPress: () => {
+                            void (async () => {
+                                setBusy(true)
+                                setError(null)
+                                try {
+                                    await api.post('/api/practice-session/delete', { sessionId })
+                                    setSessions((prev) => prev.filter((x) => x.sessionId !== sessionId))
+                                } catch (e) {
+                                    setError(e instanceof Error ? e.message : 'Nao foi possivel excluir')
+                                } finally {
+                                    setBusy(false)
+                                }
+                            })()
+                        },
+                    },
+                ],
+            )
+        },
+        [busy],
+    )
+
     return (
         <SafeAreaView style={styles.screen} edges={['top']}>
             <FireflyBackground count={5} runKey={1} opacity={0.85} />
@@ -77,7 +140,18 @@ export default function MockExamHistoryScreen() {
                     </Pressable>
                 </Link>
                 <Text style={styles.title}>Sessões anteriores</Text>
-                <View style={{ width: 40 }} />
+                <Pressable
+                    style={[
+                        styles.headerClear,
+                        (loading || sessions.length === 0 || busy) && styles.headerClearDisabled,
+                    ]}
+                    disabled={loading || sessions.length === 0 || busy}
+                    onPress={promptClearAll}
+                    accessibilityRole="button"
+                    accessibilityLabel="Limpar todo o histórico de sessões"
+                >
+                    <Text style={styles.headerClearText}>Limpar</Text>
+                </Pressable>
             </View>
 
             <ScrollView contentContainerStyle={styles.scroll}>
@@ -118,16 +192,27 @@ export default function MockExamHistoryScreen() {
                                         <Text style={styles.btnText}>Continuar</Text>
                                     </Pressable>
                                 ) : null}
+                                {done ? (
+                                    <Pressable
+                                        style={styles.btnGhost}
+                                        onPress={() =>
+                                            router.push({
+                                                pathname: '/mock-exam/result',
+                                                params: { sessionId: s.sessionId },
+                                            })
+                                        }
+                                    >
+                                        <Text style={styles.btnGhostText}>Resultado</Text>
+                                    </Pressable>
+                                ) : null}
                                 <Pressable
-                                    style={styles.btnGhost}
-                                    onPress={() =>
-                                        router.push({
-                                            pathname: '/mock-exam/result',
-                                            params: { sessionId: s.sessionId },
-                                        })
-                                    }
+                                    style={styles.btnTrash}
+                                    onPress={() => promptDeleteOne(s.sessionId)}
+                                    disabled={busy}
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Excluir sessão do histórico"
                                 >
-                                    <Text style={styles.btnGhostText}>Resultado</Text>
+                                    <Trash2 size={20} color={colors.red[400]} />
                                 </Pressable>
                             </View>
                         </View>
@@ -184,4 +269,27 @@ const styles = StyleSheet.create({
         borderColor: colors.border.strong,
     },
     btnGhostText: { fontFamily: fonts.sansSemiBold, color: colors.text.secondary },
+    headerClear: {
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: colors.red[400],
+    },
+    headerClearDisabled: { opacity: 0.4 },
+    headerClearText: {
+        fontFamily: fonts.sansSemiBold,
+        fontSize: 13,
+        color: colors.red[400],
+    },
+    btnTrash: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.deep,
+    },
 })

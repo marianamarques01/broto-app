@@ -58,7 +58,7 @@ function TopicRow({
         <span className="broto-progress-topic-row__pct">{topic.accuracyPct}%</span>
       </div>
       <Link
-        to={`/study/${areaKey}?hub=bank`}
+        to={`/study/${areaKey}`}
         className="broto-progress-topic-cta"
       >
         Abrir área

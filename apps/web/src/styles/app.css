@@ -1529,10 +1529,52 @@ body::before {
 
 .broto-topbar__study-lead {
   display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+  min-width: 0;
+}
+
+.broto-topbar__study-lead-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.broto-topbar__study-lead-row {
+  display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 20px;
   min-width: 0;
+}
+
+.broto-topbar__study-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 2px 0;
+  align-self: flex-start;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.broto-topbar__study-shortcut:hover {
+  color: var(--teal-400);
+}
+
+.broto-topbar__study-shortcut:focus-visible {
+  outline: 2px solid var(--teal-400);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 .broto-topbar__breadcrumb-inline {
@@ -2001,6 +2043,10 @@ a.study-area-card {
   align-items: start;
 }
 
+.study-split--topics-only {
+  grid-template-columns: 1fr;
+}
+
 .study-side {
   display: flex;
   flex-direction: column;
@@ -2150,7 +2196,7 @@ a.study-area-card {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 10px;
+  margin-top: 16px;
   font-size: 0.7rem;
   font-weight: 500;
   color: var(--study-banco-accent);
@@ -2428,6 +2474,11 @@ a.study-area-card {
   font-size: 0.92rem;
   line-height: 1.55;
   color: var(--text-secondary);
+}
+
+.study-sanctuary-header__below-lede {
+  margin-top: 18px;
+  width: 100%;
 }
 
 .study-human-trail {
@@ -2712,7 +2763,7 @@ a.study-area-card {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  padding: max(20px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
   box-sizing: border-box;
   background: var(--bg-overlay);
   backdrop-filter: blur(10px);
@@ -11623,16 +11674,72 @@ a.broto-btn-ghost {
   margin: 0 0 28px;
 }
 
+.broto-qbank-start-with-performance--catalog-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.broto-qbank-explore--catalog-page {
+  border-radius: var(--radius-lg, 18px);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  padding: 16px 18px 20px;
+}
+
+.broto-qbank-explore--catalog-page .broto-qbank-explore-body {
+  padding-top: 0;
+  border-top: none;
+}
+
 .broto-qbank-start-with-performance__main {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
 }
 
-/* Foco, simulado e exploração ficam na mesma coluna que “Por onde começar”, à esquerda dos indicadores */
-.broto-qbank-start-with-performance__main > .broto-qbank-focus {
+/* Foco + cartão banco em linha, ou só foco — espaçamento vem do gap da coluna */
+.broto-qbank-start-with-performance__main > .broto-qbank-focus,
+.broto-qbank-start-with-performance__main > .broto-qbank-focus-banco-stack {
   margin-bottom: 0;
+}
+
+.broto-qbank-focus-banco-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.broto-qbank-focus-banco-stack .broto-qbank-focus.study-spotlight {
+  margin-bottom: 0;
+}
+
+.broto-qbank-focus-banco-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.broto-qbank-focus-banco-row__bank.study-banco,
+.broto-qbank-focus-banco-row__session.study-banco {
+  margin-top: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.broto-qbank-focus-banco-row__bank .study-banco__arrow,
+.broto-qbank-focus-banco-row__session .study-banco__arrow {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+@media (max-width: 760px) {
+  .broto-qbank-focus-banco-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .broto-qbank-start-with-performance__main > .broto-qbank-destaque {
@@ -11827,6 +11934,7 @@ button.broto-qbank-start-card:disabled .broto-qbank-start-card__dot {
   min-height: calc(0.68rem * 1.35 * 2);
   display: -webkit-box;
   -webkit-box-orient: vertical;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   overflow: hidden;
   flex: 0 0 auto;
@@ -11877,119 +11985,77 @@ button.broto-qbank-start-card:disabled .broto-qbank-start-card__dot {
   }
 }
 
-/* Faixa Foco de hoje — compacta (menos parágrafos) */
-.broto-qbank-focus {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 14px 18px;
-  align-items: center;
+/* Foco de hoje — mesmo tratamento visual que .study-spotlight (Recomendação IA) */
+.broto-qbank-focus.study-spotlight {
   margin: 0 0 28px;
-  padding: 16px 18px;
-  border-radius: var(--broto-qbank-r-lg);
-  border: 1px solid var(--broto-qbank-bd-m);
-  background: var(--broto-qbank-bg-c);
   animation: broto-qbank-slide-up 0.48s ease 0.04s both;
 }
 
-.broto-qbank-focus-skel {
-  width: 100%;
-  min-height: 100px;
-  border-radius: var(--broto-qbank-r-md);
-  margin: 0 0 24px;
+.broto-qbank-focus__badge-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.broto-qbank-focus--empty {
-  border-style: dashed;
-  margin-bottom: 24px;
+.broto-qbank-focus__badge-row .study-spotlight__badge {
+  margin-bottom: 0;
 }
 
-.broto-qbank-focus-empty-msg {
-  font-size: 0.9rem;
-  color: var(--broto-qbank-tx3);
-  margin: 0;
-  padding: 8px 0;
+.broto-qbank-focus__track-badge {
+  text-transform: none;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  font-size: 0.62rem;
 }
 
-.broto-qbank-focus__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+.broto-qbank-focus__body.study-spotlight__body {
+  margin-bottom: 0;
+}
+
+.broto-qbank-focus__daily-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--broto-qbank-bg-r);
-  border: 1px solid var(--broto-qbank-bd);
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.broto-qbank-focus__cta-row {
   flex-shrink: 0;
 }
 
-.broto-qbank-focus__main {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+@media (max-width: 520px) {
+  .broto-qbank-focus__daily-row {
+    gap: 8px;
+  }
+
+  .broto-qbank-focus__cta-row {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
 }
 
-.broto-qbank-focus__topline {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-}
-
-.broto-qbank-focus__eyebrow {
-  font-size: 0.6rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--broto-qbank-tx3);
-  margin: 0;
-}
-
-.broto-qbank-focus__pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 9px;
-  border-radius: 999px;
-  border: 1px solid;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-}
-
-.broto-qbank-focus__headline {
-  font-family: var(--broto-qbank-font-display);
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--broto-qbank-tx1);
-  margin: 0;
-  line-height: 1.28;
-  letter-spacing: -0.01em;
-}
-
-.broto-qbank-focus__progress {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.broto-qbank-focus__progress-label {
+.broto-qbank-focus__daily-label {
   font-size: 0.68rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--broto-qbank-tx3);
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
 .broto-qbank-focus__bar-wrap {
-  flex: 1;
+  flex: 1 1 72px;
   min-width: 72px;
   height: 7px;
   border-radius: 99px;
-  background: var(--broto-qbank-bg-ch);
+  background: rgba(245, 200, 66, 0.12);
   overflow: hidden;
+}
+
+[data-theme="dark"] .broto-qbank-focus__bar-wrap {
+  background: rgba(245, 200, 66, 0.08);
 }
 
 .broto-qbank-focus__bar {
@@ -12002,46 +12068,27 @@ button.broto-qbank-start-card:disabled .broto-qbank-start-card__dot {
 .broto-qbank-focus__count {
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
-  color: var(--broto-qbank-tx2);
+  color: var(--text-secondary);
   margin: 0;
   font-weight: 700;
   flex-shrink: 0;
 }
 
-.broto-qbank-focus__actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  flex-shrink: 0;
+.broto-qbank-focus-skel {
+  width: 100%;
+  min-height: 120px;
+  border-radius: var(--radius-md, 14px);
 }
 
-.broto-qbank-focus__sparkle {
-  opacity: 0.5;
+.broto-qbank-focus--empty {
+  border-style: dashed;
 }
 
-.broto-qbank-focus__cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 20px;
-  border: none;
-  border-radius: var(--broto-qbank-r-full);
-  font-family: inherit;
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: #06221a;
-  cursor: pointer;
-  transition: filter 0.15s ease, transform 0.12s ease;
-}
-
-.broto-qbank-focus__cta:hover:not(:disabled) {
-  filter: brightness(1.06);
-}
-
-.broto-qbank-focus__cta:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.broto-qbank-focus-empty-msg {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
 }
 
 /* Tópicos em carrossel */
@@ -12129,6 +12176,7 @@ button.broto-qbank-start-card:disabled .broto-qbank-start-card__dot {
   margin-bottom: 4px;
   line-height: 1.3;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -12269,21 +12317,8 @@ button.broto-qbank-start-card:disabled .broto-qbank-start-card__dot {
 .broto-qbank-donut-meta {
   font-size: 0.72rem;
   color: var(--broto-qbank-tx3);
-  margin: 0 0 10px;
+  margin: 0;
   line-height: 1.4;
-}
-
-.broto-qbank-donut-link {
-  display: block;
-  text-align: center;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--broto-qbank-t4);
-  text-decoration: none;
-}
-
-.broto-qbank-donut-link:hover {
-  text-decoration: underline;
 }
 
 .broto-qbank-weak-list {
@@ -12348,34 +12383,6 @@ button.broto-qbank-start-card:disabled .broto-qbank-start-card__dot {
   font-size: 0.72rem;
   color: var(--broto-qbank-tx3);
   font-weight: 500;
-}
-
-@media (max-width: 900px) {
-  .broto-qbank-focus {
-    grid-template-columns: auto 1fr;
-    grid-template-areas:
-      'icon main'
-      'cta cta';
-  }
-
-  .broto-qbank-focus__icon {
-    grid-area: icon;
-  }
-
-  .broto-qbank-focus__main {
-    grid-area: main;
-  }
-
-  .broto-qbank-focus__actions {
-    grid-area: cta;
-    flex-direction: row;
-    justify-content: stretch;
-    width: 100%;
-  }
-
-  .broto-qbank-focus__cta {
-    width: 100%;
-  }
 }
 
 .broto-qbank-hero {
@@ -12649,6 +12656,45 @@ button.broto-qbank-start-card:disabled .broto-qbank-start-card__dot {
 .broto-qbank-explore-body {
   padding: 0 18px 18px;
   border-top: 1px solid var(--broto-qbank-bd);
+}
+
+.broto-qbank-explore--guided-inline {
+  margin: 20px 0 0;
+  border-style: solid;
+}
+
+.broto-qbank-explore-guided-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--broto-qbank-bd);
+}
+
+.broto-qbank-explore-guided-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--broto-qbank-tx1);
+}
+
+.broto-qbank-explore-hint--block {
+  margin: 4px 0 0;
+}
+
+.broto-qbank-explore--guided-inline .broto-qbank-explore-body {
+  border-top: none;
+}
+
+.broto-qbank-explore-collapse {
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+.study-split--compact-top {
+  margin-top: 4px;
 }
 
 .broto-qbank-main-stack {
@@ -13127,6 +13173,51 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
   border: 1px solid rgba(245, 200, 66, 0.15);
 }
 
+.broto-qbank-outcome {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--broto-qbank-r-full);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border: 1px solid transparent;
+}
+
+.broto-qbank-outcome-icon {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.broto-qbank-outcome--ok {
+  color: var(--green-400);
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.broto-qbank-outcome--bad {
+  color: var(--red-400);
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.22);
+}
+
+.broto-qbank-outcome--pending {
+  color: var(--broto-qbank-tx3);
+  background: var(--broto-qbank-bg-r);
+  border-color: var(--broto-qbank-bd);
+}
+
+.broto-qbank-outcome--loading {
+  color: var(--broto-qbank-tx3);
+  background: var(--broto-qbank-bg-r);
+  border-color: var(--broto-qbank-bd);
+}
+
+.broto-qbank-outcome--loading .broto-qbank-outcome-icon {
+  animation: broto-spin 0.8s linear infinite;
+}
+
 .broto-qbank-card-id {
   font-size: 0.68rem;
   color: var(--broto-qbank-tx3);
@@ -13149,6 +13240,7 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
   color: var(--broto-qbank-tx2);
   line-height: 1.55;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -13496,6 +13588,193 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
   font-size: 0.72rem;
   color: var(--broto-qbank-tx3);
   font-weight: 500;
+}
+
+.broto-qbank-question-page {
+  --broto-qbank-area-accent: var(--green-500);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 40px;
+}
+
+.broto-qbank-question-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  overflow: hidden;
+  padding: 20px;
+  border: 1.5px solid color-mix(in srgb, var(--broto-qbank-area-accent) 40%, var(--border-subtle));
+  border-radius: 20px;
+  background: var(--bg-card);
+  transition:
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s ease;
+}
+
+.broto-qbank-question-hero__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.broto-qbank-question-hero__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+}
+
+.broto-qbank-question-hero__icon {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--broto-qbank-area-accent) 12%, transparent);
+  color: var(--broto-qbank-area-accent);
+}
+
+.broto-qbank-question-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+}
+
+.broto-qbank-question-nav-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--broto-qbank-area-accent) 40%, var(--border-subtle));
+  color: var(--text-primary);
+  background: var(--bg-deep);
+}
+
+.broto-qbank-question-nav-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.broto-qbank-question-kicker {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.broto-qbank-question-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2.8vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.broto-qbank-question-subtitle {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.broto-qbank-question-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.broto-qbank-question-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+  gap: 18px;
+  align-items: start;
+}
+
+.broto-qbank-question-player {
+  min-width: 0;
+}
+
+.broto-qbank-question-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 88px;
+}
+
+.broto-qbank-question-aside-card {
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.broto-qbank-question-aside-card strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+}
+
+.broto-qbank-question-aside-card p {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.broto-qbank-question-aside-label {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.broto-qbank-question-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.broto-qbank-question-skeleton {
+  min-height: 520px;
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 860px) {
+  .broto-qbank-question-hero,
+  .broto-qbank-question-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .broto-qbank-question-nav {
+    justify-content: flex-start;
+  }
+
+  .broto-qbank-question-aside {
+    position: static;
+  }
 }
 
 .broto-qbank-skeletons {
@@ -16995,24 +17274,17 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
   line-height: 1.45;
 }
 
-/* Mesmos gutters horizontais que .broto-home-dashboard__body + largura do conteúdo como .broto-main-inner--dashboard */
+/* Gutters horizontais alinhados a .broto-main-inner--study (rotina, progresso, área de estudo) */
 .broto-main-inner--mock-exam {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 28px 16px 56px;
+  padding: 28px 48px 56px;
   box-sizing: border-box;
 }
 
-@media (min-width: 1180px) {
+@media (max-width: 1024px) {
   .broto-main-inner--mock-exam {
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-}
-
-@media (max-width: 768px) {
-  .broto-main-inner--mock-exam {
-    padding: 20px 16px 40px;
+    padding: 20px 20px 40px;
   }
 }
 
@@ -17060,12 +17332,23 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
   }
 }
 
+.broto-mock-exam-config__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 16px;
+}
+
 .broto-mock-exam-config__nav {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 10px;
-  margin-bottom: 16px;
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .broto-mock-exam-config__nav-dot {
@@ -17096,6 +17379,80 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
 .broto-mock-exam-config__nav-link:focus-visible {
   outline: 2px solid var(--green-500);
   outline-offset: 3px;
+}
+
+.broto-mock-exam-config__quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 0;
+  flex: 0 1 auto;
+}
+
+.broto-mock-exam-config__quick-link {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 0;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--bg-card) 78%, transparent);
+  transition:
+    color 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease,
+    transform 0.16s ease;
+}
+
+.broto-mock-exam-config__quick-link:hover {
+  color: var(--text-secondary);
+  border-color: color-mix(in srgb, var(--green-400) 22%, var(--border-subtle));
+  background: var(--bg-card);
+  transform: translateY(-0.5px);
+}
+
+.broto-mock-exam-config__quick-link:focus-visible {
+  outline: 2px solid var(--green-500);
+  outline-offset: 3px;
+}
+
+.broto-mock-exam-config__quick-link-badge {
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--status-sky);
+  padding: 2px 5px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--status-sky) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-sky) 28%, transparent);
+}
+
+@media (max-width: 560px) {
+  .broto-mock-exam-config__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .broto-mock-exam-config__quick-links {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .broto-mock-exam-config__quick-link {
+    flex: 0 1 auto;
+  }
 }
 
 .broto-mock-exam-panel {
@@ -17392,6 +17749,17 @@ select.broto-mock-exam-year-select {
   border-top: none;
 }
 
+/** Linha inteira após ano + quantidade (mesmo padrão visual do limite de tempo). */
+.broto-mock-exam-switch.broto-mock-exam-switch--full-row {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 18px;
+}
+
+.broto-mock-exam-switch.broto-mock-exam-switch--full-row .broto-mock-exam-switch__subtitle {
+  max-width: none;
+}
+
 .broto-mock-exam-qty-years-row .broto-mock-exam-slider-block {
   padding-top: 0;
 }
@@ -17652,6 +18020,147 @@ input.broto-mock-exam-range:focus-visible {
   margin-top: 2px;
   color: var(--gold-400);
   opacity: 0.9;
+}
+
+.broto-mock-exam-info-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 520;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(20px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.broto-mock-exam-info-modal {
+  position: relative;
+  width: min(520px, 100%);
+  max-width: 100%;
+  margin: auto;
+  padding: 22px;
+  box-sizing: border-box;
+  border-radius: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 24px 70px -34px rgba(0, 0, 0, 0.65);
+}
+
+.broto-mock-exam-info-modal--group {
+  width: min(640px, 100%);
+}
+
+.broto-mock-exam-info-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--bg-card) 80%, transparent);
+  transition:
+    color 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.broto-mock-exam-info-modal__close:hover {
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  background: var(--bg-elevated);
+}
+
+.broto-mock-exam-info-modal__close:focus-visible {
+  outline: 2px solid var(--green-500);
+  outline-offset: 3px;
+}
+
+/* Modal de aviso (validação — área / modo aleatório) */
+.broto-mock-exam-warning-modal {
+  width: min(420px, 100%);
+  border-color: color-mix(in srgb, var(--gold-400) 38%, var(--border-subtle));
+  background:
+    linear-gradient(165deg, color-mix(in srgb, var(--gold-400) 12%, transparent), transparent 48%),
+    var(--bg-card);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 20px 56px -28px rgba(0, 0, 0, 0.55),
+    0 0 40px -20px color-mix(in srgb, var(--gold-400) 35%, transparent);
+}
+
+.broto-mock-exam-warning-modal__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-right: 36px;
+}
+
+.broto-mock-exam-warning-modal__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--gold-400) 14%, var(--bg-deep));
+  border: 1px solid color-mix(in srgb, var(--gold-400) 32%, transparent);
+  color: var(--gold-400);
+}
+
+.broto-mock-exam-warning-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.broto-mock-exam-warning-modal__body {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.broto-mock-exam-warning-modal__ok {
+  width: 100%;
+  justify-content: center;
+}
+
+.broto-mock-exam-tips-card--modal,
+.broto-mock-exam-group-teaser--modal {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.broto-mock-exam-tips-card--modal .broto-mock-exam-card-head,
+.broto-mock-exam-group-teaser--modal .broto-mock-exam-group-teaser__head {
+  padding-right: 42px;
+}
+
+@media (max-width: 560px) {
+  .broto-mock-exam-info-modal {
+    padding: 20px;
+    border-radius: 20px;
+  }
 }
 
 /* Simulado em grupo — prévia visual (sem backend) */
@@ -18716,6 +19225,7 @@ button.broto-mock-exam-area:hover {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .broto-mock-exam-status__counter {
@@ -18725,38 +19235,162 @@ button.broto-mock-exam-area:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.broto-mock-exam-status__timer {
+.broto-mock-exam-status__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.broto-mock-exam-status__timer-hover {
+  position: relative;
+}
+
+.broto-mock-exam-status__timer-hover::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 12px;
+}
+
+.broto-mock-exam-status__timer-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.broto-mock-exam-status__timers {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-}
-
-.broto-mock-exam-status__timer--countdown {
-  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--teal-400) 32%, transparent);
+  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
   color: var(--teal-400);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  cursor: default;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
-.broto-mock-exam-status__timer--warn {
+.broto-mock-exam-status__timer-chip:hover {
+  border-color: color-mix(in srgb, var(--teal-400) 55%, transparent);
+  background: color-mix(in srgb, var(--bg-elevated) 65%, transparent);
+}
+
+.broto-mock-exam-status__timer-chip:focus-visible {
+  outline: 2px solid var(--green-500);
+  outline-offset: 2px;
+}
+
+.broto-mock-exam-status__timer-hover--warn .broto-mock-exam-status__timer-chip {
+  border-color: color-mix(in srgb, var(--gold-400) 42%, transparent);
   color: var(--gold-400);
 }
 
-.broto-mock-exam-status__timer-elapsed {
-  font-size: 0.72rem;
-  font-weight: 500;
+.broto-mock-exam-status__timer-hover--warn .broto-mock-exam-status__timer-chip:hover {
+  border-color: color-mix(in srgb, var(--gold-400) 62%, transparent);
+}
+
+.broto-mock-exam-status__timer-chip-time {
+  letter-spacing: -0.02em;
+}
+
+.broto-mock-exam-status__timer-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 30;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.14s ease,
+    visibility 0.14s ease;
+}
+
+.broto-mock-exam-status__timer-hover:hover .broto-mock-exam-status__timer-popover,
+.broto-mock-exam-status__timer-hover:focus-within .broto-mock-exam-status__timer-popover {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.broto-mock-exam-status__timer-popover-title {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   color: var(--text-muted);
-  opacity: 0.88;
+}
+
+.broto-mock-exam-status__timer-popover-meta {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
+}
+
+.broto-mock-exam-status__timer-popover-warn {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gold-400);
+}
+
+.broto-mock-exam-status__timer-track {
+  position: relative;
+  overflow: hidden;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-muted) 16%, transparent);
+}
+
+.broto-mock-exam-status__timer-track--popover {
+  flex-shrink: 0;
+}
+
+.broto-mock-exam-status__timer-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal-400), var(--green-500));
+  transition: width 0.35s ease;
+}
+
+.broto-mock-exam-status__timer-fill--warn {
+  background: linear-gradient(90deg, var(--gold-400), var(--red-400));
+}
+
+@media (max-width: 560px) {
+  .broto-mock-exam-status {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .broto-mock-exam-status__left {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .broto-mock-exam-status__actions {
+    margin-left: auto;
+  }
 }
 
 .broto-mock-exam-time-limit-controls {
@@ -18858,6 +19492,491 @@ button.broto-mock-exam-area:hover {
 .broto-mock-exam-exit-link:hover {
   color: var(--red-400);
   background: rgba(224, 82, 82, 0.08);
+}
+
+/* ── Play: layout + painel lateral de progresso ─────── */
+
+.broto-mock-exam-play-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(300px, 34vw);
+  gap: 22px 28px;
+  align-items: start;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.broto-mock-exam-play-layout__main {
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .broto-mock-exam-play-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .broto-mock-exam-session-panel {
+    position: relative;
+    top: auto;
+    max-width: 520px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+.broto-mock-exam-session-panel {
+  position: sticky;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  z-index: 4;
+}
+
+.broto-mock-exam-session-panel__shell {
+  padding: 20px 18px 18px;
+  border-radius: 22px;
+  background:
+    linear-gradient(155deg, rgba(16, 185, 129, 0.1) 0%, transparent 42%),
+    linear-gradient(210deg, color-mix(in srgb, var(--teal-400) 6%, transparent), transparent 38%),
+    var(--bg-glass);
+  border: 1px solid color-mix(in srgb, var(--green-500) 26%, var(--border-subtle));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 22px 56px -34px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(16, 185, 129, 0.07);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.broto-mock-exam-session-panel__header {
+  margin-bottom: 4px;
+}
+
+.broto-mock-exam-session-panel__intro {
+  margin-bottom: 16px;
+  min-width: 0;
+}
+
+.broto-mock-exam-session-panel__title {
+  margin: 0 0 4px;
+  font-size: 1.02rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+.broto-mock-exam-session-panel__subtitle {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.broto-mock-exam-session-panel__status-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 14px 16px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--bg-deep) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 85%, var(--green-500));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+.broto-mock-exam-session-panel__current {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.broto-mock-exam-session-panel__current-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.broto-mock-exam-session-panel__current-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.broto-mock-exam-session-panel__current-of {
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.broto-mock-exam-session-panel__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.broto-mock-exam-session-panel__progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.broto-mock-exam-session-panel__progress-fraction {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  font-weight: 650;
+}
+
+.broto-mock-exam-session-panel__progress-track {
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bg-deep) 75%, var(--border-subtle));
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 90%, transparent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12) inset;
+}
+
+.broto-mock-exam-session-panel__progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--green-500) 92%, var(--teal-400)) 0%,
+    color-mix(in srgb, var(--teal-400) 85%, var(--green-500)) 100%
+  );
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--green-400) 55%, transparent);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.broto-mock-exam-session-panel__section-label {
+  margin: 18px 2px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.broto-mock-exam-session-panel__grid-wrap {
+  max-height: min(46vh, 400px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin: 0 -4px;
+  padding: 2px 4px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--green-500) 35%, transparent) transparent;
+}
+
+.broto-mock-exam-session-panel__grid-wrap::-webkit-scrollbar {
+  width: 6px;
+}
+
+.broto-mock-exam-session-panel__grid-wrap::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--green-500) 38%, transparent);
+  border-radius: 999px;
+}
+
+.broto-mock-exam-session-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 8px;
+}
+
+.broto-mock-exam-qcell {
+  aspect-ratio: 1;
+  min-height: 42px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--bg-deep) 82%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition:
+    transform 0.14s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.18s ease;
+}
+
+.broto-mock-exam-qcell:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--teal-400) 40%, var(--border-subtle));
+}
+
+.broto-mock-exam-qcell:focus-visible {
+  outline: 2px solid var(--green-500);
+  outline-offset: 2px;
+}
+
+.broto-mock-exam-qcell__num {
+  line-height: 1;
+}
+
+.broto-mock-exam-qcell--empty {
+  opacity: 0.72;
+}
+
+.broto-mock-exam-qcell--skipped {
+  border-color: color-mix(in srgb, var(--gold-400) 38%, var(--border-subtle));
+  background: color-mix(in srgb, var(--gold-400) 10%, var(--bg-deep) 88%);
+  color: color-mix(in srgb, var(--gold-400) 88%, var(--text-secondary));
+}
+
+.broto-mock-exam-qcell--correct {
+  border-color: color-mix(in srgb, var(--green-500) 42%, transparent);
+  background: color-mix(in srgb, var(--green-500) 9%, var(--bg-deep) 90%);
+  color: var(--green-400);
+}
+
+.broto-mock-exam-qcell--wrong {
+  border-color: color-mix(in srgb, var(--red-400) 38%, transparent);
+  background: color-mix(in srgb, var(--red-400) 8%, var(--bg-deep) 92%);
+  color: color-mix(in srgb, var(--red-400) 92%, var(--text-primary));
+}
+
+.broto-mock-exam-qcell--current {
+  border-color: color-mix(in srgb, var(--green-400) 72%, transparent);
+  background: color-mix(in srgb, var(--green-500) 18%, var(--bg-deep) 82%);
+  color: var(--text-primary);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--green-400) 45%, transparent),
+    0 0 20px -4px color-mix(in srgb, var(--green-500) 55%, transparent);
+  opacity: 1;
+}
+
+.broto-mock-exam-session-panel__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 92%, var(--green-500));
+}
+
+.broto-mock-exam-session-panel__stat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 8px;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--bg-deep) 68%, transparent);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+.broto-mock-exam-session-panel__stat--ok {
+  border-color: color-mix(in srgb, var(--green-500) 38%, var(--border-subtle));
+  background: color-mix(in srgb, var(--green-500) 9%, var(--bg-deep) 90%);
+}
+
+.broto-mock-exam-session-panel__stat--bad {
+  border-color: color-mix(in srgb, var(--red-400) 35%, var(--border-subtle));
+  background: color-mix(in srgb, var(--red-500) 8%, var(--bg-deep) 92%);
+}
+
+.broto-mock-exam-session-panel__stat--pending {
+  border-color: color-mix(in srgb, var(--text-muted) 28%, var(--border-subtle));
+  background: color-mix(in srgb, var(--bg-deep) 78%, transparent);
+}
+
+.broto-mock-exam-session-panel__stat-glyph {
+  flex-shrink: 0;
+}
+
+.broto-mock-exam-session-panel__stat--ok .broto-mock-exam-session-panel__stat-glyph {
+  color: var(--green-400);
+}
+
+.broto-mock-exam-session-panel__stat--bad .broto-mock-exam-session-panel__stat-glyph {
+  color: color-mix(in srgb, var(--red-400) 92%, var(--text-muted));
+}
+
+.broto-mock-exam-session-panel__stat--pending .broto-mock-exam-session-panel__stat-glyph {
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.broto-mock-exam-session-panel__stat-value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.broto-mock-exam-session-panel__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.broto-mock-exam-session-panel__btn-desistir {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 11px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--red-400) 42%, var(--border-subtle));
+  background: color-mix(in srgb, var(--red-500) 12%, transparent);
+  color: color-mix(in srgb, var(--red-300) 70%, var(--text-primary));
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.2s ease,
+    color 0.16s ease;
+}
+
+.broto-mock-exam-session-panel__btn-desistir:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--red-400) 58%, transparent);
+  background: color-mix(in srgb, var(--red-500) 18%, transparent);
+  box-shadow: 0 0 18px -6px color-mix(in srgb, var(--red-400) 55%, transparent);
+}
+
+.broto-mock-exam-session-panel__btn-desistir:focus-visible {
+  outline: 2px solid var(--red-400);
+  outline-offset: 2px;
+}
+
+.broto-mock-exam-session-panel__btn-finalizar {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 11px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--green-500) 55%, transparent);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--green-500) 88%, var(--green-600)) 0%,
+    color-mix(in srgb, var(--green-600) 85%, #0b3d2e) 100%
+  );
+  color: #f4fff8;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 10px 28px -16px color-mix(in srgb, var(--green-500) 65%, transparent);
+  transition:
+    opacity 0.2s ease,
+    transform 0.16s ease,
+    box-shadow 0.22s ease,
+    filter 0.2s ease;
+}
+
+.broto-mock-exam-session-panel__btn-finalizar:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  filter: grayscale(0.25);
+  box-shadow: none;
+  border-color: var(--border-subtle);
+  background: var(--bg-deep);
+  color: var(--text-muted);
+}
+
+.broto-mock-exam-session-panel__btn-finalizar:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 14px 34px -14px color-mix(in srgb, var(--green-400) 58%, transparent);
+}
+
+.broto-mock-exam-session-panel__btn-finalizar--ready:not(:disabled) {
+  animation: broto-mock-exam-finalize-ready 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes broto-mock-exam-finalize-ready {
+  from {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.12) inset,
+      0 10px 28px -16px color-mix(in srgb, var(--green-500) 65%, transparent);
+  }
+
+  to {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.14) inset,
+      0 10px 32px -12px color-mix(in srgb, var(--green-400) 72%, transparent),
+      0 0 24px -8px color-mix(in srgb, var(--green-500) 48%, transparent);
+  }
+}
+
+.broto-mock-exam-session-panel__btn-finalizar:focus-visible:not(:disabled) {
+  outline: 2px solid var(--green-400);
+  outline-offset: 2px;
+}
+
+.broto-mock-exam-session-exit-modal__title {
+  margin: 0 0 20px;
+  font-size: 1.02rem;
+  font-weight: 650;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+.broto-mock-exam-session-exit-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.broto-mock-exam-session-exit-modal__btn {
+  flex: 1 1 auto;
+  min-width: 100px;
+}
+
+.broto-mock-exam-session-exit-modal__btn-danger {
+  flex: 1 1 auto;
+  min-width: 120px;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 11px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--red-400) 45%, var(--border-subtle));
+  background: transparent;
+  color: var(--red-400);
+  transition:
+    background 0.15s ease,
+    box-shadow 0.18s ease,
+    border-color 0.15s ease;
+}
+
+.broto-mock-exam-session-exit-modal__btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--red-500) 12%, transparent);
+  box-shadow: 0 0 20px -8px color-mix(in srgb, var(--red-400) 45%, transparent);
+}
+
+.broto-mock-exam-session-exit-modal__btn-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.broto-mock-exam-session-exit-modal__btn-save {
+  flex: 1 1 auto;
+  min-width: 130px;
 }
 
 /* ── Result: score ring ──────────────────────────────── */
@@ -19053,6 +20172,102 @@ button.broto-mock-exam-area:hover {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
+}
+
+.broto-mock-exam-history-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.broto-mock-exam-history-toolbar__spacer {
+  flex: 1;
+  min-width: 8px;
+}
+
+.broto-mock-exam-history-clear {
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--red-400) 38%, var(--border-subtle));
+  background: color-mix(in srgb, var(--red-500) 8%, transparent);
+  color: color-mix(in srgb, var(--red-300) 72%, var(--text-primary));
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.18s ease;
+}
+
+.broto-mock-exam-history-clear:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--red-400) 55%, transparent);
+  background: color-mix(in srgb, var(--red-500) 14%, transparent);
+  box-shadow: 0 0 18px -8px color-mix(in srgb, var(--red-400) 40%, transparent);
+}
+
+.broto-mock-exam-history-clear:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.broto-mock-exam-history-clear:focus-visible {
+  outline: 2px solid var(--red-400);
+  outline-offset: 2px;
+}
+
+.broto-mock-exam-session__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.broto-mock-exam-session__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 11px;
+  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.18s ease;
+}
+
+.broto-mock-exam-session__delete:hover:not(:disabled) {
+  color: var(--red-400);
+  border-color: color-mix(in srgb, var(--red-400) 35%, var(--border-subtle));
+  background: color-mix(in srgb, var(--red-500) 10%, transparent);
+  box-shadow: 0 0 14px -6px color-mix(in srgb, var(--red-400) 45%, transparent);
+}
+
+.broto-mock-exam-session__delete:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.broto-mock-exam-session__delete:focus-visible {
+  outline: 2px solid var(--green-500);
+  outline-offset: 2px;
+}
+
+.broto-mock-exam-history-confirm__text {
+  margin: 0 0 18px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
 }
 
 .broto-mock-exam-badge {

@@ -103,6 +103,7 @@ serve(async (req) => {
       .from('question_topic_mapping')
       .select('topico_value')
       .eq('question_id', questionId)
+      .order('topico_value', { ascending: true })
       .limit(1)
 
     if (mapErr) {

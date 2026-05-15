@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 export interface PerformanceDonutCardProps {
   /** 0–100 accuracy */
   accuracyPct: number
@@ -80,9 +78,6 @@ export function PerformanceDonutCard({
       <p className="broto-qbank-donut-meta">
         ~{pendingApprox.toLocaleString('pt-BR')} questões ainda sem fazer (aprox.)
       </p>
-      <Link className="broto-qbank-donut-link" to="/#home-desempenho">
-        Ver resumo na página inicial
-      </Link>
     </div>
   )
 }

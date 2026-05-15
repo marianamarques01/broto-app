@@ -94,7 +94,7 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
                   </p>
                 ) : null}
                 <Link
-                  to="/study/linguagens?hub=bank"
+                  to="/study/linguagens"
                   className="broto-btn-secondary broto-btn-secondary--inline"
                 >
                   Praticar no banco de questões

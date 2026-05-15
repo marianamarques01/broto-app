@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { QuestionBankRow } from '@/hooks/useQuestionBank'
 import { getQuestionId } from '@broto/shared'
 import { supabase } from '@/lib/supabase'
@@ -19,7 +19,7 @@ export function useQuestionBankAnswerStatus(
   >(() => new Map())
   const [loading, setLoading] = useState(true)
 
-  const idsKey = rows.map((r) => getQuestionId(r)).sort().join('|')
+  const idsKey = useMemo(() => rows.map((r) => getQuestionId(r)).sort().join('|'), [rows])
 
   useEffect(() => {
     let cancelled = false
@@ -83,6 +83,7 @@ export function useQuestionBankAnswerStatus(
     return () => {
       cancelled = true
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- idsKey cobre o conteúdo de `rows`
   }, [idsKey, bumpVersion])
 
   return { statusByQuestionId, loading }

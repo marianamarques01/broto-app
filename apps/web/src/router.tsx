@@ -6,6 +6,8 @@ import { Signup } from '@/pages/Signup'
 import { Landing } from '@/pages/Landing'
 import { Onboarding } from '@/pages/Onboarding'
 import { Home } from '@/pages/Home'
+import { QuestionBankCatalog } from '@/pages/QuestionBankCatalog'
+import { QuestionBankQuestion } from '@/pages/QuestionBankQuestion'
 import { StudyArea } from '@/pages/StudyArea'
 import { Routine } from '@/pages/Routine'
 import { JoinClass } from '@/pages/JoinClass'
@@ -52,11 +54,13 @@ export const router = createBrowserRouter([
     ),
     children: [
       { path: '/', element: <Home /> },
-      { path: '/study/questions', element: <Navigate to="/study/linguagens?hub=bank" replace /> },
+      { path: '/study/questions', element: <Navigate to="/study/linguagens" replace /> },
       { path: '/study/mock-exam', element: <MockExamConfig /> },
       { path: '/study/mock-exam/history', element: <MockExamHistory /> },
       { path: '/study/mock-exam/play/:sessionId', element: <MockExamPlay /> },
       { path: '/study/mock-exam/result', element: <MockExamResult /> },
+      { path: '/study/:areaKey/banco/:questionId', element: <QuestionBankQuestion /> },
+      { path: '/study/:areaKey/banco', element: <QuestionBankCatalog /> },
       { path: '/study/:areaKey', element: <StudyArea /> },
       { path: '/study', element: <StudyArea /> },
       { path: '/study-area', element: <Navigate to="/study" replace /> },

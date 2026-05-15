@@ -1,6 +1,6 @@
 import { usePet } from '@/hooks/usePet'
 import { useTheme } from '@/hooks/useTheme'
-import { ChevronRight, Flame, Moon, Sparkles, Sun } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Flame, Moon, Sparkles, Sun } from 'lucide-react'
 
 export type StudyBreadcrumbParts = {
   area: string
@@ -12,10 +12,18 @@ export type TopBarProps = {
   subtitle?: string
   /** Trecho contextual ao lado do título (referência v2). */
   studyBreadcrumb?: StudyBreadcrumbParts
+  /** Atalho discreto acima do título/breadcrumb (ex.: voltar ao banco). */
+  studyShortcut?: { label: string; onClick: () => void }
   variant?: 'default' | 'study'
 }
 
-export function TopBar({ title, subtitle, studyBreadcrumb, variant = 'default' }: TopBarProps) {
+export function TopBar({
+  title,
+  subtitle,
+  studyBreadcrumb,
+  studyShortcut,
+  variant = 'default',
+}: TopBarProps) {
   const { pet } = usePet()
   const { theme, toggleTheme } = useTheme()
   const streak = pet?.streak ?? 0
@@ -26,17 +34,33 @@ export function TopBar({ title, subtitle, studyBreadcrumb, variant = 'default' }
     <header className={`broto-topbar${isStudy ? ' broto-topbar--study' : ''}`}>
       {isStudy ? (
         <div className="broto-topbar__study-lead">
-          <div className="broto-topbar__study-lead-primary">
-            <h2 className="broto-topbar__title">{title}</h2>
-            {subtitle ? <p className="broto-topbar__subtitle broto-topbar__subtitle--study">{subtitle}</p> : null}
-          </div>
-          {studyBreadcrumb ? (
-            <div className="broto-topbar__breadcrumb-inline">
-              <span className="broto-topbar__breadcrumb-area">{studyBreadcrumb.area}</span>
-              <ChevronRight size={12} className="broto-topbar__breadcrumb-chev" aria-hidden />
-              <span className="broto-topbar__breadcrumb-detail">{studyBreadcrumb.detail}</span>
+          <div className="broto-topbar__study-lead-stack">
+            {studyShortcut ? (
+              <button
+                type="button"
+                className="broto-topbar__study-shortcut"
+                onClick={studyShortcut.onClick}
+              >
+                <ArrowLeft size={14} aria-hidden />
+                {studyShortcut.label}
+              </button>
+            ) : null}
+            <div className="broto-topbar__study-lead-row">
+              <div className="broto-topbar__study-lead-primary">
+                <h2 className="broto-topbar__title">{title}</h2>
+                {subtitle ? (
+                  <p className="broto-topbar__subtitle broto-topbar__subtitle--study">{subtitle}</p>
+                ) : null}
+              </div>
+              {studyBreadcrumb ? (
+                <div className="broto-topbar__breadcrumb-inline">
+                  <span className="broto-topbar__breadcrumb-area">{studyBreadcrumb.area}</span>
+                  <ChevronRight size={12} className="broto-topbar__breadcrumb-chev" aria-hidden />
+                  <span className="broto-topbar__breadcrumb-detail">{studyBreadcrumb.detail}</span>
+                </div>
+              ) : null}
             </div>
-          ) : null}
+          </div>
         </div>
       ) : (
         <div className="broto-topbar__head">

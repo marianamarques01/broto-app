@@ -145,7 +145,7 @@ export function Progress() {
             </div>
             {!loadingProgress && !hasData ? (
               <Link
-                to="/study/linguagens?hub=bank"
+                to="/study/linguagens"
                 className="broto-btn-secondary broto-progress-page-head__cta"
               >
                 Ir ao banco

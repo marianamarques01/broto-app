@@ -19,7 +19,7 @@ import { useQuestionsFilters, LANGUAGE_OPTIONS } from '@/hooks/useQuestionsFilte
 import { QuestionPlayer } from '@/components/questions/QuestionPlayer'
 import { submitAnswer } from '@/lib/api/answer-question'
 import type { Question } from '@broto/shared'
-import { getQuestionId } from '@broto/shared'
+import { getQuestionId, parseEnemAreaKey } from '@broto/shared'
 import { AREA_CONFIG } from '@/theme/area-config'
 import { colors, fonts } from '@/theme/tokens'
 import { FadeInSection, StaggerItem } from '@/components/AnimatedEntry'
@@ -259,7 +259,12 @@ export default function EnemQuestionsScreen() {
         total: s.total + 1,
       }))
       const questionId = getQuestionId(question)
-      submitAnswer({ questionId, isCorrect, areaKey: selectedArea }).catch(() => {})
+      const areaSlug = parseEnemAreaKey(selectedArea)
+      submitAnswer({
+        questionId,
+        isCorrect,
+        ...(areaSlug ? { areaKey: areaSlug } : {}),
+      }).catch(() => {})
     },
     [selectedArea],
   )

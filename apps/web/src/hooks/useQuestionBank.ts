@@ -92,6 +92,11 @@ function difficultyOf(year: number, index: number): 'facil' | 'medio' | 'dificil
   return h === 0 ? 'facil' : h === 1 ? 'medio' : 'dificil'
 }
 
+/** Mesma heurística usada nas linhas do banco (ano + índice), para telas onde a linha não está na sequência. */
+export function estimateQuestionBankDifficulty(year: number, index: number): 'facil' | 'medio' | 'dificil' {
+  return difficultyOf(year, index)
+}
+
 function areaPrefix(area: string): string {
   if (area === 'linguagens') return 'LNG'
   if (area === 'ciencias-humanas') return 'CH'

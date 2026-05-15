@@ -5,7 +5,6 @@ import {
   useEffect,
   useMemo,
   type CSSProperties,
-  type ReactNode,
 } from 'react'
 import type { Question, StudyJourneyTab } from '@broto/shared'
 import {
@@ -13,7 +12,6 @@ import {
   studyJourneyCompletedCount,
   studyJourneyNextIncompleteTab,
   STUDY_JOURNEY_STAGES,
-  STUDY_JOURNEY_TABS,
   brotoCelebrateLine,
 } from '@broto/shared'
 import { QuestionPlayer } from '@/components/questions/QuestionPlayer'
@@ -44,10 +42,7 @@ import {
   Trophy,
   Zap,
   Loader2,
-  ClipboardList,
-  ArrowDownUp,
   Timer,
-  BookOpen,
 } from 'lucide-react'
 import {
   getMockStudyPackage,
@@ -62,7 +57,6 @@ import {
   StudyPackageLeaveDialog,
   GrowthTrail,
   HumanTrailProgress,
-  StickyContextCta,
   StudyBackLink,
   StudyPackageJourneyGrid,
   StudySanctuaryHeader,
@@ -84,19 +78,12 @@ import {
 
 type Step = 'select' | 'loading' | 'study'
 type Tab = StudyJourneyTab
-type HubSurface = 'menu' | 'guided' | 'bank'
-
-const RING_R = 19
-const RING_C = 2 * Math.PI * RING_R
-
 /** Áreas reais do ENEM — `sem_area` é só fallback de dados, não entra na grade. */
 const STUDY_AREA_CARD_KEYS = Object.keys(AREA_CONFIG).filter((k) => k !== 'sem_area')
 
 function areaBlockForKey(areas: AreaStat[] | undefined, areaKey: string): AreaStat | undefined {
   return areas?.find((a) => a.value === areaKey)
 }
-
-const STUDY_TOPIC_JOURNEY_TOTAL = STUDY_JOURNEY_TABS.length
 
 function topicsForAreaKey(areaKey: string, areas: AreaStat[] | undefined): TopicOption[] {
   const cat = getStudyTopicCatalog(areaKey)
@@ -125,107 +112,6 @@ function landingQuickStats(progress: ProgressData | undefined) {
     weightedAcc: Math.round(progress.accuracyPct),
     lowest,
   }
-}
-
-function topicTier(
-  accuracy: number | null,
-  journeyStagesCompleted = 0,
-): {
-  label: string
-  tagClass: string
-  ringColor: string
-  displayPct: number
-  metaHint: string
-} {
-  if (accuracy === null) {
-    if (journeyStagesCompleted > 0) {
-      const displayPct = Math.round((journeyStagesCompleted / STUDY_TOPIC_JOURNEY_TOTAL) * 100)
-      if (journeyStagesCompleted >= STUDY_TOPIC_JOURNEY_TOTAL) {
-        return {
-          label: 'Trilha ok',
-          tagClass: 'study-topic-card__tag--manter',
-          ringColor: 'var(--teal-400)',
-          displayPct,
-          metaHint: 'Pratique questões no banco para medir acerto',
-        }
-      }
-      return {
-        label: 'Em estudo',
-        tagClass: 'study-topic-card__tag--reforcar',
-        ringColor: 'var(--gold-400)',
-        displayPct,
-        metaHint: 'Progresso no pacote guiado (fora do banco)',
-      }
-    }
-    return {
-      label: 'Novo',
-      tagClass: 'study-topic-card__tag--novo',
-      ringColor: 'var(--text-muted)',
-      displayPct: 0,
-      metaHint: 'Sem dados ainda',
-    }
-  }
-  if (accuracy < 50) {
-    return {
-      label: 'Focar',
-      tagClass: 'study-topic-card__tag--focar',
-      ringColor: 'var(--status-coral)',
-      displayPct: accuracy,
-      metaHint: 'Prioridade alta',
-    }
-  }
-  if (accuracy < 70) {
-    return {
-      label: 'Reforçar',
-      tagClass: 'study-topic-card__tag--reforcar',
-      ringColor: 'var(--gold-400)',
-      displayPct: accuracy,
-      metaHint: 'Progresso moderado',
-    }
-  }
-  return {
-    label: 'Manter',
-    tagClass: 'study-topic-card__tag--manter',
-    ringColor: 'var(--teal-400)',
-    displayPct: accuracy,
-    metaHint: 'Bom desempenho',
-  }
-}
-
-function RingProgress({
-  pct,
-  stroke,
-  centerLabel,
-}: {
-  pct: number
-  stroke: string
-  centerLabel: string
-}) {
-  const off = RING_C - (pct / 100) * RING_C
-  return (
-    <div className="study-ring-wrap">
-      <svg className="study-ring-svg" viewBox="0 0 48 48" aria-hidden>
-        <circle className="study-ring-bg" cx={24} cy={24} r={RING_R} />
-        <circle
-          className="study-ring-fill"
-          cx={24}
-          cy={24}
-          r={RING_R}
-          stroke={stroke}
-          strokeDasharray={RING_C}
-          style={
-            {
-              '--ring-circ': RING_C,
-              '--ring-offset': off,
-            } as CSSProperties
-          }
-        />
-      </svg>
-      <div className="study-ring-label" style={{ color: stroke }}>
-        {centerLabel}
-      </div>
-    </div>
-  )
 }
 
 /* ─── Landing: só escolha de área ─────────── */
@@ -342,225 +228,6 @@ function StudyLandingPick({ progress }: { progress: ProgressData | undefined }) 
   )
 }
 
-/* ─── Menu: o que fazer na área ───────────── */
-
-function StudyHubMenu({
-  areaKey,
-  topics,
-  onChooseBank,
-  onChangeArea,
-  onStartTopic,
-}: {
-  areaKey: string
-  topics: TopicOption[]
-  onChooseBank: () => void
-  onChangeArea: () => void
-  onStartTopic: (areaKey: string, topico: TopicOption) => void
-}) {
-  const cfg = AREA_CONFIG[areaKey]
-  const Icon = cfg?.icon ?? BookOpen
-  const [sortWeakestFirst, setSortWeakestFirst] = useState(true)
-
-  const sorted = [...topics].sort((a, b) => {
-    if (a.accuracy === null && b.accuracy === null) return 0
-    if (a.accuracy === null) return 1
-    if (b.accuracy === null) return -1
-    return sortWeakestFirst ? a.accuracy - b.accuracy : b.accuracy - a.accuracy
-  })
-
-  const weakestInArea = sorted.find((t) => t.accuracy !== null)
-  const spotlight =
-    weakestInArea != null ? { topic: weakestInArea, areaLabel: cfg?.label ?? '' } : null
-  const suggestedValue = weakestInArea?.value
-
-  return (
-    <div>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 28,
-          flexWrap: 'wrap',
-          gap: 14,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 14,
-              background: `${cfg?.color}18`,
-              border: `1px solid ${cfg?.color}33`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: cfg?.color,
-            }}
-          >
-            <Icon size={22} strokeWidth={1.8} />
-          </div>
-          <div>
-            <p
-              style={{
-                margin: 0,
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
-              }}
-            >
-              Área selecionada
-            </p>
-            <h2
-              style={{
-                margin: '2px 0 0',
-                fontSize: '1.28rem',
-                fontWeight: 700,
-                color: 'var(--text-primary)',
-              }}
-            >
-              {cfg?.label ?? ''}
-            </h2>
-          </div>
-        </div>
-        <button
-          type="button"
-          className="study-sort-btn"
-          onClick={onChangeArea}
-          style={{ borderRadius: 'var(--radius-sm)' }}
-        >
-          Outras áreas
-        </button>
-      </div>
-
-      {/* ── Topics + AI spotlight embedded ── */}
-      <div className="study-split">
-        <div className="study-side">
-          <div className="study-spotlight">
-            <div className="study-spotlight__badge">✨ Recomendação IA</div>
-            <h3 className="study-spotlight__title">
-              {spotlight ? spotlight.topic.label : 'Pratique mais para ver sugestões'}
-            </h3>
-            <p className="study-spotlight__body">
-              {spotlight
-                ? `Seu ponto mais fraco em ${spotlight.areaLabel}, com ${spotlight.topic.accuracy}% de acerto e ${spotlight.topic.totalAnswered} questões. Foque aqui para subir sua nota mais rápido.`
-                : 'Assim que você praticar mais questões, indicamos o melhor próximo passo automaticamente.'}
-            </p>
-            <button
-              type="button"
-              className="study-spotlight__cta"
-              disabled={!spotlight}
-              onClick={() => {
-                if (!spotlight) return
-                void onStartTopic(areaKey, spotlight.topic)
-              }}
-            >
-              Estudar agora
-              <ArrowRight size={14} strokeWidth={2} aria-hidden />
-            </button>
-          </div>
-
-          <button
-            type="button"
-            className="study-banco"
-            onClick={onChooseBank}
-            style={
-              {
-                textAlign: 'left',
-                marginTop: 14,
-                '--study-banco-accent': cfg?.color ?? '#2dd4a8',
-              } as CSSProperties
-            }
-          >
-            <div className="study-banco__head">
-              <div className="study-banco__icon">
-                <ClipboardList size={16} strokeWidth={1.8} aria-hidden />
-              </div>
-              <h4 className="study-banco__title">Banco de questões</h4>
-            </div>
-            <p className="study-banco__desc">
-              Pratique com filtros por ano, tópico e dificuldade — fora do pacote guiado.
-            </p>
-            <div className="study-banco__arrow">
-              Abrir banco
-              <ChevronRight size={14} strokeWidth={2} aria-hidden />
-            </div>
-          </button>
-        </div>
-
-        <div className="study-topics">
-          <div className="study-topics__header">
-            <h2 className="study-topics__title">Tópicos de {cfg?.label ?? ''}</h2>
-            <button
-              type="button"
-              className="study-sort-btn"
-              onClick={() => setSortWeakestFirst((v) => !v)}
-            >
-              <ArrowDownUp size={12} strokeWidth={2} aria-hidden />
-              {sortWeakestFirst ? 'Menor acerto' : 'Maior acerto'}
-            </button>
-          </div>
-
-          <div className="study-topics-grid">
-            {sorted.map((topic, idx) => {
-              const jc = topic.journeyStagesCompleted ?? 0
-              const tier = topicTier(topic.accuracy, jc)
-              const isSuggested = topic.value === suggestedValue && topic.accuracy !== null
-              const activityLine =
-                topic.totalAnswered >= 1
-                  ? `${topic.totalAnswered === 1 ? '1 questão' : `${topic.totalAnswered} questões`}${
-                      jc > 0 ? ` · Trilha ${jc}/${STUDY_TOPIC_JOURNEY_TOTAL}` : ''
-                    }`
-                  : jc > 0
-                    ? `Trilha · ${jc}/${STUDY_TOPIC_JOURNEY_TOTAL}`
-                    : '0 questões'
-              const staggerMs = 450 + idx * 60
-              return (
-                <button
-                  key={topic.value}
-                  type="button"
-                  className={`study-topic-card${isSuggested ? ' study-topic-card--suggested' : ''}`}
-                  style={
-                    {
-                      animation: 'study-slide-up 0.4s ease-out both',
-                      animationDelay: `${staggerMs}ms`,
-                    } as CSSProperties
-                  }
-                  onClick={() => onStartTopic(areaKey, topic)}
-                >
-                  <RingProgress
-                    pct={tier.displayPct}
-                    stroke={tier.ringColor}
-                    centerLabel={
-                      topic.accuracy !== null || jc > 0 ? `${tier.displayPct}%` : '—'
-                    }
-                  />
-                  <div className="study-topic-card__body">
-                    <p className="study-topic-card__name">{topic.label}</p>
-                    <div className="study-topic-card__meta">
-                      <span>{activityLine}</span>
-                      <span className="study-topic-card__meta-sep" aria-hidden />
-                      <span>{tier.metaHint}</span>
-                    </div>
-                  </div>
-                  <span className={`study-topic-card__tag ${tier.tagClass}`}>{tier.label}</span>
-                  <ChevronRight
-                    size={16}
-                    strokeWidth={2}
-                    className="study-topic-card__chev"
-                    aria-hidden
-                  />
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 /* ─── Loading State ────────────────────────── */
 
 function PackageLoading({ areaKey, topicoLabel }: { areaKey: string; topicoLabel: string }) {
@@ -609,12 +276,10 @@ function SummarySection({
   summary,
   areaColor,
   onDone,
-  simuladoCard,
 }: {
   summary: StudyPackage['summary']
   areaColor: string
   onDone: () => void
-  simuladoCard?: ReactNode
 }) {
   return (
     <div>
@@ -729,8 +394,6 @@ function SummarySection({
           </div>
         ))}
       </div>
-
-      {simuladoCard ? <div style={{ marginTop: 18 }}>{simuladoCard}</div> : null}
 
       <button
         type="button"
@@ -959,12 +622,10 @@ function GuidedBankPracticeQuestions({
   areaKey,
   rows,
   onDone,
-  simuladoCard,
 }: {
   areaKey: string
   rows: QuestionBankRow[]
   onDone: (correct: number, total: number) => void
-  simuladoCard?: ReactNode
 }) {
   const baseUrl = getQuestionBankStaticBaseUrl()
   const [idx, setIdx] = useState(0)
@@ -1017,7 +678,6 @@ function GuidedBankPracticeQuestions({
 
   return (
     <div>
-      {simuladoCard ? <div style={{ marginBottom: 20 }}>{simuladoCard}</div> : null}
       <div
         style={{
           display: 'flex',
@@ -1084,11 +744,9 @@ function GuidedBankPracticeQuestions({
 function PracticeQuestions({
   questions,
   onDone,
-  simuladoCard,
 }: {
   questions: StudyPackage['practiceQuestions']
   onDone: (correct: number, total: number) => void
-  simuladoCard?: ReactNode
 }) {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
@@ -1119,7 +777,6 @@ function PracticeQuestions({
 
   return (
     <div>
-      {simuladoCard ? <div style={{ marginBottom: 20 }}>{simuladoCard}</div> : null}
       <div
         style={{
           display: 'flex',
@@ -1676,7 +1333,7 @@ export function StudyArea() {
     const area = areaParam && keys.includes(areaParam) ? areaParam : (keys[0] ?? null)
     const tid = window.setTimeout(() => {
       if (area) {
-        navigate(`/study/${area}?hub=bank`, { replace: true })
+        navigate(`/study/${area}`, { replace: true })
       } else {
         setSearchParams({}, { replace: true })
       }
@@ -1695,14 +1352,6 @@ export function StudyArea() {
     areaKeyParam && STUDY_AREA_CARD_KEYS.includes(areaKeyParam) ? areaKeyParam : null
 
   const hubTopics = selectedArea ? topicsForAreaKey(selectedArea, progress?.areas) : []
-
-  const hubSurface: HubSurface | null = !selectedArea
-    ? null
-    : searchParams.get('hub') === 'guided'
-      ? 'guided'
-      : searchParams.get('hub') === 'bank'
-        ? 'bank'
-        : 'menu'
 
   const areaColor = pkg ? getAreaColor(pkg.areaKey) : 'var(--green-500)'
   const areaLabel = pkg ? (AREA_CONFIG[pkg.areaKey]?.label ?? '') : ''
@@ -1872,35 +1521,16 @@ export function StudyArea() {
     }
   }, [pkg, blocker, handleBack])
 
-  const sessionStickyCopy = useMemo(() => {
-    const label = pkg?.topicoLabel?.trim() ? pkg.topicoLabel : 'este tópico'
-    const topicTitle = pkg?.topicoLabel?.trim() || 'tópico'
-    return {
-      title: 'Sessão no estilo ENEM',
-      sub: `Monte um bloco focado em ${label} — quantidade de questões e ano à tua escolha.`,
-      buttonText: `Fazer sessão de ${topicTitle}`,
-    }
-  }, [pkg?.topicoLabel])
-
-  const handleSessionStickyPrimary = useCallback(() => {
-    setSimuladoModalOpen(true)
-  }, [])
-
   let studyBreadcrumb: StudyBreadcrumbParts | undefined
   if (step === 'loading' && selectedArea) {
     studyBreadcrumb = {
       area: AREA_CONFIG[selectedArea]?.label ?? '',
       detail: 'preparando…',
     }
-  } else if (step === 'select' && selectedArea && hubSurface === 'menu') {
+  } else if (step === 'select' && selectedArea) {
     studyBreadcrumb = {
       area: AREA_CONFIG[selectedArea]?.label ?? '',
-      detail: 'O que estudar',
-    }
-  } else if (step === 'select' && selectedArea && hubSurface === 'bank') {
-    studyBreadcrumb = {
-      area: AREA_CONFIG[selectedArea]?.label ?? '',
-      detail: 'Banco de questões',
+      detail: 'Menu da área',
     }
   } else if (pkg) {
     studyBreadcrumb = { area: areaLabel, detail: pkg.topicoLabel }
@@ -1918,37 +1548,31 @@ export function StudyArea() {
           <StudyLandingPick progress={progress ?? undefined} />
         ) : null}
 
-        {step === 'select' && selectedArea && hubSurface === 'menu' ? (
-          <StudyHubMenu
-            areaKey={selectedArea}
-            topics={hubTopics}
-            onChooseBank={() => navigate(`/study/${selectedArea}?hub=bank`)}
-            onChangeArea={() => navigate('/study')}
-            onStartTopic={handleStart}
-          />
-        ) : null}
-
-        {step === 'select' && selectedArea && hubSurface === 'guided' ? (
-          <Navigate to={`/study/${selectedArea}`} replace />
-        ) : null}
-
-        {step === 'select' && selectedArea && hubSurface === 'bank' ? (
-          <QuestionBankView
-            embedded
-            preferredArea={selectedArea}
-            onBackToHub={() => navigate(`/study/${selectedArea}`)}
-            onOpenStudyPackageForRow={(row, practiceRows) => {
-              if (!selectedArea) return
-              const topico = hubTopics.find((t) => t.value === row.topicoValue) ?? {
-                value: row.topicoValue ?? '',
-                label: row.topicoLabel?.trim() ? row.topicoLabel : (row.topicoValue ?? 'Tópico'),
-                accuracy: null,
-                totalAnswered: 0,
-              }
-              if (!topico.value) return
-              void handleStart(selectedArea, topico, practiceRows)
-            }}
-          />
+        {step === 'select' && selectedArea ? (
+          searchParams.get('hub') === 'guided' ? (
+            <Navigate to={`/study/${selectedArea}`} replace />
+          ) : (
+            <QuestionBankView
+              embedded
+              preferredArea={selectedArea}
+              guidedTopics={hubTopics}
+              onSelectGuidedTopic={(t) => void handleStart(selectedArea, t)}
+              onBackToHub={() => navigate('/study')}
+              onOpenStudyPackageForRow={(row, practiceRows) => {
+                if (!selectedArea) return
+                const topico = hubTopics.find((t) => t.value === row.topicoValue) ?? {
+                  value: row.topicoValue ?? '',
+                  label: row.topicoLabel?.trim()
+                    ? row.topicoLabel
+                    : (row.topicoValue ?? 'Tópico'),
+                  accuracy: null,
+                  totalAnswered: 0,
+                }
+                if (!topico.value) return
+                void handleStart(selectedArea, topico, practiceRows)
+              }}
+            />
+          )
         ) : null}
 
         {step === 'loading' && pkg === null && (
@@ -1968,6 +1592,7 @@ export function StudyArea() {
                 focusMode={focusMode}
                 onToggleFocus={() => setFocusMode((v) => !v)}
                 areaColor={areaColor}
+                belowLede={simuladoStudyCard}
               />
               <HumanTrailProgress
                 completedCount={studyJourneyCompletedCount(completed)}
@@ -2013,7 +1638,6 @@ export function StudyArea() {
                         <GuidedBankPracticeQuestions
                           areaKey={pkg.areaKey}
                           rows={guidedBankRows}
-                          simuladoCard={simuladoStudyCard}
                           onDone={(correct, total) => {
                             markDone('questions')
                             setQuestionsResult({ correct, total })
@@ -2023,7 +1647,6 @@ export function StudyArea() {
                       ) : (
                         <PracticeQuestions
                           questions={pkg.practiceQuestions}
-                          simuladoCard={simuladoStudyCard}
                           onDone={(correct, total) => {
                             markDone('questions')
                             setQuestionsResult({ correct, total })
@@ -2048,13 +1671,6 @@ export function StudyArea() {
                 }
               />
 
-              <StickyContextCta
-                title={sessionStickyCopy.title}
-                sub={sessionStickyCopy.sub}
-                buttonText={sessionStickyCopy.buttonText}
-                areaColor={areaColor}
-                onClick={handleSessionStickyPrimary}
-              />
             </div>
 
             <StudyPackageLeaveDialog

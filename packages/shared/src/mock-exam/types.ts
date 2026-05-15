@@ -1,6 +1,7 @@
 import type { Question } from '../types/question'
 
 export type PracticeSessionKind = 'student_mock' | 'class_assignment'
+export type MockExamAnswerFeedbackMode = 'immediate' | 'final'
 
 /**
  * Critérios escolhidos pelo aluno (persistidos em `practice_sessions.config`).
@@ -25,6 +26,8 @@ export interface StudentMockExamConfig {
    * (cronômetro só conta tempo decorrido).
    */
   timeLimitMinutes?: number | null
+  /** Quando revelar correção: a cada resposta ou apenas no resultado final. */
+  answerFeedbackMode?: MockExamAnswerFeedbackMode
 }
 
 export interface MockExamPoolEntry {
@@ -45,6 +48,14 @@ export interface PracticeTopicStat {
   percentual: number
 }
 
+export interface PracticeSessionAnswerReviewItem {
+  questionId: string
+  label: string
+  selectedLetter?: string
+  correctLetter?: string | null
+  isCorrect: boolean
+}
+
 /** Snapshot gravado em `practice_sessions.summary` e exibido no pós-prova. */
 export interface PracticeSessionSummary {
   percentualGeral: number
@@ -54,12 +65,21 @@ export interface PracticeSessionSummary {
   tempoTotalSeg: number | null
   porArea: Record<string, PracticeTopicStat>
   porTopico: Record<string, PracticeTopicStat>
+  respostas?: PracticeSessionAnswerReviewItem[]
 }
 
 export interface MockExamAnswerResult {
   questionId: string
   isCorrect: boolean
   timeSpentSec?: number
+  selectedLetter?: string
+  correctLetter?: string | null
+}
+
+/** Persistido em `practice_sessions.progress` para retomar simulado em andamento. */
+export interface PracticeSessionProgressState {
+  currentIndex: number
+  skippedQuestionIds: string[]
 }
 
 export type BuildMockExamPayloadResult =

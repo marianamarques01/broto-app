@@ -29,12 +29,15 @@ export function StudySanctuaryHeader({
   focusMode,
   onToggleFocus,
   areaColor,
+  belowLede,
 }: {
   topicLabel: string
   areaLabel: string
   focusMode: boolean
   onToggleFocus: () => void
   areaColor: string
+  /** Ex.: card “Questões do ENEM”. Oculto automaticamente em modo foco. */
+  belowLede?: ReactNode
 }) {
   return (
     <header className="study-sanctuary-header">
@@ -56,6 +59,9 @@ export function StudySanctuaryHeader({
           ? 'Modo foco: só o essencial. Respira e segue no seu ritmo.'
           : 'Uma jornada curta em quatro passos — constância emocional, não pressa.'}
       </p>
+      {!focusMode && belowLede ? (
+        <div className="study-sanctuary-header__below-lede">{belowLede}</div>
+      ) : null}
     </header>
   )
 }

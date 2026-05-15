@@ -137,7 +137,7 @@ export function AreaPerformanceTable({ areas, loading }: AreaPerformanceTablePro
                   </td>
                   <td className="broto-progress-area-table__col-cta">
                     <Link
-                      to={`/study/${area.value}?hub=bank`}
+                      to={`/study/${area.value}`}
                       className="broto-progress-area-table__link"
                     >
                       Praticar

@@ -9,7 +9,7 @@ export type QuestionBankAnswerBadgeProps = {
 export function QuestionBankAnswerStatusBadge({ outcome, loading }: QuestionBankAnswerBadgeProps) {
   if (loading) {
     return (
-      <span className="broto-qbank-outcome broto-qbank-outcome--loading" title="A carregar estado">
+      <span className="broto-qbank-outcome broto-qbank-outcome--loading" title="Carregando estado">
         <Loader2 size={12} className="broto-qbank-outcome-icon" aria-hidden />
         …
       </span>

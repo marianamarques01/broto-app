@@ -253,7 +253,7 @@ export function Routine() {
                           </div>
                           {!dia.ehDescanso && dia.area && (
                             <Link
-                              to={`/study/${dia.area.value}?hub=bank`}
+                              to={`/study/${dia.area.value}`}
                               className="broto-routine-week-row__cta"
                             >
                               Abrir

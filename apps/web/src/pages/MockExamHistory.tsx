@@ -3,7 +3,15 @@ import { Link } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { api } from '@/lib/api-client'
 import { formatPracticeSessionAreasLabel, type PracticeSessionSummary } from '@broto/shared'
-import { ArrowLeft, ClipboardList, Loader2, PlayCircle, CheckCircle2, Clock } from 'lucide-react'
+import {
+  ArrowLeft,
+  ClipboardList,
+  Loader2,
+  PlayCircle,
+  CheckCircle2,
+  Clock,
+  Trash2,
+} from 'lucide-react'
 
 function scoreBadgeClass(pct: number): string {
   if (pct >= 70) return 'broto-mock-exam-badge--score-high'
@@ -43,10 +51,15 @@ function formatWhen(iso: string): string {
   })
 }
 
+type BusyKind = 'clear-all' | 'one' | null
+
 export function MockExamHistory() {
   const [sessions, setSessions] = useState<SessionListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [clearModalOpen, setClearModalOpen] = useState(false)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [busy, setBusy] = useState<BusyKind>(null)
 
   const load = useCallback(async () => {
     setError(null)
@@ -67,6 +80,34 @@ export function MockExamHistory() {
     void load()
   }, [load])
 
+  const handleClearAll = useCallback(async () => {
+    setBusy('clear-all')
+    try {
+      await api.post('/api/practice-session/delete', { deleteAll: true })
+      setSessions([])
+      setClearModalOpen(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Não foi possível limpar o histórico')
+    } finally {
+      setBusy(null)
+    }
+  }, [])
+
+  const handleDeleteOne = useCallback(async () => {
+    const id = deleteTargetId
+    if (!id) return
+    setBusy('one')
+    try {
+      await api.post('/api/practice-session/delete', { sessionId: id })
+      setSessions((prev) => prev.filter((s) => s.sessionId !== id))
+      setDeleteTargetId(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Não foi possível excluir a sessão')
+    } finally {
+      setBusy(null)
+    }
+  }, [deleteTargetId])
+
   return (
     <div className="broto-page broto-page--study">
       <TopBar
@@ -75,13 +116,24 @@ export function MockExamHistory() {
         variant="study"
       />
       <div className="broto-main-inner" style={{ maxWidth: 720, margin: '0 auto', padding: '20px 18px' }}>
-        <Link
-          to="/study/mock-exam"
-          className="broto-btn-ghost broto-btn-ghost--inline"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 20 }}
-        >
-          <ArrowLeft size={18} /> Voltar ao configurador
-        </Link>
+        <div className="broto-mock-exam-history-toolbar">
+          <Link
+            to="/study/mock-exam"
+            className="broto-btn-ghost broto-btn-ghost--inline"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+          >
+            <ArrowLeft size={18} /> Voltar ao configurador
+          </Link>
+          <span className="broto-mock-exam-history-toolbar__spacer" aria-hidden />
+          <button
+            type="button"
+            className="broto-mock-exam-history-clear"
+            disabled={loading || sessions.length === 0 || busy !== null}
+            onClick={() => setClearModalOpen(true)}
+          >
+            Limpar histórico
+          </button>
+        </div>
 
         {loading ? (
           <p className="broto-muted" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -152,7 +204,7 @@ export function MockExamHistory() {
                         ) : null}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    <div className="broto-mock-exam-session__actions">
                       {!done ? (
                         <Link
                           to={`/study/mock-exam/play/${s.sessionId}`}
@@ -176,6 +228,15 @@ export function MockExamHistory() {
                           Resumo indisponível
                         </span>
                       ) : null}
+                      <button
+                        type="button"
+                        className="broto-mock-exam-session__delete"
+                        aria-label={`Excluir sessão de ${formatWhen(s.createdAt)}`}
+                        disabled={busy !== null}
+                        onClick={() => setDeleteTargetId(s.sessionId)}
+                      >
+                        <Trash2 size={18} strokeWidth={2} aria-hidden />
+                      </button>
                     </div>
                   </div>
                 </li>
@@ -184,6 +245,90 @@ export function MockExamHistory() {
           </ul>
         ) : null}
       </div>
+
+      {clearModalOpen ? (
+        <div
+          className="broto-mock-exam-info-modal-backdrop"
+          role="presentation"
+          onClick={busy ? undefined : () => setClearModalOpen(false)}
+        >
+          <div
+            className="broto-mock-exam-info-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="broto-mock-history-clear-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="broto-mock-history-clear-title" className="broto-mock-exam-session-exit-modal__title">
+              Limpar todo o histórico?
+            </h2>
+            <p className="broto-mock-exam-history-confirm__text">
+              Todas as sessões desta lista serão removidas. Esta ação não pode ser desfeita. Suas respostas
+              já registradas permanecem na conta, mas deixam de estar ligadas a essas sessões.
+            </p>
+            <div className="broto-mock-exam-session-exit-modal__actions">
+              <button
+                type="button"
+                className="broto-btn-secondary broto-btn-secondary--inline broto-mock-exam-session-exit-modal__btn"
+                disabled={busy !== null}
+                onClick={() => setClearModalOpen(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="broto-mock-exam-session-exit-modal__btn-danger"
+                disabled={busy !== null}
+                onClick={() => void handleClearAll()}
+              >
+                {busy === 'clear-all' ? 'Removendo…' : 'Limpar tudo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {deleteTargetId ? (
+        <div
+          className="broto-mock-exam-info-modal-backdrop"
+          role="presentation"
+          onClick={busy ? undefined : () => setDeleteTargetId(null)}
+        >
+          <div
+            className="broto-mock-exam-info-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="broto-mock-history-delete-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="broto-mock-history-delete-title" className="broto-mock-exam-session-exit-modal__title">
+              Excluir esta sessão?
+            </h2>
+            <p className="broto-mock-exam-history-confirm__text">
+              O bloco sai do histórico. Se estiver em andamento, você não poderá retomá-lo por aqui. Respostas
+              enviadas continuam na sua conta, sem vínculo com esta sessão.
+            </p>
+            <div className="broto-mock-exam-session-exit-modal__actions">
+              <button
+                type="button"
+                className="broto-btn-secondary broto-btn-secondary--inline broto-mock-exam-session-exit-modal__btn"
+                disabled={busy !== null}
+                onClick={() => setDeleteTargetId(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="broto-mock-exam-session-exit-modal__btn-danger"
+                disabled={busy !== null}
+                onClick={() => void handleDeleteOne()}
+              >
+                {busy === 'one' ? 'Excluindo…' : 'Excluir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

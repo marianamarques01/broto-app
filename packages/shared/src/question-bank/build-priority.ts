@@ -204,7 +204,7 @@ export function buildQuestionBankPriority(params: {
     title: 'Tópicos fracos',
     description: 'Reforço onde acertas menos.',
     rows: weakRows,
-    emptyHint: 'Pratica mais para surgirem sugestões.',
+    emptyHint: 'Pratique mais para surgirem sugestões.',
   }
 
   const newTrack: QuestionBankPracticeTrack = {

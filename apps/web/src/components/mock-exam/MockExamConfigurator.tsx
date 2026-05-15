@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   IDIOMAS_TOPIC_ID,
@@ -15,6 +16,7 @@ import {
   fetchMockExamQuestions,
   isValidMockExamN,
   loadMockExamPool,
+  MOCK_EXAM_ANSWER_FEEDBACK_MODE_DEFAULT,
   MOCK_EXAM_N_MAX,
   MOCK_EXAM_N_MIN,
   MOCK_EXAM_TIME_LIMIT_MINUTES_MAX,
@@ -22,6 +24,7 @@ import {
   MOCK_EXAM_YEAR_MAX,
   MOCK_EXAM_YEAR_MIN,
   clampMockExamTimeLimitMinutes,
+  type MockExamAnswerFeedbackMode,
   type StudentMockExamConfig,
 } from '@broto/shared'
 import { AREA_CONFIG } from '@/lib/area-config'
@@ -31,8 +34,10 @@ import {
   ArrowRight,
   BarChart3,
   Check,
+  ClipboardCheck,
   ClipboardList,
   Clock,
+  Eye,
   History,
   Lightbulb,
   ListOrdered,
@@ -46,10 +51,16 @@ import {
   Timer,
   Trophy,
   Users,
+  AlertTriangle,
   X,
 } from 'lucide-react'
 
 const ALL_YEARS_VALUE = ''
+
+const AREA_OR_RANDOM_WARNING =
+  'Selecione ao menos uma área ou ative o modo aleatório.'
+
+type MockExamInfoModal = 'tips' | 'group' | null
 
 function clampMockExamN(n: number): number {
   return Math.min(
@@ -101,18 +112,28 @@ export function MockExamConfigurator({
   const [refineDetailsOpen, setRefineDetailsOpen] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [infoModal, setInfoModal] = useState<MockExamInfoModal>(null)
+  const [selectionWarningOpen, setSelectionWarningOpen] = useState(false)
+  const selectionWarningModalRef = useRef<HTMLDivElement | null>(null)
+  const selectionWarningBtnRef = useRef<HTMLButtonElement | null>(null)
   const suggestedTimeLimit = useMemo(
-    () =>
-      clampMockExamTimeLimitMinutes(Math.max(30, Math.round(clampMockExamN(nQuestoes) * 1.5))),
+    () => clampMockExamTimeLimitMinutes(Math.max(30, Math.round(clampMockExamN(nQuestoes) * 1.5))),
     [nQuestoes],
   )
   const [timeLimitEnabled, setTimeLimitEnabled] = useState(false)
   const [timeLimitMinutes, setTimeLimitMinutes] = useState(() =>
     clampMockExamTimeLimitMinutes(Math.max(30, Math.round(20 * 1.5))),
   )
+  const [answerFeedbackMode, setAnswerFeedbackMode] = useState<MockExamAnswerFeedbackMode>(
+    MOCK_EXAM_ANSWER_FEEDBACK_MODE_DEFAULT,
+  )
 
   const presetAppliedRef = useRef(false)
   const pendingPresetTopicoRef = useRef<string | null>(null)
+  const tipsQuickLinkRef = useRef<HTMLButtonElement | null>(null)
+  const groupQuickLinkRef = useRef<HTMLButtonElement | null>(null)
+  const infoModalRef = useRef<HTMLDivElement | null>(null)
+  const infoModalCloseRef = useRef<HTMLButtonElement | null>(null)
 
   const toggleArea = (value: string) => {
     setSelectedAreas((prev) =>
@@ -121,7 +142,9 @@ export function MockExamConfigurator({
   }
 
   const toggleTopico = (id: string) => {
-    setSelectedTopicIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+    setSelectedTopicIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
   }
 
   const singleAreaForTopics = !randomMode && selectedAreas.length === 1 ? selectedAreas[0] : null
@@ -197,7 +220,7 @@ export function MockExamConfigurator({
       return null
     }
     if (!randomMode && selectedAreas.length === 0) {
-      setSubmitError('Selecione ao menos uma área ou ative o modo aleatório.')
+      setSelectionWarningOpen(true)
       return null
     }
     return {
@@ -208,6 +231,7 @@ export function MockExamConfigurator({
       years: selectedYears,
       language: selectedLanguage,
       expandLinguagensIdiomas: randomMode ? false : expandLinguagensIdiomas,
+      answerFeedbackMode,
       ...(timeLimitEnabled
         ? { timeLimitMinutes: clampMockExamTimeLimitMinutes(timeLimitMinutes) }
         : {}),
@@ -221,12 +245,14 @@ export function MockExamConfigurator({
     selectedYears,
     selectedLanguage,
     expandLinguagensIdiomas,
+    answerFeedbackMode,
     timeLimitEnabled,
     timeLimitMinutes,
   ])
 
   const handleStart = async () => {
     setSubmitError(null)
+    setSelectionWarningOpen(false)
     const cfg = buildConfig()
     if (!cfg || !baseUrl) return
 
@@ -307,13 +333,12 @@ export function MockExamConfigurator({
     ? 'Todas as áreas'
     : `${selectedAreas.length} de ${areas.length}`
   const asideYearsLabel =
-    yearSelect === ALL_YEARS_VALUE
-      ? `Todos (${yearBounds.min}–${yearBounds.max})`
-      : yearSelect
+    yearSelect === ALL_YEARS_VALUE ? `Todos (${yearBounds.min}–${yearBounds.max})` : yearSelect
   const asideModeLabel = randomMode ? 'Aleatório (todas as áreas)' : 'Por área selecionada'
   const asideTimeLabel = timeLimitEnabled
     ? `${clampMockExamTimeLimitMinutes(timeLimitMinutes)} min`
     : 'Sem limite'
+  const asideFeedbackLabel = answerFeedbackMode === 'immediate' ? 'Durante a sessão' : 'Só no final'
   const tLim = clampMockExamTimeLimitMinutes(timeLimitMinutes)
 
   const presetAreaLabel = useMemo(() => {
@@ -325,11 +350,7 @@ export function MockExamConfigurator({
   const presetTopicLabel = useMemo(() => {
     const pt = presetTopicoValue?.trim()
     if (!pt) return null
-    return (
-      topicos.find((t) => t.value === pt)?.label ??
-      presetTopicoLabelHint ??
-      pt
-    )
+    return topicos.find((t) => t.value === pt)?.label ?? presetTopicoLabelHint ?? pt
   }, [topicos, presetTopicoValue, presetTopicoLabelHint])
 
   const modalTopicStillLoading = useMemo(() => {
@@ -340,6 +361,79 @@ export function MockExamConfigurator({
     return false
   }, [variant, presetArea, singleAreaForTopics, topicos.length])
 
+  const closeInfoModal = useCallback(() => {
+    const modalToClose = infoModal
+    setInfoModal(null)
+    window.setTimeout(() => {
+      const trigger = modalToClose === 'tips' ? tipsQuickLinkRef.current : groupQuickLinkRef.current
+      trigger?.focus()
+    }, 0)
+  }, [infoModal])
+
+  useEffect(() => {
+    if (!infoModal) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeInfoModal()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const modal = infoModalRef.current
+      if (!modal) return
+      const focusable = Array.from(
+        modal.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      )
+      if (focusable.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+      if (!active || !modal.contains(active)) {
+        event.preventDefault()
+        const target = event.shiftKey ? last : first
+        target.focus()
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    window.setTimeout(() => infoModalCloseRef.current?.focus(), 0)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [closeInfoModal, infoModal])
+
+  const closeSelectionWarning = useCallback(() => {
+    setSelectionWarningOpen(false)
+  }, [])
+
+  useEffect(() => {
+    if (!selectionWarningOpen) return
+    const t = window.setTimeout(() => selectionWarningBtnRef.current?.focus(), 0)
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeSelectionWarning()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.clearTimeout(t)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [selectionWarningOpen, closeSelectionWarning])
+
   return (
     <div
       className={
@@ -347,35 +441,61 @@ export function MockExamConfigurator({
         (variant === 'modal' ? ' broto-mock-exam-config--modal-shell' : '')
       }
     >
-      <nav className="broto-mock-exam-config__nav" aria-label="Navegação da sessão ENEM">
-        {variant === 'modal' ? (
-          <button
-            type="button"
-            className="broto-mock-exam-config__nav-link"
-            onClick={onClose}
-            style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
-          >
-            <X size={15} strokeWidth={2} aria-hidden />
-            Fechar
-          </button>
-        ) : (
-          <Link to="/study" className="broto-mock-exam-config__nav-link">
-            <ArrowLeft size={15} strokeWidth={2} aria-hidden />
-            Área de estudo
-          </Link>
-        )}
-        {variant === 'page' ? (
-          <>
-            <span className="broto-mock-exam-config__nav-dot" aria-hidden>
-              ·
-            </span>
-            <Link to="/study/mock-exam/history" className="broto-mock-exam-config__nav-link">
-              <History size={15} strokeWidth={2} aria-hidden />
-              Histórico
+      <div className="broto-mock-exam-config__toolbar">
+        <nav className="broto-mock-exam-config__nav" aria-label="Navegação da sessão ENEM">
+          {variant === 'modal' ? (
+            <button
+              type="button"
+              className="broto-mock-exam-config__nav-link"
+              onClick={onClose}
+              style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <X size={15} strokeWidth={2} aria-hidden />
+              Fechar
+            </button>
+          ) : (
+            <Link to="/study" className="broto-mock-exam-config__nav-link">
+              <ArrowLeft size={15} strokeWidth={2} aria-hidden />
+              Área de estudo
             </Link>
-          </>
+          )}
+          {variant === 'page' ? (
+            <>
+              <span className="broto-mock-exam-config__nav-dot" aria-hidden>
+                ·
+              </span>
+              <Link to="/study/mock-exam/history" className="broto-mock-exam-config__nav-link">
+                <History size={15} strokeWidth={2} aria-hidden />
+                Histórico
+              </Link>
+            </>
+          ) : null}
+        </nav>
+
+        {variant === 'page' ? (
+          <div className="broto-mock-exam-config__quick-links" aria-label="Atalhos da sessão">
+            <button
+              type="button"
+              className="broto-mock-exam-config__quick-link"
+              ref={tipsQuickLinkRef}
+              onClick={() => setInfoModal('tips')}
+            >
+              <Lightbulb size={13} strokeWidth={2} aria-hidden />
+              Dicas
+            </button>
+            <button
+              type="button"
+              className="broto-mock-exam-config__quick-link"
+              ref={groupQuickLinkRef}
+              onClick={() => setInfoModal('group')}
+            >
+              <Users size={13} strokeWidth={2} aria-hidden />
+              Sessão em grupo
+              <span className="broto-mock-exam-config__quick-link-badge">Em breve</span>
+            </button>
+          </div>
         ) : null}
-      </nav>
+      </div>
 
       <div
         className={
@@ -404,9 +524,9 @@ export function MockExamConfigurator({
               </>
             ) : (
               <>
-                <strong>No estilo de um simulado</strong>, com a quantidade e o tempo que você quiser —
-                não é obrigatório cobrir as 90 questões da prova. Suas respostas seguem contando no
-                desempenho por tópico.
+                <strong>No estilo de um simulado</strong>, com a quantidade e o tempo que você
+                quiser — não é obrigatório cobrir as 90 questões da prova. Suas respostas seguem
+                contando no desempenho por tópico.
               </>
             )}
           </p>
@@ -485,12 +605,23 @@ export function MockExamConfigurator({
 
               <div className="broto-mock-exam-modal-section">
                 <div className="broto-mock-exam-modal-section__head">
-                  <ListOrdered size={15} strokeWidth={2} aria-hidden className="broto-mock-exam-modal-section__icon" />
+                  <ListOrdered
+                    size={15}
+                    strokeWidth={2}
+                    aria-hidden
+                    className="broto-mock-exam-modal-section__icon"
+                  />
                   <span className="broto-mock-exam-modal-section__title">Quantidade</span>
                 </div>
-                <div className="broto-mock-exam-slider-block broto-mock-exam-slider-block--modal" style={{ marginBottom: 0 }}>
+                <div
+                  className="broto-mock-exam-slider-block broto-mock-exam-slider-block--modal"
+                  style={{ marginBottom: 0 }}
+                >
                   <div className="broto-mock-exam-slider-head">
-                    <label className="broto-mock-exam-slider-head__label" htmlFor="mock-n-range-modal">
+                    <label
+                      className="broto-mock-exam-slider-head__label"
+                      htmlFor="mock-n-range-modal"
+                    >
                       Questões na sessão
                     </label>
                     <span className="broto-mock-exam-slider-head__meta">
@@ -538,17 +669,69 @@ export function MockExamConfigurator({
                     />
                   </div>
                   <p className="broto-mock-exam-microcopy broto-mock-exam-microcopy--tight broto-mock-exam-microcopy--modal-qty">
-                    Use o campo ao lado para digitar o número exato. Estimativa de leitura: ~{estMinutes}{' '}
-                    min (sem cronômetro).
+                    Use o campo ao lado para digitar o número exato. Estimativa de leitura: ~
+                    {estMinutes} min (sem cronômetro).
                   </p>
                 </div>
               </div>
 
-              <div className="broto-mock-exam-divider broto-mock-exam-divider--modal-spaced" role="presentation" />
+              <div className="broto-mock-exam-modal-section">
+                <div className="broto-mock-exam-modal-section__head">
+                  <Eye
+                    size={15}
+                    strokeWidth={2}
+                    aria-hidden
+                    className="broto-mock-exam-modal-section__icon"
+                  />
+                  <span className="broto-mock-exam-modal-section__title">Correção</span>
+                </div>
+              </div>
+
+              <label className="broto-mock-exam-switch broto-mock-exam-switch--rich broto-mock-exam-switch--modal-timer">
+                <span className="broto-mock-exam-switch__icon-wrap" aria-hidden>
+                  <ClipboardCheck size={18} strokeWidth={2} />
+                </span>
+                <span className="broto-mock-exam-switch__lead">
+                  <span className="broto-mock-exam-switch__title">
+                    {answerFeedbackMode === 'immediate'
+                      ? 'Acompanhar respostas'
+                      : 'Ver respostas no final'}
+                  </span>
+                  <span className="broto-mock-exam-switch__subtitle">
+                    {answerFeedbackMode === 'immediate'
+                      ? 'Mostra se acertou logo após responder.'
+                      : 'Guarda as correções para o resultado da sessão.'}
+                  </span>
+                </span>
+                <span className="broto-mock-exam-switch__control">
+                  <input
+                    type="checkbox"
+                    className="broto-mock-exam-switch__input"
+                    checked={answerFeedbackMode === 'immediate'}
+                    onChange={(e) =>
+                      setAnswerFeedbackMode(e.target.checked ? 'immediate' : 'final')
+                    }
+                    aria-label="Acompanhar respostas durante a sessão"
+                  />
+                  <span className="broto-mock-exam-switch__track" aria-hidden>
+                    <span className="broto-mock-exam-switch__thumb" />
+                  </span>
+                </span>
+              </label>
+
+              <div
+                className="broto-mock-exam-divider broto-mock-exam-divider--modal-spaced"
+                role="presentation"
+              />
 
               <div className="broto-mock-exam-modal-section">
                 <div className="broto-mock-exam-modal-section__head">
-                  <Clock size={15} strokeWidth={2} aria-hidden className="broto-mock-exam-modal-section__icon" />
+                  <Clock
+                    size={15}
+                    strokeWidth={2}
+                    aria-hidden
+                    className="broto-mock-exam-modal-section__icon"
+                  />
                   <span className="broto-mock-exam-modal-section__title">Cronômetro</span>
                   <span className="broto-mock-exam-modal-section__optional">opcional</span>
                 </div>
@@ -802,6 +985,38 @@ export function MockExamConfigurator({
                 </div>
               </div>
 
+              <label className="broto-mock-exam-switch broto-mock-exam-switch--rich broto-mock-exam-switch--full-row">
+                <span className="broto-mock-exam-switch__icon-wrap" aria-hidden>
+                  <Eye size={18} strokeWidth={2} />
+                </span>
+                <span className="broto-mock-exam-switch__lead">
+                  <span className="broto-mock-exam-switch__title">
+                    {answerFeedbackMode === 'immediate'
+                      ? 'Acompanhar respostas'
+                      : 'Ver respostas no final'}
+                  </span>
+                  <span className="broto-mock-exam-switch__subtitle">
+                    {answerFeedbackMode === 'immediate'
+                      ? 'Mostra a correção depois de cada questão.'
+                      : 'Sem revelar certo/errado até o resultado.'}
+                  </span>
+                </span>
+                <span className="broto-mock-exam-switch__control">
+                  <input
+                    type="checkbox"
+                    className="broto-mock-exam-switch__input"
+                    checked={answerFeedbackMode === 'immediate'}
+                    onChange={(e) =>
+                      setAnswerFeedbackMode(e.target.checked ? 'immediate' : 'final')
+                    }
+                    aria-label="Acompanhar respostas durante a sessão"
+                  />
+                  <span className="broto-mock-exam-switch__track" aria-hidden>
+                    <span className="broto-mock-exam-switch__thumb" />
+                  </span>
+                </span>
+              </label>
+
               <div className="broto-mock-exam-divider" role="presentation" />
 
               <label className="broto-mock-exam-switch broto-mock-exam-switch--rich">
@@ -811,7 +1026,8 @@ export function MockExamConfigurator({
                 <span className="broto-mock-exam-switch__lead">
                   <span className="broto-mock-exam-switch__title">Limite de tempo</span>
                   <span className="broto-mock-exam-switch__subtitle">
-                    Ao zerar o cronômetro, a sessão encerra e você vê o resultado com o que já respondeu.
+                    Ao zerar o cronômetro, a sessão encerra e você vê o resultado com o que já
+                    respondeu.
                   </span>
                 </span>
                 <span className="broto-mock-exam-switch__control">
@@ -973,9 +1189,7 @@ export function MockExamConfigurator({
               <details
                 className="broto-mock-exam-details"
                 open={refineDetailsOpen}
-                onToggle={(e) =>
-                  setRefineDetailsOpen((e.target as HTMLDetailsElement).open)
-                }
+                onToggle={(e) => setRefineDetailsOpen((e.target as HTMLDetailsElement).open)}
               >
                 <summary className="broto-mock-exam-details__summary">
                   Refinar por tópicos ou idioma
@@ -1040,7 +1254,12 @@ export function MockExamConfigurator({
               <div className="broto-mock-exam-preview-ring-wrap">
                 <div className="broto-mock-exam-preview-ring" aria-hidden>
                   <svg viewBox="0 0 120 120" className="broto-mock-exam-preview-ring__svg">
-                    <circle className="broto-mock-exam-preview-ring__bg" cx="60" cy="60" r={ringR} />
+                    <circle
+                      className="broto-mock-exam-preview-ring__bg"
+                      cx="60"
+                      cy="60"
+                      r={ringR}
+                    />
                     <circle
                       className="broto-mock-exam-preview-ring__fill"
                       cx="60"
@@ -1101,6 +1320,17 @@ export function MockExamConfigurator({
                     {asideTimeLabel}
                   </span>
                 </li>
+                <li className="broto-mock-exam-aside-list__item">
+                  <span
+                    className="broto-mock-exam-aside-list__dot"
+                    style={{ background: 'var(--green-400)' }}
+                    aria-hidden
+                  />
+                  <span className="broto-mock-exam-aside-list__text">
+                    <span className="broto-mock-exam-aside-list__k">Correção</span>
+                    {asideFeedbackLabel}
+                  </span>
+                </li>
               </ul>
 
               <p className="broto-mock-exam-aside-estimate">
@@ -1125,125 +1355,235 @@ export function MockExamConfigurator({
                 Iniciar sessão
               </button>
             </div>
-
-            <div className="broto-mock-exam-tips-card">
-              <div className="broto-mock-exam-card-head broto-mock-exam-card-head--in-card">
-                <span
-                  className="broto-mock-exam-card-head__dot"
-                  style={{ background: 'var(--gold-400)' }}
-                  aria-hidden
-                />
-                <h2 className="broto-mock-exam-card-head__title">Dicas</h2>
-              </div>
-              <ul className="broto-mock-exam-tips">
-                <li className="broto-mock-exam-tips__item">
-                  <Lightbulb size={16} strokeWidth={2} className="broto-mock-exam-tips__icon" aria-hidden />
-                  <span>Reserve um bloco contínuo, como no dia da prova.</span>
-                </li>
-                <li className="broto-mock-exam-tips__item">
-                  <Target size={16} strokeWidth={2} className="broto-mock-exam-tips__icon" aria-hidden />
-                  <span>Leia o enunciado inteiro antes de marcar a alternativa.</span>
-                </li>
-                <li className="broto-mock-exam-tips__item">
-                  <BarChart3 size={16} strokeWidth={2} className="broto-mock-exam-tips__icon" aria-hidden />
-                  <span>Depois, confira o resultado por área no seu progresso.</span>
-                </li>
-              </ul>
-            </div>
-
-            {variant === 'page' ? (
-              <div
-                className="broto-mock-exam-group-teaser"
-                aria-label="Prévia visual de sessão em grupo no estilo prova. Recurso ainda não disponível."
-              >
-                <div className="broto-mock-exam-group-teaser__head">
-                  <div className="broto-mock-exam-card-head broto-mock-exam-card-head--in-card broto-mock-exam-group-teaser__card-head">
-                    <span
-                      className="broto-mock-exam-card-head__dot"
-                      style={{ background: 'var(--status-sky)' }}
-                      aria-hidden
-                    />
-                    <h2 className="broto-mock-exam-card-head__title">Sessão em grupo</h2>
-                  </div>
-                  <span className="broto-mock-exam-group-teaser__badge">Em breve</span>
-                </div>
-
-                <p className="broto-mock-exam-group-teaser__lead">
-                  Convide amigos, todos respondem ao mesmo conjunto de questões e, ao final, aparece
-                  quantos acertos cada um teve — ideal para estudar junto e comparar o desempenho.
-                </p>
-
-                <ul className="broto-mock-exam-group-teaser__flow">
-                  <li className="broto-mock-exam-group-teaser__flow-item">
-                    <span className="broto-mock-exam-group-teaser__flow-icon" aria-hidden>
-                      <Share2 size={15} strokeWidth={2} />
-                    </span>
-                    <span>
-                      <strong className="broto-mock-exam-group-teaser__flow-k">Convite</strong>
-                      Você gera um link e manda para a turma.
-                    </span>
-                  </li>
-                  <li className="broto-mock-exam-group-teaser__flow-item">
-                    <span className="broto-mock-exam-group-teaser__flow-icon" aria-hidden>
-                      <Users size={15} strokeWidth={2} />
-                    </span>
-                    <span>
-                      <strong className="broto-mock-exam-group-teaser__flow-k">Juntos</strong>
-                      Mesmas questões para todos — com limite de tempo opcional ou ritmo livre.
-                    </span>
-                  </li>
-                  <li className="broto-mock-exam-group-teaser__flow-item">
-                    <span className="broto-mock-exam-group-teaser__flow-icon" aria-hidden>
-                      <Trophy size={15} strokeWidth={2} />
-                    </span>
-                    <span>
-                      <strong className="broto-mock-exam-group-teaser__flow-k">Ranking</strong>
-                      O painel mostra acertos por pessoa (ex.: 14 acertos em 20 questões).
-                    </span>
-                  </li>
-                </ul>
-
-                <div className="broto-mock-exam-group-teaser__board" aria-hidden>
-                  <p className="broto-mock-exam-group-teaser__board-label">Exemplo de painel ao final</p>
-                  <ul className="broto-mock-exam-group-teaser__rows">
-                    <li className="broto-mock-exam-group-teaser__row broto-mock-exam-group-teaser__row--you">
-                      <span className="broto-mock-exam-group-teaser__who">
-                        <span className="broto-mock-exam-group-teaser__avatar" aria-hidden>
-                          VC
-                        </span>
-                        Você
-                      </span>
-                      <span className="broto-mock-exam-group-teaser__score">14/20</span>
-                    </li>
-                    <li className="broto-mock-exam-group-teaser__row">
-                      <span className="broto-mock-exam-group-teaser__who">
-                        <span className="broto-mock-exam-group-teaser__avatar" aria-hidden>
-                          AM
-                        </span>
-                        Amiga
-                      </span>
-                      <span className="broto-mock-exam-group-teaser__score">12/20</span>
-                    </li>
-                    <li className="broto-mock-exam-group-teaser__row">
-                      <span className="broto-mock-exam-group-teaser__who">
-                        <span className="broto-mock-exam-group-teaser__avatar" aria-hidden>
-                          JP
-                        </span>
-                        João
-                      </span>
-                      <span className="broto-mock-exam-group-teaser__score">11/20</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <p className="broto-mock-exam-group-teaser__footnote">
-                  Ilustração apenas — convites e ranking em grupo ainda não estão ativos no app.
-                </p>
-              </div>
-            ) : null}
           </aside>
         </div>
       )}
+
+      {variant === 'page' && infoModal
+        ? createPortal(
+            <div
+              role="presentation"
+              className="broto-mock-exam-info-modal-backdrop"
+              onClick={closeInfoModal}
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="mock-exam-info-modal-title"
+                ref={infoModalRef}
+                className={
+                  'broto-mock-exam-info-modal' +
+                  (infoModal === 'group' ? ' broto-mock-exam-info-modal--group' : '')
+                }
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="broto-mock-exam-info-modal__close"
+                  ref={infoModalCloseRef}
+                  aria-label="Fechar modal"
+                  onClick={closeInfoModal}
+                >
+                  <X size={17} strokeWidth={2.2} aria-hidden />
+                </button>
+
+                {infoModal === 'tips' ? (
+                  <div className="broto-mock-exam-tips-card broto-mock-exam-tips-card--modal">
+                    <div className="broto-mock-exam-card-head broto-mock-exam-card-head--in-card">
+                      <span
+                        className="broto-mock-exam-card-head__dot"
+                        style={{ background: 'var(--gold-400)' }}
+                        aria-hidden
+                      />
+                      <h2
+                        id="mock-exam-info-modal-title"
+                        className="broto-mock-exam-card-head__title"
+                      >
+                        Dicas
+                      </h2>
+                    </div>
+                    <ul className="broto-mock-exam-tips">
+                      <li className="broto-mock-exam-tips__item">
+                        <Lightbulb
+                          size={16}
+                          strokeWidth={2}
+                          className="broto-mock-exam-tips__icon"
+                          aria-hidden
+                        />
+                        <span>Reserve um bloco contínuo, como no dia da prova.</span>
+                      </li>
+                      <li className="broto-mock-exam-tips__item">
+                        <Target
+                          size={16}
+                          strokeWidth={2}
+                          className="broto-mock-exam-tips__icon"
+                          aria-hidden
+                        />
+                        <span>Leia o enunciado inteiro antes de marcar a alternativa.</span>
+                      </li>
+                      <li className="broto-mock-exam-tips__item">
+                        <BarChart3
+                          size={16}
+                          strokeWidth={2}
+                          className="broto-mock-exam-tips__icon"
+                          aria-hidden
+                        />
+                        <span>Depois, confira o resultado por área no seu progresso.</span>
+                      </li>
+                    </ul>
+                  </div>
+                ) : (
+                  <div
+                    className="broto-mock-exam-group-teaser broto-mock-exam-group-teaser--modal"
+                    aria-label="Prévia visual de sessão em grupo no estilo prova. Recurso ainda não disponível."
+                  >
+                    <div className="broto-mock-exam-group-teaser__head">
+                      <div className="broto-mock-exam-card-head broto-mock-exam-card-head--in-card broto-mock-exam-group-teaser__card-head">
+                        <span
+                          className="broto-mock-exam-card-head__dot"
+                          style={{ background: 'var(--status-sky)' }}
+                          aria-hidden
+                        />
+                        <h2
+                          id="mock-exam-info-modal-title"
+                          className="broto-mock-exam-card-head__title"
+                        >
+                          Sessão em grupo
+                        </h2>
+                      </div>
+                      <span className="broto-mock-exam-group-teaser__badge">Em breve</span>
+                    </div>
+
+                    <p className="broto-mock-exam-group-teaser__lead">
+                      Convide amigos, todos respondem ao mesmo conjunto de questões e, ao final,
+                      aparece quantos acertos cada um teve — ideal para estudar junto e comparar o
+                      desempenho.
+                    </p>
+
+                    <ul className="broto-mock-exam-group-teaser__flow">
+                      <li className="broto-mock-exam-group-teaser__flow-item">
+                        <span className="broto-mock-exam-group-teaser__flow-icon" aria-hidden>
+                          <Share2 size={15} strokeWidth={2} />
+                        </span>
+                        <span>
+                          <strong className="broto-mock-exam-group-teaser__flow-k">Convite</strong>
+                          Você gera um link e manda para a turma.
+                        </span>
+                      </li>
+                      <li className="broto-mock-exam-group-teaser__flow-item">
+                        <span className="broto-mock-exam-group-teaser__flow-icon" aria-hidden>
+                          <Users size={15} strokeWidth={2} />
+                        </span>
+                        <span>
+                          <strong className="broto-mock-exam-group-teaser__flow-k">Juntos</strong>
+                          Mesmas questões para todos — com limite de tempo opcional ou ritmo livre.
+                        </span>
+                      </li>
+                      <li className="broto-mock-exam-group-teaser__flow-item">
+                        <span className="broto-mock-exam-group-teaser__flow-icon" aria-hidden>
+                          <Trophy size={15} strokeWidth={2} />
+                        </span>
+                        <span>
+                          <strong className="broto-mock-exam-group-teaser__flow-k">Ranking</strong>{' '}
+                          O painel mostra acertos por pessoa (ex.: 14 acertos em 20 questões).
+                        </span>
+                      </li>
+                    </ul>
+
+                    <div className="broto-mock-exam-group-teaser__board" aria-hidden>
+                      <p className="broto-mock-exam-group-teaser__board-label">
+                        Exemplo de painel ao final
+                      </p>
+                      <ul className="broto-mock-exam-group-teaser__rows">
+                        <li className="broto-mock-exam-group-teaser__row broto-mock-exam-group-teaser__row--you">
+                          <span className="broto-mock-exam-group-teaser__who">
+                            <span className="broto-mock-exam-group-teaser__avatar" aria-hidden>
+                              VC
+                            </span>
+                            Você
+                          </span>
+                          <span className="broto-mock-exam-group-teaser__score">14/20</span>
+                        </li>
+                        <li className="broto-mock-exam-group-teaser__row">
+                          <span className="broto-mock-exam-group-teaser__who">
+                            <span className="broto-mock-exam-group-teaser__avatar" aria-hidden>
+                              AM
+                            </span>
+                            Amiga
+                          </span>
+                          <span className="broto-mock-exam-group-teaser__score">12/20</span>
+                        </li>
+                        <li className="broto-mock-exam-group-teaser__row">
+                          <span className="broto-mock-exam-group-teaser__who">
+                            <span className="broto-mock-exam-group-teaser__avatar" aria-hidden>
+                              JP
+                            </span>
+                            João
+                          </span>
+                          <span className="broto-mock-exam-group-teaser__score">11/20</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <p className="broto-mock-exam-group-teaser__footnote">
+                      Ilustração apenas — convites e ranking em grupo ainda não estão ativos no app.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+
+      {selectionWarningOpen
+        ? createPortal(
+            <div
+              role="presentation"
+              className="broto-mock-exam-info-modal-backdrop"
+              onClick={closeSelectionWarning}
+            >
+              <div
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="mock-exam-selection-warning-title"
+                aria-describedby="mock-exam-selection-warning-desc"
+                ref={selectionWarningModalRef}
+                className="broto-mock-exam-info-modal broto-mock-exam-warning-modal"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="broto-mock-exam-info-modal__close"
+                  aria-label="Fechar aviso"
+                  onClick={closeSelectionWarning}
+                >
+                  <X size={17} strokeWidth={2.2} aria-hidden />
+                </button>
+                <div className="broto-mock-exam-warning-modal__head">
+                  <span className="broto-mock-exam-warning-modal__icon-wrap" aria-hidden>
+                    <AlertTriangle size={22} strokeWidth={2.2} />
+                  </span>
+                  <h2 id="mock-exam-selection-warning-title" className="broto-mock-exam-warning-modal__title">
+                    Atenção
+                  </h2>
+                </div>
+                <p id="mock-exam-selection-warning-desc" className="broto-mock-exam-warning-modal__body">
+                  {AREA_OR_RANDOM_WARNING}
+                </p>
+                <button
+                  type="button"
+                  ref={selectionWarningBtnRef}
+                  className="broto-btn-primary broto-mock-exam-warning-modal__ok"
+                  onClick={closeSelectionWarning}
+                >
+                  Entendi
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   )
 }

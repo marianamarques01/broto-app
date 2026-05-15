@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { api } from '@/lib/api-client'
-import type { PracticeSessionSummary } from '@broto/shared'
+import type { PracticeSessionAnswerReviewItem, PracticeSessionSummary } from '@broto/shared'
 import { AREA_CONFIG } from '@/lib/area-config'
 import { Home, Loader2, RotateCcw, History } from 'lucide-react'
 
@@ -53,15 +53,22 @@ export function MockExamResult() {
   const [searchParams] = useSearchParams()
   const paramSessionId = searchParams.get('sessionId')
 
-  const state = location.state as { summary?: PracticeSessionSummary; sessionId?: string } | undefined
+  const state = location.state as
+    | {
+        summary?: PracticeSessionSummary
+        sessionId?: string
+        answerReview?: PracticeSessionAnswerReviewItem[]
+        showAnswerReview?: boolean
+      }
+    | undefined
   const [summary, setSummary] = useState<PracticeSessionSummary | null>(state?.summary ?? null)
-  const [sessionId, setSessionId] = useState<string | undefined>(
-    state?.sessionId ?? (paramSessionId || undefined),
-  )
   const [loading, setLoading] = useState(
     () => !(state?.summary) && !!(paramSessionId && paramSessionId.length > 0),
   )
   const [loadError, setLoadError] = useState<string | null>(null)
+  const answerReview = state?.showAnswerReview
+    ? (state.answerReview ?? summary?.respostas ?? [])
+    : (summary?.respostas ?? [])
 
   useEffect(() => {
     if (summary) {
@@ -73,7 +80,6 @@ export function MockExamResult() {
       setLoading(false)
       return
     }
-    setSessionId(sid)
     let cancelled = false
     setLoading(true)
     setLoadError(null)
@@ -212,6 +218,56 @@ export function MockExamResult() {
             </div>
           ) : null}
         </div>
+
+        {answerReview.length > 0 ? (
+          <div className="broto-card" style={{ padding: 22, marginBottom: 18 }}>
+            <h3 className="broto-section-label" style={{ marginBottom: 14 }}>
+              Suas respostas
+            </h3>
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
+              {answerReview.map((item, idx) => (
+                <li
+                  key={`${item.questionId}-${idx}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    padding: '10px 12px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: item.isCorrect
+                      ? 'rgba(16, 185, 129, 0.08)'
+                      : 'rgba(224, 82, 82, 0.08)',
+                    border: `1px solid ${
+                      item.isCorrect ? 'rgba(16, 185, 129, 0.18)' : 'rgba(224, 82, 82, 0.18)'
+                    }`,
+                  }}
+                >
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                    {item.label}
+                  </span>
+                  <span
+                    style={{
+                      color: item.isCorrect ? 'var(--green-400)' : 'var(--red-400)',
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {item.selectedLetter ?? '—'} / {item.correctLetter ?? '—'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div className="broto-card" style={{ padding: 22, marginBottom: 18 }}>
           <h3 className="broto-section-label" style={{ marginBottom: 14 }}>

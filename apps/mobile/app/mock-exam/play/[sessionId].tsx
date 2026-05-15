@@ -4,9 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Clock, LogOut } from 'lucide-react-native'
 import {
+    areaKeyFromTopico,
     buildPracticeSessionSummary,
     fetchMockExamQuestions,
     getQuestionId,
+    parseEnemAreaKey,
     timeLimitMinutesFromPracticeConfig,
     type MockExamAnswerResult,
     type Question,
@@ -26,6 +28,14 @@ function formatElapsed(totalSec: number): string {
     if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`
     if (m > 0) return `${m}m ${String(s).padStart(2, '0')}s`
     return `${s}s`
+}
+
+function formatTimerClock(totalSec: number): string {
+    const h = Math.floor(totalSec / 3600)
+    const m = Math.floor((totalSec % 3600) / 60)
+    const s = totalSec % 60
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 type SessionGetRes = {
@@ -138,18 +148,22 @@ export default function MockExamPlayScreen() {
                 0,
                 Math.round((Date.now() - questionStartMs.current) / 1000),
             )
-            const areaKey = question.discipline ?? 'outros'
+            const topicSlug = topicByQuestionId[questionId]
+            const fromTopicSlug = topicSlug != null ? areaKeyFromTopico(topicSlug) : 'outros'
+            const areaSlug =
+                parseEnemAreaKey(question.discipline) ??
+                (fromTopicSlug !== 'outros' ? fromTopicSlug : undefined)
             void submitAnswer({
                 questionId,
                 isCorrect,
-                areaKey,
+                ...(areaSlug ? { areaKey: areaSlug } : {}),
                 timeSpentSec,
                 sessionId: sessionId ?? undefined,
             }).then(() => {
                 onAnswerRecorded({ questionId, isCorrect, timeSpentSec })
             })
         },
-        [sessionId, onAnswerRecorded],
+        [sessionId, onAnswerRecorded, topicByQuestionId],
     )
 
     const finalizeExam = useCallback(() => {
@@ -177,6 +191,11 @@ export default function MockExamPlayScreen() {
         setIndex((i) => i + 1)
     }, [questions, sessionId, index, finalizeExam])
 
+    const handlePrevious = useCallback(() => {
+        if (finishingRef.current || index <= 0) return
+        setIndex((i) => i - 1)
+    }, [index])
+
     useEffect(() => {
         if (timeLimitMinutes == null || !questions?.length || !sessionId) return
         const limitSec = timeLimitMinutes * 60
@@ -190,6 +209,8 @@ export default function MockExamPlayScreen() {
     const limitSec = timeLimitMinutes != null ? timeLimitMinutes * 60 : null
     const remainingSec = limitSec != null ? Math.max(0, limitSec - elapsedSec) : null
     const timerWarn = remainingSec != null && remainingSec > 0 && remainingSec <= 300
+    const timerProgressPct =
+        limitSec != null ? Math.max(0, Math.min(100, ((remainingSec ?? 0) / limitSec) * 100)) : null
 
     if (!routeSessionId || String(routeSessionId).trim() === '') {
         return (
@@ -248,32 +269,45 @@ export default function MockExamPlayScreen() {
             <View style={styles.statusRow}>
                 <View style={styles.statusLeft}>
                     <Text style={styles.counter}>Questao {index + 1} de {totalQ}</Text>
-                    <View style={styles.timerCol}>
+                    <View style={[styles.timerCard, timerWarn && styles.timerCardWarn]}>
                         {remainingSec != null ? (
                             <>
-                                <View style={styles.timerRow}>
-                                    <Clock
-                                        size={14}
-                                        color={timerWarn ? colors.gold[400] : colors.green[400]}
-                                    />
-                                    <Text
-                                        style={[
-                                            styles.timerRemaining,
-                                            timerWarn && styles.timerRemainingWarn,
-                                        ]}
-                                    >
-                                        Restante {formatElapsed(remainingSec)}
+                                <View style={styles.timerHead}>
+                                    <View style={styles.timerLabelRow}>
+                                        <Clock
+                                            size={14}
+                                            color={timerWarn ? colors.gold[400] : colors.green[400]}
+                                        />
+                                        <Text style={styles.timerLabel}>Tempo restante</Text>
+                                    </View>
+                                    <Text style={[styles.timerClock, timerWarn && styles.timerClockWarn]}>
+                                        {formatTimerClock(remainingSec)}
                                     </Text>
                                 </View>
+                                <View style={styles.timerTrack}>
+                                    <View
+                                        style={[
+                                            styles.timerFill,
+                                            timerWarn && styles.timerFillWarn,
+                                            { width: `${timerProgressPct ?? 0}%` },
+                                        ]}
+                                    />
+                                </View>
                                 <Text style={styles.timerElapsed}>
-                                    Decorrido {formatElapsed(elapsedSec)}
+                                    {timerWarn ? 'Reta final' : 'Decorrido'} · {formatElapsed(elapsedSec)}
                                 </Text>
                             </>
                         ) : (
-                            <View style={styles.timerRow}>
-                                <Clock size={14} color={colors.text.muted} />
-                                <Text style={styles.timer}>{formatElapsed(elapsedSec)}</Text>
-                            </View>
+                            <>
+                                <View style={styles.timerHead}>
+                                    <View style={styles.timerLabelRow}>
+                                        <Clock size={14} color={colors.text.muted} />
+                                        <Text style={styles.timerLabel}>Tempo de prova</Text>
+                                    </View>
+                                    <Text style={styles.timerClock}>{formatTimerClock(elapsedSec)}</Text>
+                                </View>
+                                <Text style={styles.timerElapsed}>Sessao sem limite de tempo</Text>
+                            </>
                         )}
                     </View>
                 </View>
@@ -293,6 +327,8 @@ export default function MockExamPlayScreen() {
                     questionNumber={index + 1}
                     totalQuestions={totalQ}
                     onAnswer={handleAnswer}
+                    onPrevious={handlePrevious}
+                    previousDisabled={index <= 0}
                     onNext={handleNext}
                 />
             </ScrollView>
@@ -329,17 +365,63 @@ const styles = StyleSheet.create({
         borderBottomColor: colors.border.subtle,
     },
     statusLeft: { gap: 4 },
-    timerCol: { gap: 2 },
     counter: { fontFamily: fonts.sansSemiBold, color: colors.text.primary, fontSize: 14 },
-    timerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    timer: { fontFamily: fonts.sans, fontSize: 13, color: colors.text.muted },
-    timerRemaining: {
-        fontFamily: fonts.sansSemiBold,
-        fontSize: 13,
-        color: colors.green[400],
+    timerCard: {
+        minWidth: 214,
+        marginTop: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(45, 212, 168, 0.26)',
+        backgroundColor: 'rgba(18, 28, 23, 0.86)',
     },
-    timerRemainingWarn: { color: colors.gold[400] },
-    timerElapsed: { fontFamily: fonts.sans, fontSize: 12, color: colors.text.muted, opacity: 0.88 },
+    timerCardWarn: {
+        borderColor: 'rgba(245, 200, 66, 0.46)',
+        backgroundColor: 'rgba(34, 26, 9, 0.82)',
+    },
+    timerHead: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+    },
+    timerLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    timerLabel: {
+        fontFamily: fonts.sansSemiBold,
+        fontSize: 10,
+        letterSpacing: 0.8,
+        textTransform: 'uppercase',
+        color: colors.text.muted,
+    },
+    timerClock: {
+        fontFamily: fonts.sansBold,
+        fontSize: 20,
+        lineHeight: 22,
+        color: colors.green[400],
+        letterSpacing: -0.4,
+    },
+    timerClockWarn: { color: colors.gold[400] },
+    timerTrack: {
+        height: 5,
+        marginTop: 9,
+        overflow: 'hidden',
+        borderRadius: 999,
+        backgroundColor: 'rgba(160, 184, 160, 0.16)',
+    },
+    timerFill: {
+        height: 5,
+        borderRadius: 999,
+        backgroundColor: colors.green[400],
+    },
+    timerFillWarn: { backgroundColor: colors.gold[400] },
+    timerElapsed: {
+        marginTop: 6,
+        fontFamily: fonts.sans,
+        fontSize: 11,
+        color: colors.text.muted,
+        opacity: 0.88,
+    },
     exitBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8 },
     exitText: { fontFamily: fonts.sansSemiBold, fontSize: 13, color: colors.text.secondary },
     scroll: { paddingBottom: 32 },

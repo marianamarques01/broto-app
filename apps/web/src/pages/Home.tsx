@@ -197,7 +197,7 @@ export function Home() {
                   <p className="broto-home-hub-focus__title">{reviewCopy.title}</p>
                   <p className="broto-home-hub-focus__hint">{reviewCopy.subtitle}</p>
                   <Link
-                    to={`/study/${reviewCopy.areaSlug}?hub=bank`}
+                    to={`/study/${reviewCopy.areaSlug}`}
                     className="broto-btn-secondary broto-home-hub-focus__btn"
                   >
                     Abrir questões nesta área

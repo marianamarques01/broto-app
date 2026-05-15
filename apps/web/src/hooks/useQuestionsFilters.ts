@@ -17,7 +17,7 @@ export const LANGUAGE_OPTIONS = [
 
 const IDIOMAS_TOPIC: Topico = { id: IDIOMAS_TOPIC_ID, value: 'idiomas', label: 'Idiomas' }
 
-function getBaseUrl(orgSlug?: string | null): string {
+function getBaseUrl(_orgSlug?: string | null): string {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   if (!supabaseUrl) return ''
   const base = `${supabaseUrl}/storage/v1/object/public/static`
@@ -193,6 +193,9 @@ export function useQuestionsFilters(options?: {
   preferredArea?: string | null
   /** Default true. Set false in embedded mode so the first catalog area is not forced. */
   autoSelectFirstArea?: boolean
+  initialYear?: string
+  initialTopico?: string
+  initialLanguage?: string
 }) {
   const enableQuestionFetch = options?.enableQuestionFetch !== false
   const preferredArea = options?.preferredArea
@@ -207,10 +210,13 @@ export function useQuestionsFilters(options?: {
   const [loadingQuestions, setLoadingQuestions] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedArea, setSelectedArea] = useState('')
-  const [selectedYear, setSelectedYear] = useState('')
-  const [selectedTopico, setSelectedTopico] = useState('')
-  const [selectedLanguage, setSelectedLanguage] = useState('')
+  const [selectedYear, setSelectedYear] = useState(options?.initialYear ?? '')
+  const [selectedTopico, setSelectedTopico] = useState(options?.initialTopico ?? '')
+  const [selectedLanguage, setSelectedLanguage] = useState(options?.initialLanguage ?? '')
   const topicosRef = useRef<Topico[]>([])
+  const preserveInitialTopicFiltersRef = useRef(
+    Boolean(options?.initialTopico || options?.initialLanguage),
+  )
 
   const loadInitialData = useCallback(async () => {
     setLoading(true)
@@ -262,6 +268,10 @@ export function useQuestionsFilters(options?: {
         topicosRef.current = []
         setError(err instanceof Error ? err.message : 'Erro ao carregar tópicos')
       })
+    if (preserveInitialTopicFiltersRef.current) {
+      preserveInitialTopicFiltersRef.current = false
+      return
+    }
     setSelectedTopico('')
     setSelectedLanguage('')
   }, [selectedArea, baseUrl])

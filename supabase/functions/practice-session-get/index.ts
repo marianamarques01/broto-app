@@ -30,7 +30,9 @@ serve(async (req) => {
 
     const { data: row, error } = await admin
       .from('practice_sessions')
-      .select('id, user_id, created_at, completed_at, kind, config, question_ids, summary')
+      .select(
+        'id, user_id, created_at, completed_at, kind, config, question_ids, summary, progress',
+      )
       .eq('id', sessionId)
       .maybeSingle()
 
@@ -53,6 +55,35 @@ serve(async (req) => {
       config: unknown
       question_ids: unknown
       summary: unknown
+      progress: unknown
+    }
+
+    const questionIds = Array.isArray(r.question_ids) ? r.question_ids.map(String) : []
+
+    let sessionAnswers: { questionId: string; isCorrect: boolean }[] = []
+    if (!r.completed_at && questionIds.length > 0) {
+      const { data: ansRows, error: ansErr } = await admin
+        .from('user_question_answers')
+        .select('question_id, acertou, created_at')
+        .eq('session_id', sessionId)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+
+      if (ansErr) {
+        console.error('[practice-session-get] answers:', ansErr)
+      } else if (Array.isArray(ansRows)) {
+        const latest = new Map<string, boolean>()
+        for (const a of ansRows) {
+          const ar = a as { question_id?: string; acertou?: boolean }
+          const qid = typeof ar.question_id === 'string' ? ar.question_id.trim() : ''
+          if (!qid) continue
+          latest.set(qid, ar.acertou === true)
+        }
+        sessionAnswers = [...latest.entries()].map(([questionId, isCorrect]) => ({
+          questionId,
+          isCorrect,
+        }))
+      }
     }
 
     return json(
@@ -63,8 +94,10 @@ serve(async (req) => {
         completedAt: r.completed_at,
         kind: r.kind,
         config: r.config,
-        questionIds: Array.isArray(r.question_ids) ? r.question_ids : [],
+        questionIds,
         summary: r.summary,
+        progress: r.progress ?? null,
+        sessionAnswers,
       },
       cors,
     )
