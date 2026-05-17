@@ -193,14 +193,26 @@ export function Home() {
 
   const petBannerNextSteps = useMemo(() => {
     if (!showHubFocus || !reviewCopy.areaSlug) return null
+    const today = diaHoje
     return {
       revisaoLinha: reviewCopy.title,
       areaSlug: reviewCopy.areaSlug,
       topicAnswerCount: reviewCopy.topicAnswerCount,
       contextualHint:
         reviewCopy.topicAnswerCount === undefined ? reviewCopy.subtitle : undefined,
+      todayRoutineAreaLabel: today?.ehDescanso ? null : today?.area?.label ?? null,
+      todayRoutineAreaSlug: today?.ehDescanso ? null : today?.area?.value ?? null,
+      todayRoutineMinutes: today?.ehDescanso ? undefined : today?.duracaoMin,
+      todayIsRoutineRest: Boolean(today?.ehDescanso),
     }
-  }, [showHubFocus, reviewCopy.areaSlug, reviewCopy.title, reviewCopy.subtitle, reviewCopy.topicAnswerCount])
+  }, [
+    showHubFocus,
+    reviewCopy.areaSlug,
+    reviewCopy.title,
+    reviewCopy.subtitle,
+    reviewCopy.topicAnswerCount,
+    diaHoje,
+  ])
 
   const [overlays, setOverlays] = useState<HomeOverlayState>(() => createHomeOverlayState())
 

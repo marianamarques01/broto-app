@@ -1,13 +1,6 @@
 import { useId } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  ArrowRight,
-  BookOpen,
-  Layers2,
-  Lightbulb,
-  MessageSquare,
-  Sparkles,
-} from 'lucide-react'
+import { ArrowRight, BookOpen, ChevronRight } from 'lucide-react'
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
 
 /** Alinhado a Home.tsx e DashboardStudyStats (meta gamificada do dia). */
@@ -19,6 +12,11 @@ export type PetBannerNextSteps = {
   /** Texto complementar quando não há `topicAnswerCount` (evita repetir números). */
   contextualHint?: string
   topicAnswerCount?: number
+  /** Área foco da rotina semanal para o dia atual (quando existe). */
+  todayRoutineAreaLabel?: string | null
+  todayRoutineAreaSlug?: string | null
+  todayRoutineMinutes?: number
+  todayIsRoutineRest?: boolean
 }
 
 type HomePetBannerProps = {
@@ -75,6 +73,41 @@ function PetXpRing({ pct, size }: { pct: number; size: number }) {
   )
 }
 
+function formatRoutineStudyHint(min: number | undefined): string | null {
+  if (min === undefined || min <= 0) return null
+  if (min >= 60) {
+    const hours = min / 60
+    const rounded = Number.isInteger(hours) ? String(hours) : hours.toFixed(1).replace('.', ',')
+    return `≈ ${rounded} h previstas para hoje na rotina`
+  }
+  return `≈ ${min} min previstos para hoje na rotina`
+}
+
+function routineSecondStep(
+  ns: PetBannerNextSteps,
+): { to: string; title: string; hint: string } {
+  if (ns.todayIsRoutineRest) {
+    return {
+      to: '/study/mock-exam',
+      title: 'Sessão no formato ENEM',
+      hint: 'Dia diferente na semana — mantenha o ritmo com um bloco guiado.',
+    }
+  }
+  if (ns.todayRoutineAreaSlug && ns.todayRoutineAreaLabel) {
+    const rhythm = formatRoutineStudyHint(ns.todayRoutineMinutes)
+    return {
+      to: `/study/${ns.todayRoutineAreaSlug}`,
+      title: `Rotina de hoje · ${ns.todayRoutineAreaLabel}`,
+      hint: rhythm ?? 'Área sugerida na sua rotina semanal — encaixe após o reforço.',
+    }
+  }
+  return {
+    to: '/study/mock-exam',
+    title: 'Bloco rápido de questões',
+    hint: 'Siga com prática objetiva antes de navegar pelo restante do app.',
+  }
+}
+
 export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
   const { pet, loading } = usePet()
 
@@ -100,6 +133,8 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
     ['broto-home-pet-banner', 'broto-home-pet-banner--square', showNextColumn && 'broto-home-pet-banner--with-next']
       .filter(Boolean)
       .join(' ')
+
+  const routineFollowStep = nextSteps ? routineSecondStep(nextSteps) : null
 
   return (
     <section className={sectionClass} aria-label={`${brotoNome} e indicadores de hoje`}>
@@ -222,55 +257,50 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
 
         {nextSteps ? (
           <aside className="broto-home-pet-banner__next-pane" aria-label="Próximos passos na rotina">
-            <header className="broto-home-pet-banner__next-pane-head">
-              <p className="broto-home-pet-banner__next-eyebrow">
-                <Sparkles size={14} strokeWidth={2} className="broto-home-pet-banner__next-eyebrow-icon" aria-hidden />
-                Próximos passos
-              </p>
-              <h3 className="broto-home-pet-banner__next-title">Onde reforçar agora</h3>
-              <span className="broto-home-pet-banner__next-accent" aria-hidden />
-            </header>
-
             <div className="broto-home-pet-banner__next-panel">
-              <p className="broto-home-pet-banner__next-context">{nextSteps.revisaoLinha}</p>
+              <div className="broto-home-pet-banner__next-spotlight">
+                <div className="broto-home-pet-banner__next-spotlight-top">
+                  <span className="broto-home-pet-banner__next-step-chip">Prioridade · agora</span>
+                </div>
 
-              <div className="broto-home-pet-banner__next-stack">
-                {nextSteps.topicAnswerCount !== undefined ? (
-                  <p className="broto-home-pet-banner__next-pill" role="note">
-                    <MessageSquare size={14} strokeWidth={2} aria-hidden />
-                    <span>{nextSteps.topicAnswerCount} respostas no tópico</span>
-                  </p>
-                ) : nextSteps.contextualHint ? (
-                  <p className="broto-home-pet-banner__next-freecopy">{nextSteps.contextualHint}</p>
-                ) : null}
+                <p className="broto-home-pet-banner__next-spotlight-title">{nextSteps.revisaoLinha}</p>
+                <p className="broto-home-pet-banner__next-spotlight-micro">
+                  {nextSteps.topicAnswerCount !== undefined ? (
+                    <>Na página da área você encontra questões e flashcards para consolidar.</>
+                  ) : (
+                    <>
+                      {nextSteps.contextualHint ??
+                        'O broto sugere esse foco porque concentra o maior ganho de desempenho agora.'}
+                    </>
+                  )}
+                </p>
+
                 <Link
-                  className="broto-btn-ghost broto-home-pet-banner__next-flashcards"
+                  className="broto-btn-primary broto-home-pet-banner__next-spotlight-cta"
                   to={`/study/${nextSteps.areaSlug}`}
                 >
-                  <span>Consolide com flashcards</span>
-                  <Layers2 size={16} strokeWidth={2} aria-hidden />
-                </Link>
-                <Link className="broto-home-pet-banner__next-cta" to={`/study/${nextSteps.areaSlug}`}>
-                  <span className="broto-home-pet-banner__next-cta-icon" aria-hidden>
-                    <BookOpen size={18} strokeWidth={2} />
-                  </span>
-                  <span className="broto-home-pet-banner__next-cta-body">
-                    <span className="broto-home-pet-banner__next-cta-title">Revisar agora</span>
-                    <span className="broto-home-pet-banner__next-cta-sub">Pratique e fixe o conteúdo</span>
-                  </span>
-                  <span className="broto-home-pet-banner__next-cta-go" aria-hidden>
-                    <ArrowRight size={18} strokeWidth={2} />
-                  </span>
+                  <BookOpen size={18} strokeWidth={2} aria-hidden />
+                  <span>Abrir esta área e praticar</span>
+                  <ArrowRight size={18} strokeWidth={2} aria-hidden />
                 </Link>
               </div>
 
-              <p className="broto-home-pet-banner__next-tip" role="note">
-                <Lightbulb size={16} strokeWidth={2} className="broto-home-pet-banner__next-tip-icon" aria-hidden />
-                <span>
-                  <span className="broto-home-pet-banner__next-tip-lead">Dica:</span> Pequenas revisões diárias geram
-                  grandes resultados.
-                </span>
-              </p>
+              {routineFollowStep ? (
+                <ol className="broto-home-pet-banner__next-rail-list" aria-label="Próximo na sequência">
+                  <li className="broto-home-pet-banner__next-rail-li">
+                    <Link className="broto-home-pet-banner__next-rail-link" to={routineFollowStep.to}>
+                      <span className="broto-home-pet-banner__next-rail-num">2</span>
+                      <span className="broto-home-pet-banner__next-rail-text">
+                        <span className="broto-home-pet-banner__next-rail-head">{routineFollowStep.title}</span>
+                        <span className="broto-home-pet-banner__next-rail-hint">{routineFollowStep.hint}</span>
+                      </span>
+                      <span className="broto-home-pet-banner__next-rail-chevrons" aria-hidden>
+                        <ChevronRight size={18} strokeWidth={2} />
+                      </span>
+                    </Link>
+                  </li>
+                </ol>
+              ) : null}
             </div>
           </aside>
         ) : null}

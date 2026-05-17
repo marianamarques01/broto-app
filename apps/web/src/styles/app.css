@@ -6021,6 +6021,15 @@ a.broto-home-first-mock-cta__btn:focus-visible {
   color: var(--text-primary);
 }
 
+.broto-home-pet-banner__next-lead {
+  margin: 11px 0 0;
+  max-width: 38ch;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.53;
+  color: var(--text-muted);
+}
+
 .broto-home-pet-banner__next-accent {
   display: block;
   width: 40px;
@@ -6037,7 +6046,7 @@ a.broto-home-first-mock-cta__btn:focus-visible {
 .broto-home-pet-banner__next-panel {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 17px;
   padding: 16px 18px 17px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
@@ -6047,180 +6056,185 @@ a.broto-home-first-mock-cta__btn:focus-visible {
   box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(45, 212, 168, 0.05);
 }
 
-.broto-home-pet-banner__next-context {
-  margin: 0;
-  font-size: 0.84rem;
-  font-weight: 500;
-  line-height: 1.48;
-  color: var(--text-muted);
-}
-
-.broto-home-pet-banner__next-stack {
+.broto-home-pet-banner__next-spotlight {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 11px;
+  padding: 15px 16px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--teal-400) 18%, var(--border-default));
+  background:
+    radial-gradient(ellipse 90% 80% at 12% -20%, rgba(45, 212, 168, 0.12), transparent 55%),
+    linear-gradient(
+      170deg,
+      color-mix(in srgb, var(--bg-card) 58%, transparent) 0%,
+      color-mix(in srgb, var(--bg-deep) 92%, transparent) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(45, 212, 168, 0.09),
+    0 0 0 1px color-mix(in srgb, var(--teal-400) 5%, transparent);
 }
 
-.broto-home-pet-banner__next-pill {
-  margin: 0;
+.broto-home-pet-banner__next-spotlight-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.broto-home-pet-banner__next-step-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  width: fit-content;
-  max-width: 100%;
-  padding: 8px 14px;
+  padding: 5px 10px;
   border-radius: var(--radius-full);
-  font-size: 0.76rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  background: rgba(45, 212, 168, 0.12);
+  border: 1px solid color-mix(in srgb, var(--teal-400) 25%, transparent);
+}
+
+.broto-home-pet-banner__next-metric-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.7175rem;
   font-weight: 600;
-  letter-spacing: 0.015em;
-  color: var(--teal-400);
-  background: color-mix(in srgb, var(--bg-card) 68%, transparent);
+  color: color-mix(in srgb, var(--teal-400) 90%, var(--text-primary));
+  background: color-mix(in srgb, var(--bg-deep) 40%, transparent);
   border: 1px solid var(--border-default);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.broto-home-pet-banner__next-pill svg {
-  flex-shrink: 0;
-  opacity: 0.92;
+.broto-home-pet-banner__next-spotlight-title {
+  margin: 3px 0 0;
+  font-size: 0.9575rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.37;
+  color: var(--text-primary);
 }
 
-.broto-home-pet-banner__next-freecopy {
+.broto-home-pet-banner__next-spotlight-micro {
   margin: 0;
-  font-size: 0.84rem;
-  line-height: 1.47;
+  font-size: 0.7825rem;
+  font-weight: 500;
+  line-height: 1.53;
   color: var(--text-secondary);
 }
 
-/* Linha ghost + borda típica de secondary inline (cartão embutido) */
-a.broto-home-pet-banner__next-flashcards.broto-btn-ghost {
+a.broto-btn-primary.broto-home-pet-banner__next-spotlight-cta {
+  margin-top: 4px;
   width: 100%;
-  justify-content: space-between;
-  padding: 11px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-default);
-  background: color-mix(in srgb, var(--bg-card) 45%, transparent);
-  font-weight: 600;
-  font-size: 0.82rem;
   box-sizing: border-box;
+  justify-content: center;
 }
 
-a.broto-home-pet-banner__next-flashcards.broto-btn-ghost:hover {
-  border-color: var(--border-strong);
-  background: color-mix(in srgb, var(--bg-elevated) 52%, transparent);
-}
-
-a.broto-home-pet-banner__next-flashcards svg {
+a.broto-btn-primary.broto-home-pet-banner__next-spotlight-cta svg:first-of-type {
   flex-shrink: 0;
-  opacity: 0.88;
-  color: var(--teal-400);
 }
 
-.broto-home-pet-banner__next-cta {
+a.broto-btn-primary.broto-home-pet-banner__next-spotlight-cta svg:last-of-type {
+  flex-shrink: 0;
+}
+
+.broto-home-pet-banner__next-rail-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
+  flex-direction: column;
+  gap: 0;
+}
+
+.broto-home-pet-banner__next-rail-li {
+  margin: 0;
+}
+
+.broto-home-pet-banner__next-rail-li + .broto-home-pet-banner__next-rail-li .broto-home-pet-banner__next-rail-link {
+  margin-top: 8px;
+  border-top: 1px dashed var(--border-subtle);
+  padding-top: 12px;
+}
+
+.broto-home-pet-banner__next-rail-link {
+  box-sizing: border-box;
+  display: flex;
+  align-items: stretch;
+  gap: 13px;
+  width: 100%;
+  padding: 10px 12px;
   border-radius: var(--radius-md);
   text-decoration: none;
-  border: 1px solid var(--border-default);
-  background: linear-gradient(165deg, var(--bg-card) 0%, color-mix(in srgb, var(--bg-deep) 78%, var(--bg-card)) 55%, color-mix(in srgb, var(--bg-deep) 94%, transparent) 100%);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(16, 185, 129, 0.07);
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--bg-card) 35%, transparent);
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
-.broto-home-pet-banner__next-cta:hover {
-  border-color: color-mix(in srgb, var(--teal-400) 32%, var(--border-default));
-  box-shadow:
-    var(--shadow-md),
-    inset 0 1px 0 rgba(16, 185, 129, 0.09),
-    0 0 0 1px color-mix(in srgb, var(--teal-400) 10%, transparent);
+.broto-home-pet-banner__next-rail-link:hover {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--bg-elevated) 46%, transparent);
+  box-shadow: var(--shadow-sm);
 }
 
-.broto-home-pet-banner__next-cta:focus-visible {
+.broto-home-pet-banner__next-rail-link:focus-visible {
   outline: 2px solid var(--green-400);
   outline-offset: 2px;
 }
 
-a.broto-home-pet-banner__next-flashcards:focus-visible {
-  outline: 2px solid var(--green-400);
-  outline-offset: 2px;
-}
-
-.broto-home-pet-banner__next-cta-icon {
+.broto-home-pet-banner__next-rail-num {
   flex-shrink: 0;
-  width: 46px;
-  height: 46px;
+  width: 28px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  color: var(--teal-400);
+  border-radius: 10px;
+  font-size: 0.8375rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: color-mix(in srgb, var(--teal-400) 88%, var(--text-primary));
   background: rgba(45, 212, 168, 0.1);
-  border: 1px solid var(--border-default);
+  border: 1px solid color-mix(in srgb, var(--teal-400) 12%, var(--border-default));
 }
 
-.broto-home-pet-banner__next-cta-body {
+.broto-home-pet-banner__next-rail-text {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
+  align-self: center;
 }
 
-.broto-home-pet-banner__next-cta-title {
-  font-size: 0.93rem;
+.broto-home-pet-banner__next-rail-head {
+  font-size: 0.835rem;
   font-weight: 700;
-  letter-spacing: -0.024em;
+  letter-spacing: -0.022em;
+  line-height: 1.34;
   color: var(--text-primary);
 }
 
-.broto-home-pet-banner__next-cta-sub {
-  font-size: 0.74rem;
+.broto-home-pet-banner__next-rail-hint {
+  font-size: 0.7325rem;
   font-weight: 500;
-  line-height: 1.38;
+  line-height: 1.43;
   color: var(--text-muted);
 }
 
-.broto-home-pet-banner__next-cta-go {
+.broto-home-pet-banner__next-rail-chevrons {
   flex-shrink: 0;
-  width: 41px;
-  height: 41px;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 14px;
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--bg-elevated) 38%, transparent);
-  border: 1px solid var(--border-default);
-}
-
-.broto-home-pet-banner__next-tip {
-  margin: 5px 0 0;
-  padding-top: 14px;
-  border-top: 1px solid var(--border-subtle);
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 0.74rem;
-  font-weight: 500;
-  line-height: 1.48;
-  color: var(--text-secondary);
-  background: transparent;
-}
-
-.broto-home-pet-banner__next-tip-icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--gold-400);
-  opacity: 0.94;
-}
-
-.broto-home-pet-banner__next-tip-lead {
-  font-weight: 700;
-  color: var(--gold-accent);
+  align-self: center;
+  opacity: 0.65;
+  color: var(--teal-400);
 }
 
 /* ── Splash de carregamento (paridade com mobile `AnimatedSplash` + FireflyBackground) ── */
@@ -7906,9 +7920,6 @@ a.broto-subjects-questions-btn:focus-visible {
     align-self: stretch;
     min-width: 0;
   }
-    margin-bottom: 10px;
-    width: 100%;
-  }
 
   .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__block--aside-hint {
     display: none;
@@ -7942,6 +7953,10 @@ a.broto-subjects-questions-btn:focus-visible {
   }
 
   .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__block--identity {
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
   .broto-dashboard-hero--solo .broto-home-pet-banner:not(.broto-home-pet-banner--with-next) .broto-home-pet-banner__square-inner {
     display: flex;
     flex-direction: column;
@@ -12052,48 +12067,41 @@ a.broto-btn-ghost {
   box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.94);
 }
 
-:root[data-theme="light"] .broto-home-pet-banner__next-pill {
-  color: color-mix(in srgb, var(--teal-600) 88%, var(--text-primary));
-  background: rgba(255, 255, 255, 0.75);
+:root[data-theme="light"] .broto-home-pet-banner__next-spotlight {
+  border-color: color-mix(in srgb, var(--teal-600) 22%, var(--border-default));
+  background:
+    radial-gradient(ellipse 90% 80% at 12% -20%, rgba(34, 197, 94, 0.12), transparent 55%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #ffffff 94%, transparent) 0%,
+      rgba(239, 250, 244, 0.55) 100%
+    );
 }
 
-:root[data-theme="light"] a.broto-home-pet-banner__next-flashcards.broto-btn-ghost {
-  border-color: var(--border-default);
-  background: color-mix(in srgb, #ffffff 70%, transparent);
+:root[data-theme="light"] .broto-home-pet-banner__next-step-chip {
+  color: var(--text-primary);
 }
 
-:root[data-theme="light"] a.broto-home-pet-banner__next-flashcards.broto-btn-ghost:hover {
-  background: color-mix(in srgb, #ffffff 95%, transparent);
+:root[data-theme="light"] .broto-home-pet-banner__next-metric-chip {
+  color: color-mix(in srgb, var(--teal-600) 92%, var(--text-primary));
+  background: rgba(255, 255, 255, 0.76);
 }
 
-:root[data-theme="light"] .broto-home-pet-banner__next-cta {
-  border-color: var(--border-default);
-  background: linear-gradient(
-    165deg,
-    #ffffff 0%,
-    color-mix(in srgb, var(--bg-surface) 55%, #ffffff) 52%,
-    color-mix(in srgb, var(--bg-surface) 88%, transparent) 100%
-  );
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+:root[data-theme="light"] .broto-home-pet-banner__next-rail-link {
+  background: color-mix(in srgb, #ffffff 68%, transparent);
 }
 
-:root[data-theme="light"] .broto-home-pet-banner__next-cta:hover {
+:root[data-theme="light"] .broto-home-pet-banner__next-rail-link:hover {
+  background: color-mix(in srgb, #ffffff 94%, transparent);
   border-color: var(--border-strong);
 }
 
-:root[data-theme="light"] .broto-home-pet-banner__next-cta-icon {
-  border-color: var(--border-default);
-  background: rgba(22, 163, 74, 0.1);
+:root[data-theme="light"] .broto-home-pet-banner__next-rail-num {
+  color: color-mix(in srgb, var(--teal-600) 94%, var(--text-primary));
 }
 
-:root[data-theme="light"] .broto-home-pet-banner__next-cta-go {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.65);
-  border-color: var(--border-default);
-}
-
-:root[data-theme="light"] .broto-home-pet-banner__next-tip {
-  border-top-color: rgba(180, 83, 9, 0.15);
+:root[data-theme="light"] .broto-home-pet-banner__next-rail-chevrons {
+  color: color-mix(in srgb, var(--teal-600) 94%, var(--teal-400));
 }
 
 :root[data-theme="light"] .broto-practice-year-heatmap {
