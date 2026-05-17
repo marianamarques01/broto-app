@@ -7,7 +7,6 @@ import {
   LogOut,
   GraduationCap,
   Settings,
-  UserCircle,
 } from 'lucide-react'
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
 
@@ -28,10 +27,7 @@ const NAV_ITEMS: {
   },
 ]
 
-const FOOTER_LINKS = [
-  { path: '/settings', label: 'Configurações', icon: Settings },
-  { path: '/profile', label: 'Perfil', icon: UserCircle },
-] as const
+const FOOTER_LINKS = [{ path: '/settings', label: 'Configurações', icon: Settings }] as const
 
 type SidebarProps = {
   onNavigate?: () => void

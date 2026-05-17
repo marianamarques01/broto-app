@@ -50,7 +50,6 @@ function createHomeOverlayState(): HomeOverlayState {
     }
   }
   const resolved = resolveIntegratedTourOpenOnHomeMount()
-  if (resolved.consumedSessionTriggers) consumeIntegratedTourSessionTriggers()
   if (resolved.open) {
     return {
       integratedTourOpen: true,
@@ -217,6 +216,7 @@ export function Home() {
   const [overlays, setOverlays] = useState<HomeOverlayState>(() => createHomeOverlayState())
 
   const handleIntegratedTourClose = useCallback(() => {
+    consumeIntegratedTourSessionTriggers()
     setOverlays((o) => ({
       ...o,
       integratedTourOpen: false,

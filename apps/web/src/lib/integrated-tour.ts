@@ -329,8 +329,9 @@ function clearSessionFlag(key: string): void {
 }
 
 /**
- * Limpa flags de sessão depois que a Home decide abrir o tour
- * (evita reabrir ao navegar dentro do app na mesma aba).
+ * Limpa flags de sessão do tour disparadas por onboarding ou replay em Configurações.
+ * Chame ao **fechar** o tour na Home (pular, concluir ou Esc) — não na montagem, para
+ * compatibilidade com React Strict Mode (dupla montagem em dev).
  */
 export function consumeIntegratedTourSessionTriggers(): void {
   clearSessionFlag(SESSION_FROM_ONBOARDING)
@@ -346,8 +347,6 @@ function clampStep(step: number): number {
 export interface IntegratedTourResolveOpen {
   open: boolean
   step: number
-  /** Se true, Home deve chamar `consumeIntegratedTourSessionTriggers` após abrir. */
-  consumedSessionTriggers: boolean
 }
 
 /**
@@ -358,7 +357,7 @@ export function resolveIntegratedTourOpenOnHomeMount(): IntegratedTourResolveOpe
   if (!isIntegratedTourFeatureEnabled()) {
     if (readSessionFlag(SESSION_REPLAY)) clearSessionFlag(SESSION_REPLAY)
     if (readSessionFlag(SESSION_FROM_ONBOARDING)) clearSessionFlag(SESSION_FROM_ONBOARDING)
-    return { open: false, step: 0, consumedSessionTriggers: false }
+    return { open: false, step: 0 }
   }
 
   const replay = readSessionFlag(SESSION_REPLAY)
@@ -366,26 +365,26 @@ export function resolveIntegratedTourOpenOnHomeMount(): IntegratedTourResolveOpe
   const persist = readIntegratedTourPersist()
 
   if (replay) {
-    return { open: true, step: 0, consumedSessionTriggers: true }
+    return { open: true, step: 0 }
   }
 
   if (fromOnboarding) {
     const step =
       persist?.status === 'in_progress' ? clampStep(persist.step) : 0
-    return { open: true, step, consumedSessionTriggers: true }
+    return { open: true, step }
   }
 
   if (!persist) {
-    return { open: true, step: 0, consumedSessionTriggers: false }
+    return { open: true, step: 0 }
   }
 
   if (persist.contentVersion !== INTEGRATED_TOUR_CONTENT_VERSION) {
-    return { open: true, step: 0, consumedSessionTriggers: false }
+    return { open: true, step: 0 }
   }
 
   if (persist.status === 'in_progress') {
-    return { open: true, step: clampStep(persist.step), consumedSessionTriggers: false }
+    return { open: true, step: clampStep(persist.step) }
   }
 
-  return { open: false, step: 0, consumedSessionTriggers: false }
+  return { open: false, step: 0 }
 }
