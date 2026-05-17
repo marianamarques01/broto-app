@@ -70,25 +70,23 @@ export function RoutineSessionCards({ sessions }: RoutineSessionCardsProps) {
                 <span>{s.durationMin} min</span>
               </div>
             </div>
-            {s.accuracyBadge ? (
-              <span className="broto-routine-sess__acc" style={{ color }}>
-                {s.accuracyBadge}
-              </span>
-            ) : (
-              <span className="broto-routine-sess__acc broto-routine-sess__acc--empty" />
-            )}
-            <StatusPill session={s} />
-            {s.status === 'completed' ? (
-              <span className="broto-routine-sess__xp">
-                <Zap size={12} strokeWidth={2.5} aria-hidden />+{s.xp} XP
-              </span>
-            ) : s.status === 'active' && !s.locked ? (
-              <span className="broto-routine-sess__xp broto-routine-sess__xp--ghost">
-                <Zap size={12} strokeWidth={2.5} aria-hidden />+{s.xp} XP
-              </span>
-            ) : (
-              <span className="broto-routine-sess__xp broto-routine-sess__xp--placeholder" />
-            )}
+            <div className="broto-routine-sess__tail">
+              {s.accuracyBadge ? (
+                <span className="broto-routine-sess__acc" style={{ color }}>
+                  {s.accuracyBadge}
+                </span>
+              ) : null}
+              <StatusPill session={s} />
+              {s.status === 'completed' ? (
+                <span className="broto-routine-sess__xp">
+                  <Zap size={12} strokeWidth={2.5} aria-hidden />+{s.xp} XP
+                </span>
+              ) : s.status === 'active' && !s.locked ? (
+                <span className="broto-routine-sess__xp broto-routine-sess__xp--ghost">
+                  <Zap size={12} strokeWidth={2.5} aria-hidden />+{s.xp} XP
+                </span>
+              ) : null}
+            </div>
           </>
         )
 

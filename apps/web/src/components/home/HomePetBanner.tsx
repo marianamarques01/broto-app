@@ -1,8 +1,29 @@
 import { useId } from 'react'
+import { Link } from 'react-router-dom'
+import {
+  ArrowRight,
+  BookOpen,
+  Layers2,
+  Lightbulb,
+  MessageSquare,
+  Sparkles,
+} from 'lucide-react'
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
 
 /** Alinhado a Home.tsx e DashboardStudyStats (meta gamificada do dia). */
 const META_QUESTOES_DIA = 5
+
+export type PetBannerNextSteps = {
+  revisaoLinha: string
+  areaSlug: string
+  /** Texto complementar quando não há `topicAnswerCount` (evita repetir números). */
+  contextualHint?: string
+  topicAnswerCount?: number
+}
+
+type HomePetBannerProps = {
+  nextSteps?: PetBannerNextSteps | null
+}
 
 function PetXpRing({ pct, size }: { pct: number; size: number }) {
   const rawId = useId()
@@ -54,7 +75,7 @@ function PetXpRing({ pct, size }: { pct: number; size: number }) {
   )
 }
 
-export function HomePetBanner() {
+export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
   const { pet, loading } = usePet()
 
   const fase = pet?.fase ?? 'semente'
@@ -73,121 +94,186 @@ export function HomePetBanner() {
   /** Diâmetro do anel XP — anel mais justo ao emoji (tamanho do emoji só no CSS). */
   const ringSize = 108
 
+  const showNextColumn = Boolean(nextSteps)
+
+  const sectionClass =
+    ['broto-home-pet-banner', 'broto-home-pet-banner--square', showNextColumn && 'broto-home-pet-banner--with-next']
+      .filter(Boolean)
+      .join(' ')
+
   return (
-    <section
-      className="broto-home-pet-banner broto-home-pet-banner--square"
-      aria-label={`${brotoNome} e indicadores de hoje`}
-    >
+    <section className={sectionClass} aria-label={`${brotoNome} e indicadores de hoje`}>
       <div className="broto-home-pet-banner__square-inner">
-        <header className="broto-home-pet-banner__block broto-home-pet-banner__block--identity">
-          <p className="broto-home-pet-banner__sq-kicker">{loading ? '…' : FASE_LABEL[fase]}</p>
-          <h2 className="broto-home-pet-banner__sq-name">{loading ? '…' : brotoNome}</h2>
-        </header>
+        <div className="broto-home-pet-banner__pet-pane">
+          <header className="broto-home-pet-banner__block broto-home-pet-banner__block--identity">
+            <p className="broto-home-pet-banner__sq-kicker">{loading ? '…' : FASE_LABEL[fase]}</p>
+            <h2 className="broto-home-pet-banner__sq-name">{loading ? '…' : brotoNome}</h2>
+          </header>
 
-        {/* Desktop web (≥1040px): micro-barras espelham meta e XP sem texto editorial */}
-        <div
-          className="broto-home-pet-banner__block broto-home-pet-banner__block--aside-hint"
-          aria-hidden
-        >
-          <div className="broto-home-pet-banner__micro-strip">
-            <div className="broto-home-pet-banner__micro-head">
-              <span className="broto-home-pet-banner__micro-label">Meta do dia</span>
-              <span className="broto-home-pet-banner__micro-nums">
-                {loading ? '…' : `${metaCount}/${META_QUESTOES_DIA}`}
-              </span>
-            </div>
-            <div className="broto-home-pet-banner__micro-track">
-              <span
-                className="broto-home-pet-banner__micro-fill broto-home-pet-banner__micro-fill--meta"
-                style={{ width: `${metaPct}%` }}
-              />
-            </div>
-            <div className="broto-home-pet-banner__micro-head">
-              <span className="broto-home-pet-banner__micro-label">XP no nível</span>
-              <span className="broto-home-pet-banner__micro-nums">
-                {loading ? '…' : `${xpInLevel}/100`}
-              </span>
-            </div>
-            <div className="broto-home-pet-banner__micro-track">
-              <span
-                className="broto-home-pet-banner__micro-fill broto-home-pet-banner__micro-fill--xp"
-                style={{ width: `${xpPct}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="broto-home-pet-banner__block broto-home-pet-banner__block--progress">
+          {/* Faixa de micro-progresso — ocultada no desktop quando a coluna "próximos passos" substitui o bloco */}
           <div
-            className="broto-home-pet-banner__ring-wrap"
-            style={{ width: ringSize, height: ringSize }}
+            className="broto-home-pet-banner__block broto-home-pet-banner__block--aside-hint"
+            aria-hidden
           >
-            <PetXpRing pct={loading ? 0 : xpInLevel} size={ringSize} />
-            <div className="broto-home-pet-banner__ring-center" aria-hidden>
-              {loading ? '…' : FASE_EMOJI[fase]}
+            <div className="broto-home-pet-banner__micro-strip">
+              <div className="broto-home-pet-banner__micro-head">
+                <span className="broto-home-pet-banner__micro-label">Meta do dia</span>
+                <span className="broto-home-pet-banner__micro-nums">
+                  {loading ? '…' : `${metaCount}/${META_QUESTOES_DIA}`}
+                </span>
+              </div>
+              <div className="broto-home-pet-banner__micro-track">
+                <span
+                  className="broto-home-pet-banner__micro-fill broto-home-pet-banner__micro-fill--meta"
+                  style={{ width: `${metaPct}%` }}
+                />
+              </div>
+              <div className="broto-home-pet-banner__micro-head">
+                <span className="broto-home-pet-banner__micro-label">XP no nível</span>
+                <span className="broto-home-pet-banner__micro-nums">
+                  {loading ? '…' : `${xpInLevel}/100`}
+                </span>
+              </div>
+              <div className="broto-home-pet-banner__micro-track">
+                <span
+                  className="broto-home-pet-banner__micro-fill broto-home-pet-banner__micro-fill--xp"
+                  style={{ width: `${xpPct}%` }}
+                />
+              </div>
             </div>
           </div>
-          <p className="broto-home-pet-banner__level-pill" aria-label={`Nível ${nivel}`}>
-            {loading ? '…' : `Nv. ${nivel}`}
-          </p>
-          <p className="broto-home-pet-banner__ring-xp">
-            {loading ? (
-              '…'
-            ) : (
-              <>
-                <span className="broto-home-pet-banner__ring-xp-values">
-                  <span className="broto-home-pet-banner__ring-xp-num">{xpInLevel}</span>
-                  <span className="broto-home-pet-banner__ring-xp-sep">/</span>
-                  <span className="broto-home-pet-banner__ring-xp-den">100</span>
-                </span>{' '}
-                <span className="broto-home-pet-banner__ring-xp-unit">XP</span>
-              </>
-            )}
-          </p>
+
+          <div className="broto-home-pet-banner__block broto-home-pet-banner__block--progress">
+            <div
+              className="broto-home-pet-banner__ring-wrap"
+              style={{ width: ringSize, height: ringSize }}
+            >
+              <PetXpRing pct={loading ? 0 : xpInLevel} size={ringSize} />
+              <div className="broto-home-pet-banner__ring-center" aria-hidden>
+                {loading ? '…' : FASE_EMOJI[fase]}
+              </div>
+            </div>
+            <p className="broto-home-pet-banner__level-pill" aria-label={`Nível ${nivel}`}>
+              {loading ? '…' : `Nv. ${nivel}`}
+            </p>
+            <p className="broto-home-pet-banner__ring-xp">
+              {loading ? (
+                '…'
+              ) : (
+                <>
+                  <span className="broto-home-pet-banner__ring-xp-values">
+                    <span className="broto-home-pet-banner__ring-xp-num">{xpInLevel}</span>
+                    <span className="broto-home-pet-banner__ring-xp-sep">/</span>
+                    <span className="broto-home-pet-banner__ring-xp-den">100</span>
+                  </span>{' '}
+                  <span className="broto-home-pet-banner__ring-xp-unit">XP</span>
+                </>
+              )}
+            </p>
+          </div>
+
+          <footer className="broto-home-pet-banner__block broto-home-pet-banner__block--stats">
+            <div className="broto-home-pet-banner__sq-metrics">
+              <div className="broto-home-pet-banner__sq-metric">
+                <span className="broto-home-pet-banner__sq-metric-label">Meta hoje</span>
+                <span className="broto-home-pet-banner__sq-metric-val">
+                  {loading ? (
+                    '—'
+                  ) : (
+                    <>
+                      <span className="broto-home-pet-banner__sq-metric-num">{metaCount}</span>
+                      <span className="broto-home-pet-banner__sq-metric-sep">/</span>
+                      <span className="broto-home-pet-banner__sq-metric-den">{META_QUESTOES_DIA}</span>
+                    </>
+                  )}
+                </span>
+              </div>
+              <div className="broto-home-pet-banner__sq-metric">
+                <span className="broto-home-pet-banner__sq-metric-label">Acerto hoje</span>
+                <span className="broto-home-pet-banner__sq-metric-val">
+                  {loading
+                    ? '—'
+                    : hitPct === null
+                      ? '—'
+                      : (
+                          <>
+                            <span className="broto-home-pet-banner__sq-metric-num">{hitPct}</span>
+                            <span className="broto-home-pet-banner__sq-metric-unit">%</span>
+                          </>
+                        )}
+                </span>
+              </div>
+              <div className="broto-home-pet-banner__sq-metric">
+                <span className="broto-home-pet-banner__sq-metric-label">Sequência</span>
+                <span className="broto-home-pet-banner__sq-metric-val">
+                  {loading ? '—' : (
+                    <>
+                      <span className="broto-home-pet-banner__sq-metric-num">{streak}</span>
+                      <span className="broto-home-pet-banner__sq-metric-unit broto-home-pet-banner__sq-metric-unit--word">
+                        {streak === 1 ? 'dia' : 'dias'}
+                      </span>
+                    </>
+                  )}
+                </span>
+              </div>
+            </div>
+          </footer>
         </div>
 
-        <footer className="broto-home-pet-banner__block broto-home-pet-banner__block--stats">
-          <div className="broto-home-pet-banner__sq-metrics">
-            <div className="broto-home-pet-banner__sq-metric">
-              <span className="broto-home-pet-banner__sq-metric-label">Meta hoje</span>
-              <span className="broto-home-pet-banner__sq-metric-val">
-                {loading ? (
-                  '—'
-                ) : (
-                  <>
-                    <span className="broto-home-pet-banner__sq-metric-num">{metaCount}</span>
-                    <span className="broto-home-pet-banner__sq-metric-sep">/</span>
-                    <span className="broto-home-pet-banner__sq-metric-den">{META_QUESTOES_DIA}</span>
-                  </>
-                )}
-              </span>
+        {nextSteps ? (
+          <aside className="broto-home-pet-banner__next-pane" aria-label="Próximos passos na rotina">
+            <header className="broto-home-pet-banner__next-pane-head">
+              <p className="broto-home-pet-banner__next-eyebrow">
+                <Sparkles size={14} strokeWidth={2} className="broto-home-pet-banner__next-eyebrow-icon" aria-hidden />
+                Próximos passos
+              </p>
+              <h3 className="broto-home-pet-banner__next-title">Onde reforçar agora</h3>
+              <span className="broto-home-pet-banner__next-accent" aria-hidden />
+            </header>
+
+            <div className="broto-home-pet-banner__next-panel">
+              <p className="broto-home-pet-banner__next-context">{nextSteps.revisaoLinha}</p>
+
+              <div className="broto-home-pet-banner__next-stack">
+                {nextSteps.topicAnswerCount !== undefined ? (
+                  <p className="broto-home-pet-banner__next-pill" role="note">
+                    <MessageSquare size={14} strokeWidth={2} aria-hidden />
+                    <span>{nextSteps.topicAnswerCount} respostas no tópico</span>
+                  </p>
+                ) : nextSteps.contextualHint ? (
+                  <p className="broto-home-pet-banner__next-freecopy">{nextSteps.contextualHint}</p>
+                ) : null}
+                <Link
+                  className="broto-btn-ghost broto-home-pet-banner__next-flashcards"
+                  to={`/study/${nextSteps.areaSlug}`}
+                >
+                  <span>Consolide com flashcards</span>
+                  <Layers2 size={16} strokeWidth={2} aria-hidden />
+                </Link>
+                <Link className="broto-home-pet-banner__next-cta" to={`/study/${nextSteps.areaSlug}`}>
+                  <span className="broto-home-pet-banner__next-cta-icon" aria-hidden>
+                    <BookOpen size={18} strokeWidth={2} />
+                  </span>
+                  <span className="broto-home-pet-banner__next-cta-body">
+                    <span className="broto-home-pet-banner__next-cta-title">Revisar agora</span>
+                    <span className="broto-home-pet-banner__next-cta-sub">Pratique e fixe o conteúdo</span>
+                  </span>
+                  <span className="broto-home-pet-banner__next-cta-go" aria-hidden>
+                    <ArrowRight size={18} strokeWidth={2} />
+                  </span>
+                </Link>
+              </div>
+
+              <p className="broto-home-pet-banner__next-tip" role="note">
+                <Lightbulb size={16} strokeWidth={2} className="broto-home-pet-banner__next-tip-icon" aria-hidden />
+                <span>
+                  <span className="broto-home-pet-banner__next-tip-lead">Dica:</span> Pequenas revisões diárias geram
+                  grandes resultados.
+                </span>
+              </p>
             </div>
-            <div className="broto-home-pet-banner__sq-metric">
-              <span className="broto-home-pet-banner__sq-metric-label">Acerto hoje</span>
-              <span className="broto-home-pet-banner__sq-metric-val">
-                {loading ? '—' : hitPct === null ? '—' : (
-                  <>
-                    <span className="broto-home-pet-banner__sq-metric-num">{hitPct}</span>
-                    <span className="broto-home-pet-banner__sq-metric-unit">%</span>
-                  </>
-                )}
-              </span>
-            </div>
-            <div className="broto-home-pet-banner__sq-metric">
-              <span className="broto-home-pet-banner__sq-metric-label">Sequência</span>
-              <span className="broto-home-pet-banner__sq-metric-val">
-                {loading ? '—' : (
-                  <>
-                    <span className="broto-home-pet-banner__sq-metric-num">{streak}</span>
-                    <span className="broto-home-pet-banner__sq-metric-unit broto-home-pet-banner__sq-metric-unit--word">
-                      {streak === 1 ? 'dia' : 'dias'}
-                    </span>
-                  </>
-                )}
-              </span>
-            </div>
-          </div>
-        </footer>
+          </aside>
+        ) : null}
       </div>
     </section>
   )

@@ -472,6 +472,86 @@ body::before {
   }
 }
 
+/* Banner: experiência recomendada no desktop (viewport estreito) */
+.broto-mobile-desktop-tip {
+  position: sticky;
+  top: 0;
+  z-index: 260;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px calc(11px + env(safe-area-inset-top, 0px));
+  margin: 0;
+  margin-bottom: -1px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(
+    130deg,
+    color-mix(in srgb, var(--green-600) 18%, var(--bg-elevated)) 0%,
+    color-mix(in srgb, var(--teal-600) 12%, var(--bg-deep)) 100%
+  );
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
+}
+
+:root[data-theme='light'] .broto-mobile-desktop-tip {
+  border-bottom-color: rgba(18, 60, 40, 0.12);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--green-200) 55%, var(--bg-card)) 0%,
+    color-mix(in srgb, var(--bg-card) 92%, var(--green-300)) 100%
+  );
+  box-shadow: 0 6px 22px rgba(12, 40, 24, 0.12);
+}
+
+.broto-mobile-desktop-tip__text {
+  flex: 1;
+  margin: 0;
+  padding: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.42;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] .broto-mobile-desktop-tip__text {
+  color: color-mix(in srgb, var(--text-primary) 92%, #0a3524);
+}
+
+.broto-mobile-desktop-tip__close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin: -2px -4px 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+
+.broto-mobile-desktop-tip__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] .broto-mobile-desktop-tip__close:hover {
+  background: rgba(14, 60, 40, 0.08);
+}
+
+.broto-mobile-desktop-tip__close:focus-visible {
+  outline: 2px solid var(--green-400);
+  outline-offset: 2px;
+}
+
 .broto-mtab__shell {
   position: absolute;
   left: 0;
@@ -734,6 +814,25 @@ body::before {
   padding: 28px 28px 56px;
 }
 
+.broto-main-inner--settings {
+  max-width: min(72rem, 100%);
+  margin-top: 2px;
+  margin-bottom: 8px;
+  padding-top: 24px;
+  padding-bottom: 48px;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(ellipse 140% 90% at 50% -55%, color-mix(in srgb, var(--teal-400) 18%, transparent), transparent 52%),
+    linear-gradient(
+      185deg,
+      color-mix(in srgb, var(--bg-deep) 94%, var(--green-600) 6%) 0%,
+      var(--bg-void) 68%
+    );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--border-default) 85%, transparent);
+}
+
 @media (max-width: 768px) {
   .broto-main-inner {
     padding: 20px 16px 40px;
@@ -743,44 +842,189 @@ body::before {
 /* ── Settings (/settings) ── */
 
 .broto-settings {
-  max-width: 720px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 28px;
 }
 
-.broto-settings__intro {
+.broto-settings-page {
+  display: block;
+}
+
+.broto-settings__column {
+  min-width: 0;
+}
+
+.broto-settings__group {
   display: flex;
-  gap: 18px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 12px;
+  scroll-margin-top: 1.25rem;
+}
+
+@media (min-width: 960px) {
+  .broto-settings-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 188px;
+    gap: 28px 36px;
+    align-items: start;
+  }
+
+  .broto-settings__toc:not(.broto-settings__toc--rail) {
+    display: none;
+  }
+
+  .broto-settings__toc--rail {
+    display: block;
+    position: sticky;
+    top: 18px;
+    padding: 14px 14px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: color-mix(in srgb, var(--bg-card) 92%, var(--bg-deep));
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+@media (max-width: 959px) {
+  .broto-settings__toc--rail {
+    display: none;
+  }
+}
+
+.broto-settings__toc-list {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0 0 2px;
+  padding: 0 2px 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.broto-settings__toc-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.broto-settings__toc-link:hover {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--green-500) 38%, var(--border-default));
+  background: color-mix(in srgb, var(--green-600) 8%, var(--bg-card));
+}
+
+.broto-settings__toc-link:focus-visible {
+  outline: 2px solid var(--teal-400);
+  outline-offset: 2px;
+}
+
+.broto-settings__toc-rail-title {
+  margin: 0 0 10px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.broto-settings__toc-rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.broto-settings__toc-rail-link {
+  display: block;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.broto-settings__toc-rail-link:hover {
+  background: color-mix(in srgb, var(--green-600) 12%, transparent);
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--border-default) 80%, transparent);
+}
+
+.broto-settings__toc-rail-link:focus-visible {
+  outline: 2px solid var(--teal-400);
+  outline-offset: 2px;
+}
+
+.broto-settings__hero {
+  position: relative;
+  overflow: hidden;
   padding: 22px 22px 24px;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-default);
-  background:
-    radial-gradient(ellipse 120% 80% at 12% 0%, rgba(16, 185, 129, 0.14), transparent 52%),
-    radial-gradient(ellipse 80% 60% at 92% 100%, rgba(245, 200, 66, 0.06), transparent 48%),
-    linear-gradient(165deg, var(--bg-card) 0%, color-mix(in srgb, var(--bg-deep) 92%, transparent) 100%);
-  box-shadow: var(--shadow-sm);
 }
 
-.broto-settings__intro-icon {
+.broto-settings__hero-accent {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 100% 90% at 0% -20%, color-mix(in srgb, var(--green-500) 22%, transparent), transparent 55%),
+    radial-gradient(ellipse 80% 70% at 100% 120%, color-mix(in srgb, var(--gold-400) 8%, transparent), transparent 50%);
+  opacity: 0.95;
+}
+
+.broto-settings__hero-row {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.broto-settings__hero-icon {
   flex-shrink: 0;
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
-  color: var(--green-400);
-  background: color-mix(in srgb, var(--green-600) 16%, transparent);
-  border: 1px solid color-mix(in srgb, var(--green-500) 22%, transparent);
+  color: color-mix(in srgb, var(--green-400) 95%, var(--text-primary));
+  background: color-mix(in srgb, var(--green-600) 18%, var(--bg-deep));
+  border: 1px solid color-mix(in srgb, var(--green-500) 28%, var(--border-default));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent);
+}
+
+.broto-settings__hero-copy {
+  min-width: 0;
 }
 
 .broto-settings__title {
   margin: 0 0 8px;
   font-family: var(--font-display);
-  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-size: clamp(1.28rem, 3.2vw, 1.65rem);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -789,59 +1033,117 @@ body::before {
 
 .broto-settings__lede {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   line-height: 1.55;
   color: var(--text-secondary);
-  max-width: 36rem;
+  max-width: 40rem;
 }
 
 .broto-settings__alert {
   margin: 0;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in srgb, var(--gold-400) 35%, var(--border-default));
-  background: color-mix(in srgb, var(--gold-400) 8%, var(--bg-card));
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--gold-400) 42%, var(--border-default));
+  background: color-mix(in srgb, var(--gold-400) 10%, var(--bg-card));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold-400) 12%, transparent);
+}
+
+.broto-settings__alert-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: color-mix(in srgb, var(--gold-400) 90%, var(--text-primary));
+}
+
+.broto-settings__alert-text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
   color: var(--text-secondary);
-  font-size: 0.86rem;
 }
 
-.broto-settings__panel {
-  padding: 20px 20px 18px;
+.broto-settings__section {
+  padding: 22px 22px 20px;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-default);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-sm);
 }
 
-.broto-settings__panel--broto {
+.broto-settings__section--broto {
   background:
-    radial-gradient(ellipse 90% 80% at 0% 0%, rgba(16, 185, 129, 0.08), transparent 55%),
+    radial-gradient(ellipse 100% 120% at 0% 0%, color-mix(in srgb, var(--green-500) 12%, transparent), transparent 58%),
     var(--bg-card);
 }
 
-.broto-settings__panel--danger {
-  border-color: color-mix(in srgb, var(--border-default) 70%, rgba(239, 68, 68, 0.22));
-  background: color-mix(in srgb, var(--bg-card) 92%, rgba(239, 68, 68, 0.04));
+.broto-settings__section--class {
+  padding-bottom: 18px;
 }
 
-.broto-settings__panel-head {
-  margin-bottom: 16px;
+.broto-settings__section--muted {
+  background: color-mix(in srgb, var(--bg-deep) 55%, var(--bg-card));
 }
 
-.broto-settings__panel-title {
-  margin: 0 0 4px;
-  font-size: 0.75rem;
+.broto-settings__section--danger {
+  border-color: color-mix(in srgb, var(--border-default) 65%, rgba(239, 68, 68, 0.28));
+  background: color-mix(in srgb, var(--bg-card) 88%, rgba(239, 68, 68, 0.055));
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 1px color-mix(in srgb, rgba(239, 68, 68, 0.12), transparent);
+}
+
+.broto-settings__section-head {
+  margin-bottom: 20px;
+}
+
+.broto-settings__section-title {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+.broto-settings__section-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.broto-settings__blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.broto-settings__block {
+  padding: 2px 0;
+}
+
+.broto-settings__block + .broto-settings__hr {
+  margin: 18px 0;
+}
+
+.broto-settings__block-label {
+  margin: 0 0 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
-.broto-settings__panel-desc {
+.broto-settings__hr {
+  height: 1px;
   margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  color: var(--text-secondary);
+  border: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--border-default) 88%, transparent),
+    transparent
+  );
 }
 
 .broto-settings__grid {
@@ -853,11 +1155,16 @@ body::before {
 @media (min-width: 640px) {
   .broto-settings__grid {
     grid-template-columns: 1fr 1fr;
-    gap: 18px 20px;
+    gap: 18px 22px;
   }
 }
 
 .broto-settings__field {
+  min-width: 0;
+}
+
+.broto-settings__field--grow {
+  flex: 1;
   min-width: 0;
 }
 
@@ -874,8 +1181,9 @@ body::before {
 }
 
 .broto-settings__label-icon {
-  opacity: 0.85;
+  opacity: 0.88;
   flex-shrink: 0;
+  color: color-mix(in srgb, var(--text-muted) 92%, var(--green-400));
 }
 
 .broto-settings__hint {
@@ -894,53 +1202,144 @@ body::before {
   color: var(--text-primary);
   background: var(--bg-deep);
   border: 1px solid var(--border-subtle);
+  word-break: break-word;
 }
 
-.broto-settings__row-actions {
+.broto-settings__section-footer {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin-top: 18px;
-  padding-top: 2px;
+  justify-content: flex-end;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
 }
 
-.broto-settings__row-actions--wrap {
-  margin-top: 12px;
+.broto-settings__section-footer--tight {
+  margin-top: 18px;
+  padding-top: 16px;
 }
 
 .broto-settings__inline-ok {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding-top: 16px;
+  border-top: 1px dashed color-mix(in srgb, var(--border-default) 80%, transparent);
+  font-size: 0.84rem;
+  line-height: 1.45;
   color: var(--text-secondary);
 }
 
 .broto-settings__broto-row {
   display: flex;
-  gap: 16px;
+  gap: 18px;
   align-items: flex-start;
   flex-wrap: wrap;
 }
 
 .broto-settings__broto-avatar {
-  width: 64px;
-  height: 64px;
+  width: 68px;
+  height: 68px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2rem;
+  line-height: 1;
   flex-shrink: 0;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--green-600) 20%, var(--bg-deep)), var(--bg-deep));
-  border: 1px solid var(--border-default);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--green-600) 22%, var(--bg-deep)),
+    var(--bg-deep)
+  );
+  border: 1px solid color-mix(in srgb, var(--green-500) 22%, var(--border-default));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent);
+}
+
+.broto-settings__class-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.broto-settings__class-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--green-400);
+  background: color-mix(in srgb, var(--green-600) 14%, var(--bg-deep));
+  border: 1px solid color-mix(in srgb, var(--green-500) 24%, var(--border-default));
+}
+
+.broto-settings__class-panel {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-deep);
+}
+
+.broto-settings__class-name {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.broto-settings__class-org {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.broto-settings__class-status {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.broto-settings__class-status--muted {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.broto-settings__class-actions {
+  margin-top: 16px;
+}
+
+.broto-settings__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--green-400);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 4px;
+  margin: -6px -4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.broto-settings__link:hover {
+  color: color-mix(in srgb, var(--green-400) 85%, #fff);
+}
+
+.broto-settings__link:focus-visible {
+  outline: 2px solid var(--teal-400);
+  outline-offset: 2px;
 }
 
 .broto-settings__theme {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
@@ -949,33 +1348,49 @@ body::before {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 18px;
-  border-radius: var(--radius-full);
+  min-height: 48px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
   font-family: inherit;
-  font-size: 0.86rem;
-  font-weight: 500;
+  font-size: 0.88rem;
+  font-weight: 600;
   cursor: pointer;
   border: 1px solid var(--border-default);
   background: var(--bg-deep);
   color: var(--text-secondary);
-  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .broto-settings__theme-pill:hover {
-  border-color: color-mix(in srgb, var(--green-500) 30%, var(--border-default));
+  border-color: color-mix(in srgb, var(--green-500) 34%, var(--border-default));
   color: var(--text-primary);
+}
+
+.broto-settings__theme-pill:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--green-500) 55%, var(--border-default));
+  box-shadow:
+    0 0 0 2px var(--bg-card),
+    0 0 0 4px var(--teal-400);
 }
 
 .broto-settings__theme-pill--on {
-  border-color: color-mix(in srgb, var(--green-500) 45%, var(--border-default));
-  background: color-mix(in srgb, var(--green-600) 12%, var(--bg-deep));
+  border-color: color-mix(in srgb, var(--green-500) 48%, var(--border-default));
+  background: color-mix(in srgb, var(--green-600) 14%, var(--bg-deep));
   color: var(--text-primary);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--green-500) 20%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--green-500) 18%, transparent);
 }
 
 .broto-settings__theme-note {
-  margin: 12px 0 0;
+  margin: 14px 0 0;
   font-size: 0.8rem;
+  line-height: 1.45;
   color: var(--text-muted);
 }
 
@@ -983,10 +1398,10 @@ body::before {
   display: flex;
   gap: 14px;
   align-items: flex-start;
-  padding: 14px 16px;
+  padding: 16px 18px;
   border-radius: var(--radius-md);
-  border: 1px dashed var(--border-default);
-  background: var(--bg-deep);
+  border: 1px dashed color-mix(in srgb, var(--border-default) 92%, var(--text-muted));
+  background: color-mix(in srgb, var(--bg-deep) 65%, var(--bg-card));
 }
 
 .broto-settings__placeholder-icon {
@@ -996,7 +1411,7 @@ body::before {
 }
 
 .broto-settings__placeholder-title {
-  margin: 0 0 4px;
+  margin: 0 0 6px;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -1005,8 +1420,85 @@ body::before {
 .broto-settings__placeholder-text {
   margin: 0;
   font-size: 0.84rem;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--text-muted);
+}
+
+.broto-settings__action-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.broto-settings__action-item {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.broto-settings__action-item:first-child {
+  padding-top: 4px;
+}
+
+.broto-settings__action-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+@media (min-width: 640px) {
+  .broto-settings__action-item {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+}
+
+.broto-settings__action-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.broto-settings__action-title {
+  margin: 0 0 6px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.broto-settings__action-desc {
+  margin: 0;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.broto-settings__action-btn {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .broto-settings__action-btn {
+    width: auto;
+    min-width: 11rem;
+  }
+}
+
+.broto-settings__kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-deep);
+  color: var(--text-secondary);
 }
 
 .broto-settings__spin,
@@ -3014,6 +3506,10 @@ a.study-area-card {
     justify-content: center;
   }
 
+  .study-simulado-landing__trailing-chev {
+    display: none;
+  }
+
   .study-areas {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
@@ -4317,6 +4813,20 @@ a.study-area-card {
   }
 }
 
+/* Home: sequência principal logo abaixo do banner do Broto (sem sidebar de missões) */
+.broto-home-main-streak {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+@media (min-width: 720px) {
+  .broto-home-main-streak {
+    max-width: 400px;
+    width: 100%;
+    margin-inline: auto;
+  }
+}
+
 .broto-dashboard-hero__aside {
   flex: 1;
   min-width: 0;
@@ -4545,6 +5055,568 @@ a.broto-home-first-mock-cta__btn:focus-visible {
   width: fit-content;
 }
 
+@media (min-width: 1040px) {
+  .broto-home-hub-focus.broto-home-hub-focus--paired-with-banner {
+    display: none;
+  }
+}
+
+/* Modal — pesquisa de feedback do beta (Home) */
+.broto-home-beta-survey-modal.broto-mock-exam-info-modal {
+  padding: 26px 22px 22px;
+  border-color: color-mix(in srgb, var(--teal-400) 22%, var(--border-subtle));
+  background:
+    linear-gradient(
+      152deg,
+      color-mix(in srgb, var(--teal-400) 10%, transparent),
+      transparent 52%
+    ),
+    var(--bg-card);
+}
+
+.broto-home-beta-survey-modal__title {
+  margin: 0 0 10px;
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.broto-home-beta-survey-modal__lead {
+  margin: 0 0 22px;
+  font-size: 0.9rem;
+  line-height: 1.52;
+  color: var(--text-secondary);
+}
+
+.broto-home-beta-survey-modal__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.broto-home-beta-survey-modal__primary.broto-btn-primary--inline {
+  width: 100%;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.broto-home-beta-survey-modal__secondary.broto-btn-secondary--inline {
+  width: 100%;
+  justify-content: center;
+}
+
+.broto-home-beta-survey-modal__done {
+  margin-top: 2px;
+  padding: 8px;
+  align-self: center;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.broto-home-beta-survey-modal__done:hover {
+  color: var(--text-secondary);
+}
+
+.broto-home-beta-survey-modal__done:focus-visible {
+  outline: 2px solid var(--green-500);
+  outline-offset: 3px;
+}
+
+/* Tour integrado (full screen, carrossel — estilo onboarding “card”, tokens do tema) */
+.broto-integrated-tour-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 530;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+  box-sizing: border-box;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+.broto-integrated-tour {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: max(16px, env(safe-area-inset-top)) clamp(16px, 4vw, 28px) max(20px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  color: var(--text-primary);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--teal-400) 6%, var(--bg-deep)) 0%,
+    var(--bg-deep) 28%,
+    var(--bg-deep) 100%
+  );
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--teal-400) 6%, transparent);
+}
+
+/* Encerramento do tour — layout editorial (sem grid de highlights) */
+.broto-integrated-tour--note-slide {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--green-500) 14%, var(--bg-deep)) 0%,
+    var(--bg-deep) 42%,
+    color-mix(in srgb, var(--green-500) 5%, var(--bg-deep)) 100%
+  );
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--green-500) 14%, transparent);
+}
+
+.broto-integrated-tour--note-slide .broto-integrated-tour__skip:hover {
+  color: color-mix(in srgb, var(--green-500) 65%, var(--text-primary));
+}
+
+.broto-integrated-tour--note-slide .broto-integrated-tour__skip:focus-visible {
+  outline-color: var(--green-500);
+}
+
+.broto-integrated-tour--note-slide .broto-integrated-tour__dot:hover {
+  background: color-mix(in srgb, var(--green-500) 50%, transparent);
+}
+
+.broto-integrated-tour--note-slide .broto-integrated-tour__dot--on {
+  background: var(--green-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green-500) 26%, transparent);
+}
+
+.broto-integrated-tour--note-slide .broto-integrated-tour__footer {
+  border-top-color: color-mix(in srgb, var(--green-500) 22%, var(--border-subtle));
+}
+
+.broto-integrated-tour__note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 0;
+  padding: 4px 0 20px;
+}
+
+.broto-integrated-tour__note-panel {
+  width: 100%;
+  max-width: min(440px, 100%);
+  margin: 4px 0 0;
+  padding: 22px 22px 24px;
+  box-sizing: border-box;
+  text-align: center;
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--bg-card) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--green-500) 22%, var(--border-subtle));
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--green-500) 7%, transparent) inset,
+    0 14px 36px -24px color-mix(in srgb, var(--green-500) 26%, rgba(0, 0, 0, 0.42));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.broto-integrated-tour__note-panel-title {
+  margin: 0 0 14px;
+  padding: 0;
+  font-size: clamp(1.28rem, 4vw, 1.62rem);
+  font-weight: 800;
+  font-family: var(--font-display, var(--font-sans));
+  letter-spacing: -0.025em;
+  line-height: 1.18;
+  color: var(--text-primary);
+}
+
+.broto-integrated-tour__note-panel-body {
+  margin: 0;
+  padding: 0;
+  font-size: clamp(0.94rem, 2.9vw, 1.03rem);
+  line-height: 1.62;
+  color: var(--text-secondary);
+  text-wrap: balance;
+}
+
+.broto-integrated-tour__note-panel-body .broto-integrated-tour__body-strong {
+  color: color-mix(in srgb, var(--green-500) 35%, var(--text-primary));
+  font-weight: 700;
+}
+
+.broto-integrated-tour__note-panel-foot {
+  margin: 18px 0 0;
+  padding: 14px 6px 0;
+  border-top: 1px dashed color-mix(in srgb, var(--green-500) 22%, var(--border-subtle));
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.broto-integrated-tour__note-panel .broto-integrated-tour__note-survey {
+  width: 100%;
+  margin: 22px 0 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.broto-integrated-tour__note-panel .broto-btn-secondary.broto-integrated-tour__note-survey-link {
+  width: 100%;
+  max-width: 100%;
+}
+
+.broto-integrated-tour__note-survey-link {
+  display: inline-flex;
+  width: 100%;
+  min-height: 54px;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  text-decoration: none;
+  border-radius: var(--radius-full);
+  padding: 17px 22px;
+  font-size: clamp(1.02rem, 3.1vw, 1.14rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  border-width: 2px;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--green-500) 42%, var(--border-default));
+  color: color-mix(in srgb, var(--green-500) 88%, var(--text-primary));
+  background: color-mix(in srgb, var(--green-500) 14%, var(--bg-card));
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .broto-integrated-tour__note-survey-link:hover {
+    border-color: color-mix(in srgb, var(--green-500) 58%, var(--border-strong));
+    background: color-mix(in srgb, var(--green-500) 22%, var(--bg-elevated));
+    transform: translateY(-1px);
+  }
+}
+
+.broto-integrated-tour--note-slide .broto-integrated-tour__note-survey-link:focus-visible {
+  outline: 2px solid var(--green-500);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .broto-integrated-tour__note-panel {
+    padding: 18px 18px 22px;
+    border-radius: 22px;
+  }
+}
+
+.broto-integrated-tour__top {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  min-height: 44px;
+  margin-bottom: 4px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.broto-integrated-tour__skip {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+  transform: none;
+  border: none;
+  background: transparent;
+  padding: 10px 4px;
+  margin: 0;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.broto-integrated-tour__skip:hover {
+  color: var(--teal-500);
+}
+
+.broto-integrated-tour__skip:focus-visible {
+  outline: 2px solid var(--teal-400);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.broto-integrated-tour__carousel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  align-items: stretch;
+  max-width: min(520px, 100%);
+  width: 100%;
+  margin: 0 auto;
+  padding: 4px 0 12px;
+  gap: 16px;
+}
+
+.broto-integrated-tour__step-line {
+  margin: 0;
+  padding: 4px 4px 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.broto-integrated-tour__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  padding: 0 2px 4px;
+}
+
+.broto-integrated-tour__title {
+  margin: 0;
+  padding: 0 4px 10px;
+  font-size: clamp(1.45rem, 4.5vw, 1.85rem);
+  font-weight: 800;
+  font-family: var(--font-display, var(--font-sans));
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.broto-integrated-tour__body {
+  margin: 0;
+  padding: 0 6px;
+  font-size: clamp(0.92rem, 2.8vw, 1rem);
+  line-height: 1.58;
+  color: var(--text-secondary);
+  max-width: 48ch;
+  align-self: center;
+}
+
+.broto-integrated-tour__body-strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.broto-integrated-tour__highlights-wrap {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.broto-integrated-tour__highlights {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.broto-integrated-tour__highlight {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-align: left;
+  justify-content: flex-start;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  min-height: 0;
+  min-width: 0;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--bg-deep) 35%, var(--bg-card));
+  border: 1px solid color-mix(in srgb, var(--teal-400) 18%, var(--border-subtle));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--teal-400) 5%, transparent) inset;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .broto-integrated-tour__highlight:hover {
+    border-color: color-mix(in srgb, var(--teal-400) 32%, var(--border-subtle));
+    box-shadow:
+      0 1px 0 color-mix(in srgb, var(--teal-400) 8%, transparent) inset,
+      0 10px 28px -20px color-mix(in srgb, var(--teal-400) 14%, rgba(0, 0, 0, 0.45));
+  }
+}
+
+.broto-integrated-tour__highlight-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.broto-integrated-tour__highlight-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.broto-integrated-tour__highlight-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.22;
+}
+
+.broto-integrated-tour__highlight-hint {
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.broto-integrated-tour__dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 0 16px;
+  flex-shrink: 0;
+}
+
+.broto-integrated-tour__dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--text-muted) 45%, transparent);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.broto-integrated-tour__dot:hover {
+  background: color-mix(in srgb, var(--teal-400) 55%, transparent);
+}
+
+.broto-integrated-tour__dot--on {
+  background: var(--teal-400);
+  transform: scale(1.2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal-400) 22%, transparent);
+}
+
+.broto-integrated-tour__dot:focus-visible {
+  outline: 2px solid var(--green-500);
+  outline-offset: 2px;
+}
+
+.broto-integrated-tour__footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  max-width: min(520px, 100%);
+  width: 100%;
+  margin: 0 auto;
+  margin-top: 8px;
+  padding: 14px 2px 0;
+  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 85%, transparent);
+}
+
+.broto-integrated-tour__footer .broto-btn-primary {
+  border-radius: var(--radius-full);
+  padding: 14px 16px;
+  font-weight: 700;
+  min-width: min(200px, 100%);
+}
+
+.broto-integrated-tour__footer .broto-integrated-tour__nav--ghost {
+  border-radius: var(--radius-full);
+  padding: 13px 20px;
+  font-weight: 600;
+  border-color: color-mix(in srgb, var(--teal-400) 32%, var(--border-default));
+  color: color-mix(in srgb, var(--teal-500) 85%, var(--text-primary));
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+}
+
+.broto-integrated-tour__footer .broto-integrated-tour__nav--ghost:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--teal-400) 55%, var(--border-strong));
+  background: color-mix(in srgb, var(--teal-400) 8%, var(--bg-elevated));
+}
+
+.broto-integrated-tour__nav {
+  min-width: 0;
+}
+
+.broto-integrated-tour__nav--primary {
+  margin-left: auto;
+}
+
+@media (max-width: 480px) {
+  .broto-integrated-tour__footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .broto-integrated-tour__nav--primary {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .broto-integrated-tour__nav:not(.broto-integrated-tour__nav--primary) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .broto-integrated-tour__highlight {
+    padding: 10px 10px 12px;
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .broto-integrated-tour__highlight,
+  .broto-integrated-tour__dot {
+    transition: none;
+  }
+}
+
 .broto-home-details-analytics {
   grid-column: 1 / -1;
   border-radius: 14px;
@@ -4593,18 +5665,14 @@ a.broto-home-first-mock-cta__btn:focus-visible {
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
-  border: 1px solid color-mix(in srgb, var(--teal-500) 28%, transparent);
-  background: color-mix(in srgb, var(--teal-500) 11%, transparent);
-  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, var(--status-sky) 32%, transparent);
+  background: color-mix(in srgb, var(--status-sky) 16%, transparent);
+  color: var(--status-sky);
 }
 
 .broto-home-mock-pill:focus-visible {
-  outline: 2px solid var(--teal-500);
+  outline: 2px solid var(--status-sky);
   outline-offset: 2px;
-}
-
-[data-theme='dark'] .broto-home-mock-pill {
-  color: color-mix(in srgb, #fff 88%, transparent);
 }
 
 .broto-home-missoes-anchor {
@@ -4897,6 +5965,262 @@ a.broto-home-first-mock-cta__btn:focus-visible {
   );
   mix-blend-mode: multiply;
   opacity: 0.75;
+}
+
+/* Coluna do mascote (sempre); no desktop com “próximos passos”, vira painel esquerdo */
+.broto-home-pet-banner__pet-pane {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Desktop ≥1040: coluna extra no banner — mobile/tablet mantém só o painel do Broto visível aqui */
+.broto-home-pet-banner__next-pane {
+  display: none;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.broto-home-pet-banner__next-pane-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.broto-home-pet-banner__next-eyebrow {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal-500);
+}
+
+.broto-home-pet-banner__next-eyebrow-icon {
+  flex-shrink: 0;
+  opacity: 0.92;
+  color: var(--teal-400);
+}
+
+.broto-home-pet-banner__next-title {
+  margin: 7px 0 0;
+  font-size: 1.22rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.22;
+  color: var(--text-primary);
+}
+
+.broto-home-pet-banner__next-accent {
+  display: block;
+  width: 40px;
+  height: 3px;
+  margin-top: 11px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--teal-400) 85%, transparent) 0%,
+    transparent 100%
+  );
+}
+
+.broto-home-pet-banner__next-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px 17px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background:
+    radial-gradient(ellipse 118% 100% at 98% -8%, rgba(45, 212, 168, 0.08), transparent 52%),
+    color-mix(in srgb, var(--bg-deep) 52%, transparent);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(45, 212, 168, 0.05);
+}
+
+.broto-home-pet-banner__next-context {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.48;
+  color: var(--text-muted);
+}
+
+.broto-home-pet-banner__next-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.broto-home-pet-banner__next-pill {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  color: var(--teal-400);
+  background: color-mix(in srgb, var(--bg-card) 68%, transparent);
+  border: 1px solid var(--border-default);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.broto-home-pet-banner__next-pill svg {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.broto-home-pet-banner__next-freecopy {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.47;
+  color: var(--text-secondary);
+}
+
+/* Linha ghost + borda típica de secondary inline (cartão embutido) */
+a.broto-home-pet-banner__next-flashcards.broto-btn-ghost {
+  width: 100%;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: color-mix(in srgb, var(--bg-card) 45%, transparent);
+  font-weight: 600;
+  font-size: 0.82rem;
+  box-sizing: border-box;
+}
+
+a.broto-home-pet-banner__next-flashcards.broto-btn-ghost:hover {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--bg-elevated) 52%, transparent);
+}
+
+a.broto-home-pet-banner__next-flashcards svg {
+  flex-shrink: 0;
+  opacity: 0.88;
+  color: var(--teal-400);
+}
+
+.broto-home-pet-banner__next-cta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  border: 1px solid var(--border-default);
+  background: linear-gradient(165deg, var(--bg-card) 0%, color-mix(in srgb, var(--bg-deep) 78%, var(--bg-card)) 55%, color-mix(in srgb, var(--bg-deep) 94%, transparent) 100%);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(16, 185, 129, 0.07);
+}
+
+.broto-home-pet-banner__next-cta:hover {
+  border-color: color-mix(in srgb, var(--teal-400) 32%, var(--border-default));
+  box-shadow:
+    var(--shadow-md),
+    inset 0 1px 0 rgba(16, 185, 129, 0.09),
+    0 0 0 1px color-mix(in srgb, var(--teal-400) 10%, transparent);
+}
+
+.broto-home-pet-banner__next-cta:focus-visible {
+  outline: 2px solid var(--green-400);
+  outline-offset: 2px;
+}
+
+a.broto-home-pet-banner__next-flashcards:focus-visible {
+  outline: 2px solid var(--green-400);
+  outline-offset: 2px;
+}
+
+.broto-home-pet-banner__next-cta-icon {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: var(--teal-400);
+  background: rgba(45, 212, 168, 0.1);
+  border: 1px solid var(--border-default);
+}
+
+.broto-home-pet-banner__next-cta-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.broto-home-pet-banner__next-cta-title {
+  font-size: 0.93rem;
+  font-weight: 700;
+  letter-spacing: -0.024em;
+  color: var(--text-primary);
+}
+
+.broto-home-pet-banner__next-cta-sub {
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.38;
+  color: var(--text-muted);
+}
+
+.broto-home-pet-banner__next-cta-go {
+  flex-shrink: 0;
+  width: 41px;
+  height: 41px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--bg-elevated) 38%, transparent);
+  border: 1px solid var(--border-default);
+}
+
+.broto-home-pet-banner__next-tip {
+  margin: 5px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.48;
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+.broto-home-pet-banner__next-tip-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--gold-400);
+  opacity: 0.94;
+}
+
+.broto-home-pet-banner__next-tip-lead {
+  font-weight: 700;
+  color: var(--gold-accent);
 }
 
 /* ── Splash de carregamento (paridade com mobile `AnimatedSplash` + FireflyBackground) ── */
@@ -6545,25 +7869,106 @@ a.broto-subjects-questions-btn:focus-visible {
     margin-inline: 0;
   }
 
-  .broto-dashboard-hero--solo .broto-home-pet-banner__square-inner {
+  /* Dois painéis — progresso à esquerda, próximos passos à direita (paridade com referência de IA) */
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next.broto-home-pet-banner--square {
+    min-height: 300px;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__square-inner {
     display: grid;
-    grid-template-columns: minmax(128px, 0.82fr) minmax(0, 1.18fr);
-    grid-template-rows: auto 1fr auto;
-    column-gap: 28px;
-    row-gap: 10px;
+    grid-template-columns: minmax(276px, 0.54fr) minmax(264px, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    column-gap: 0;
+    align-items: stretch;
+    min-height: 304px;
+    padding: 24px 26px 22px 29px;
+    aspect-ratio: unset;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__pet-pane {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    padding-right: 28px;
+    border-right: 1px solid var(--border-subtle);
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__next-pane {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 4px 0 0 28px;
+    align-self: stretch;
+    min-width: 0;
+  }
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__block--aside-hint {
+    display: none;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__block--progress {
+    flex: 1;
+    min-height: 0;
+    justify-content: center;
+    padding-block: 4px 12px;
+    width: 100%;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__ring-xp {
+    font-size: 0.88rem;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__ring-xp-num {
+    font-size: 1.08rem;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__ring-xp-den {
+    font-size: 0.94rem;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__block--stats {
+    margin-top: 10px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+    width: 100%;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__block--identity {
+  .broto-dashboard-hero--solo .broto-home-pet-banner:not(.broto-home-pet-banner--with-next) .broto-home-pet-banner__square-inner {
+    display: flex;
+    flex-direction: column;
     min-height: 280px;
     padding: 24px 28px 22px;
     aspect-ratio: unset;
   }
 
-  .broto-dashboard-hero--solo .broto-home-pet-banner__block--identity {
+  .broto-dashboard-hero--solo .broto-home-pet-banner:not(.broto-home-pet-banner--with-next) .broto-home-pet-banner__pet-pane {
+    display: grid;
+    grid-template-columns: minmax(128px, 0.82fr) minmax(0, 1.18fr);
+    grid-template-rows: auto 1fr auto;
+    column-gap: 28px;
+    row-gap: 10px;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .broto-dashboard-hero--solo .broto-home-pet-banner:not(.broto-home-pet-banner--with-next) .broto-home-pet-banner__block--identity {
     grid-column: 2;
     grid-row: 1;
     margin-bottom: 0;
     text-align: left;
   }
 
-  .broto-dashboard-hero--solo .broto-home-pet-banner__block--aside-hint {
+  .broto-dashboard-hero--solo .broto-home-pet-banner:not(.broto-home-pet-banner--with-next) .broto-home-pet-banner__block--aside-hint {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -6574,13 +7979,13 @@ a.broto-subjects-questions-btn:focus-visible {
     padding: 0 2px;
   }
 
-  .broto-dashboard-hero--solo .broto-home-pet-banner__block--progress {
+  .broto-dashboard-hero--solo .broto-home-pet-banner:not(.broto-home-pet-banner--with-next) .broto-home-pet-banner__block--progress {
     grid-column: 1;
     grid-row: 1 / 4;
     padding-block: 0;
   }
 
-  .broto-dashboard-hero--solo .broto-home-pet-banner__block--stats {
+  .broto-dashboard-hero--solo .broto-home-pet-banner:not(.broto-home-pet-banner--with-next) .broto-home-pet-banner__block--stats {
     grid-column: 2;
     grid-row: 3;
     margin-top: 0;
@@ -7464,6 +8869,32 @@ select.broto-select:focus {
   background: var(--bg-deep);
 }
 
+.broto-chat__feature-notice {
+  flex-shrink: 0;
+  margin: 0 20px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--amber-500, #f59e0b) 16%, var(--bg-card));
+  border: 1px solid color-mix(in srgb, var(--amber-500, #f59e0b) 35%, transparent);
+}
+
+.broto-chat-modal__feature-notice {
+  flex-shrink: 0;
+  margin: 0 16px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--amber-500, #f59e0b) 14%, var(--bg-card));
+  border: 1px solid color-mix(in srgb, var(--amber-500, #f59e0b) 32%, transparent);
+}
+
 .broto-chat__scroll {
   flex: 1;
   overflow: auto;
@@ -7985,6 +9416,13 @@ select.broto-select:focus {
 :root[data-theme="light"] .broto-chat-modal__composer {
   background: rgba(255, 255, 255, 0.94);
   border-color: var(--green-500);
+}
+
+:root[data-theme="light"] .broto-chat__feature-notice,
+:root[data-theme="light"] .broto-chat-modal__feature-notice {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(217, 119, 6, 0.35);
+  color: var(--text-primary);
 }
 
 /* ── Utility classes ── */
@@ -8832,6 +10270,7 @@ a.broto-btn-ghost {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  width: 100%;
   max-width: 960px;
 }
 
@@ -8862,6 +10301,20 @@ a.broto-btn-ghost {
   .broto-routine-layout {
     grid-template-columns: 1fr;
     gap: 28px;
+  }
+
+  .broto-routine-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .broto-main-inner--study.broto-routine-page {
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+    padding-bottom: max(48px, env(safe-area-inset-bottom, 0px));
+    min-width: 0;
+    overflow-x: clip;
   }
 }
 
@@ -9187,7 +10640,7 @@ a.broto-btn-ghost {
 
 .broto-routine-sess__link {
   display: grid;
-  grid-template-columns: 52px 48px minmax(0, 1fr) 48px auto minmax(64px, 72px);
+  grid-template-columns: 52px 48px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px 12px;
   padding: 14px 16px;
@@ -9195,30 +10648,70 @@ a.broto-btn-ghost {
   color: inherit;
 }
 
+.broto-routine-sess__locked-wrap {
+  display: grid;
+  grid-template-columns: 52px 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 14px 16px;
+}
+
+.broto-routine-sess__body {
+  min-width: 0;
+}
+
+.broto-routine-sess__tail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 10px;
+  min-width: 0;
+  align-self: center;
+}
+
 @media (max-width: 720px) {
   .broto-routine-sess__link,
   .broto-routine-sess__locked-wrap {
-    grid-template-columns: 48px 40px minmax(0, 1fr);
+    grid-template-columns: 46px 46px minmax(0, 1fr);
     grid-template-rows: auto auto;
-  }
-
-  .broto-routine-sess__acc,
-  .broto-routine-sess__pill,
-  .broto-routine-sess__xp {
-    grid-column: 3;
+    padding: 12px 14px;
+    column-gap: 10px;
+    row-gap: 10px;
+    align-items: start;
   }
 
   .broto-routine-sess__time {
     grid-column: 1;
+    grid-row: 1;
+    align-self: center;
   }
-}
 
-.broto-routine-sess__locked-wrap {
-  display: grid;
-  grid-template-columns: 52px 48px minmax(0, 1fr) 48px auto minmax(64px, 72px);
-  align-items: center;
-  gap: 10px 12px;
-  padding: 14px 16px;
+  .broto-routine-sess__icon {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .broto-routine-sess__body {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .broto-routine-sess__tail {
+    grid-column: 1/-1;
+    grid-row: 2;
+    justify-content: flex-start;
+    align-self: stretch;
+    padding-top: 8px;
+    margin-top: 2px;
+    border-top: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+  }
+
+  .broto-routine-sess__acc {
+    text-align: left;
+  }
 }
 
 .broto-routine-sess__time {
@@ -9243,6 +10736,9 @@ a.broto-btn-ghost {
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.25;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .broto-routine-sess__meta {
@@ -9265,10 +10761,6 @@ a.broto-btn-ghost {
   text-align: right;
 }
 
-.broto-routine-sess__acc--empty {
-  visibility: hidden;
-}
-
 .broto-routine-sess__pill {
   font-size: 0.62rem;
   font-weight: 700;
@@ -9277,7 +10769,6 @@ a.broto-btn-ghost {
   padding: 5px 10px;
   border-radius: var(--radius-full);
   white-space: nowrap;
-  justify-self: end;
 }
 
 .broto-routine-sess__pill--done {
@@ -9316,15 +10807,10 @@ a.broto-btn-ghost {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--gold-400);
-  justify-self: end;
 }
 
 .broto-routine-sess__xp--ghost {
   color: rgba(245, 200, 66, 0.85);
-}
-
-.broto-routine-sess__xp--placeholder {
-  min-width: 1px;
 }
 
 .broto-routine-add {
@@ -9365,10 +10851,51 @@ a.broto-btn-ghost {
   gap: 14px;
 }
 
+.broto-routine-week-strip-wrap {
+  margin-inline: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
 .broto-routine-week-strip-wrap .broto-week-strip {
+  flex-wrap: nowrap;
+  min-width: min(100%, 520px);
+  justify-content: space-between;
+  gap: 2px;
   background: transparent;
   border: 1px dashed color-mix(in srgb, var(--border-default) 75%, transparent);
   box-shadow: none;
+}
+
+@media (max-width: 480px) {
+  .broto-routine-week-strip-wrap .broto-week-strip {
+    min-width: 100%;
+    padding: 12px 6px;
+    gap: 0;
+  }
+
+  .broto-routine-week-strip-wrap .broto-week-day {
+    flex: 1 0 calc(100% / 7);
+    min-width: 2.75rem;
+  }
+
+  .broto-routine-week-strip-wrap .broto-week-day__letter {
+    font-size: 0.62rem;
+  }
+
+  .broto-routine-week-strip-wrap .broto-week-day__num {
+    width: 34px;
+    min-width: 34px;
+    max-width: 34px;
+    height: 34px;
+    min-height: 34px;
+    max-height: 34px;
+    margin-top: 6px;
+    font-size: 0.74rem;
+  }
 }
 
 .broto-routine-week-head {
@@ -9625,7 +11152,13 @@ a.broto-btn-ghost {
 .broto-routine-personal__callouts {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+}
+
+@media (max-width: 480px) {
+  .broto-routine-personal__callouts {
+    grid-template-columns: 1fr;
+  }
 }
 
 .broto-routine-personal__callout {
@@ -9675,7 +11208,7 @@ a.broto-btn-ghost {
   gap: 12px;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 380px) {
   .broto-routine-kpis {
     grid-template-columns: 1fr;
   }
@@ -9898,6 +11431,36 @@ a.broto-btn-ghost {
   color: var(--text-muted);
 }
 
+@media (max-width: 520px) {
+  .broto-routine-week-chart {
+    padding: 14px 12px 10px;
+  }
+
+  .broto-routine-week-chart__plot {
+    height: 128px;
+  }
+
+  .broto-routine-week-chart__bars {
+    gap: 4px;
+    padding-bottom: 20px;
+  }
+
+  .broto-routine-week-chart__bar {
+    max-width: 22px;
+    border-radius: 6px 6px 3px 3px;
+  }
+
+  .broto-routine-week-chart__val,
+  .broto-routine-week-chart__wd {
+    font-size: 0.56rem;
+  }
+
+  .broto-routine-week-chart__head {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+}
+
 .broto-routine-area-perf {
   padding: 16px 16px 14px;
   border-radius: var(--radius-md);
@@ -9967,6 +11530,21 @@ a.broto-btn-ghost {
 .broto-routine-area-perf__pct--empty {
   color: var(--text-muted);
   opacity: 0.45;
+}
+
+@media (max-width: 480px) {
+  .broto-routine-area-perf__row-top {
+    flex-wrap: wrap;
+  }
+
+  .broto-routine-area-perf__label {
+    white-space: normal;
+    line-height: 1.3;
+  }
+
+  .broto-routine-area-perf__pct {
+    margin-left: auto;
+  }
 }
 
 .broto-routine-area-perf__track {
@@ -10059,6 +11637,19 @@ a.broto-btn-ghost {
   outline: 2px solid var(--routine-mint);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+@media (max-width: 560px) {
+  .broto-routine-tip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .broto-routine-tip__icon {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 :root[data-theme="light"] .broto-routine-sess,
@@ -10433,6 +12024,76 @@ a.broto-btn-ghost {
 
 :root[data-theme="light"] .broto-home-pet-banner__ring-progress {
   filter: drop-shadow(0 0 4px rgba(74, 120, 95, 0.22));
+}
+
+@media (min-width: 1040px) {
+  :root[data-theme="light"] .broto-dashboard-hero--solo .broto-home-pet-banner--with-next .broto-home-pet-banner__pet-pane {
+    border-right-color: rgba(15, 118, 88, 0.14);
+  }
+}
+
+:root[data-theme="light"] .broto-home-pet-banner__next-accent {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--teal-600) 75%, transparent) 0%,
+    transparent 100%
+  );
+}
+
+:root[data-theme="light"] .broto-home-pet-banner__next-panel {
+  border-color: var(--border-default);
+  background:
+    radial-gradient(ellipse 118% 100% at 98% -8%, rgba(34, 197, 94, 0.1), transparent 52%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #ffffff 86%, transparent) 0%,
+      rgba(239, 250, 244, 0.55) 100%
+    );
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
+
+:root[data-theme="light"] .broto-home-pet-banner__next-pill {
+  color: color-mix(in srgb, var(--teal-600) 88%, var(--text-primary));
+  background: rgba(255, 255, 255, 0.75);
+}
+
+:root[data-theme="light"] a.broto-home-pet-banner__next-flashcards.broto-btn-ghost {
+  border-color: var(--border-default);
+  background: color-mix(in srgb, #ffffff 70%, transparent);
+}
+
+:root[data-theme="light"] a.broto-home-pet-banner__next-flashcards.broto-btn-ghost:hover {
+  background: color-mix(in srgb, #ffffff 95%, transparent);
+}
+
+:root[data-theme="light"] .broto-home-pet-banner__next-cta {
+  border-color: var(--border-default);
+  background: linear-gradient(
+    165deg,
+    #ffffff 0%,
+    color-mix(in srgb, var(--bg-surface) 55%, #ffffff) 52%,
+    color-mix(in srgb, var(--bg-surface) 88%, transparent) 100%
+  );
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+}
+
+:root[data-theme="light"] .broto-home-pet-banner__next-cta:hover {
+  border-color: var(--border-strong);
+}
+
+:root[data-theme="light"] .broto-home-pet-banner__next-cta-icon {
+  border-color: var(--border-default);
+  background: rgba(22, 163, 74, 0.1);
+}
+
+:root[data-theme="light"] .broto-home-pet-banner__next-cta-go {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.65);
+  border-color: var(--border-default);
+}
+
+:root[data-theme="light"] .broto-home-pet-banner__next-tip {
+  border-top-color: rgba(180, 83, 9, 0.15);
 }
 
 :root[data-theme="light"] .broto-practice-year-heatmap {
@@ -11739,6 +13400,10 @@ a.broto-btn-ghost {
 @media (max-width: 760px) {
   .broto-qbank-focus-banco-row {
     grid-template-columns: 1fr;
+  }
+
+  .broto-qbank-focus-banco-row__session .study-banco__arrow svg {
+    display: none;
   }
 }
 
@@ -13860,6 +15525,11 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
   .broto-qbank-hero-band__head {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  /* Área de estudo (embedded): menos espaço entre o parágrafo do Broto e os KPIs */
+  .broto-qbank-hero-band--embedded .broto-qbank-hero-band__head {
+    gap: 8px 20px;
   }
 
   .broto-qbank-kpi-strip--head {

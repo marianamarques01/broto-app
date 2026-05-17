@@ -11,11 +11,21 @@ import {
 } from 'lucide-react'
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
 
-const NAV_ITEMS = [
+const NAV_ITEMS: {
+  path: string
+  label: string
+  icon: typeof Home
+  linkTitle?: string
+}[] = [
   { path: '/', label: 'Inicio', icon: Home },
   { path: '/study', label: 'Área de Estudo', icon: GraduationCap },
   { path: '/routine', label: 'Rotina', icon: CalendarCheck },
-  { path: '/broto', label: 'Broto AI', icon: MessageCircle },
+  {
+    path: '/broto',
+    label: 'Broto IA',
+    icon: MessageCircle,
+    linkTitle: 'Assistente de IA — funcionalidade ainda em desenvolvimento',
+  },
 ]
 
 const FOOTER_LINKS = [
@@ -64,6 +74,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             key={item.path}
             to={item.path}
             end={item.path === '/'}
+            title={item.linkTitle}
             className={({ isActive }) => {
               const studyActive =
                 item.path === '/study' &&

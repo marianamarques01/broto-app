@@ -1,10 +1,11 @@
-import { StrictMode } from 'react'
+import { Fragment, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import '@/styles/app.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { OrganizationProvider } from '@/contexts/OrganizationContext'
 import { ClassProvider } from '@/contexts/ClassContext'
+import { DesktopRecommendationBanner } from '@/components/layout/DesktopRecommendationBanner'
 import { router } from '@/router'
 
 const rootElement = document.documentElement
@@ -17,7 +18,10 @@ createRoot(document.getElementById('root')!).render(
     <AuthProvider>
       <OrganizationProvider>
         <ClassProvider>
-          <RouterProvider router={router} />
+          <Fragment>
+            <DesktopRecommendationBanner />
+            <RouterProvider router={router} />
+          </Fragment>
         </ClassProvider>
       </OrganizationProvider>
     </AuthProvider>

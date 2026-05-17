@@ -21,8 +21,8 @@ export function BrotoIaFab() {
         <button
           type="button"
           className="broto-fab-ia"
-          title="Conversar com o Broto (IA)"
-          aria-label="Conversar com o Broto (IA)"
+          title="Abrir Broto IA (em desenvolvimento)"
+          aria-label="Abrir Broto IA — funcionalidade ainda em desenvolvimento"
           aria-expanded={open}
           aria-controls="broto-chat-floating-panel"
           onClick={() => setOpen(true)}

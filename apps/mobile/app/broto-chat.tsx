@@ -32,6 +32,9 @@ const INITIAL_MESSAGE: Message = {
 const COMPOSER_MIN_H = 48
 const SEND_SIZE = 48
 
+const BROTO_IA_NOT_READY_NOTICE =
+  'O Broto IA ainda não está pronto: você pode testar a interface, mas respostas e disponibilidade podem variar até o lançamento oficial.'
+
 export default function BrotoChatScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
@@ -182,7 +185,7 @@ export default function BrotoChatScreen() {
               color: colors.text.primary,
             }}
           >
-            Broto AI
+            Broto IA
           </Text>
           <Text
             style={{
@@ -191,9 +194,36 @@ export default function BrotoChatScreen() {
               color: colors.text.muted,
             }}
           >
-            Assistente de estudos
+            Assistente de estudos — em desenvolvimento
           </Text>
         </View>
+      </View>
+
+      <View
+        accessibilityRole="text"
+        accessibilityLiveRegion="polite"
+        style={{
+          marginHorizontal: 16,
+          marginTop: 10,
+          marginBottom: 2,
+          paddingHorizontal: 12,
+          paddingVertical: 10,
+          borderRadius: 12,
+          backgroundColor: 'rgba(245, 158, 11, 0.18)',
+          borderWidth: 1,
+          borderColor: 'rgba(217, 119, 6, 0.35)',
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 12,
+            lineHeight: 17,
+            fontFamily: fonts.sans,
+            color: colors.text.primary,
+          }}
+        >
+          {BROTO_IA_NOT_READY_NOTICE}
+        </Text>
       </View>
 
       {/* Messages */}

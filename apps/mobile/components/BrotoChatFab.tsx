@@ -86,7 +86,7 @@ export function BrotoChatFab() {
         onPressOut={() => {
           scale.value = withSpring(1, { damping: 12, stiffness: 300 })
         }}
-        accessibilityLabel="Abrir chat com Broto"
+        accessibilityLabel="Abrir Broto IA (funcionalidade ainda em desenvolvimento)"
         accessibilityRole="button"
       >
         <View style={styles.button}>

@@ -5,6 +5,8 @@ type MobileTabItem = {
   path: string
   label: string
   shortLabel: string
+  /** Acessibilidade: quando definido, substitui `label` no aria-label do link. */
+  ariaLabel?: string
   end?: boolean
 } & ({ icon: LucideIcon; center?: false } | { emoji: string; center: true })
 
@@ -13,7 +15,13 @@ const TAB_ITEMS: MobileTabItem[] = [
   { path: '/study/mock-exam', label: 'Sessão ENEM', shortLabel: 'Sessão', icon: ClipboardList },
   { path: '/', label: 'Início', shortLabel: 'Início', emoji: '🌱', end: true, center: true },
   { path: '/routine', label: 'Rotina', shortLabel: 'Rotina', icon: CalendarCheck },
-  { path: '/broto', label: 'Broto AI', shortLabel: 'Broto', icon: MessageCircle },
+  {
+    path: '/broto',
+    label: 'Broto IA',
+    shortLabel: 'Broto',
+    ariaLabel: 'Broto IA — em desenvolvimento',
+    icon: MessageCircle,
+  },
 ]
 
 /** Barra inferior com entalhe suave no centro (SVG) + botão Início elevado. */
@@ -93,7 +101,7 @@ export function MobileTabBar() {
                   const base = isCenter ? 'broto-mtab__link broto-mtab__link--home' : 'broto-mtab__link'
                   return active ? `${base} broto-mtab__link--active` : base
                 }}
-                aria-label={item.label}
+                aria-label={item.ariaLabel ?? item.label}
               >
                 <span className="broto-mtab__link-bg" aria-hidden />
                 {isCenter ? (

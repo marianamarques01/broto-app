@@ -10,6 +10,19 @@ export interface BrotoChatMessage {
 export const BROTO_WELCOME_TEXT =
   'Oi! Sou o Broto, seu assistente de estudos. Como posso te ajudar?'
 
+/** Aviso exibido nas superfícies do Broto IA (funcionalidade ainda não finalizada). */
+export const BROTO_IA_NOT_READY_NOTICE =
+  'O Broto IA ainda não está pronto: você pode testar a interface, mas respostas e disponibilidade podem variar até o lançamento oficial.'
+
+export function BrotoIaNotReadyBanner(props: { className?: string }) {
+  const cls = props.className ?? 'broto-chat__feature-notice'
+  return (
+    <div className={cls} role="status">
+      {BROTO_IA_NOT_READY_NOTICE}
+    </div>
+  )
+}
+
 export function useBrotoChat() {
   const [messages, setMessages] = useState<BrotoChatMessage[]>([
     { role: 'assistant', content: BROTO_WELCOME_TEXT },
@@ -85,6 +98,7 @@ export function BrotoChat() {
 
   return (
     <div className="broto-chat">
+      <BrotoIaNotReadyBanner />
       <div className="broto-chat__scroll">
         {messages.map((msg, i) => (
           <div

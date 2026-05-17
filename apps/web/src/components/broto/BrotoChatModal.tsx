@@ -11,7 +11,11 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
-import { useBrotoChat, BROTO_WELCOME_TEXT } from '@/components/broto/BrotoChat'
+import {
+  useBrotoChat,
+  BROTO_WELCOME_TEXT,
+  BrotoIaNotReadyBanner,
+} from '@/components/broto/BrotoChat'
 
 type BrotoChatModalProps = {
   onClose: () => void
@@ -130,6 +134,8 @@ export function BrotoChatModal({ onClose }: BrotoChatModalProps) {
             </button>
           </div>
         </header>
+
+        <BrotoIaNotReadyBanner className="broto-chat-modal__feature-notice" />
 
         <div className="broto-chat-modal__body">
           {showWelcomeShell ? (

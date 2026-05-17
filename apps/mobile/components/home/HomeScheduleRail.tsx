@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect, type RefObject } from 'react'
+import { useCallback, useMemo, useState, useEffect } from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { useRouter } from 'expo-router'
 import { ChevronLeft, ChevronRight, Zap } from 'lucide-react-native'
@@ -86,7 +86,6 @@ export function HomeScheduleRail({
     missionItems,
     focusDia,
     progressAreas,
-    missionsAnchorRef,
 }: {
     horasPorDia: number
     questoesHoje: number
@@ -106,7 +105,6 @@ export function HomeScheduleRail({
         duracaoMin: number
     } | null
     progressAreas: AreaStat[] | undefined
-    missionsAnchorRef?: RefObject<View | null>
 }) {
     const router = useRouter()
     const today = new Date()
@@ -208,8 +206,6 @@ export function HomeScheduleRail({
             <View style={{ width: '100%', marginTop: space[8], marginBottom: space[6] }}>
                 {/* Missões de hoje — logo abaixo do card do Broto na Home */}
                 <View
-                    ref={missionsAnchorRef}
-                    collapsable={false}
                     style={{
                         backgroundColor: colors.bg.card,
                         borderRadius: radii.lg,

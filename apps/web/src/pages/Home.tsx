@@ -1,4 +1,4 @@
-import { useMemo, useSyncExternalStore, useEffect } from 'react'
+import { useMemo, useSyncExternalStore, useEffect, useState, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet, FASE_LABEL } from '@/hooks/usePet'
@@ -19,7 +19,51 @@ import { HomeRightSidebar } from '@/components/home/HomeRightSidebar'
 import { HomePetBanner } from '@/components/home/HomePetBanner'
 import { HomePracticeYearHeatmap } from '@/components/home/HomePracticeYearHeatmap'
 import { buildFlashcardReviewCopy } from '@broto/shared'
-import { ClipboardCheck, ClipboardList } from 'lucide-react'
+import { ClipboardCheck } from 'lucide-react'
+import {
+  HomeBetaSurveyModal,
+  readBetaSurveyCompleted,
+  resolveBetaFeedbackFormUrl,
+  writeBetaSurveyCompleted,
+} from '@/components/home/HomeBetaSurveyModal'
+import { HomeIntegratedTourModal } from '@/components/home/HomeIntegratedTourModal'
+import {
+  consumeIntegratedTourSessionTriggers,
+  isIntegratedTourFeatureEnabled,
+  resolveIntegratedTourOpenOnHomeMount,
+} from '@/lib/integrated-tour'
+
+const BETA_SURVEY_FORM_URL = resolveBetaFeedbackFormUrl()
+
+type HomeOverlayState = {
+  integratedTourOpen: boolean
+  integratedTourInitialStep: number
+  betaSurveyModalOpen: boolean
+}
+
+function createHomeOverlayState(): HomeOverlayState {
+  if (!isIntegratedTourFeatureEnabled()) {
+    return {
+      integratedTourOpen: false,
+      integratedTourInitialStep: 0,
+      betaSurveyModalOpen: !readBetaSurveyCompleted(),
+    }
+  }
+  const resolved = resolveIntegratedTourOpenOnHomeMount()
+  if (resolved.consumedSessionTriggers) consumeIntegratedTourSessionTriggers()
+  if (resolved.open) {
+    return {
+      integratedTourOpen: true,
+      integratedTourInitialStep: resolved.step,
+      betaSurveyModalOpen: false,
+    }
+  }
+  return {
+    integratedTourOpen: false,
+    integratedTourInitialStep: 0,
+    betaSurveyModalOpen: !readBetaSurveyCompleted(),
+  }
+}
 
 function plantStatusLine(fase: keyof typeof FASE_LABEL): string {
   const lines: Record<keyof typeof FASE_LABEL, string> = {
@@ -145,6 +189,38 @@ export function Home() {
 
   const showFirstMockCta = !loadingProgress && !hasData
 
+  const showHubFocus = !showFirstMockCta && hasData && Boolean(reviewCopy.areaSlug)
+
+  const petBannerNextSteps = useMemo(() => {
+    if (!showHubFocus || !reviewCopy.areaSlug) return null
+    return {
+      revisaoLinha: reviewCopy.title,
+      areaSlug: reviewCopy.areaSlug,
+      topicAnswerCount: reviewCopy.topicAnswerCount,
+      contextualHint:
+        reviewCopy.topicAnswerCount === undefined ? reviewCopy.subtitle : undefined,
+    }
+  }, [showHubFocus, reviewCopy.areaSlug, reviewCopy.title, reviewCopy.subtitle, reviewCopy.topicAnswerCount])
+
+  const [overlays, setOverlays] = useState<HomeOverlayState>(() => createHomeOverlayState())
+
+  const handleIntegratedTourClose = useCallback(() => {
+    setOverlays((o) => ({
+      ...o,
+      integratedTourOpen: false,
+      betaSurveyModalOpen: !readBetaSurveyCompleted(),
+    }))
+  }, [])
+
+  const handleBetaSurveyDismiss = useCallback(() => {
+    setOverlays((o) => ({ ...o, betaSurveyModalOpen: false }))
+  }, [])
+
+  const handleBetaSurveyMarked = useCallback(() => {
+    writeBetaSurveyCompleted()
+    setOverlays((o) => ({ ...o, betaSurveyModalOpen: false }))
+  }, [])
+
   return (
     <div className="broto-home-dashboard">
       <HomeDashboardTopBar
@@ -159,7 +235,7 @@ export function Home() {
           <div className="broto-main-inner broto-main-inner--dashboard">
             <div className="broto-dashboard-grid broto-dashboard-grid--pet-banner broto-fade-in">
               <div className="broto-dashboard-hero broto-dashboard-hero--solo">
-                <HomePetBanner />
+                <HomePetBanner nextSteps={petBannerNextSteps} />
               </div>
 
               {showFirstMockCta ? (
@@ -191,8 +267,17 @@ export function Home() {
                 </section>
               ) : null}
 
-              {!showFirstMockCta && hasData && reviewCopy.areaSlug ? (
-                <section className="broto-home-hub-focus broto-home-hub-focus--weak" aria-label="Área para reforço">
+              {showHubFocus ? (
+                <section
+                  className={[
+                    'broto-home-hub-focus',
+                    'broto-home-hub-focus--weak',
+                    petBannerNextSteps ? 'broto-home-hub-focus--paired-with-banner' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  aria-label="Área para reforço"
+                >
                   <p className="broto-home-hub-focus__label">Onde reforçar agora</p>
                   <p className="broto-home-hub-focus__title">{reviewCopy.title}</p>
                   <p className="broto-home-hub-focus__hint">{reviewCopy.subtitle}</p>
@@ -206,20 +291,6 @@ export function Home() {
               ) : null}
 
               <div id="home-desempenho" className="broto-home-dash-progress">
-                <button
-                  type="button"
-                  className="broto-btn-secondary broto-home-jump-missoes"
-                  aria-label="Ir para missões de hoje"
-                  onClick={() =>
-                    document.getElementById('home-missoes-hoje')?.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'start',
-                    })
-                  }
-                >
-                  <ClipboardList size={18} strokeWidth={2} aria-hidden />
-                  Missões de hoje
-                </button>
                 <ProgressKpiStrip items={kpiItems} loading={loadingProgress} />
                 <AreaPerformanceTable areas={areasForProgress} loading={loadingProgress} />
               </div>
@@ -242,6 +313,19 @@ export function Home() {
 
         <HomeRightSidebar diaHoje={diaHoje} horasPorDia={horasPorDia} />
       </div>
+
+      <HomeIntegratedTourModal
+        open={overlays.integratedTourOpen}
+        initialStep={overlays.integratedTourInitialStep}
+        onRequestClose={handleIntegratedTourClose}
+      />
+
+      <HomeBetaSurveyModal
+        open={overlays.betaSurveyModalOpen && !overlays.integratedTourOpen}
+        formUrl={BETA_SURVEY_FORM_URL}
+        onDismiss={handleBetaSurveyDismiss}
+        onMarkAnswered={handleBetaSurveyMarked}
+      />
     </div>
   )
 }

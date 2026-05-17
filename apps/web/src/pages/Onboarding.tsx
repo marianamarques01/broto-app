@@ -7,6 +7,7 @@ import { refreshUser } from '@/hooks/useUser'
 import { api } from '@/lib/api-client'
 import { formatMockExamFlowError } from '@/lib/mock-exam-flow-error'
 import { getQuestionsStaticBaseUrl } from '@/lib/questions-static-base'
+import { markIntegratedTourTriggerFromOnboarding } from '@/lib/integrated-tour'
 import { trackMvpFunnelStep } from '@/lib/mvp-funnel'
 import {
   buildMockExamPayload,
@@ -706,6 +707,7 @@ export function Onboarding() {
       await refreshUser()
       await refreshPet()
       trackMvpFunnelStep('onboarding_complete', { via: 'finish_no_mock' })
+      markIntegratedTourTriggerFromOnboarding()
       navigate('/?cta=primeiro-simulado')
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Erro ao salvar')
@@ -781,6 +783,7 @@ export function Onboarding() {
         return
       }
 
+      markIntegratedTourTriggerFromOnboarding()
       navigate(`/study/mock-exam/play/${created.sessionId}`, {
         state: {
           questions,
@@ -812,6 +815,7 @@ export function Onboarding() {
     } catch {
       // ainda navega — usuario pode editar perfil depois
     }
+    markIntegratedTourTriggerFromOnboarding()
     navigate('/?cta=primeiro-simulado')
   }, [navigate])
 
