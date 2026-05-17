@@ -1,5 +1,6 @@
 /** topico_value (slug) → área ENEM (alinhado a user-progress e AREA_CONFIG do app). */
 export const TOPICO_TO_AREA: Record<string, string> = {
+  'interpretacao-textual': 'linguagens',
   'interpretacao-texto': 'linguagens',
   literatura: 'linguagens',
   gramatica: 'linguagens',

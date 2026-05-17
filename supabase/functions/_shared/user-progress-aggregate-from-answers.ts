@@ -14,7 +14,8 @@ import {
 } from './enem-topic-area.ts'
 
 export const TOPICO_LABELS: Record<string, string> = {
-  'interpretacao-texto': 'Interpretação de Texto',
+  'interpretacao-textual': 'Interpretação Textual',
+  'interpretacao-texto': 'Interpretação Textual',
   literatura: 'Literatura Brasileira',
   gramatica: 'Gramática e Norma Culta',
   'generos-textuais': 'Gêneros Textuais',

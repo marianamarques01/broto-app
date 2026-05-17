@@ -25,6 +25,7 @@ import { BrotoCtaButton } from '@/components/BrotoCtaButton'
 import {
   getMockTopics,
   getMockStudyPackage,
+  resolveStudyTopicValue,
   type StudyPackage,
   type StudyFlashcard,
   type TopicOption,
@@ -1215,7 +1216,7 @@ export default function StudyAreaScreen() {
     setShowDone(false)
     setFocusMode(false)
     setGentleStopOpen(false)
-    const data = await getMockStudyPackage(areaKey, topic.value)
+    const data = await getMockStudyPackage(areaKey, resolveStudyTopicValue(topic.value))
     setPkg(data)
     setStep('study')
   }

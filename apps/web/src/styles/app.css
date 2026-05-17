@@ -1925,6 +1925,17 @@ body::before {
   border: none;
 }
 
+/* Home: mesma coluna de .broto-home-dashboard__body (max 1440 centralizado) + gutter horizontal. */
+.broto-home-dashboard > .broto-topbar--dashboard {
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
 @media (min-width: 1025px) {
   .broto-app__main {
     padding-right: 18px;
@@ -1950,7 +1961,16 @@ body::before {
 
   .broto-home-dashboard > .broto-topbar--dashboard {
     margin: 10px 0 4px;
-    padding: 14px 28px 8px;
+    /* horizontal alinhado a .broto-home-dashboard__body até a sidebar empilhar (16px) */
+    padding: 14px 16px 8px;
+  }
+}
+
+/* Home: mesmo recuo lateral que o corpo quando o rail vira duas colunas (24px). */
+@media (min-width: 1040px) {
+  .broto-home-dashboard > .broto-topbar--dashboard {
+    padding-left: 24px;
+    padding-right: 24px;
   }
 }
 
@@ -4366,6 +4386,16 @@ a.study-area-card {
 .broto-home-dashboard__main .broto-main-inner--dashboard {
   padding-left: 0;
   padding-right: 0;
+  max-width: none;
+  width: 100%;
+}
+
+/* Home: mesma largura útil que KPI / “Onde reforçar” (o quadrado ainda tinha max 340px + margin auto no base). */
+.broto-home-dashboard .broto-home-pet-banner--square {
+  max-width: none;
+  width: 100%;
+  margin-inline: 0;
+  align-self: stretch;
 }
 
 @media (min-width: 1180px) {
@@ -4802,14 +4832,14 @@ a.study-area-card {
 
   .broto-dashboard-hero--solo {
     grid-template-columns: minmax(0, 1fr);
-    justify-items: center;
+    justify-items: stretch;
     gap: 12px;
   }
 
   .broto-dashboard-hero--solo .broto-home-pet-banner--square {
-    max-width: 400px;
+    max-width: none;
     width: 100%;
-    margin-inline: auto;
+    margin-inline: 0;
   }
 }
 
@@ -5055,9 +5085,40 @@ a.broto-home-first-mock-cta__btn:focus-visible {
   width: fit-content;
 }
 
-/* Mesmo padrão visual do item compacto ao lado do Broto (banner — rail). */
-.broto-home-hub-focus--rail-row {
-  padding: 12px 14px;
+/* Card único no padrão dos KPIs (label → valor → hint), sem lista/chevron. */
+.broto-home-hub-focus--kpi-wrap {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+a.broto-home-hub-focus-kpi-tile.broto-progress-kpi-tile {
+  text-decoration: none;
+  color: inherit;
+  outline-offset: 3px;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+
+a.broto-home-hub-focus-kpi-tile:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+a.broto-home-hub-focus-kpi-tile:focus-visible {
+  outline: 2px solid var(--green-400);
+}
+
+.broto-home-hub-focus-kpi-tile__headline {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 @media (min-width: 1040px) {
@@ -6131,19 +6192,14 @@ a.broto-home-first-mock-cta__btn:focus-visible {
   color: var(--text-secondary);
 }
 
-a.broto-btn-primary.broto-home-pet-banner__next-spotlight-cta {
-  margin-top: 4px;
+a.broto-home-pet-banner__next-spotlight-cta.broto-home-tl__show-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   box-sizing: border-box;
-  justify-content: center;
-}
-
-a.broto-btn-primary.broto-home-pet-banner__next-spotlight-cta svg:first-of-type {
-  flex-shrink: 0;
-}
-
-a.broto-btn-primary.broto-home-pet-banner__next-spotlight-cta svg:last-of-type {
-  flex-shrink: 0;
+  text-decoration: none;
+  margin-top: 8px;
 }
 
 .broto-home-pet-banner__next-rail-list {
@@ -15542,7 +15598,14 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
 
   /* Área de estudo (embedded): menos espaço entre o parágrafo do Broto e os KPIs */
   .broto-qbank-hero-band--embedded .broto-qbank-hero-band__head {
-    gap: 8px 20px;
+    gap: 4px 20px;
+  }
+
+  .broto-qbank-hero-band--embedded
+    .broto-qbank-hero-band__head
+    .broto-qbank-hero-band__text
+    .broto-qbank-hero-band__desc--below-head {
+    margin-top: 0;
   }
 
   .broto-qbank-kpi-strip--head {

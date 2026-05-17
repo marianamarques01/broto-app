@@ -20,7 +20,8 @@ const XP_MISSION_2 = 50
 
 /** topico_value → área + label — espelha `user-progress/index.ts`. */
 const TOPICO: Record<string, { area: string; label: string }> = {
-  'interpretacao-texto': { area: 'linguagens', label: 'Interpretação de Texto' },
+  'interpretacao-textual': { area: 'linguagens', label: 'Interpretação Textual' },
+  'interpretacao-texto': { area: 'linguagens', label: 'Interpretação Textual' },
   literatura: { area: 'linguagens', label: 'Literatura Brasileira' },
   gramatica: { area: 'linguagens', label: 'Gramática e Norma Culta' },
   'generos-textuais': { area: 'linguagens', label: 'Gêneros Textuais' },

@@ -48,6 +48,7 @@ import {
   getMockStudyPackage,
   getStudyTopicCatalog,
   mergeTopicCatalogWithStats,
+  resolveStudyTopicValue,
   type StudyPackage,
   type StudyFlashcard,
   type TopicOption,
@@ -1384,14 +1385,17 @@ export function StudyArea() {
     setLeaveDialogOpen(false)
     setGuidedBankRows(bankPracticeRows && bankPracticeRows.length > 0 ? bankPracticeRows : null)
 
-    const data = await getMockStudyPackage(areaKey, topico.value)
+    const topicKey = resolveStudyTopicValue(topico.value)
+    const data = await getMockStudyPackage(areaKey, topicKey)
     const blank: Record<Tab, boolean> = {
       summary: false,
       flashcards: false,
       questions: false,
       mindmap: false,
     }
-    const draft = loadStudyPackageSessionDraft(areaKey, topico.value)
+    const draft =
+      loadStudyPackageSessionDraft(areaKey, topicKey) ??
+      loadStudyPackageSessionDraft(areaKey, topico.value)
     let nextCompleted = { ...blank }
     let nextTab: Tab = 'summary'
     if (draft) {

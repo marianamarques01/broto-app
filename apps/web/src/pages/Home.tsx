@@ -19,7 +19,7 @@ import { HomeRightSidebar } from '@/components/home/HomeRightSidebar'
 import { HomePetBanner } from '@/components/home/HomePetBanner'
 import { HomePracticeYearHeatmap } from '@/components/home/HomePracticeYearHeatmap'
 import { buildFlashcardReviewCopy } from '@broto/shared'
-import { ChevronRight, ClipboardCheck } from 'lucide-react'
+import { ClipboardCheck } from 'lucide-react'
 import {
   HomeBetaSurveyModal,
   readBetaSurveyCompleted,
@@ -283,7 +283,7 @@ export function Home() {
                 <section
                   className={[
                     'broto-home-hub-focus',
-                    'broto-home-hub-focus--rail-row',
+                    'broto-home-hub-focus--kpi-wrap',
                     'broto-home-hub-focus--weak',
                     petBannerNextSteps ? 'broto-home-hub-focus--paired-with-banner' : '',
                   ]
@@ -291,27 +291,23 @@ export function Home() {
                     .join(' ')}
                   aria-label="Área para reforço"
                 >
-                  <ol className="broto-home-pet-banner__next-rail-list">
-                    <li className="broto-home-pet-banner__next-rail-li">
-                      <Link
-                        className="broto-home-pet-banner__next-rail-link"
-                        to={`/study/${reviewCopy.areaSlug}`}
-                      >
-                        <span className="broto-home-pet-banner__next-rail-num">1</span>
-                        <span className="broto-home-pet-banner__next-rail-text">
-                          <span className="broto-home-pet-banner__next-rail-head">{reviewCopy.title}</span>
-                          <span className="broto-home-pet-banner__next-rail-hint">
-                            {reviewCopy.topicAnswerCount !== undefined
-                              ? 'Na página da área você encontra questões e flashcards para consolidar.'
-                              : reviewCopy.subtitle}
-                          </span>
-                        </span>
-                        <span className="broto-home-pet-banner__next-rail-chevrons" aria-hidden>
-                          <ChevronRight size={18} strokeWidth={2} />
-                        </span>
-                      </Link>
-                    </li>
-                  </ol>
+                  <Link
+                    className="broto-progress-kpi-tile broto-home-hub-focus-kpi-tile"
+                    to={`/study/${reviewCopy.areaSlug}`}
+                  >
+                    <span className="broto-progress-kpi-tile__label">Onde reforçar agora</span>
+                    <span
+                      className="broto-progress-kpi-tile__value broto-home-hub-focus-kpi-tile__headline"
+                      style={{ color: 'var(--teal-400)' }}
+                    >
+                      {reviewCopy.title}
+                    </span>
+                    <span className="broto-progress-kpi-tile__hint">
+                      {reviewCopy.topicAnswerCount !== undefined
+                        ? 'Na página da área você encontra questões e flashcards para consolidar.'
+                        : reviewCopy.subtitle}
+                    </span>
+                  </Link>
                 </section>
               ) : null}
 

@@ -276,7 +276,7 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
                 </p>
 
                 <Link
-                  className="broto-btn-primary broto-home-pet-banner__next-spotlight-cta"
+                  className="broto-home-tl__show-more broto-home-pet-banner__next-spotlight-cta"
                   to={`/study/${nextSteps.areaSlug}`}
                 >
                   Abrir esta área e praticar
