@@ -5055,6 +5055,11 @@ a.broto-home-first-mock-cta__btn:focus-visible {
   width: fit-content;
 }
 
+/* Mesmo padrão visual do item compacto ao lado do Broto (banner — rail). */
+.broto-home-hub-focus--rail-row {
+  padding: 12px 14px;
+}
+
 @media (min-width: 1040px) {
   .broto-home-hub-focus.broto-home-hub-focus--paired-with-banner {
     display: none;

@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, BookOpen, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
 
 /** Alinhado a Home.tsx e DashboardStudyStats (meta gamificada do dia). */
@@ -279,9 +279,7 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
                   className="broto-btn-primary broto-home-pet-banner__next-spotlight-cta"
                   to={`/study/${nextSteps.areaSlug}`}
                 >
-                  <BookOpen size={18} strokeWidth={2} aria-hidden />
-                  <span>Abrir esta área e praticar</span>
-                  <ArrowRight size={18} strokeWidth={2} aria-hidden />
+                  Abrir esta área e praticar
                 </Link>
               </div>
 

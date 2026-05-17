@@ -19,7 +19,7 @@ import { HomeRightSidebar } from '@/components/home/HomeRightSidebar'
 import { HomePetBanner } from '@/components/home/HomePetBanner'
 import { HomePracticeYearHeatmap } from '@/components/home/HomePracticeYearHeatmap'
 import { buildFlashcardReviewCopy } from '@broto/shared'
-import { ClipboardCheck } from 'lucide-react'
+import { ChevronRight, ClipboardCheck } from 'lucide-react'
 import {
   HomeBetaSurveyModal,
   readBetaSurveyCompleted,
@@ -283,6 +283,7 @@ export function Home() {
                 <section
                   className={[
                     'broto-home-hub-focus',
+                    'broto-home-hub-focus--rail-row',
                     'broto-home-hub-focus--weak',
                     petBannerNextSteps ? 'broto-home-hub-focus--paired-with-banner' : '',
                   ]
@@ -290,15 +291,27 @@ export function Home() {
                     .join(' ')}
                   aria-label="Área para reforço"
                 >
-                  <p className="broto-home-hub-focus__label">Onde reforçar agora</p>
-                  <p className="broto-home-hub-focus__title">{reviewCopy.title}</p>
-                  <p className="broto-home-hub-focus__hint">{reviewCopy.subtitle}</p>
-                  <Link
-                    to={`/study/${reviewCopy.areaSlug}`}
-                    className="broto-btn-secondary broto-home-hub-focus__btn"
-                  >
-                    Abrir questões nesta área
-                  </Link>
+                  <ol className="broto-home-pet-banner__next-rail-list">
+                    <li className="broto-home-pet-banner__next-rail-li">
+                      <Link
+                        className="broto-home-pet-banner__next-rail-link"
+                        to={`/study/${reviewCopy.areaSlug}`}
+                      >
+                        <span className="broto-home-pet-banner__next-rail-num">1</span>
+                        <span className="broto-home-pet-banner__next-rail-text">
+                          <span className="broto-home-pet-banner__next-rail-head">{reviewCopy.title}</span>
+                          <span className="broto-home-pet-banner__next-rail-hint">
+                            {reviewCopy.topicAnswerCount !== undefined
+                              ? 'Na página da área você encontra questões e flashcards para consolidar.'
+                              : reviewCopy.subtitle}
+                          </span>
+                        </span>
+                        <span className="broto-home-pet-banner__next-rail-chevrons" aria-hidden>
+                          <ChevronRight size={18} strokeWidth={2} />
+                        </span>
+                      </Link>
+                    </li>
+                  </ol>
                 </section>
               ) : null}
 
