@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { useAuth } from '@/contexts/AuthContext'
 import { Mail, Lock } from 'lucide-react'
 
@@ -14,6 +15,11 @@ const FIREFLIES = [
 ]
 
 export function Login() {
+  usePageMeta({
+    title: 'Entrar | broto',
+    description:
+      'Acesse sua conta no Broto para continuar estudando: questões por área do ENEM, simulados e rotina personalizada.',
+  })
   const { signIn } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')

@@ -1,24 +1,8 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import type { ReactNode } from 'react'
+import { createBrowserRouter, Navigate, Link } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
-import { AppShell } from '@/components/layout/AppShell'
-import { Login } from '@/pages/Login'
-import { Signup } from '@/pages/Signup'
-import { Landing } from '@/pages/Landing'
-import { Onboarding } from '@/pages/Onboarding'
-import { Home } from '@/pages/Home'
-import { QuestionBankCatalog } from '@/pages/QuestionBankCatalog'
-import { QuestionBankQuestion } from '@/pages/QuestionBankQuestion'
-import { StudyArea } from '@/pages/StudyArea'
-import { Routine } from '@/pages/Routine'
-import { JoinClass } from '@/pages/JoinClass'
-import { BrotoPage } from '@/pages/BrotoPage'
-import { Settings } from '@/pages/Settings'
-import { Profile } from '@/pages/Profile'
-import { MockExamConfig } from '@/pages/MockExamConfig'
-import { MockExamHistory } from '@/pages/MockExamHistory'
-import { MockExamPlay } from '@/pages/MockExamPlay'
-import { MockExamResult } from '@/pages/MockExamResult'
-import { Link } from 'react-router-dom'
+import { RouteFallback } from '@/components/layout/RouteFallback'
 
 function NotFound() {
   return (
@@ -41,36 +25,69 @@ function NotFound() {
   )
 }
 
+const Landing = lazy(() => import('@/pages/Landing').then((m) => ({ default: m.Landing })))
+const Login = lazy(() => import('@/pages/Login').then((m) => ({ default: m.Login })))
+const Signup = lazy(() => import('@/pages/Signup').then((m) => ({ default: m.Signup })))
+const Onboarding = lazy(() => import('@/pages/Onboarding').then((m) => ({ default: m.Onboarding })))
+const AppShell = lazy(() => import('@/components/layout/AppShell').then((m) => ({ default: m.AppShell })))
+const Home = lazy(() => import('@/pages/Home').then((m) => ({ default: m.Home })))
+const QuestionBankCatalog = lazy(() =>
+  import('@/pages/QuestionBankCatalog').then((m) => ({ default: m.QuestionBankCatalog })),
+)
+const QuestionBankQuestion = lazy(() =>
+  import('@/pages/QuestionBankQuestion').then((m) => ({ default: m.QuestionBankQuestion })),
+)
+const StudyArea = lazy(() => import('@/pages/StudyArea').then((m) => ({ default: m.StudyArea })))
+const Routine = lazy(() => import('@/pages/Routine').then((m) => ({ default: m.Routine })))
+const JoinClass = lazy(() => import('@/pages/JoinClass').then((m) => ({ default: m.JoinClass })))
+const BrotoPage = lazy(() => import('@/pages/BrotoPage').then((m) => ({ default: m.BrotoPage })))
+const Settings = lazy(() => import('@/pages/Settings').then((m) => ({ default: m.Settings })))
+const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
+const MockExamConfig = lazy(() => import('@/pages/MockExamConfig').then((m) => ({ default: m.MockExamConfig })))
+const MockExamHistory = lazy(() => import('@/pages/MockExamHistory').then((m) => ({ default: m.MockExamHistory })))
+const MockExamPlay = lazy(() => import('@/pages/MockExamPlay').then((m) => ({ default: m.MockExamPlay })))
+const MockExamResult = lazy(() => import('@/pages/MockExamResult').then((m) => ({ default: m.MockExamResult })))
+
 export const router = createBrowserRouter([
-  { path: '/inicio', element: <Landing /> },
-  { path: '/login', element: <Login /> },
-  { path: '/signup', element: <Signup /> },
-  { path: '/onboarding', element: <Onboarding /> },
+  { path: '/inicio', element: SuspenseWrapped(<Landing />) },
+  { path: '/login', element: SuspenseWrapped(<Login />) },
+  { path: '/signup', element: SuspenseWrapped(<Signup />) },
+  { path: '/onboarding', element: SuspenseWrapped(<Onboarding />) },
   {
-    element: (
+    element: SuspenseWrapped(
       <ProtectedRoute>
         <AppShell />
-      </ProtectedRoute>
+      </ProtectedRoute>,
     ),
     children: [
-      { path: '/', element: <Home /> },
+      { path: '/', element: SuspenseWrapped(<Home />) },
       { path: '/study/questions', element: <Navigate to="/study/linguagens" replace /> },
-      { path: '/study/mock-exam', element: <MockExamConfig /> },
-      { path: '/study/mock-exam/history', element: <MockExamHistory /> },
-      { path: '/study/mock-exam/play/:sessionId', element: <MockExamPlay /> },
-      { path: '/study/mock-exam/result', element: <MockExamResult /> },
-      { path: '/study/:areaKey/banco/:questionId', element: <QuestionBankQuestion /> },
-      { path: '/study/:areaKey/banco', element: <QuestionBankCatalog /> },
-      { path: '/study/:areaKey', element: <StudyArea /> },
-      { path: '/study', element: <StudyArea /> },
+      { path: '/study/mock-exam', element: SuspenseWrapped(<MockExamConfig />) },
+      { path: '/study/mock-exam/history', element: SuspenseWrapped(<MockExamHistory />) },
+      { path: '/study/mock-exam/play/:sessionId', element: SuspenseWrapped(<MockExamPlay />) },
+      { path: '/study/mock-exam/result', element: SuspenseWrapped(<MockExamResult />) },
+      {
+        path: '/study/:areaKey/banco/:questionId',
+        element: SuspenseWrapped(<QuestionBankQuestion />),
+      },
+      {
+        path: '/study/:areaKey/banco',
+        element: SuspenseWrapped(<QuestionBankCatalog />),
+      },
+      { path: '/study/:areaKey', element: SuspenseWrapped(<StudyArea />) },
+      { path: '/study', element: SuspenseWrapped(<StudyArea />) },
       { path: '/study-area', element: <Navigate to="/study" replace /> },
       { path: '/progress', element: <Navigate to="/" replace /> },
-      { path: '/routine', element: <Routine /> },
-      { path: '/join-class', element: <JoinClass /> },
-      { path: '/broto', element: <BrotoPage /> },
-      { path: '/settings', element: <Settings /> },
-      { path: '/profile', element: <Profile /> },
+      { path: '/routine', element: SuspenseWrapped(<Routine />) },
+      { path: '/join-class', element: SuspenseWrapped(<JoinClass />) },
+      { path: '/broto', element: SuspenseWrapped(<BrotoPage />) },
+      { path: '/settings', element: SuspenseWrapped(<Settings />) },
+      { path: '/profile', element: SuspenseWrapped(<Profile />) },
     ],
   },
   { path: '*', element: <NotFound /> },
 ])
+
+function SuspenseWrapped(node: ReactNode) {
+  return <Suspense fallback={<RouteFallback />}>{node}</Suspense>
+}

@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signUp(email: string, password: string, nome: string) {
     try {
-      await api.post<{ userId: string }>('/api/auth/signup', { email, password, nome })
+      await api.postPublic<{ userId: string }>('/api/auth/signup', { email, password, nome })
     } catch (e) {
       if (e instanceof ApiError) return { error: e.message }
       return { error: 'Erro ao criar conta' }

@@ -647,7 +647,7 @@ export default function SignupScreen() {
     setLoading(true)
 
     try {
-      const result = await api.post<{ userId: string }>('/api/auth/signup', form)
+      const result = await api.postPublic<{ userId: string }>('/api/auth/signup', form)
 
       const supabase = createClient()
       const { error: loginError } = await supabase.auth.signInWithPassword({

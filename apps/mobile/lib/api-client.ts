@@ -35,8 +35,10 @@ function isEdgeFunction401(e: unknown): boolean {
   )
 }
 
-async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
+async function invokeOnce<T>(path: string, options: InvokeOptions & { publicEndpoint?: boolean }): Promise<T> {
   const fnName = pathToFunctionName(path)
+  /** Evita propriedade `public` no bundle; signup sempre anon. */
+  const useAnonBearer = options.publicEndpoint === true || fnName === 'auth-signup'
   const supabase = createClient()
 
   let sessionOverride: Session | null = null
@@ -64,15 +66,17 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
     return token
   }
 
-  async function buildInvokeOptions() {
-    const token = await resolveAccessToken()
+  async function buildInvokeOptions(isPublic = false) {
+    // Endpoints públicos (ex: signup) não têm sessão — usam apenas o anon key do cliente Supabase.
     const invokeOpts: {
       method?: HttpMethod
       body?: Record<string, unknown>
       headers?: Record<string, string>
-    } = {
+    } = {}
+    if (!isPublic) {
+      const token = await resolveAccessToken()
       // Override fetchWithAuth fallback: never send anon JWT as the user Bearer.
-      headers: { Authorization: `Bearer ${token}` },
+      invokeOpts.headers = { Authorization: `Bearer ${token}` }
     }
     if (options.method) invokeOpts.method = options.method
     const merged = mergeParamsIntoBody(options.body, options.params)
@@ -81,6 +85,14 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
   }
 
   try {
+    // Endpoints públicos não têm sessão para refresh — executa direto.
+    if (useAnonBearer) {
+      const invokeOptions = await buildInvokeOptions(true)
+      const { data, error } = await supabase.functions.invoke(fnName, invokeOptions)
+      if (error) throw error
+      return data as T
+    }
+
     return await withJwtRefreshRetry(
       async () => {
         const invokeOptions = await buildInvokeOptions()
@@ -101,13 +113,13 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
       const res = e.context as Response
       const resBody = await res.json().catch(() => ({}))
       const msg = extractErrorMessage(resBody, res.status)
-      if (res.status === 401) {
+      if (res.status === 401 && !useAnonBearer) {
         scheduleUnauthorizedRedirect()
       }
       throw new ApiError(msg, res.status, resBody)
     }
     if (e instanceof ApiError) {
-      if (e.status === 401) {
+      if (e.status === 401 && !useAnonBearer) {
         scheduleUnauthorizedRedirect()
       }
       throw e
@@ -120,6 +132,11 @@ function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
   return withExponentialBackoff(() => invokeOnce<T>(path, options))
 }
 
+/** Para endpoints públicos (sem sessão), ex: signup. Usa anon key do cliente Supabase. */
+function invokePublic<T>(path: string, options: InvokeOptions): Promise<T> {
+  return withExponentialBackoff(() => invokeOnce<T>(path, { ...options, publicEndpoint: true }))
+}
+
 export const api = {
   async get<T>(path: string): Promise<T> {
     return invoke<T>(path, { method: 'GET' })
@@ -127,6 +144,11 @@ export const api = {
 
   async post<T>(path: string, body?: Record<string, unknown>): Promise<T> {
     return invoke<T>(path, { method: 'POST', body })
+  },
+
+  /** Chama uma Edge Function sem exigir sessão autenticada. Use para signup, etc. */
+  async postPublic<T>(path: string, body?: Record<string, unknown>): Promise<T> {
+    return invokePublic<T>(path, { method: 'POST', body })
   },
 
   async patch<T>(path: string, body?: Record<string, unknown>): Promise<T> {

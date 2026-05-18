@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { useAuth } from '@/contexts/AuthContext'
 import { useClass } from '@/hooks/useClass'
 import { refreshPet } from '@/hooks/usePet'
@@ -158,7 +159,12 @@ function StepWelcome({
 }) {
   return (
     <div className="onb-welcome">
-      <h1 className="broto-auth__title">broto</h1>
+      <div className="onb-welcome__brand">
+        <span className="onb-welcome__emoji" role="img" aria-label="Broto">
+          🌱
+        </span>
+        <h1 className="broto-auth__title onb-welcome__logo">broto</h1>
+      </div>
       <h1 className="onb-welcome__title">
         Vamos personalizar seus estudos{nome ? `, ${nome}` : ''}!
       </h1>
@@ -667,6 +673,11 @@ function buildOnboardingBody(data: OnboardingState) {
 /* ── Main Component ─────────────────────────────────────── */
 
 export function Onboarding() {
+  usePageMeta({
+    title: 'Seu perfil de estudos | broto',
+    description:
+      'Personalize metas, nível em cada área do ENEM e horários de estudo para o Broto montar sua rotina.',
+  })
   const { user } = useAuth()
   const { organization } = useClass()
   const navigate = useNavigate()

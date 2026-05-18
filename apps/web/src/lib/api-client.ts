@@ -46,8 +46,10 @@ function isLikelyBrowserNetworkFailure(e: unknown): boolean {
   )
 }
 
-async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
+async function invokeOnce<T>(path: string, options: InvokeOptions & { publicEndpoint?: boolean }): Promise<T> {
   const fnName = pathToFunctionName(path)
+  /** Não usar a chave `public` (reservada / minify) — e força signup a sempre enviar anon JWT. */
+  const useAnonBearer = options.publicEndpoint === true || fnName === 'auth-signup'
   const method = options.method ?? 'POST'
   const functionsUrl = functionsBaseUrl()
 
@@ -85,7 +87,15 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
   }
 
   const executeFetch = async () => {
-    const token = await resolveAccessToken()
+    if (useAnonBearer && (typeof API_KEY !== 'string' || !API_KEY.trim())) {
+      throw new ApiError(
+        'VITE_SUPABASE_ANON_KEY ausente ou inválida. No Vercel, adicione a mesma anon key do projeto (Settings → API) em Environment Variables.',
+        0,
+        { error: 'missing_anon_key' },
+      )
+    }
+
+    const token = useAnonBearer ? API_KEY : await resolveAccessToken()
 
     const body = mergeParamsIntoBody(options.body, options.params)
 
@@ -115,6 +125,9 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
   }
 
   try {
+    if (useAnonBearer) {
+      return await executeFetch()
+    }
     return await withJwtRefreshRetry(
       executeFetch,
       async () => {
@@ -130,7 +143,8 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
       console.error('[api-client]', fnName, e.status, e.message)
 
       // Só deslogar em 401 confirmado pela Edge (JWT inválido/expirado), não na corrida pós-login.
-      if (e.status === 401 && !isClientSessionNotReady401(e)) {
+      // Nunca deslogar em chamadas públicas (ex: signup).
+      if (e.status === 401 && !isClientSessionNotReady401(e) && !useAnonBearer) {
         await supabase.auth.signOut().catch(() => {})
         window.location.href = '/login'
       }
@@ -139,11 +153,18 @@ async function invokeOnce<T>(path: string, options: InvokeOptions): Promise<T> {
 
     if (isLikelyBrowserNetworkFailure(e)) {
       const raw = e instanceof Error ? e.message : String(e)
-      console.error('[api-client]', fnName, 'rede/cors', raw)
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      console.error('[api-client]', fnName, 'rede/cors', raw, origin || '(no-window)')
+      const originBit = origin
+        ? ` Esta aba: ${origin} (tem de bater com CORS ou ser localhost/LAN conforme deploy das functions). `
+        : ' '
       throw new ApiError(
-        'Não foi possível conectar ao Supabase. Verifique a internet. Em desenvolvimento, no Supabase (Edge Functions → Secrets), defina ALLOWED_ORIGINS com a origem exata do app, por exemplo http://localhost:5173 (inclua a porta). Em produção, inclua a URL do site. Confirme se a função foi publicada (ex.: practice-session-create) e se VITE_SUPABASE_URL está correta.',
+        `Não foi possível conectar ao Supabase (${fnName}). Verifique internet, VPN/antivírus e se VITE_SUPABASE_URL aponta para o projeto certo.${originBit}` +
+          'Publique todas as Edge Functions com o código atual do repositório (inclui CORS permissivo para dev). Ex.: `npx supabase@latest functions deploy ' +
+          fnName +
+          ' --no-verify-jwt`. Em HTTPS público ou domínio custom, inclua a origem em Edge Functions → Secrets → ALLOWED_ORIGINS.',
         0,
-        { error: 'network_or_cors', detail: raw },
+        { error: 'network_or_cors', detail: raw, ...(origin ? { origin } : {}) },
       )
     }
 
@@ -155,12 +176,21 @@ function invoke<T>(path: string, options: InvokeOptions): Promise<T> {
   return withExponentialBackoff(() => invokeOnce<T>(path, options))
 }
 
+/** Para endpoints públicos (sem sessão), ex: signup. Usa anon key como bearer. */
+function invokePublic<T>(path: string, options: InvokeOptions): Promise<T> {
+  return withExponentialBackoff(() => invokeOnce<T>(path, { ...options, publicEndpoint: true }))
+}
+
 export const api = {
   async get<T>(path: string): Promise<T> {
     return invoke<T>(path, { method: 'GET' })
   },
   async post<T>(path: string, body?: Record<string, unknown>): Promise<T> {
     return invoke<T>(path, { method: 'POST', body })
+  },
+  /** Chama uma Edge Function sem exigir sessão autenticada (usa anon key). Use para signup, etc. */
+  async postPublic<T>(path: string, body?: Record<string, unknown>): Promise<T> {
+    return invokePublic<T>(path, { method: 'POST', body })
   },
   async patch<T>(path: string, body?: Record<string, unknown>): Promise<T> {
     return invoke<T>(path, { method: 'PATCH', body })

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { usePageMeta, DEFAULT_PAGE_DESCRIPTION, DEFAULT_PAGE_TITLE } from '@/hooks/usePageMeta'
 import {
   BookOpen,
   CalendarDays,
@@ -67,6 +68,7 @@ const STEPS = [
 ] as const
 
 export function Landing() {
+  usePageMeta({ title: DEFAULT_PAGE_TITLE, description: DEFAULT_PAGE_DESCRIPTION })
   return (
     <div className="broto-landing">
       {LANDING_FIREFLIES.map((f, i) => (

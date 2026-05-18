@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { useAuth } from '@/contexts/AuthContext'
 import { trackMvpFunnelStep } from '@/lib/mvp-funnel'
 import { User, Mail, Lock } from 'lucide-react'
@@ -13,6 +14,11 @@ const FIREFLIES = [
 ]
 
 export function Signup() {
+  usePageMeta({
+    title: 'Criar conta | broto',
+    description:
+      'Cadastre-se no Broto gratuitamente: pratique para o ENEM com questões por área, rotina de estudos e acompanhamento do progresso.',
+  })
   const { signUp } = useAuth()
   const navigate = useNavigate()
   const [nome, setNome] = useState('')

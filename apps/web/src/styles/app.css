@@ -12400,6 +12400,21 @@ a.broto-btn-ghost {
   align-items: center;
 }
 
+.onb-welcome__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.onb-welcome__emoji {
+  font-size: 2.75rem;
+  line-height: 1;
+}
+
+.onb-welcome__logo {
+  margin-top: 10px;
+}
+
 .onb-welcome__title {
   font-family: var(--font-logo);
   font-size: 1.5rem;
