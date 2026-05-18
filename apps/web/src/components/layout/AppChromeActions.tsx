@@ -1,13 +1,11 @@
-import { useTheme } from '@/hooks/useTheme'
 import { usePet } from '@/hooks/usePet'
-import { Bell, Flame, Moon, Sun } from 'lucide-react'
+import { Bell, Flame } from 'lucide-react'
 
 /**
- * Sequência, notificações e tema no header mobile (XP removido do chrome).
+ * Sequência e notificações no header mobile (XP removido do chrome).
  */
 export function AppChromeActions() {
   const { pet } = usePet()
-  const { theme, toggleTheme } = useTheme()
   const streak = pet?.streak ?? 0
 
   return (
@@ -30,15 +28,6 @@ export function AppChromeActions() {
       </div>
       <button type="button" className="broto-topbar__icon-btn" aria-label="Notificações">
         <Bell size={16} strokeWidth={1.8} />
-      </button>
-      <button
-        type="button"
-        className="broto-topbar__icon-btn"
-        aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
-        title={theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
-        onClick={toggleTheme}
-      >
-        {theme === 'dark' ? <Sun size={16} strokeWidth={1.8} /> : <Moon size={16} strokeWidth={1.8} />}
       </button>
     </div>
   )

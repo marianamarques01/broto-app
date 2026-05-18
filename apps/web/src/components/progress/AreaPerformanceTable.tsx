@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { filterDisplayAreas } from '@broto/shared'
 import type { AreaStat } from '@/hooks/useProgress'
 import { AREA_CONFIG } from '@/lib/area-config'
 import { BookOpen, ChevronDown } from 'lucide-react'
@@ -15,7 +16,7 @@ export function AreaPerformanceTable({ areas, loading }: AreaPerformanceTablePro
   const [sort, setSort] = useState<SortMode>('priority')
 
   const rows = useMemo(() => {
-    const copy = [...areas]
+    const copy = [...filterDisplayAreas(areas)]
     if (sort === 'accuracy') {
       copy.sort((a, b) => {
         const wa = a.totalAnswered > 0 ? a.accuracyPct : -1

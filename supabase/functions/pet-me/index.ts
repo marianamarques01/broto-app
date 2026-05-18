@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
-import { areaKeyForPracticeAnswer } from '../_shared/enem-topic-area.ts'
+import { areaKeyForPracticeAnswer, isCountablePracticeArea } from '../_shared/enem-topic-area.ts'
 import { createServiceRoleClientUnsafe, requireUser } from '../_shared/authz.ts'
 
 type Fase = 'semente' | 'muda' | 'planta' | 'flor' | 'especial'
@@ -238,6 +238,7 @@ serve(async (req) => {
         topicoSlug: topicByQid.get(a.question_id) ?? undefined,
         clientAreaKey: a.answer_area_key,
       })
+      if (!isCountablePracticeArea(area)) continue
       const cur = studyTodayByArea[area] ?? { answered: 0, correct: 0 }
       cur.answered += 1
       if (a.acertou) cur.correct += 1

@@ -23,3 +23,8 @@ export function parseEnemAreaKey(raw: unknown): string | undefined {
   const t = raw.trim()
   return ENEM_AREA_KEYS.has(t) ? t : undefined
 }
+
+/** Área contável em progresso e missões — exclui bucket interno `outros`. */
+export function isCountablePracticeArea(areaKey: string): boolean {
+  return areaKey !== 'outros' && ENEM_AREA_KEYS.has(areaKey)
+}

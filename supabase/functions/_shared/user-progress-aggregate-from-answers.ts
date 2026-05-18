@@ -9,6 +9,7 @@ import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import {
   AREA_ROLLUP_PREFIX,
   areaKeyForPracticeAnswer,
+  isCountablePracticeArea,
   isEnemAreaKey,
   rollupTopicPerformanceSlug,
 } from './enem-topic-area.ts'
@@ -122,22 +123,6 @@ export type MutableAgg = {
       >
     }
   >
-  outros: {
-    value: string
-    label: string
-    totalAnswered: number
-    totalCorrect: number
-    topicos: Map<
-      string,
-      {
-        value: string
-        label: string
-        totalAnswered: number
-        totalCorrect: number
-        accuracyPct: number
-      }
-    >
-  }
 }
 
 export function createEmptyAgg(areaOrder: readonly { value: string; label: string }[]): MutableAgg {
@@ -171,24 +156,7 @@ export function createEmptyAgg(areaOrder: readonly { value: string; label: strin
     })
   }
 
-  const outros = {
-    value: 'outros',
-    label: 'Outros',
-    totalAnswered: 0,
-    totalCorrect: 0,
-    topicos: new Map<
-      string,
-      {
-        value: string
-        label: string
-        totalAnswered: number
-        totalCorrect: number
-        accuracyPct: number
-      }
-    >(),
-  }
-
-  return { areaMap, outros }
+  return { areaMap }
 }
 
 /** Uma tentativa registada (= incremento igual ao upsert incremental em topic_performance por tópico). */
@@ -198,7 +166,7 @@ export function applyAnswerIncrement(
   topicByQuestionId: ReadonlyMap<string, string>,
   _areaOrder: readonly { value: string; label: string }[],
 ) {
-  const { areaMap, outros } = state
+  const { areaMap } = state
   const qid = ans.question_id?.trim?.() ?? String(ans.question_id ?? '').trim()
   if (!qid) return
   const topicoSlug = topicByQuestionId.get(qid)
@@ -206,7 +174,8 @@ export function applyAnswerIncrement(
     topicoSlug: topicoSlug ?? undefined,
     clientAreaKey: ans.answer_area_key,
   })
-  const block = area !== 'outros' && areaMap.has(area) ? areaMap.get(area)! : outros
+  if (!isCountablePracticeArea(area)) return
+  const block = areaMap.get(area)!
   const tk = topicGroupingKey(topicoSlug, ans.answer_area_key)
   block.totalAnswered += 1
   if (ans.acertou === true) block.totalCorrect += 1
@@ -251,7 +220,7 @@ function finalizeAgg(
   accuracyPct: number
   areas: unknown[]
 } {
-  const { areaMap, outros } = state
+  const { areaMap } = state
   let totalAnswered = 0
   let totalCorrect = 0
   const areas: unknown[] = []
@@ -260,7 +229,9 @@ function finalizeAgg(
     const block = areaMap.get(a.value)!
     totalAnswered += block.totalAnswered
     totalCorrect += block.totalCorrect
-    const topicos = [...block.topicos.values()].sort((x, y) => y.totalAnswered - x.totalAnswered)
+    const topicos = [...block.topicos.values()]
+      .filter((t) => t.value !== '__broto_sem_classificacao__')
+      .sort((x, y) => y.totalAnswered - x.totalAnswered)
     const acc =
       block.totalAnswered > 0
         ? Math.round((block.totalCorrect / block.totalAnswered) * 1000) / 10
@@ -270,24 +241,6 @@ function finalizeAgg(
       label: block.label,
       totalAnswered: block.totalAnswered,
       totalCorrect: block.totalCorrect,
-      accuracyPct: acc,
-      topicos,
-    })
-  }
-
-  if (outros.topicos.size > 0 || outros.totalAnswered > 0) {
-    totalAnswered += outros.totalAnswered
-    totalCorrect += outros.totalCorrect
-    const topicos = [...outros.topicos.values()].sort((x, y) => y.totalAnswered - x.totalAnswered)
-    const acc =
-      outros.totalAnswered > 0
-        ? Math.round((outros.totalCorrect / outros.totalAnswered) * 1000) / 10
-        : 0
-    areas.push({
-      value: outros.value,
-      label: outros.label,
-      totalAnswered: outros.totalAnswered,
-      totalCorrect: outros.totalCorrect,
       accuracyPct: acc,
       topicos,
     })

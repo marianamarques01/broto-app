@@ -5,6 +5,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import {
   areaKeyForPracticeAnswer,
+  isCountablePracticeArea,
   areaKeyFromTopico,
   AREA_ROLLUP_PREFIX,
 } from './enem-topic-area.ts'
@@ -127,6 +128,7 @@ export async function fetchStudyTodayByArea(
       topicoSlug: topicByQid.get(a.question_id) ?? undefined,
       clientAreaKey: a.answer_area_key,
     })
+    if (!isCountablePracticeArea(area)) continue
     const cur = studyTodayByArea[area] ?? { answered: 0, correct: 0 }
     cur.answered += 1
     if (a.acertou) cur.correct += 1
@@ -143,8 +145,6 @@ function pickMissionAreasFromTopicPerformance(rows: TpRow[]): [string, string, s
     areaMap.set(a.value, { value: a.value, totalAnswered: 0, totalCorrect: 0 })
   }
 
-  const outros = { value: 'outros', totalAnswered: 0, totalCorrect: 0 }
-
   for (const r of rows) {
     const meta = TOPICO[r.topico_value]
     const fromDb = r.area_key && String(r.area_key).trim()
@@ -154,8 +154,9 @@ function pickMissionAreasFromTopicPerformance(rows: TpRow[]): [string, string, s
         : meta?.area && areaMap.has(meta.area)
           ? meta.area
           : null
-    const block = resolved ? areaMap.get(resolved)! : outros
+    if (!resolved) continue
 
+    const block = areaMap.get(resolved)!
     block.totalAnswered += Number(r.total_answered) || 0
     block.totalCorrect += Number(r.total_correct) || 0
   }
@@ -167,18 +168,6 @@ function pickMissionAreasFromTopicPerformance(rows: TpRow[]): [string, string, s
     const acc = b.totalAnswered > 0 ? Math.round((b.totalCorrect / b.totalAnswered) * 1000) / 10 : 0
     areaSummaries.push({ value: b.value, totalAnswered: b.totalAnswered, accuracyPct: acc })
   }
-  if (outros.totalAnswered > 0) {
-    const acc =
-      outros.totalAnswered > 0
-        ? Math.round((outros.totalCorrect / outros.totalAnswered) * 1000) / 10
-        : 0
-    areaSummaries.push({
-      value: outros.value,
-      totalAnswered: outros.totalAnswered,
-      accuracyPct: acc,
-    })
-  }
-
   const sortedKeys = areaSummaries
     .filter((x) => x.totalAnswered >= 1)
     .sort((a, b) => a.accuracyPct - b.accuracyPct)
@@ -265,6 +254,7 @@ export function applyAnswerToStudyToday(
   isCorrect: boolean,
 ): StudyTodayByArea {
   const area = areaKeyFromTopico(topico)
+  if (!isCountablePracticeArea(area)) return map
   const next: StudyTodayByArea = { ...map }
   const cur = next[area] ?? { answered: 0, correct: 0 }
   next[area] = {

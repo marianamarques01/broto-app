@@ -1,34 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
-
-type BrotoTheme = 'light' | 'dark'
+import { useEffect } from 'react'
 
 const THEME_STORAGE_KEY = 'broto-theme'
 
-function getThemeFromEnvironment(): BrotoTheme {
-  if (typeof window === 'undefined') return 'light'
-
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
-  if (storedTheme === 'dark' || storedTheme === 'light') return storedTheme
-
-  const datasetTheme = document.documentElement.dataset.theme
-  return datasetTheme === 'dark' ? 'dark' : 'light'
-}
-
+/** Aplicação web usa apenas tema escuro. */
 export function useTheme() {
-  const [theme, setTheme] = useState<BrotoTheme>(() => getThemeFromEnvironment())
-
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme)
-  }, [theme])
-
-  const toggleTheme = useCallback(() => {
-    setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))
+    document.documentElement.dataset.theme = 'dark'
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark')
   }, [])
 
-  const setExplicitTheme = useCallback((next: BrotoTheme) => {
-    setTheme(next)
-  }, [])
-
-  return { theme, toggleTheme, setTheme: setExplicitTheme }
+  return { theme: 'dark' as const }
 }

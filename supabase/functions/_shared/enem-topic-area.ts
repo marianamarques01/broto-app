@@ -13,6 +13,11 @@ export function isEnemAreaKey(areaKey: string): boolean {
   return ENEM_AREA_KEY_SET.has(areaKey)
 }
 
+/** Área contável em progresso, missões e pet — exclui bucket interno `outros`. */
+export function isCountablePracticeArea(areaKey: string): boolean {
+  return areaKey !== 'outros' && isEnemAreaKey(areaKey)
+}
+
 export function rollupTopicPerformanceSlug(areaKey: string): string {
   return `${AREA_ROLLUP_PREFIX}${areaKey}`
 }

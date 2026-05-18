@@ -1,6 +1,5 @@
 import { usePet } from '@/hooks/usePet'
-import { useTheme } from '@/hooks/useTheme'
-import { ArrowLeft, ChevronRight, Flame, Moon, Sparkles, Sun } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Flame, Sparkles } from 'lucide-react'
 
 export type StudyBreadcrumbParts = {
   area: string
@@ -25,7 +24,6 @@ export function TopBar({
   variant = 'default',
 }: TopBarProps) {
   const { pet } = usePet()
-  const { theme, toggleTheme } = useTheme()
   const streak = pet?.streak ?? 0
   const xpTotal = pet?.xp ?? 0
   const isStudy = variant === 'study'
@@ -83,15 +81,6 @@ export function TopBar({
             {streak} {streak === 1 ? 'dia' : 'dias'}
           </span>
         ) : null}
-        <button
-          type="button"
-          className="broto-topbar__icon-btn"
-          aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
-          title={theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
-          onClick={toggleTheme}
-        >
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
       </div>
     </header>
   )

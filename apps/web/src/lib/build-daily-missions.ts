@@ -1,6 +1,6 @@
 import { AREA_CONFIG } from '@/lib/area-config'
 import type { AreaStat } from '@/hooks/useProgress'
-import type { DailyMissionsState } from '@broto/shared'
+import { sanitizeStudyTodayByArea, type DailyMissionsState } from '@broto/shared'
 
 /** Regras de missões/XP: manter alinhadas a `supabase/functions/_shared/daily-mission-bonus.ts`. */
 
@@ -34,15 +34,16 @@ function mergeByAreaWithServer(
   daily: DailyMissionsState,
   serverToday?: Record<string, { answered: number; correct: number }>,
 ): DailyMissionsState['byArea'] {
-  if (!serverToday || Object.keys(serverToday).length === 0) return daily.byArea
+  const server = sanitizeStudyTodayByArea(serverToday)
+  if (Object.keys(server).length === 0) return daily.byArea
   const keys = new Set([
     ...Object.keys(daily.byArea),
-    ...Object.keys(serverToday),
+    ...Object.keys(server),
   ])
   const out: DailyMissionsState['byArea'] = {}
   for (const k of keys) {
     const l = daily.byArea[k] ?? { answered: 0, correct: 0 }
-    const s = serverToday[k] ?? { answered: 0, correct: 0 }
+    const s = server[k] ?? { answered: 0, correct: 0 }
     out[k] = {
       answered: Math.max(l.answered, s.answered),
       correct: Math.max(l.correct, s.correct),

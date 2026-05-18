@@ -8,10 +8,8 @@ import { ClassProvider } from '@/contexts/ClassContext'
 import { DesktopRecommendationBanner } from '@/components/layout/DesktopRecommendationBanner'
 import { router } from '@/router'
 
-const rootElement = document.documentElement
-const storedTheme = window.localStorage.getItem('broto-theme')
-const initialTheme = storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : 'light'
-rootElement.dataset.theme = initialTheme
+document.documentElement.dataset.theme = 'dark'
+window.localStorage.setItem('broto-theme', 'dark')
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

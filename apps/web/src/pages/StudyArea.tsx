@@ -67,6 +67,7 @@ import { AREA_ACCENT_VARS, StudyAreaCardPattern } from '@/components/study/study
 import { QuestionBankView } from '@/components/study/QuestionBankView'
 import { StudyPackageSimuladoSessionCard } from '@/components/study/StudyPackageSimuladoSessionCard'
 import { MockExamConfigurator } from '@/components/mock-exam/MockExamConfigurator'
+import { filterDisplayAreas } from '@broto/shared'
 import { useProgress, type ProgressData, type AreaStat } from '@/hooks/useProgress'
 import type { BlockerFunction } from 'react-router-dom'
 import {
@@ -102,8 +103,7 @@ function landingQuickStats(progress: ProgressData | undefined) {
   if (!progress || totalAnswered < 1) {
     return { totalAnswered, weightedAcc: null as number | null, lowest: null as number | null }
   }
-  const topicRows = progress.areas
-    .filter((a) => a.value !== 'outros')
+  const topicRows = filterDisplayAreas(progress.areas)
     .flatMap((a) => a.topicos)
     .filter((t) => t.totalAnswered > 0)
   const lowest =

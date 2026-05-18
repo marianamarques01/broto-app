@@ -1,5 +1,4 @@
-import { useTheme } from '@/hooks/useTheme'
-import { Bell, ClipboardList, Flame, Moon, Sun } from 'lucide-react'
+import { Bell, ClipboardList, Flame } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 /** Domingo da 1ª aplicação (referência única para o contador). */
@@ -27,7 +26,6 @@ export function HomeDashboardTopBar({
   streak,
   mockExamAnchorId,
 }: HomeDashboardTopBarProps) {
-  const { theme, toggleTheme } = useTheme()
   const enemLabel = getEnemCountdownLabel()
 
   return (
@@ -69,15 +67,6 @@ export function HomeDashboardTopBar({
         </div>
         <button type="button" className="broto-topbar__icon-btn" aria-label="Notificações">
           <Bell size={18} />
-        </button>
-        <button
-          type="button"
-          className="broto-topbar__icon-btn"
-          aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
-          title={theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
-          onClick={toggleTheme}
-        >
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
       </div>
     </header>

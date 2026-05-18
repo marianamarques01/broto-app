@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { filterDisplayAreas } from '@broto/shared'
 import type { AreaStat } from '@/hooks/useProgress'
 import { getAreaColor } from '@/lib/area-config'
 
@@ -7,15 +8,7 @@ interface RoutineAreaPerformanceProps {
 }
 
 export function RoutineAreaPerformance({ areas }: RoutineAreaPerformanceProps) {
-  const rows = useMemo(() => {
-    const main = areas.filter((a) => a.value !== 'outros')
-    const outros = areas.find((a) => a.value === 'outros')
-    const list = [...main]
-    if (outros && outros.totalAnswered > 0) {
-      list.push(outros)
-    }
-    return list
-  }, [areas])
+  const rows = useMemo(() => filterDisplayAreas(areas), [areas])
 
   return (
     <section className="broto-routine-area-perf" aria-label="Desempenho por matéria">

@@ -20,6 +20,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from 'lucide-react-native'
+import { filterDisplayAreas } from '@broto/shared'
 import { useProgress, type AreaStat, type TopicoStat } from '@/hooks/useProgress'
 import { getAreaConfig } from '@/theme/area-config'
 import { colors, fonts, radii } from '@/theme/tokens'
@@ -225,7 +226,7 @@ function TopicoChip({ t, variant }: { t: TopicoStat; variant: 'forte' | 'fraco' 
 }
 
 function topFortes(areas: AreaStat[]): TopicoStat[] {
-  return areas
+  return filterDisplayAreas(areas)
     .flatMap((a) => a.topicos)
     .filter((t) => t.totalAnswered >= 3)
     .sort((a, b) => b.accuracyPct - a.accuracyPct)
@@ -233,7 +234,7 @@ function topFortes(areas: AreaStat[]): TopicoStat[] {
 }
 
 function topFracos(areas: AreaStat[]): TopicoStat[] {
-  return areas
+  return filterDisplayAreas(areas)
     .flatMap((a) => a.topicos)
     .filter((t) => t.totalAnswered >= 3)
     .sort((a, b) => a.accuracyPct - b.accuracyPct)

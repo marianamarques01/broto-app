@@ -30,6 +30,9 @@ android/
 ### macOS
 .DS_Store
 
+### Supabase CLI temp
+supabase/.temp/linked-project.json
+
 ### Python
 .venv/
 __pycache__/

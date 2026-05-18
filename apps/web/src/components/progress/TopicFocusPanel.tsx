@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { filterDisplayAreas } from '@broto/shared'
 import type { AreaStat, TopicoStat } from '@/hooks/useProgress'
 import { TrendingDown, TrendingUp } from 'lucide-react'
 
@@ -11,7 +12,7 @@ function areaKeyForTopic(areas: AreaStat[], topicValue: string): string {
 }
 
 function getTopFortes(areas: AreaStat[]): TopicoStat[] {
-  return areas
+  return filterDisplayAreas(areas)
     .flatMap((a) => a.topicos)
     .filter((t) => t.totalAnswered >= 3)
     .sort((a, b) => b.accuracyPct - a.accuracyPct)
@@ -19,7 +20,7 @@ function getTopFortes(areas: AreaStat[]): TopicoStat[] {
 }
 
 function getTopFracos(areas: AreaStat[]): TopicoStat[] {
-  return areas
+  return filterDisplayAreas(areas)
     .flatMap((a) => a.topicos)
     .filter((t) => t.totalAnswered >= 3)
     .sort((a, b) => a.accuracyPct - b.accuracyPct)

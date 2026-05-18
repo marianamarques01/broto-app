@@ -1,5 +1,6 @@
 import type { UserProfile } from '../types/user-profile'
 import type { PetData } from '../types/pet'
+import { sanitizeProgressData } from '../enem-area-display'
 import type { ProgressData } from '../types/dashboard-progress'
 import type { PerformancePeriod, PerformanceSeriesResponse } from '../types/performance-series'
 import type { RecentMistakesResponse } from '../types/recent-mistakes'
@@ -22,7 +23,7 @@ export function createPetMeFetcher(apiGet: ApiGet): () => Promise<PetData> {
 }
 
 export function createUserProgressFetcher(apiGet: ApiGet): () => Promise<ProgressData> {
-  return () => apiGet<ProgressData>(API_PATH_USER_PROGRESS)
+  return async () => sanitizeProgressData(await apiGet<ProgressData>(API_PATH_USER_PROGRESS))
 }
 
 export function createUserPerformanceSeriesFetcher(apiPost: ApiPost) {

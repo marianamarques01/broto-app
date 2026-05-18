@@ -1,7 +1,6 @@
 import { TopBar } from '@/components/layout/TopBar'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePet, refreshPet } from '@/hooks/usePet'
-import { useTheme } from '@/hooks/useTheme'
 import { useClass } from '@/hooks/useClass'
 import { api } from '@/lib/api-client'
 import { resetPracticeHistoryFromServer } from '@/lib/reset-practice-history'
@@ -21,10 +20,8 @@ import {
   Loader2,
   LogOut,
   Mail,
-  Moon,
   Pencil,
   RotateCw,
-  Sun,
   Users,
 } from 'lucide-react'
 
@@ -34,7 +31,6 @@ const SETTINGS_ANCHORS = [
   { id: 'settings-section-conta', label: 'Conta' },
   { id: 'settings-section-turma', label: 'Turma' },
   { id: 'settings-section-broto', label: 'Broto' },
-  { id: 'settings-section-aparencia', label: 'Tema' },
   { id: 'settings-section-prefs', label: 'Alertas' },
   { id: 'settings-section-ajuda', label: 'Ajuda' },
   { id: 'settings-section-dados', label: 'Dados' },
@@ -65,7 +61,6 @@ function formatDataEnem(iso: string | null | undefined): string {
 export function Settings() {
   const { user, signOut, refreshUser } = useAuth()
   const { pet, loading: loadingPet } = usePet()
-  const { theme, setTheme } = useTheme()
   const { currentClass, organization, loading: loadingClass } = useClass()
   const idPrefix = useId()
   const localMsgId = `${idPrefix}-local-msg`
@@ -449,46 +444,6 @@ export function Settings() {
                   {savingBroto ? 'Salvando…' : 'Salvar nome'}
                 </button>
               </footer>
-            </section>
-          </div>
-
-          <div className="broto-settings__group" id="settings-section-aparencia">
-            <p className="broto-section-label">Aparência</p>
-            <section
-              className="broto-card broto-settings__section"
-              aria-labelledby={`${idPrefix}-section-look`}
-            >
-              <div className="broto-settings__section-head">
-                <div>
-                  <h2 className="broto-settings__section-title" id={`${idPrefix}-section-look`}>
-                    Tema
-                  </h2>
-                  <p className="broto-settings__section-desc">Claro ou escuro em todo o app web.</p>
-                </div>
-              </div>
-              <div className="broto-settings__theme" role="group" aria-label="Tema do aplicativo">
-                <button
-                  type="button"
-                  className={`broto-settings__theme-pill${theme === 'light' ? ' broto-settings__theme-pill--on' : ''}`}
-                  onClick={() => setTheme('light')}
-                  aria-pressed={theme === 'light'}
-                >
-                  <Sun size={16} aria-hidden />
-                  Claro
-                </button>
-                <button
-                  type="button"
-                  className={`broto-settings__theme-pill${theme === 'dark' ? ' broto-settings__theme-pill--on' : ''}`}
-                  onClick={() => setTheme('dark')}
-                  aria-pressed={theme === 'dark'}
-                >
-                  <Moon size={16} aria-hidden />
-                  Escuro
-                </button>
-              </div>
-              <p className="broto-settings__theme-note">
-                Você também pode alternar pelo ícone na barra superior.
-              </p>
             </section>
           </div>
 
