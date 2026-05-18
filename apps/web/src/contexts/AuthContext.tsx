@@ -38,11 +38,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = useCallback(async (id: string) => {
     setLoading(true)
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .select('id, nome, email, image, onboarding_done, data_enem, horas_disponiveis_por_dia')
         .eq('id', id)
-        .single()
+        .maybeSingle()
+
+      if (error) {
+        console.error('[fetchProfile] query error:', error)
+        return
+      }
 
       if (data) {
         setUser({
@@ -54,9 +59,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           dataEnem: data.data_enem ?? null,
           horasDisponiveisPorDia: data.horas_disponiveis_por_dia ?? 2,
         })
+        return
       }
-    } catch {
-      // ignore
+
+      // No public.users row — orphan auth user (trigger failed silently on signup).
+      // Auto-create a minimal profile so the user can proceed to onboarding
+      // instead of being stuck in an infinite /login redirect loop.
+      const { data: sessionData } = await supabase.auth.getSession()
+      const authUser = sessionData.session?.user
+      const email = authUser?.email ?? ''
+      const nome =
+        (authUser?.user_metadata?.full_name as string | undefined) ??
+        email.split('@')[0] ??
+        'Usuário'
+
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({ id, email, nome, onboarding_done: false })
+
+      if (insertError) {
+        console.error('[fetchProfile] could not auto-create profile:', insertError)
+        return
+      }
+
+      // Best-effort pet creation — ignore failure (pet may already exist or be created later).
+      await supabase
+        .from('pets')
+        .insert({ user_id: id, fase: 'semente', nivel: 1, xp: 0, humor: 100, energia: 100, moedas: 0 })
+        .then(({ error: petErr }) => {
+          if (petErr) console.warn('[fetchProfile] pet auto-create:', petErr.message)
+        })
+
+      setUser({ id, nome, email, image: null, onboardingDone: false, dataEnem: null, horasDisponiveisPorDia: 2 })
+    } catch (err) {
+      console.error('[fetchProfile] unexpected error:', err)
     } finally {
       setLoading(false)
     }

@@ -68,13 +68,25 @@ export function ClassProvider({ children }: { children: ReactNode }) {
         .from('users')
         .select('current_class_id, classes:current_class_id(*, organizations(*))')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
       if (profileError) {
         if (alive) {
           setCurrentClass(null)
           setOrganization(null)
           setError(formatClassLoadError(profileError))
+          setLoading(false)
+        }
+        return
+      }
+
+      // No public.users row yet (orphan auth user or first-login before trigger ran).
+      // Treat as no-class state — onboarding or profile repair will create the row.
+      if (!profile) {
+        if (alive) {
+          setCurrentClass(null)
+          setOrganization(null)
+          setError(null)
           setLoading(false)
         }
         return
