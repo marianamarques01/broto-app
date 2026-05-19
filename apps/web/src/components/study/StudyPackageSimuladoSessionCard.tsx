@@ -80,8 +80,8 @@ export function StudyPackageSimuladoSessionCard({
           </p>
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+              display: 'flex',
+              flexWrap: 'wrap',
               gap: 10,
               marginTop: 14,
               alignItems: 'stretch',
@@ -95,8 +95,8 @@ export function StudyPackageSimuladoSessionCard({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                width: '100%',
-                minWidth: 0,
+                flex: '1 1 180px',
+                minWidth: 160,
                 boxSizing: 'border-box',
                 textAlign: 'center',
               }}
@@ -113,8 +113,8 @@ export function StudyPackageSimuladoSessionCard({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                width: '100%',
-                minWidth: 0,
+                flex: '1 1 200px',
+                minWidth: 180,
                 boxSizing: 'border-box',
                 background: areaColor,
               }}

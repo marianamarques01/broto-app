@@ -201,9 +201,9 @@ export function StudyPackageLeaveDialog({
           <button type="button" className="broto-btn-secondary study-pack-leave__btn" onClick={onContinue}>
             Continuar estudando
           </button>
-          <button type="button" className="study-pack-leave__discard" onClick={onDiscardAndLeave}>
+          {/* <button type="button" className="study-pack-leave__discard" onClick={onDiscardAndLeave}>
             Sair sem guardar
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

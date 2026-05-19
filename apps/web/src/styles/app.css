@@ -10778,7 +10778,7 @@ a.broto-btn-ghost {
   .broto-routine-sess__tail {
     grid-column: 1/-1;
     grid-row: 2;
-    justify-content: flex-start;
+    justify-content: flex-end;
     align-self: stretch;
     padding-top: 8px;
     margin-top: 2px;
@@ -13239,7 +13239,7 @@ a.broto-btn-ghost {
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px 28px;
+  gap: 8px 28px;
   width: 100%;
 }
 
@@ -15610,6 +15610,7 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
   .broto-qbank-hero-band__head {
     flex-direction: column;
     align-items: stretch;
+    justify-content: flex-start;
   }
 
   /* Área de estudo / catálogo: KPIs maiores, menos espaço entre texto e faixa */
@@ -15619,7 +15620,12 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
   }
 
   .broto-qbank-hero-band--embedded .broto-qbank-hero-band__head {
+    display: block;
     gap: 2px 12px;
+  }
+
+  .broto-qbank-hero-band--embedded .broto-qbank-kpi-strip--head {
+    margin-top: 12px;
   }
 
   .broto-qbank-hero-band--embedded
@@ -15627,6 +15633,7 @@ a.broto-qbank-destaque--link:hover .broto-qbank-destaque__chev {
     .broto-qbank-hero-band__text
     .broto-qbank-hero-band__desc--below-head {
     margin-top: 0;
+    margin-bottom: 4px;
     font-size: 1rem;
     line-height: 1.45;
   }
