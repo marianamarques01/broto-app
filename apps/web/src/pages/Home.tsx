@@ -316,13 +316,13 @@ export function Home() {
                 <AreaPerformanceTable areas={areasForProgress} loading={loadingProgress} />
               </div>
 
-              <details className="broto-home-details-analytics">
+              {/* <details className="broto-home-details-analytics">
                 <summary>Ver calendário e detalhes de prática</summary>
                 <HomePracticeYearHeatmap
                   performanceDayMap={performanceDayMap}
                   questoesHoje={pet?.questoesHoje ?? 0}
                 />
-              </details>
+              </details> */}
 
               {/* Card legado do Broto: mantido no DOM, oculto via CSS (substituído pelo banner) */}
               <div className="broto-pet-card-legacy" aria-hidden>
