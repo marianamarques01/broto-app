@@ -103,6 +103,7 @@ async function fetchQuestionDetail(
       const q = await res.json()
       return {
         title: q.title,
+        statement: q.alternativesIntroduction ?? null,
         index: q.index,
         year: q.year ?? year,
         discipline: q.discipline ?? null,

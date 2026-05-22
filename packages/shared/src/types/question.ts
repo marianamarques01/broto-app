@@ -19,6 +19,7 @@ export interface Exam {
 
 export interface Question {
   title: string
+  statement: string | null
   index: number
   year: number
   discipline: string | null

@@ -78,11 +78,11 @@ export function QuestionPlayer({
     [contextHtml],
   )
 
-  const titleHtml = useMemo(() => questionFieldMarkdownToHtml(question.title), [question.title])
-  const titleAsHtml = titleHtml != null && questionFieldNeedsHtmlRendering(titleHtml)
-  const titleHtmlSource = useMemo(
-    () => (titleAsHtml && titleHtml ? { html: titleHtml } : { html: '' }),
-    [titleAsHtml, titleHtml],
+  const statementHtml = useMemo(() => questionFieldMarkdownToHtml(question.statement), [question.statement])
+  const statementAsHtml = statementHtml != null && questionFieldNeedsHtmlRendering(statementHtml)
+  const statementHtmlSource = useMemo(
+    () => (statementAsHtml && statementHtml ? { html: statementHtml } : { html: '' }),
+    [statementAsHtml, statementHtml],
   )
   const renderHtmlBaseStyle = useMemo(
     () => ({
@@ -136,26 +136,28 @@ export function QuestionPlayer({
           backgroundColor: colors.bg.card,
         }}
       >
-        {titleAsHtml ? (
-          <RenderHtml
-            contentWidth={width - 64}
-            source={titleHtmlSource}
-            baseStyle={{
-              color: colors.text.primary,
-              fontSize: 14,
-              lineHeight: 22,
-              fontWeight: '600',
-            }}
-            tagsStyles={renderHtmlTagsStyles}
-          />
-        ) : (
-          <Text
-            className="text-sm font-semibold leading-relaxed"
-            style={{ color: colors.text.primary }}
-          >
-            {question.title}
-          </Text>
-        )}
+        {question.statement != null ? (
+          statementAsHtml ? (
+            <RenderHtml
+              contentWidth={width - 64}
+              source={statementHtmlSource}
+              baseStyle={{
+                color: colors.text.primary,
+                fontSize: 14,
+                lineHeight: 22,
+                fontWeight: '600',
+              }}
+              tagsStyles={renderHtmlTagsStyles}
+            />
+          ) : (
+            <Text
+              className="text-sm font-semibold leading-relaxed"
+              style={{ color: colors.text.primary }}
+            >
+              {question.statement}
+            </Text>
+          )
+        ) : null}
         {contextHtml && (
           <View className="mt-3">
             <RenderHtml

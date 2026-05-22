@@ -99,14 +99,14 @@ export function QuestionPlayer({
     [contextHtmlRaw],
   )
 
-  const titleHtmlRaw = useMemo(
-    () => questionFieldMarkdownToHtml(question.title),
-    [question.title],
+  const statementHtmlRaw = useMemo(
+    () => questionFieldMarkdownToHtml(question.statement),
+    [question.statement],
   )
-  const titleAsHtml = titleHtmlRaw != null && questionFieldNeedsHtmlRendering(titleHtmlRaw)
-  const titleSafeHtml = useMemo(
-    () => (titleAsHtml && titleHtmlRaw ? purifyQuestionHtml(titleHtmlRaw) : ''),
-    [titleAsHtml, titleHtmlRaw],
+  const statementAsHtml = statementHtmlRaw != null && questionFieldNeedsHtmlRendering(statementHtmlRaw)
+  const statementSafeHtml = useMemo(
+    () => (statementAsHtml && statementHtmlRaw ? purifyQuestionHtml(statementHtmlRaw) : ''),
+    [statementAsHtml, statementHtmlRaw],
   )
 
   async function handleSelect(letter: string) {
@@ -199,30 +199,32 @@ export function QuestionPlayer({
         />
       ) : null}
 
-      {titleAsHtml ? (
-        <div
-          style={{
-            fontSize: '0.92rem',
-            lineHeight: 1.65,
-            color: 'var(--text-primary)',
-            marginBottom: 22,
-            marginTop: 0,
-          }}
-          dangerouslySetInnerHTML={{ __html: titleSafeHtml }}
-        />
-      ) : (
-        <p
-          style={{
-            fontSize: '0.92rem',
-            lineHeight: 1.65,
-            color: 'var(--text-primary)',
-            marginBottom: 22,
-            marginTop: 0,
-          }}
-        >
-          {question.title}
-        </p>
-      )}
+      {question.statement != null ? (
+        statementAsHtml ? (
+          <div
+            style={{
+              fontSize: '0.92rem',
+              lineHeight: 1.65,
+              color: 'var(--text-primary)',
+              marginBottom: 22,
+              marginTop: 0,
+            }}
+            dangerouslySetInnerHTML={{ __html: statementSafeHtml }}
+          />
+        ) : (
+          <p
+            style={{
+              fontSize: '0.92rem',
+              lineHeight: 1.65,
+              color: 'var(--text-primary)',
+              marginBottom: 22,
+              marginTop: 0,
+            }}
+          >
+            {question.statement}
+          </p>
+        )
+      ) : null}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {question.alternatives.map((alt) => {
