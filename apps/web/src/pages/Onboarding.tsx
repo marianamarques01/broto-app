@@ -678,7 +678,7 @@ export function Onboarding() {
     description:
       'Personalize metas, nível em cada área do ENEM e horários de estudo para o Broto montar sua rotina.',
   })
-  const { user } = useAuth()
+  const { user, refreshUser: refreshAuthUser } = useAuth()
   const { organization } = useClass()
   const navigate = useNavigate()
 
@@ -715,7 +715,7 @@ export function Onboarding() {
     setSaveLoading(true)
     try {
       await api.post('/api/user/onboarding', buildOnboardingBody(data))
-      await refreshUser()
+      await Promise.all([refreshUser(), refreshAuthUser()])
       await refreshPet()
       trackMvpFunnelStep('onboarding_complete', { via: 'finish_no_mock' })
       markIntegratedTourTriggerFromOnboarding()
@@ -739,7 +739,7 @@ export function Onboarding() {
     setSimuladoLoading(true)
     try {
       await api.post('/api/user/onboarding', buildOnboardingBody(data))
-      await refreshUser()
+      await Promise.all([refreshUser(), refreshAuthUser()])
       await refreshPet()
       trackMvpFunnelStep('onboarding_complete', { via: 'mock_exam_flow' })
 
@@ -820,7 +820,7 @@ export function Onboarding() {
         horasPorDia: 2,
         horarios: [],
       })
-      await refreshUser()
+      await Promise.all([refreshUser(), refreshAuthUser()])
       await refreshPet()
       trackMvpFunnelStep('onboarding_complete', { via: 'skip_wizard' })
     } catch {
