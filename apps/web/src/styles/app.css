@@ -21725,6 +21725,17 @@ button.broto-mock-exam-area:hover {
   color: var(--text-primary);
 }
 
+.broto-mock-exam-session-exit-modal__diagnostic-warning {
+  margin: -8px 0 18px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gold-500) 10%, var(--bg-elevated));
+  border: 1px solid color-mix(in srgb, var(--gold-500) 25%, var(--border-subtle));
+}
+
 .broto-mock-exam-session-exit-modal__actions {
   display: flex;
   flex-wrap: wrap;

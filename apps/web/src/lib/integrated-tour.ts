@@ -351,7 +351,8 @@ export interface IntegratedTourResolveOpen {
 
 /**
  * Decide se a Home deve abrir o tour na montagem (primeira pintura da rota).
- * Prioridade: replay manual → pós-onboarding → retomar in_progress → migração (sem storage) → versão de conteúdo nova.
+ * Prioridade: replay manual → pós-onboarding → primeira visita.
+ * Uma vez que o usuário conclui ou pula o tour (completed/skipped), nunca reabre automaticamente.
  */
 export function resolveIntegratedTourOpenOnHomeMount(): IntegratedTourResolveOpen {
   if (!isIntegratedTourFeatureEnabled()) {
@@ -364,27 +365,22 @@ export function resolveIntegratedTourOpenOnHomeMount(): IntegratedTourResolveOpe
   const fromOnboarding = readSessionFlag(SESSION_FROM_ONBOARDING)
   const persist = readIntegratedTourPersist()
 
+  // Replay explícito (via Configurações) sempre abre do início
   if (replay) {
     return { open: true, step: 0 }
   }
 
-  if (fromOnboarding) {
-    const step =
-      persist?.status === 'in_progress' ? clampStep(persist.step) : 0
+  // Já viu e fechou: nunca reabrir automaticamente
+  if (persist?.status === 'completed' || persist?.status === 'skipped') {
+    return { open: false, step: 0 }
+  }
+
+  // Pós-onboarding ou primeira visita (sem persist): abrir
+  if (fromOnboarding || !persist) {
+    const step = persist?.status === 'in_progress' ? clampStep(persist.step) : 0
     return { open: true, step }
   }
 
-  if (!persist) {
-    return { open: true, step: 0 }
-  }
-
-  if (persist.contentVersion !== INTEGRATED_TOUR_CONTENT_VERSION) {
-    return { open: true, step: 0 }
-  }
-
-  if (persist.status === 'in_progress') {
-    return { open: true, step: clampStep(persist.step) }
-  }
-
+  // in_progress sem trigger explícito: não abrir em loop
   return { open: false, step: 0 }
 }

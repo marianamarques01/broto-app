@@ -800,6 +800,7 @@ export function Onboarding() {
           questions,
           sessionId: created.sessionId,
           questionIds: built.questionIds,
+          isDiagnostic: true,
         },
       })
     } catch (e) {

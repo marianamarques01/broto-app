@@ -1,6 +1,7 @@
 import { resolveBetaFeedbackFormUrl } from '@/components/home/HomeBetaSurveyModal'
 import {
   INTEGRATED_TOUR_SLIDES,
+  readIntegratedTourPersist,
   writeIntegratedTourPersist,
   type IntegratedTourStatus,
 } from '@/lib/integrated-tour'
@@ -54,6 +55,7 @@ function HomeIntegratedTourModalInner({
 }) {
   const [step, setStep] = useState(() => clampStep(initialStep))
   const panelRef = useRef<HTMLDivElement>(null)
+  const finishedRef = useRef(false)
 
   const persistProgress = useCallback((nextStep: number) => {
     writeIntegratedTourPersist({
@@ -66,8 +68,21 @@ function HomeIntegratedTourModalInner({
     persistProgress(step)
   }, [step, persistProgress])
 
+  // Se o modal desmontar sem o usuário concluir/pular, marca como skipped para não abrir em loop
+  useEffect(() => {
+    return () => {
+      if (!finishedRef.current) {
+        const current = readIntegratedTourPersist()
+        if (current?.status === 'in_progress') {
+          writeIntegratedTourPersist({ status: 'skipped', step: 0 })
+        }
+      }
+    }
+  }, [])
+
   const finish = useCallback(
     (status: Exclude<IntegratedTourStatus, 'in_progress'>) => {
+      finishedRef.current = true
       writeIntegratedTourPersist({
         status,
         step: status === 'skipped' ? 0 : SLIDE_COUNT - 1,

@@ -65,7 +65,7 @@ export function MockExamPlay() {
   const baseUrl = getQuestionsStaticBaseUrl(organization?.slug ?? null)
 
   const state = location.state as
-    | { questions?: Question[]; sessionId?: string; questionIds?: string[]; config?: unknown }
+    | { questions?: Question[]; sessionId?: string; questionIds?: string[]; config?: unknown; isDiagnostic?: boolean }
     | undefined
 
   const skipQuestionFetchRef = useRef(!!(state?.questions?.length))
@@ -553,6 +553,7 @@ export function MockExamPlay() {
         onSaveAndExit={handleSaveAndExit}
         onExitWithoutSave={handleExitWithoutSave}
         busyAction={exitBusy}
+        isDiagnostic={state?.isDiagnostic ?? false}
       />
     </div>
   )
