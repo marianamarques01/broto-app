@@ -2,7 +2,7 @@
  * Sobrescreva com `VITE_BETA_FEEDBACK_FORM_URL` no `.env`; localmente copie `.env.example` → `.env`.
  * Sem env definida usamos fallback para o modal aparecer mesmo em dev (troque antes de público ao ar).
  */
-const BETA_FEEDBACK_FORM_URL_FALLBACK = 'https://forms.gle/replace-me'
+const BETA_FEEDBACK_FORM_URL_FALLBACK = 'https://forms.gle/6DsGikwtY1fM5D7c7'
 
 /** Valor crus da env (sem fallback). */
 export function getBetaFeedbackFormUrl(): string {
