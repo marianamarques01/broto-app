@@ -88,7 +88,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!userId) return
 
-    fetchAdminProfile(userId).then((profile) => {
+    void fetchAdminProfile(userId).then((profile) => {
       setAdmin(profile)
       setLoading(false)
     })

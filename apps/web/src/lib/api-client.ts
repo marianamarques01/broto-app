@@ -65,7 +65,7 @@ async function invokeOnce<T>(path: string, options: InvokeOptions & { publicEndp
     // Várias chamadas em paralelo logo após o login podem rodar antes do persist da sessão no storage.
     const maxAttempts = 6
     for (let i = 0; i < maxAttempts; i++) {
-      let {
+      const {
         data: { session },
       } = await supabase.auth.getSession()
       let token = session?.access_token

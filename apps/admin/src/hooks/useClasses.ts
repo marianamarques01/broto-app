@@ -25,8 +25,25 @@ export function useClasses() {
   }, [admin])
 
   useEffect(() => {
-    fetchClasses()
-  }, [fetchClasses])
+    const organizationId = admin?.organization_id
+    if (!organizationId) return
+
+    async function load() {
+      setLoading(true)
+
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false })
+
+      if (error) console.error('fetchClasses error:', error)
+      setClasses((data as Class[]) ?? [])
+      setLoading(false)
+    }
+
+    void load()
+  }, [admin])
 
   async function createClass(params: {
     name: string

@@ -38,7 +38,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const location = useLocation()
 
   function handleSignOut() {
-    signOut()
+    void signOut()
     onNavigate?.()
   }
 

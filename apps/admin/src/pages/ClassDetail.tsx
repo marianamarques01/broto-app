@@ -36,12 +36,16 @@ export function ClassDetail() {
   const { indicators, loading: indicatorsLoading } = useClassIndicators(classId!)
   const { updateClass, deleteClass } = useClasses()
 
-  useEffect(() => {
+  const [prevClassId, setPrevClassId] = useState(classId)
+  if (classId !== prevClassId) {
+    setPrevClassId(classId)
     setEditing(false)
     setShowDeleteConfirm(false)
     setActiveTab('materials')
+  }
 
-    supabase
+  useEffect(() => {
+    void supabase
       .from('classes')
       .select('*')
       .eq('id', classId)

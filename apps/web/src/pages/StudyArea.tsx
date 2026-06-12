@@ -638,28 +638,37 @@ function GuidedBankPracticeQuestions({
 
   const row = rows[idx]
 
-  useEffect(() => {
-    correctRef.current = 0
+  const [prevRows, setPrevRows] = useState(rows)
+  if (prevRows !== rows) {
+    setPrevRows(rows)
     setStats({ correct: 0, answered: 0 })
     setIdx(0)
+  }
+
+  useEffect(() => {
+    correctRef.current = 0
   }, [rows])
 
   useEffect(() => {
-    if (!baseUrl || !row) {
+    if (!baseUrl || !row) return
+
+    async function load() {
+      fetchGen.current += 1
+      const gen = fetchGen.current
+      setLoadingQ(true)
       setQuestion(null)
-      setLoadingQ(false)
-      return
-    }
-    fetchGen.current += 1
-    const gen = fetchGen.current
-    setLoadingQ(true)
-    setQuestion(null)
-    void fetchQuestionDetailForBank(baseUrl, row.year, row.index, row.language).then((q) => {
+
+      const q = await fetchQuestionDetailForBank(baseUrl, row.year, row.index, row.language)
       if (gen !== fetchGen.current) return
       setQuestion(q)
       setLoadingQ(false)
-    })
+    }
+
+    void load()
   }, [baseUrl, row])
+
+  const displayLoading = row ? loadingQ : false
+  const displayQuestion = row ? question : null
 
   const goNext = useCallback(() => {
     if (idx >= rows.length - 1) {
@@ -703,9 +712,9 @@ function GuidedBankPracticeQuestions({
           {stats.correct}/{stats.answered} corretas
         </span>
       </div>
-      {loadingQ ? (
+      {displayLoading ? (
         <div className="broto-skeleton" style={{ height: 220, borderRadius: 20 }} />
-      ) : !question ? (
+      ) : !displayQuestion ? (
         <div
           style={{
             padding: 20,
@@ -723,8 +732,8 @@ function GuidedBankPracticeQuestions({
         </div>
       ) : (
         <QuestionPlayer
-          key={getQuestionId(question)}
-          question={question}
+          key={getQuestionId(displayQuestion)}
+          question={displayQuestion}
           areaKey={areaKey}
           onNext={goNext}
           onAnswerRecorded={({ isCorrect }) => {
@@ -1313,7 +1322,7 @@ export function StudyArea() {
   const [showSummary, setShowSummary] = useState(false)
   const [simuladoModalOpen, setSimuladoModalOpen] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
-  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false)
+  const [leaveDialogRequested, setLeaveDialogRequested] = useState(false)
   const mainRef = useRef<HTMLDivElement>(null)
   const stageMainRef = useRef<HTMLDivElement>(null)
 
@@ -1382,7 +1391,7 @@ export function StudyArea() {
     setCompleted({ summary: false, flashcards: false, questions: false, mindmap: false })
     setShowSummary(false)
     setFocusMode(false)
-    setLeaveDialogOpen(false)
+    setLeaveDialogRequested(false)
     setGuidedBankRows(bankPracticeRows && bankPracticeRows.length > 0 ? bankPracticeRows : null)
 
     const topicKey = resolveStudyTopicValue(topico.value)
@@ -1434,7 +1443,7 @@ export function StudyArea() {
     setGuidedBankRows(null)
     setShowSummary(false)
     setFocusMode(false)
-    setLeaveDialogOpen(false)
+    setLeaveDialogRequested(false)
     if (key) navigate(`/study/${key}`)
   }, [pkg?.areaKey, navigate])
 
@@ -1463,12 +1472,7 @@ export function StudyArea() {
   )
 
   const blocker = useBlocker(shouldBlockNavigation)
-
-  useEffect(() => {
-    if (blocker.state === 'blocked') {
-      setLeaveDialogOpen(true)
-    }
-  }, [blocker.state])
+  const leaveDialogOpen = leaveDialogRequested || blocker.state === 'blocked'
 
   /** Persistência contínua: o hub lê este rascunho; antes só gravava ao “Salvar e sair”. */
   useEffect(() => {
@@ -1488,14 +1492,14 @@ export function StudyArea() {
 
   const requestStudyHubBack = useCallback(() => {
     if (needsExitGuard) {
-      setLeaveDialogOpen(true)
+      setLeaveDialogRequested(true)
     } else {
       handleBack()
     }
   }, [needsExitGuard, handleBack])
 
   const handleLeaveDialogContinue = useCallback(() => {
-    setLeaveDialogOpen(false)
+    setLeaveDialogRequested(false)
     if (blocker.state === 'blocked') {
       blocker.reset()
     }
@@ -1505,7 +1509,7 @@ export function StudyArea() {
     if (pkg) {
       saveStudyPackageSessionDraft(pkg.areaKey, pkg.topicoValue, { completed, activeTab })
     }
-    setLeaveDialogOpen(false)
+    setLeaveDialogRequested(false)
     if (blocker.state === 'blocked') {
       blocker.proceed()
     } else {
@@ -1517,7 +1521,7 @@ export function StudyArea() {
     if (pkg) {
       clearStudyPackageSessionDraft(pkg.areaKey, pkg.topicoValue)
     }
-    setLeaveDialogOpen(false)
+    setLeaveDialogRequested(false)
     if (blocker.state === 'blocked') {
       blocker.proceed()
     } else {

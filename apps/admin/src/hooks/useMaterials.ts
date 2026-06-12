@@ -34,7 +34,11 @@ export function useMaterials(classId: string) {
   }, [classId])
 
   useEffect(() => {
-    fetchMaterials()
+    async function load() {
+      await fetchMaterials()
+    }
+
+    void load()
   }, [fetchMaterials])
 
   async function uploadPDF(file: File, title: string): Promise<{ error: string | null }> {
@@ -75,7 +79,7 @@ export function useMaterials(classId: string) {
     if (dbError || !inserted) return { error: 'Erro ao registrar material' }
 
     // Disparar indexação em background (atualiza lista ao concluir)
-    triggerIndex(inserted.id, classId, fetchMaterials)
+    void triggerIndex(inserted.id, classId, fetchMaterials)
     await fetchMaterials()
     return { error: null }
   }
@@ -104,7 +108,7 @@ export function useMaterials(classId: string) {
     if (dbError || !inserted) return { error: 'Erro ao registrar material' }
 
     // Disparar indexação em background (atualiza lista ao concluir)
-    triggerIndex(inserted.id, classId, fetchMaterials)
+    void triggerIndex(inserted.id, classId, fetchMaterials)
     await fetchMaterials()
     return { error: null }
   }

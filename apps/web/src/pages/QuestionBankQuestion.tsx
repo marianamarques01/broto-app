@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Clock, Gauge, ListChecks } from 'lucide-react'
+import { BookOpen, ChevronLeft, ChevronRight, Clock, Gauge, ListChecks } from 'lucide-react'
 import { getQuestionId, parseEnemAreaKey, type Question } from '@broto/shared'
 import { TopBar } from '@/components/layout/TopBar'
 import { QuestionPlayer } from '@/components/questions/QuestionPlayer'
@@ -13,7 +13,20 @@ import {
   useQuestionBank,
   type QuestionBankRow,
 } from '@/hooks/useQuestionBank'
-import { AREA_CONFIG, getAreaColor, getAreaIcon } from '@/lib/area-config'
+import { AREA_CONFIG, getAreaColor } from '@/lib/area-config'
+
+function QuestionAreaIcon({
+  area,
+  size,
+  strokeWidth,
+}: {
+  area: string
+  size: number
+  strokeWidth: number
+}) {
+  const Icon = AREA_CONFIG[area]?.icon ?? BookOpen
+  return <Icon size={size} strokeWidth={strokeWidth} aria-hidden />
+}
 
 type QuestionRouteParts = {
   year: number
@@ -133,7 +146,6 @@ export function QuestionBankQuestion() {
   const previousRow = currentIndex > 0 ? sequence[currentIndex - 1] : null
   const nextRow =
     currentIndex >= 0 && currentIndex < sequence.length - 1 ? sequence[currentIndex + 1] : null
-  const AreaIcon = getAreaIcon(selectedArea)
   const areaLabel =
     AREA_CONFIG[selectedArea]?.label ?? areas.find((a) => a.value === selectedArea)?.label ?? 'Área'
   const catalogPath = selectedArea ? buildCatalogPath(selectedArea, queryString) : '/study'
@@ -211,7 +223,7 @@ export function QuestionBankQuestion() {
           <section className="broto-qbank-question-hero">
             <div className="broto-qbank-question-hero__body">
               <div className="broto-qbank-question-hero__icon">
-                <AreaIcon size={20} strokeWidth={1.8} aria-hidden />
+                <QuestionAreaIcon area={selectedArea} size={20} strokeWidth={1.8} />
               </div>
               <div className="broto-qbank-question-hero__copy">
                 <p className="broto-qbank-question-kicker">{areaLabel}</p>

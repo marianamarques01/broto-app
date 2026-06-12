@@ -147,7 +147,7 @@ export function useClassIndicators(classId: string) {
       setLoading(false)
     }
 
-    load()
+    void load()
   }, [classId])
 
   return { indicators, loading }

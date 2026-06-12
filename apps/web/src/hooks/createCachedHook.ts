@@ -24,11 +24,8 @@ export function createCachedHook<T>(fetcher: () => Promise<T>) {
         setLoading(false)
       })
 
-      if (store.getCached() !== null) {
-        setData(store.getCached())
-        setLoading(false)
-      } else {
-        store.fetchData()
+      if (store.getCached() === null) {
+        void store.fetchData()
       }
 
       return unsubscribe

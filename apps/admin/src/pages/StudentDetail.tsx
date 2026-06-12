@@ -47,7 +47,7 @@ export function StudentDetail() {
       setLoading(false)
     }
 
-    if (studentId) load()
+    if (studentId) void load()
   }, [studentId])
 
   const metricCard = (label: string, value: string | number) => (

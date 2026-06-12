@@ -30,46 +30,39 @@ function NotFound() {
   )
 }
 
-export const router = createBrowserRouter(
-  [
-    { path: '/login', element: <Login /> },
-    {
-      path: '/',
-      element: (
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: '/classes/new',
-      element: (
-        <ProtectedRoute>
-          <CreateClass />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: '/classes/:classId',
-      element: (
-        <ProtectedRoute>
-          <ClassDetail />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: '/classes/:classId/students/:studentId',
-      element: (
-        <ProtectedRoute>
-          <StudentDetail />
-        </ProtectedRoute>
-      ),
-    },
-    { path: '*', element: <NotFound /> },
-  ],
+export const router = createBrowserRouter([
+  { path: '/login', element: <Login /> },
   {
-    future: {
-      v7_startTransition: true,
-    },
+    path: '/',
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
   },
-)
+  {
+    path: '/classes/new',
+    element: (
+      <ProtectedRoute>
+        <CreateClass />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/classes/:classId',
+    element: (
+      <ProtectedRoute>
+        <ClassDetail />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/classes/:classId/students/:studentId',
+    element: (
+      <ProtectedRoute>
+        <StudentDetail />
+      </ProtectedRoute>
+    ),
+  },
+  { path: '*', element: <NotFound /> },
+])
