@@ -113,10 +113,7 @@ export function Routine() {
   )
 
   const sessions = useMemo(
-    () =>
-      !loading
-        ? buildRoutineSessions(areas, daily, horasPorDia, pet?.studyTodayByArea)
-        : [],
+    () => (!loading ? buildRoutineSessions(areas, daily, horasPorDia, pet?.studyTodayByArea) : []),
     [loading, areas, daily, horasPorDia, pet?.studyTodayByArea],
   )
 
@@ -212,13 +209,15 @@ export function Routine() {
                   className={`broto-routine-panel broto-routine-panel--week${tab === 'semana' ? ' broto-fade-in' : ''}`}
                 >
                   <div className="broto-routine-week-plan">
-                  <div className="broto-routine-week-head">
+                    <div className="broto-routine-week-head">
                       <span className="broto-routine-week-head__eyebrow">Plano por dia</span>
                       <div className="broto-routine-week-head__row">
                         <span className="broto-routine-week-head__label">{semanaLabel}</span>
-                        <span className="broto-routine-week-head__hint">{horasPorDia} h/dia planejadas</span>
+                        <span className="broto-routine-week-head__hint">
+                          {horasPorDia} h/dia planejadas
+                        </span>
                       </div>
-                  </div>
+                    </div>
                     <div className="broto-routine-week-strip-wrap">
                       <WeekStrip rotina={rotina} />
                     </div>
@@ -243,7 +242,7 @@ export function Routine() {
                           </div>
                           <div className="broto-routine-week-row__body">
                             <span className="broto-routine-week-row__title">
-                              {dia.ehDescanso ? 'Descanso' : dia.area?.label ?? '—'}
+                              {dia.ehDescanso ? 'Descanso' : (dia.area?.label ?? '—')}
                             </span>
                             <span className="broto-routine-week-row__sub">
                               {dia.ehDescanso
@@ -273,16 +272,20 @@ export function Routine() {
                   className={`broto-routine-panel broto-routine-panel--personal${tab === 'personalizar' ? ' broto-fade-in' : ''}`}
                 >
                   <div className="broto-routine-personal__intro">
-                    <span className="broto-routine-personal__eyebrow">Como montamos sua semana</span>
+                    <span className="broto-routine-personal__eyebrow">
+                      Como montamos sua semana
+                    </span>
                     <h2 className="broto-routine-personal__title">Sua rotina inteligente</h2>
                     <p className="broto-routine-personal__copy">
                       Priorizamos áreas com menor acerto e respeitamos suas horas por dia. O plano é
-                      montado neste aparelho com base no seu progresso — em breve poderemos sincronizar
-                      rotinas personalizadas na nuvem e sugestões da IA.
+                      montado neste aparelho com base no seu progresso — em breve poderemos
+                      sincronizar rotinas personalizadas na nuvem e sugestões da IA.
                     </p>
                   </div>
                   <div className="broto-routine-personal__card">
-                    <span className="broto-routine-personal__card-label">Disponibilidade diária</span>
+                    <span className="broto-routine-personal__card-label">
+                      Disponibilidade diária
+                    </span>
                     <strong className="broto-routine-personal__card-value">
                       {horasPorDia} {horasPorDia === 1 ? 'hora' : 'horas'} / dia
                     </strong>

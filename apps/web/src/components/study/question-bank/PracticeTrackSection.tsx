@@ -37,11 +37,13 @@ export function PracticeTrackSection({
       </div>
       {track.id === 'freeExplore' ? (
         <div className="broto-qbank-track-free">
-          {track.emptyHint ? (
-            <p className="broto-qbank-track-empty">{track.emptyHint}</p>
-          ) : null}
+          {track.emptyHint ? <p className="broto-qbank-track-empty">{track.emptyHint}</p> : null}
           {onExpandExplore ? (
-            <button type="button" className="broto-qbank-track-explore-btn" onClick={onExpandExplore}>
+            <button
+              type="button"
+              className="broto-qbank-track-explore-btn"
+              onClick={onExpandExplore}
+            >
               Explorar o banco
             </button>
           ) : null}

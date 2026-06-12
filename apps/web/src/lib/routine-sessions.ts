@@ -50,10 +50,7 @@ function pickTopicLabel(areaKey: string, areas: AreaStat[] | undefined): string 
   return t?.label ?? `Foco em ${AREA_CONFIG[areaKey]?.label ?? a.label}`
 }
 
-function pickFourthAreaKey(
-  areas: AreaStat[] | undefined,
-  used: string[],
-): string {
+function pickFourthAreaKey(areas: AreaStat[] | undefined, used: string[]): string {
   const sortedKeys = areas?.length
     ? [...areas]
         .filter((a) => a.totalAnswered >= 1)
@@ -88,12 +85,7 @@ export function buildRoutineSessions(
     missions[2].done && (byArea[fourthKey]?.answered ?? 0) >= 5,
   ]
 
-  const locked = [
-    false,
-    !done[0],
-    !done[0] || !done[1],
-    !done[0] || !done[1] || !done[2],
-  ]
+  const locked = [false, !done[0], !done[0] || !done[1], !done[0] || !done[1] || !done[2]]
 
   let activeIndex = -1
   for (let i = 0; i < 4; i++) {
@@ -105,16 +97,14 @@ export function buildRoutineSessions(
 
   return allKeys.map((areaKey, i) => {
     const area = areas?.find((a) => a.value === areaKey)
-    const acc =
-      area && area.totalAnswered > 0 ? `${area.accuracyPct}%` : null
+    const acc = area && area.totalAnswered > 0 ? `${area.accuracyPct}%` : null
 
     let status: RoutineSessionStatus
     if (done[i]) status = 'completed'
     else if (i === activeIndex) status = 'active'
     else status = 'pending'
 
-    const topicLabel =
-      i < 3 ? pickTopicLabel(areaKey, areas) : pickTopicLabel(fourthKey, areas)
+    const topicLabel = i < 3 ? pickTopicLabel(areaKey, areas) : pickTopicLabel(fourthKey, areas)
 
     const xpVals = [missions[0].xp, missions[1].xp, missions[2].xp, 25]
 

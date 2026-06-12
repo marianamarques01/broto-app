@@ -15,7 +15,10 @@ function parseLocalDayKey(key: string): { y: number; m: number; d: number } {
  * Dias do mês em que o aluno registrou ao menos uma resposta (`user_question_answers`).
  * Quando houver tabelas `study_sessions` / `mission_completions`, este hook pode unir fontes.
  */
-export function useStudyActivityDays(year: number, monthIndex: number): {
+export function useStudyActivityDays(
+  year: number,
+  monthIndex: number,
+): {
   keys: Set<string>
   loading: boolean
 } {

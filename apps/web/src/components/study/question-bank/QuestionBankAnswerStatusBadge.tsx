@@ -10,8 +10,7 @@ export function QuestionBankAnswerStatusBadge({ outcome, loading }: QuestionBank
   if (loading) {
     return (
       <span className="broto-qbank-outcome broto-qbank-outcome--loading" title="Carregando estado">
-        <Loader2 size={12} className="broto-qbank-outcome-icon" aria-hidden />
-        …
+        <Loader2 size={12} className="broto-qbank-outcome-icon" aria-hidden />…
       </span>
     )
   }

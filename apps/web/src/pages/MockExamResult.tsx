@@ -24,7 +24,8 @@ function formatTime(sec: number): string {
 function getPerformanceTier(pct: number): { label: string; className: string } {
   if (pct >= 80) return { label: 'Excelente!', className: 'broto-mock-exam-score-tier--excellent' }
   if (pct >= 60) return { label: 'Bom trabalho!', className: 'broto-mock-exam-score-tier--good' }
-  if (pct >= 40) return { label: 'Continue praticando!', className: 'broto-mock-exam-score-tier--ok' }
+  if (pct >= 40)
+    return { label: 'Continue praticando!', className: 'broto-mock-exam-score-tier--ok' }
   return { label: 'Não desanime!', className: 'broto-mock-exam-score-tier--low' }
 }
 
@@ -63,7 +64,7 @@ export function MockExamResult() {
     | undefined
   const [summary, setSummary] = useState<PracticeSessionSummary | null>(state?.summary ?? null)
   const [loading, setLoading] = useState(
-    () => !(state?.summary) && !!(paramSessionId && paramSessionId.length > 0),
+    () => !state?.summary && !!(paramSessionId && paramSessionId.length > 0),
   )
   const [loadError, setLoadError] = useState<string | null>(null)
   const answerReview = state?.showAnswerReview
@@ -71,19 +72,15 @@ export function MockExamResult() {
     : (summary?.respostas ?? [])
 
   useEffect(() => {
-    if (summary) {
-      setLoading(false)
-      return
-    }
+    if (summary) return
     const sid = paramSessionId?.trim()
-    if (!sid) {
-      setLoading(false)
-      return
-    }
+    if (!sid) return
+
     let cancelled = false
-    setLoading(true)
-    setLoadError(null)
-    void (async () => {
+
+    async function load() {
+      setLoading(true)
+      setLoadError(null)
       try {
         type GetRes = { sessionId?: string; summary?: unknown; completedAt?: string | null }
         const data = await api.post<GetRes>('/api/practice-session/get', { sessionId: sid })
@@ -102,7 +99,9 @@ export function MockExamResult() {
       } finally {
         if (!cancelled) setLoading(false)
       }
-    })()
+    }
+
+    void load()
     return () => {
       cancelled = true
     }
@@ -153,7 +152,11 @@ export function MockExamResult() {
         <TopBar title="Resultado" variant="study" />
         <div className="broto-main-inner" style={{ padding: 24 }}>
           <p className="broto-muted">Nenhum resultado para exibir.</p>
-          <Link to="/study/mock-exam" className="broto-btn-primary" style={{ marginTop: 16, display: 'inline-block' }}>
+          <Link
+            to="/study/mock-exam"
+            className="broto-btn-primary"
+            style={{ marginTop: 16, display: 'inline-block' }}
+          >
             Configurar sessão
           </Link>
           <div style={{ marginTop: 12 }}>
@@ -172,14 +175,19 @@ export function MockExamResult() {
   return (
     <div className="broto-page broto-page--study">
       <TopBar title="Resultado da sessão" variant="study" />
-      <div className="broto-main-inner" style={{ maxWidth: 720, margin: '0 auto', padding: '20px 18px' }}>
+      <div
+        className="broto-main-inner"
+        style={{ maxWidth: 720, margin: '0 auto', padding: '20px 18px' }}
+      >
         <div className="broto-mock-exam-score-hero broto-fade-in">
           <div className="broto-mock-exam-score-ring">
             <svg width="140" height="140" viewBox="0 0 140 140">
               <circle className="broto-mock-exam-score-ring__bg" cx="70" cy="70" r={RING_R} />
               <circle
                 className="broto-mock-exam-score-ring__fill"
-                cx="70" cy="70" r={RING_R}
+                cx="70"
+                cy="70"
+                r={RING_R}
                 stroke={scoreColor(summary.percentualGeral)}
                 strokeDasharray={RING_C}
                 strokeDashoffset={ringOffset}
@@ -191,9 +199,7 @@ export function MockExamResult() {
             </div>
           </div>
 
-          <span className={`broto-mock-exam-score-tier ${tier.className}`}>
-            {tier.label}
-          </span>
+          <span className={`broto-mock-exam-score-tier ${tier.className}`}>{tier.label}</span>
 
           <span className="broto-mock-exam-score-detail">
             {summary.totalCorretas} de {summary.totalQuestoes} questões corretas
@@ -273,7 +279,16 @@ export function MockExamResult() {
           <h3 className="broto-section-label" style={{ marginBottom: 14 }}>
             Desempenho por área
           </h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <ul
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+            }}
+          >
             {Object.entries(summary.porArea).map(([slug, s]) => {
               const cfg = AREA_CONFIG[slug]
               const Icon = cfg?.icon
@@ -299,7 +314,10 @@ export function MockExamResult() {
                   </div>
                   <span className="broto-mock-exam-area-row__score" style={{ color }}>
                     {s.percentual}%
-                    <span className="broto-muted" style={{ fontWeight: 400, fontSize: '0.72rem', marginLeft: 4 }}>
+                    <span
+                      className="broto-muted"
+                      style={{ fontWeight: 400, fontSize: '0.72rem', marginLeft: 4 }}
+                    >
                       ({s.corretas}/{s.total})
                     </span>
                   </span>
@@ -316,7 +334,16 @@ export function MockExamResult() {
           {Object.keys(summary.porTopico).length === 0 ? (
             <p className="broto-muted">Nenhum tópico agregado nesta rodada.</p>
           ) : (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
               {Object.entries(summary.porTopico).map(([slug, s]) => (
                 <li
                   key={slug}

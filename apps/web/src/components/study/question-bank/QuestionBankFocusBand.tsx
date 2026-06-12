@@ -4,7 +4,11 @@ import type {
   QuestionBankTrackId,
 } from '@broto/shared'
 import type { AreaStat } from '@/hooks/useProgress'
-import { buildDailyMissions, DAILY_MISSION_VOLUME_QUEST_GOAL, parseDailyMissionQuestionCount } from '@/lib/build-daily-missions'
+import {
+  buildDailyMissions,
+  DAILY_MISSION_VOLUME_QUEST_GOAL,
+  parseDailyMissionQuestionCount,
+} from '@/lib/build-daily-missions'
 import { ArrowRight } from 'lucide-react'
 
 const DEFAULT_GOAL = DAILY_MISSION_VOLUME_QUEST_GOAL
@@ -50,13 +54,11 @@ export function QuestionBankFocusBand({
   studyTodayByArea,
 }: QuestionBankFocusBandProps) {
   const missions = buildDailyMissions(areas, daily, studyTodayByArea)
-  const mission =
-    missions.find((m) => m.areaKey === selectedArea) ?? missions[0] ?? null
+  const mission = missions.find((m) => m.areaKey === selectedArea) ?? missions[0] ?? null
   const answered = mergedAnsweredToday(selectedArea, daily, studyTodayByArea)
   const parsedGoal =
     mission?.areaKey === selectedArea ? parseDailyMissionQuestionCount(mission.title) : null
-  const goal =
-    parsedGoal && parsedGoal > 0 ? parsedGoal : DEFAULT_GOAL
+  const goal = parsedGoal && parsedGoal > 0 ? parsedGoal : DEFAULT_GOAL
   const pct = goal > 0 ? Math.min(100, Math.round((answered / goal) * 100)) : 0
 
   if (loading) {
@@ -77,7 +79,9 @@ export function QuestionBankFocusBand({
         className="study-spotlight broto-qbank-focus broto-qbank-focus--empty"
         aria-live="polite"
       >
-        <p className="broto-qbank-focus-empty-msg">Carrega o banco para veres o foco personalizado.</p>
+        <p className="broto-qbank-focus-empty-msg">
+          Carrega o banco para veres o foco personalizado.
+        </p>
       </section>
     )
   }
@@ -105,7 +109,10 @@ export function QuestionBankFocusBand({
             aria-valuemax={goal}
             aria-label={`Questões hoje: ${answered} de ${goal}`}
           >
-            <div className="broto-qbank-focus__bar" style={{ width: `${pct}%`, background: areaAccent }} />
+            <div
+              className="broto-qbank-focus__bar"
+              style={{ width: `${pct}%`, background: areaAccent }}
+            />
           </div>
           <span className="broto-qbank-focus__count" aria-hidden>
             {answered}/{goal}

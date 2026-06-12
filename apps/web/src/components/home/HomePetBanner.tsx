@@ -83,9 +83,7 @@ function formatRoutineStudyHint(min: number | undefined): string | null {
   return `≈ ${min} min previstos para hoje na rotina`
 }
 
-function routineSecondStep(
-  ns: PetBannerNextSteps,
-): { to: string; title: string; hint: string } {
+function routineSecondStep(ns: PetBannerNextSteps): { to: string; title: string; hint: string } {
   if (ns.todayIsRoutineRest) {
     return {
       to: '/study/mock-exam',
@@ -129,10 +127,13 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
 
   const showNextColumn = Boolean(nextSteps)
 
-  const sectionClass =
-    ['broto-home-pet-banner', 'broto-home-pet-banner--square', showNextColumn && 'broto-home-pet-banner--with-next']
-      .filter(Boolean)
-      .join(' ')
+  const sectionClass = [
+    'broto-home-pet-banner',
+    'broto-home-pet-banner--square',
+    showNextColumn && 'broto-home-pet-banner--with-next',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   const routineFollowStep = nextSteps ? routineSecondStep(nextSteps) : null
 
@@ -218,7 +219,9 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
                     <>
                       <span className="broto-home-pet-banner__sq-metric-num">{metaCount}</span>
                       <span className="broto-home-pet-banner__sq-metric-sep">/</span>
-                      <span className="broto-home-pet-banner__sq-metric-den">{META_QUESTOES_DIA}</span>
+                      <span className="broto-home-pet-banner__sq-metric-den">
+                        {META_QUESTOES_DIA}
+                      </span>
                     </>
                   )}
                 </span>
@@ -226,22 +229,24 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
               <div className="broto-home-pet-banner__sq-metric">
                 <span className="broto-home-pet-banner__sq-metric-label">Acerto hoje</span>
                 <span className="broto-home-pet-banner__sq-metric-val">
-                  {loading
-                    ? '—'
-                    : hitPct === null
-                      ? '—'
-                      : (
-                          <>
-                            <span className="broto-home-pet-banner__sq-metric-num">{hitPct}</span>
-                            <span className="broto-home-pet-banner__sq-metric-unit">%</span>
-                          </>
-                        )}
+                  {loading ? (
+                    '—'
+                  ) : hitPct === null ? (
+                    '—'
+                  ) : (
+                    <>
+                      <span className="broto-home-pet-banner__sq-metric-num">{hitPct}</span>
+                      <span className="broto-home-pet-banner__sq-metric-unit">%</span>
+                    </>
+                  )}
                 </span>
               </div>
               <div className="broto-home-pet-banner__sq-metric">
                 <span className="broto-home-pet-banner__sq-metric-label">Sequência</span>
                 <span className="broto-home-pet-banner__sq-metric-val">
-                  {loading ? '—' : (
+                  {loading ? (
+                    '—'
+                  ) : (
                     <>
                       <span className="broto-home-pet-banner__sq-metric-num">{streak}</span>
                       <span className="broto-home-pet-banner__sq-metric-unit broto-home-pet-banner__sq-metric-unit--word">
@@ -256,14 +261,19 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
         </div>
 
         {nextSteps ? (
-          <aside className="broto-home-pet-banner__next-pane" aria-label="Próximos passos na rotina">
+          <aside
+            className="broto-home-pet-banner__next-pane"
+            aria-label="Próximos passos na rotina"
+          >
             <div className="broto-home-pet-banner__next-panel">
               <div className="broto-home-pet-banner__next-spotlight">
                 <div className="broto-home-pet-banner__next-spotlight-top">
                   <span className="broto-home-pet-banner__next-step-chip">Prioridade · agora</span>
                 </div>
 
-                <p className="broto-home-pet-banner__next-spotlight-title">{nextSteps.revisaoLinha}</p>
+                <p className="broto-home-pet-banner__next-spotlight-title">
+                  {nextSteps.revisaoLinha}
+                </p>
                 <p className="broto-home-pet-banner__next-spotlight-micro">
                   {nextSteps.topicAnswerCount !== undefined ? (
                     <>Na página da área você encontra questões e flashcards para consolidar.</>
@@ -284,13 +294,23 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
               </div>
 
               {routineFollowStep ? (
-                <ol className="broto-home-pet-banner__next-rail-list" aria-label="Próximo na sequência">
+                <ol
+                  className="broto-home-pet-banner__next-rail-list"
+                  aria-label="Próximo na sequência"
+                >
                   <li className="broto-home-pet-banner__next-rail-li">
-                    <Link className="broto-home-pet-banner__next-rail-link" to={routineFollowStep.to}>
+                    <Link
+                      className="broto-home-pet-banner__next-rail-link"
+                      to={routineFollowStep.to}
+                    >
                       <span className="broto-home-pet-banner__next-rail-num">2</span>
                       <span className="broto-home-pet-banner__next-rail-text">
-                        <span className="broto-home-pet-banner__next-rail-head">{routineFollowStep.title}</span>
-                        <span className="broto-home-pet-banner__next-rail-hint">{routineFollowStep.hint}</span>
+                        <span className="broto-home-pet-banner__next-rail-head">
+                          {routineFollowStep.title}
+                        </span>
+                        <span className="broto-home-pet-banner__next-rail-hint">
+                          {routineFollowStep.hint}
+                        </span>
                       </span>
                       <span className="broto-home-pet-banner__next-rail-chevrons" aria-hidden>
                         <ChevronRight size={18} strokeWidth={2} />

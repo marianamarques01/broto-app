@@ -1,13 +1,6 @@
 import { Link } from 'react-router-dom'
 import { usePageMeta, DEFAULT_PAGE_DESCRIPTION, DEFAULT_PAGE_TITLE } from '@/hooks/usePageMeta'
-import {
-  BookOpen,
-  CalendarDays,
-  ClipboardList,
-  Sprout,
-  Target,
-  ChevronRight,
-} from 'lucide-react'
+import { BookOpen, CalendarDays, ClipboardList, Sprout, Target, ChevronRight } from 'lucide-react'
 
 const LANDING_FIREFLIES = [
   { left: '8%', top: '18%', color: 'var(--green-400)', duration: '4.4s', delay: '0s' },
@@ -129,10 +122,7 @@ export function Landing() {
               <ul className="broto-landing__area-list">
                 {AREA_CHIPS.map((a) => (
                   <li key={a.key} className="broto-landing__area-item">
-                    <span
-                      className="broto-landing__area-dot"
-                      style={{ background: a.cssVar }}
-                    />
+                    <span className="broto-landing__area-dot" style={{ background: a.cssVar }} />
                     {a.label}
                   </li>
                 ))}

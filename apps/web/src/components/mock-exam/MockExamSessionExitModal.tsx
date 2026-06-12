@@ -33,12 +33,18 @@ export function MockExamSessionExitModal({
           if (e.key === 'Escape' && !busyAction) onClose()
         }}
       >
-        <h2 id="broto-mock-exam-exit-modal-title" className="broto-mock-exam-session-exit-modal__title">
-          {isDiagnostic ? 'Tem certeza que quer sair?' : 'Você deseja salvar o progresso da sessão antes de sair?'}
+        <h2
+          id="broto-mock-exam-exit-modal-title"
+          className="broto-mock-exam-session-exit-modal__title"
+        >
+          {isDiagnostic
+            ? 'Tem certeza que quer sair?'
+            : 'Você deseja salvar o progresso da sessão antes de sair?'}
         </h2>
         {isDiagnostic && (
           <p className="broto-mock-exam-session-exit-modal__diagnostic-warning">
-            Esta é sua sessão diagnóstica. Se sair agora, o Broto não vai ter dados iniciais para personalizar seus estudos desde o começo.
+            Esta é sua sessão diagnóstica. Se sair agora, o Broto não vai ter dados iniciais para
+            personalizar seus estudos desde o começo.
           </p>
         )}
         <div className="broto-mock-exam-session-exit-modal__actions">

@@ -65,10 +65,7 @@ export function MockExamSessionProgressPanel({
   const currentN = Math.min(totalQuestions, currentIndex + 1)
 
   return (
-    <aside
-      className="broto-mock-exam-session-panel"
-      aria-label="Progresso da sessão de prova"
-    >
+    <aside className="broto-mock-exam-session-panel" aria-label="Progresso da sessão de prova">
       <div className="broto-mock-exam-session-panel__shell">
         <header className="broto-mock-exam-session-panel__header">
           <div className="broto-mock-exam-session-panel__intro">
@@ -82,9 +79,7 @@ export function MockExamSessionProgressPanel({
               <span className="broto-mock-exam-session-panel__current-label">Questão</span>
               <span className="broto-mock-exam-session-panel__current-value">
                 {currentN}
-                <span className="broto-mock-exam-session-panel__current-of">
-                  /{totalQuestions}
-                </span>
+                <span className="broto-mock-exam-session-panel__current-of">/{totalQuestions}</span>
               </span>
             </p>
             <div className="broto-mock-exam-session-panel__progress">

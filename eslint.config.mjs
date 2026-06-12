@@ -45,7 +45,7 @@ export default tseslint.config(
   },
   // no-floating-promises prevents unhandled async errors (TOOL-06, D-13)
   {
-    files: ['apps/*/src/**/*.{ts,tsx}', 'apps/mobile/**/*.{ts,tsx}'],
+    files: ['apps/*/src/**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: {
         project: true,

@@ -65,17 +65,28 @@ export function MockExamPlay() {
   const baseUrl = getQuestionsStaticBaseUrl(organization?.slug ?? null)
 
   const state = location.state as
-    | { questions?: Question[]; sessionId?: string; questionIds?: string[]; config?: unknown; isDiagnostic?: boolean }
+    | {
+        questions?: Question[]
+        sessionId?: string
+        questionIds?: string[]
+        config?: unknown
+        isDiagnostic?: boolean
+      }
     | undefined
 
-  const skipQuestionFetchRef = useRef(!!(state?.questions?.length))
+  const skipQuestionFetchRef = useRef(!!state?.questions?.length)
   const didHydrateSessionRef = useRef(false)
 
   const [questions, setQuestions] = useState<Question[] | null>(state?.questions ?? null)
-  const [sessionId, setSessionId] = useState<string | null>(state?.sessionId ?? routeSessionId ?? null)
+  const [sessionId, setSessionId] = useState<string | null>(
+    state?.sessionId ?? routeSessionId ?? null,
+  )
   const [questionIds, setQuestionIds] = useState<string[]>(() => initialQuestionIds(state))
   const questionIdsRef = useRef(questionIds)
-  questionIdsRef.current = questionIds
+
+  useEffect(() => {
+    questionIdsRef.current = questionIds
+  }, [questionIds])
   const [index, setIndex] = useState(0)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [topicByQuestionId, setTopicByQuestionId] = useState<Record<string, string | undefined>>({})
@@ -120,7 +131,7 @@ export function MockExamPlay() {
   }, [sessionId])
 
   const missingRouteBootstrap = useMemo(() => {
-    return !routeSessionId && !(state?.questions?.length)
+    return !routeSessionId && !state?.questions?.length
   }, [routeSessionId, state?.questions])
 
   useEffect(() => {
@@ -187,9 +198,7 @@ export function MockExamPlay() {
           const prog = parsePracticeSessionProgress(data.progress)
           if (prog && idsForClamp.length > 0) {
             setIndex(Math.min(Math.max(0, prog.currentIndex), idsForClamp.length - 1))
-            setSkippedIds(
-              new Set(prog.skippedQuestionIds.filter((id) => idsForClamp.includes(id))),
-            )
+            setSkippedIds(new Set(prog.skippedQuestionIds.filter((id) => idsForClamp.includes(id))))
           }
         }
 
@@ -229,10 +238,7 @@ export function MockExamPlay() {
   }, [orderedQuestionIds, answersByQuestionId])
 
   const onAnswerRecorded = useCallback((r: MockExamAnswerResult) => {
-    resultsRef.current = [
-      ...resultsRef.current.filter((x) => x.questionId !== r.questionId),
-      r,
-    ]
+    resultsRef.current = [...resultsRef.current.filter((x) => x.questionId !== r.questionId), r]
     setAnswersByQuestionId((prev) => ({
       ...prev,
       [r.questionId]: { isCorrect: r.isCorrect },
@@ -373,7 +379,11 @@ export function MockExamPlay() {
           <p style={{ color: 'var(--red-400)' }}>
             Sessão inválida. Comece uma nova na página da sessão.
           </p>
-          <Link to="/study/mock-exam" className="broto-btn-primary" style={{ marginTop: 16, display: 'inline-block' }}>
+          <Link
+            to="/study/mock-exam"
+            className="broto-btn-primary"
+            style={{ marginTop: 16, display: 'inline-block' }}
+          >
             Nova sessão
           </Link>
         </div>
@@ -389,7 +399,11 @@ export function MockExamPlay() {
           <p style={{ color: 'var(--red-400)' }}>
             Configuração incompleta (URL do Supabase). Não é possível carregar questões.
           </p>
-          <Link to="/study/mock-exam" className="broto-btn-primary" style={{ marginTop: 16, display: 'inline-block' }}>
+          <Link
+            to="/study/mock-exam"
+            className="broto-btn-primary"
+            style={{ marginTop: 16, display: 'inline-block' }}
+          >
             Voltar
           </Link>
         </div>
@@ -403,7 +417,11 @@ export function MockExamPlay() {
         <TopBar title="Sessão ENEM" variant="study" />
         <div className="broto-main-inner" style={{ padding: 24 }}>
           <p style={{ color: 'var(--red-400)' }}>{loadError}</p>
-          <Link to="/study/mock-exam" className="broto-btn-primary" style={{ marginTop: 16, display: 'inline-block' }}>
+          <Link
+            to="/study/mock-exam"
+            className="broto-btn-primary"
+            style={{ marginTop: 16, display: 'inline-block' }}
+          >
             Nova sessão
           </Link>
         </div>
@@ -474,7 +492,9 @@ export function MockExamPlay() {
                   <div className="broto-mock-exam-status__timer-popover" role="tooltip">
                     {remainingSec != null ? (
                       <>
-                        <p className="broto-mock-exam-status__timer-popover-title">Tempo restante</p>
+                        <p className="broto-mock-exam-status__timer-popover-title">
+                          Tempo restante
+                        </p>
                         <div
                           className="broto-mock-exam-status__timer-track broto-mock-exam-status__timer-track--popover"
                           role="progressbar"
@@ -502,7 +522,9 @@ export function MockExamPlay() {
                       </>
                     ) : (
                       <>
-                        <p className="broto-mock-exam-status__timer-popover-title">Tempo de prova</p>
+                        <p className="broto-mock-exam-status__timer-popover-title">
+                          Tempo de prova
+                        </p>
                         <p className="broto-mock-exam-status__timer-popover-meta">
                           Decorrido · {formatElapsed(elapsedSec)}
                         </p>

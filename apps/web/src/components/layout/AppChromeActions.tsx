@@ -21,8 +21,7 @@ export function AppChromeActions() {
             className="broto-streak-pill broto-streak-pill--muted"
             title="Comece uma sequência hoje"
           >
-            <Flame size={12} strokeWidth={2} aria-hidden />
-            0 dias
+            <Flame size={12} strokeWidth={2} aria-hidden />0 dias
           </span>
         )}
       </div>

@@ -35,13 +35,11 @@ export function DailyPracticeStrip({
   studyTodayByArea,
 }: DailyPracticeStripProps) {
   const missions = buildDailyMissions(areas, daily, studyTodayByArea)
-  const mission =
-    missions.find((m) => m.areaKey === selectedArea) ?? missions[0] ?? null
+  const mission = missions.find((m) => m.areaKey === selectedArea) ?? missions[0] ?? null
   const answered = mergedAnsweredToday(selectedArea, daily, studyTodayByArea)
   const parsedGoal =
     mission?.areaKey === selectedArea ? parseDailyMissionQuestionCount(mission.title) : null
-  const goal =
-    parsedGoal && parsedGoal > 0 ? parsedGoal : DEFAULT_GOAL
+  const goal = parsedGoal && parsedGoal > 0 ? parsedGoal : DEFAULT_GOAL
   const pct = goal > 0 ? Math.min(100, Math.round((answered / goal) * 100)) : 0
 
   const focusLabel = AREA_CONFIG[selectedArea]?.label ?? areaLabel
@@ -55,9 +53,17 @@ export function DailyPracticeStrip({
       {mission ? (
         <p className="broto-qbank-daily-mission">{mission.title}</p>
       ) : (
-        <p className="broto-qbank-daily-mission">Resolve pelo menos {goal} questões hoje nesta área.</p>
+        <p className="broto-qbank-daily-mission">
+          Resolve pelo menos {goal} questões hoje nesta área.
+        </p>
       )}
-      <div className="broto-qbank-daily-bar-wrap" role="progressbar" aria-valuenow={answered} aria-valuemin={0} aria-valuemax={goal}>
+      <div
+        className="broto-qbank-daily-bar-wrap"
+        role="progressbar"
+        aria-valuenow={answered}
+        aria-valuemin={0}
+        aria-valuemax={goal}
+      >
         <div className="broto-qbank-daily-bar" style={{ width: `${pct}%` }} />
       </div>
       <p className="broto-qbank-daily-count">

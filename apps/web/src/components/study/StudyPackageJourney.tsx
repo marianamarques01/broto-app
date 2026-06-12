@@ -1,8 +1,5 @@
 import { type CSSProperties, type ReactNode } from 'react'
-import {
-  type StudyJourneyTab,
-  STUDY_JOURNEY_STAGES,
-} from '@broto/shared'
+import { type StudyJourneyTab, STUDY_JOURNEY_STAGES } from '@broto/shared'
 import {
   ArrowLeft,
   BookOpen,
@@ -47,7 +44,10 @@ export function StudySanctuaryHeader({
           type="button"
           className={`study-focus-toggle${focusMode ? ' study-focus-toggle--on' : ''}`}
           onClick={onToggleFocus}
-          style={{ borderColor: `${areaColor}40`, color: focusMode ? areaColor : 'var(--text-secondary)' }}
+          style={{
+            borderColor: `${areaColor}40`,
+            color: focusMode ? areaColor : 'var(--text-secondary)',
+          }}
         >
           {focusMode ? <EyeOff size={15} strokeWidth={1.9} /> : <Eye size={15} strokeWidth={1.9} />}
           {focusMode ? 'Sair do modo foco' : 'Modo foco'}
@@ -80,7 +80,13 @@ export function HumanTrailProgress({
         <Sprout size={14} strokeWidth={1.8} aria-hidden style={{ color: areaColor }} />
         Trilha: <strong>{completedCount}</strong> de {total} etapas
       </p>
-      <div className="study-human-trail__segments" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={total}>
+      <div
+        className="study-human-trail__segments"
+        role="progressbar"
+        aria-valuenow={completedCount}
+        aria-valuemin={0}
+        aria-valuemax={total}
+      >
         {STUDY_JOURNEY_STAGES.map((s, i) => (
           <div
             key={s.tab}
@@ -131,8 +137,15 @@ export function GrowthTrail({
                     : undefined
                 }
               >
-                <span className="study-growth-trail__step-icon" style={{ color: isActive ? areaColor : 'var(--text-muted)' }}>
-                  {isDone ? <CheckCircle2 size={16} strokeWidth={2} /> : <Icon size={16} strokeWidth={1.8} />}
+                <span
+                  className="study-growth-trail__step-icon"
+                  style={{ color: isActive ? areaColor : 'var(--text-muted)' }}
+                >
+                  {isDone ? (
+                    <CheckCircle2 size={16} strokeWidth={2} />
+                  ) : (
+                    <Icon size={16} strokeWidth={1.8} />
+                  )}
                 </span>
                 <span className="study-growth-trail__step-body">
                   <span className="study-growth-trail__step-title">{stage.title}</span>
@@ -178,8 +191,8 @@ export function StudyPackageLeaveDialog({
           Sair do pacote?
         </h2>
         <p className="study-gentle-stop-body study-pack-leave__body">
-          Você ainda não terminou esta trilha. Quer <strong>guardar o progresso neste aparelho</strong> para
-          voltar depois no mesmo tópico?
+          Você ainda não terminou esta trilha. Quer{' '}
+          <strong>guardar o progresso neste aparelho</strong> para voltar depois no mesmo tópico?
         </p>
 
         <div className="study-pack-leave__progress" aria-label="Progresso na trilha">
@@ -195,10 +208,18 @@ export function StudyPackageLeaveDialog({
         </div>
 
         <div className="study-pack-leave__actions">
-          <button type="button" className="broto-btn-primary study-pack-leave__btn-primary" onClick={onSaveAndLeave}>
+          <button
+            type="button"
+            className="broto-btn-primary study-pack-leave__btn-primary"
+            onClick={onSaveAndLeave}
+          >
             Salvar e sair
           </button>
-          <button type="button" className="broto-btn-secondary study-pack-leave__btn" onClick={onContinue}>
+          <button
+            type="button"
+            className="broto-btn-secondary study-pack-leave__btn"
+            onClick={onContinue}
+          >
             Continuar estudando
           </button>
           {/* <button type="button" className="study-pack-leave__discard" onClick={onDiscardAndLeave}>
@@ -247,13 +268,13 @@ export function StickyContextCta({
   )
 }
 
-export function StudyBackLink({
-  onClick,
-}: {
-  onClick: () => void
-}) {
+export function StudyBackLink({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="study-back-link study-package-journey__secondary">
+    <button
+      type="button"
+      onClick={onClick}
+      className="study-back-link study-package-journey__secondary"
+    >
       <ArrowLeft size={14} strokeWidth={2} aria-hidden /> Voltar para a seleção
     </button>
   )

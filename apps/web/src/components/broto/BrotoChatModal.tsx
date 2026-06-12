@@ -176,18 +176,14 @@ export function BrotoChatModal({ onClose }: BrotoChatModalProps) {
                   className={`broto-chat__bubble broto-chat-modal__bubble ${msg.role === 'user' ? 'broto-chat__bubble--user' : 'broto-chat__bubble--assistant'}`}
                 >
                   {msg.role === 'assistant' && (
-                    <span className="broto-chat-modal__bubble-kicker">
-                      {'\u{1F331}'} Broto
-                    </span>
+                    <span className="broto-chat-modal__bubble-kicker">{'\u{1F331}'} Broto</span>
                   )}
                   {msg.content}
                 </div>
               ))}
               {loading && (
                 <div className="broto-chat__typing broto-chat-modal__typing">
-                  <span className="broto-chat-modal__bubble-kicker">
-                    {'\u{1F331}'} Broto
-                  </span>
+                  <span className="broto-chat-modal__bubble-kicker">{'\u{1F331}'} Broto</span>
                   Pensando...
                 </div>
               )}

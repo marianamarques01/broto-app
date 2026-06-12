@@ -13,7 +13,14 @@ export function RoutineWeekBars({ buckets, targetMinPerDay }: RoutineWeekBarsPro
   const { bars, maxH } = useMemo(() => {
     const minutes = buckets.map((b) => Math.round(b.answered * MIN_PER_QUESTION))
     const maxVal = Math.max(targetMinPerDay, ...minutes, 1)
-    return { bars: minutes.map((m, i) => ({ m, label: buckets[i]?.label ?? '', key: buckets[i]?.key ?? i })), maxH: maxVal }
+    return {
+      bars: minutes.map((m, i) => ({
+        m,
+        label: buckets[i]?.label ?? '',
+        key: buckets[i]?.key ?? i,
+      })),
+      maxH: maxVal,
+    }
   }, [buckets, targetMinPerDay])
 
   return (
@@ -43,7 +50,9 @@ export function RoutineWeekBars({ buckets, targetMinPerDay }: RoutineWeekBarsPro
                 {b.m > 0 ? (
                   <span className="broto-routine-week-chart__val">{b.m}m</span>
                 ) : (
-                  <span className="broto-routine-week-chart__val broto-routine-week-chart__val--zero">—</span>
+                  <span className="broto-routine-week-chart__val broto-routine-week-chart__val--zero">
+                    —
+                  </span>
                 )}
                 <span className="broto-routine-week-chart__wd">{b.label}</span>
               </div>

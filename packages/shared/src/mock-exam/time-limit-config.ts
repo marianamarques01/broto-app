@@ -1,7 +1,4 @@
-import {
-  MOCK_EXAM_TIME_LIMIT_MINUTES_MAX,
-  MOCK_EXAM_TIME_LIMIT_MINUTES_MIN,
-} from './constants'
+import { MOCK_EXAM_TIME_LIMIT_MINUTES_MAX, MOCK_EXAM_TIME_LIMIT_MINUTES_MIN } from './constants'
 
 export function clampMockExamTimeLimitMinutes(n: number): number {
   const v = Math.round(Number.isFinite(n) ? n : MOCK_EXAM_TIME_LIMIT_MINUTES_MIN)

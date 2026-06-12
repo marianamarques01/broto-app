@@ -29,11 +29,7 @@ const DAY_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 type DayState = 'future' | 'complete' | 'today-ring' | 'missed'
 
-function dayState(
-  isFuture: boolean,
-  isToday: boolean,
-  answered: number,
-): DayState {
+function dayState(isFuture: boolean, isToday: boolean, answered: number): DayState {
   if (isFuture) return 'future'
   if (isToday) {
     if (answered >= META_QUESTOES_DIA) return 'complete'
@@ -130,9 +126,7 @@ export function DailyStreakCard({
       <footer className="broto-daily-streak__footer">
         <div className="broto-daily-streak__meta-top">
           <span className="broto-daily-streak__meta-kicker">Meta hoje</span>
-          <span className="broto-daily-streak__meta-pct">
-            {loading ? '—' : `${missionsPct}%`}
-          </span>
+          <span className="broto-daily-streak__meta-pct">{loading ? '—' : `${missionsPct}%`}</span>
         </div>
         <p className="broto-daily-streak__meta-nums">
           {loading ? (

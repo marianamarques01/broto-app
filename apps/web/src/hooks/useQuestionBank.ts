@@ -93,7 +93,10 @@ function difficultyOf(year: number, index: number): 'facil' | 'medio' | 'dificil
 }
 
 /** Mesma heurística usada nas linhas do banco (ano + índice), para telas onde a linha não está na sequência. */
-export function estimateQuestionBankDifficulty(year: number, index: number): 'facil' | 'medio' | 'dificil' {
+export function estimateQuestionBankDifficulty(
+  year: number,
+  index: number,
+): 'facil' | 'medio' | 'dificil' {
   return difficultyOf(year, index)
 }
 
@@ -395,7 +398,11 @@ export function useQuestionBank(params: {
   ])
 
   useEffect(() => {
-    void runBuild()
+    async function load() {
+      await runBuild()
+    }
+
+    void load()
   }, [runBuild])
 
   const totalInArea = allInArea.length

@@ -49,7 +49,8 @@ export function AreaPerformanceTable({ areas, loading }: AreaPerformanceTablePro
               Desempenho por área
             </h2>
             <p className="broto-progress-block-lede broto-progress-block-lede--nowrap">
-              Veja onde você mais acerta e onde vale priorizar estudo — cada linha leva ao banco na área certa.
+              Veja onde você mais acerta e onde vale priorizar estudo — cada linha leva ao banco na
+              área certa.
             </p>
           </div>
         </div>
@@ -73,82 +74,79 @@ export function AreaPerformanceTable({ areas, loading }: AreaPerformanceTablePro
 
       <div className="broto-perf-card">
         <div className="broto-progress-area-table-wrap" role="region" aria-label="Tabela de áreas">
-        <table className="broto-progress-area-table">
-          <thead>
-            <tr>
-              <th scope="col">Área</th>
-              <th scope="col">Acerto</th>
-              <th scope="col">Questões</th>
-              <th scope="col" className="broto-progress-area-table__col-bar">
-                Distribuição
-              </th>
-              <th scope="col" className="broto-progress-area-table__col-cta" />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((area) => {
-              const config = AREA_CONFIG[area.value] ?? {
-                color: '#888',
-                icon: BookOpen,
-                label: area.label,
-              }
-              const Icon = config.icon
-              const hasData = !loading && area.totalAnswered > 0
-              const pct = hasData ? area.accuracyPct : 0
-              return (
-                <tr key={area.value}>
-                  <td>
-                    <div className="broto-progress-area-table__name">
+          <table className="broto-progress-area-table">
+            <thead>
+              <tr>
+                <th scope="col">Área</th>
+                <th scope="col">Acerto</th>
+                <th scope="col">Questões</th>
+                <th scope="col" className="broto-progress-area-table__col-bar">
+                  Distribuição
+                </th>
+                <th scope="col" className="broto-progress-area-table__col-cta" />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((area) => {
+                const config = AREA_CONFIG[area.value] ?? {
+                  color: '#888',
+                  icon: BookOpen,
+                  label: area.label,
+                }
+                const Icon = config.icon
+                const hasData = !loading && area.totalAnswered > 0
+                const pct = hasData ? area.accuracyPct : 0
+                return (
+                  <tr key={area.value}>
+                    <td>
+                      <div className="broto-progress-area-table__name">
+                        <span
+                          className="broto-prog-area-icon-wrap"
+                          style={{
+                            background: `${config.color}18`,
+                            border: `1px solid ${config.color}33`,
+                          }}
+                        >
+                          <Icon size={16} style={{ color: config.color }} aria-hidden />
+                        </span>
+                        <span>{area.label}</span>
+                      </div>
+                    </td>
+                    <td>
                       <span
-                        className="broto-prog-area-icon-wrap"
-                        style={{
-                          background: `${config.color}18`,
-                          border: `1px solid ${config.color}33`,
-                        }}
+                        className="broto-progress-area-table__pct"
+                        style={{ color: hasData ? config.color : 'var(--text-muted)' }}
                       >
-                        <Icon size={16} style={{ color: config.color }} aria-hidden />
+                        {loading ? '—' : hasData ? `${pct}%` : '—'}
                       </span>
-                      <span>{area.label}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      className="broto-progress-area-table__pct"
-                      style={{ color: hasData ? config.color : 'var(--text-muted)' }}
-                    >
-                      {loading ? '—' : hasData ? `${pct}%` : '—'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="broto-progress-area-table__n">
-                      {loading ? '—' : area.totalAnswered.toLocaleString('pt-BR')}
-                    </span>
-                  </td>
-                  <td className="broto-progress-area-table__col-bar">
-                    <div className="broto-prog-area-bar broto-prog-area-bar--thick">
-                      <div
-                        className="broto-prog-area-bar-fill"
-                        style={{
-                          width: hasData ? `${pct}%` : '4%',
-                          background: hasData ? config.color : 'var(--border-subtle)',
-                          opacity: hasData ? 1 : 0.5,
-                        }}
-                      />
-                    </div>
-                  </td>
-                  <td className="broto-progress-area-table__col-cta">
-                    <Link
-                      to={`/study/${area.value}`}
-                      className="broto-progress-area-table__link"
-                    >
-                      Praticar
-                    </Link>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td>
+                      <span className="broto-progress-area-table__n">
+                        {loading ? '—' : area.totalAnswered.toLocaleString('pt-BR')}
+                      </span>
+                    </td>
+                    <td className="broto-progress-area-table__col-bar">
+                      <div className="broto-prog-area-bar broto-prog-area-bar--thick">
+                        <div
+                          className="broto-prog-area-bar-fill"
+                          style={{
+                            width: hasData ? `${pct}%` : '4%',
+                            background: hasData ? config.color : 'var(--border-subtle)',
+                            opacity: hasData ? 1 : 0.5,
+                          }}
+                        />
+                      </div>
+                    </td>
+                    <td className="broto-progress-area-table__col-cta">
+                      <Link to={`/study/${area.value}`} className="broto-progress-area-table__link">
+                        Praticar
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </section>

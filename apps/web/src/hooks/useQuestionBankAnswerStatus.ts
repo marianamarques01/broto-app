@@ -19,7 +19,14 @@ export function useQuestionBankAnswerStatus(
   >(() => new Map())
   const [loading, setLoading] = useState(true)
 
-  const idsKey = useMemo(() => rows.map((r) => getQuestionId(r)).sort().join('|'), [rows])
+  const idsKey = useMemo(
+    () =>
+      rows
+        .map((r) => getQuestionId(r))
+        .sort()
+        .join('|'),
+    [rows],
+  )
 
   useEffect(() => {
     let cancelled = false

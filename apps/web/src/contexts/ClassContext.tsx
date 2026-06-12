@@ -156,9 +156,7 @@ export function ClassProvider({ children }: { children: ReactNode }) {
   const combinedLoading = orgLoading || loading
 
   return (
-    <ClassContext.Provider
-      value={{ currentClass, organization, loading: combinedLoading, error }}
-    >
+    <ClassContext.Provider value={{ currentClass, organization, loading: combinedLoading, error }}>
       {error ? (
         <div
           className="broto-error-banner"

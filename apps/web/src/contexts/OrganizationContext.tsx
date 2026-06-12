@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Organization, OrganizationMembershipItem } from '@broto/shared'
 import {
@@ -47,7 +55,9 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
           .eq('status', 'active'),
         supabase
           .from('users')
-          .select('current_organization_id, current_class_id, classes:current_class_id(organization_id)')
+          .select(
+            'current_organization_id, current_class_id, classes:current_class_id(organization_id)',
+          )
           .eq('id', user.id)
           .maybeSingle(),
       ])
@@ -65,11 +75,15 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    void load()
+    async function bootstrap() {
+      await load()
+    }
+
+    void bootstrap()
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(() => {
-      void load()
+      void bootstrap()
     })
     return () => subscription.unsubscribe()
   }, [load])

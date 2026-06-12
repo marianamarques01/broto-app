@@ -21,7 +21,7 @@ async function fetchRecentMistakes(): Promise<RecentMistakesResponse> {
       lastFetch = Date.now()
       return data
     })
-    .catch(() => ({ mistakes: [] } as RecentMistakesResponse))
+    .catch(() => ({ mistakes: [] }) as RecentMistakesResponse)
     .finally(() => {
       inflight = null
     })

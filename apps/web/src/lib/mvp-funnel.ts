@@ -6,10 +6,7 @@
 
 const STORAGE_NS = 'broto:mvp:funnel'
 
-export type MvpFunnelStep =
-  | 'signup_success'
-  | 'onboarding_complete'
-  | 'first_mock_exam_started'
+export type MvpFunnelStep = 'signup_success' | 'onboarding_complete' | 'first_mock_exam_started'
 
 export function trackMvpFunnelStep(step: MvpFunnelStep, payload?: Record<string, unknown>): void {
   const ts = new Date().toISOString()

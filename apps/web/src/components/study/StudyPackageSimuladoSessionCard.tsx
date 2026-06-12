@@ -74,9 +74,9 @@ export function StudyPackageSimuladoSessionCard({
               color: 'var(--text-secondary)',
             }}
           >
-            Gere uma <strong style={{ color: 'var(--text-primary)' }}>sessão tipo simulado</strong> focada em{' '}
-            <strong style={{ color: 'var(--text-primary)' }}>{topicoLabel}</strong> (área já filtrada).
-            Ajuste só a quantidade de questões e o ano.
+            Gere uma <strong style={{ color: 'var(--text-primary)' }}>sessão tipo simulado</strong>{' '}
+            focada em <strong style={{ color: 'var(--text-primary)' }}>{topicoLabel}</strong> (área
+            já filtrada). Ajuste só a quantidade de questões e o ano.
           </p>
           <div
             style={{

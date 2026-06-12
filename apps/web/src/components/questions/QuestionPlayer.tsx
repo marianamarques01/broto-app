@@ -10,6 +10,10 @@ import {
 import { submitAnswer } from '@/lib/answer-question'
 import { ArrowLeft, ArrowRight, CheckCircle2, XCircle } from 'lucide-react'
 
+function elapsedSecondsSince(startMs: number): number {
+  return Math.max(0, Math.round((Date.now() - startMs) / 1000))
+}
+
 interface QuestionPlayerProps {
   question: Question
   /** Slug ENEM válido; omitir quando desconhecido (o servidor usa `question_topic_mapping`). */
@@ -80,12 +84,16 @@ export function QuestionPlayer({
   const [selected, setSelected] = useState<string | null>(null)
   const [answered, setAnswered] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const questionStartMs = useRef<number>(Date.now())
+  const questionStartMs = useRef(0)
 
   useEffect(() => {
-    questionStartMs.current = Date.now()
-    setSelected(null)
-    setAnswered(false)
+    async function resetForQuestion() {
+      questionStartMs.current = Date.now()
+      setSelected(null)
+      setAnswered(false)
+    }
+
+    void resetForQuestion()
   }, [question])
 
   const correct = question.alternatives.find((a) => a.isCorrect)?.letter ?? null
@@ -103,7 +111,8 @@ export function QuestionPlayer({
     () => questionFieldMarkdownToHtml(question.statement),
     [question.statement],
   )
-  const statementAsHtml = statementHtmlRaw != null && questionFieldNeedsHtmlRendering(statementHtmlRaw)
+  const statementAsHtml =
+    statementHtmlRaw != null && questionFieldNeedsHtmlRendering(statementHtmlRaw)
   const statementSafeHtml = useMemo(
     () => (statementAsHtml && statementHtmlRaw ? purifyQuestionHtml(statementHtmlRaw) : ''),
     [statementAsHtml, statementHtmlRaw],
@@ -116,7 +125,7 @@ export function QuestionPlayer({
     setSubmitting(true)
 
     const isCorrect = letter === correct
-    const timeSpentSec = Math.max(0, Math.round((Date.now() - questionStartMs.current) / 1000))
+    const timeSpentSec = elapsedSecondsSince(questionStartMs.current)
     try {
       const areaSlug = parseEnemAreaKey(areaKey)
       await submitAnswer({

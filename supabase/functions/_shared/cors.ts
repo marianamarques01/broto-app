@@ -13,8 +13,7 @@ const EXPLICIT_ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
   .filter(Boolean)
 
 /** hostnames típicos do Vite; um site aleatório na internet não consegue forjar esse Origin no browser */
-const MACHINE_LOCAL_ORIGIN_RE =
-  /^https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i
+const MACHINE_LOCAL_ORIGIN_RE = /^https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i
 
 /** IPv4 RFC1918 + loopback (ex.: vite --host 0.0.0.0 e abrir pela LAN em 192.168.x.x) */
 const PRIVATE_OR_LOOPBACK_ORIGIN_RE =

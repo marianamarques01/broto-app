@@ -85,12 +85,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Best-effort pet creation — ignore failure (pet may already exist or be created later).
       await supabase
         .from('pets')
-        .insert({ user_id: id, fase: 'semente', nivel: 1, xp: 0, humor: 100, energia: 100, moedas: 0 })
+        .insert({
+          user_id: id,
+          fase: 'semente',
+          nivel: 1,
+          xp: 0,
+          humor: 100,
+          energia: 100,
+          moedas: 0,
+        })
         .then(({ error: petErr }) => {
           if (petErr) console.warn('[fetchProfile] pet auto-create:', petErr.message)
         })
 
-      setUser({ id, nome, email, image: null, onboardingDone: false, dataEnem: null, horasDisponiveisPorDia: 2 })
+      setUser({
+        id,
+        nome,
+        email,
+        image: null,
+        onboardingDone: false,
+        dataEnem: null,
+        horasDisponiveisPorDia: 2,
+      })
     } catch (err) {
       console.error('[fetchProfile] unexpected error:', err)
     } finally {
@@ -105,8 +121,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // When userId changes, fetch profile outside auth lock
   useEffect(() => {
-    if (!userId) return
-    void fetchProfile(userId)
+    if (userId === null) return
+    const profileId = userId
+
+    async function load() {
+      await fetchProfile(profileId)
+    }
+
+    void load()
   }, [userId, fetchProfile])
 
   async function signIn(email: string, password: string) {

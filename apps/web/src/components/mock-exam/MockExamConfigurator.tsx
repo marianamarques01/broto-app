@@ -57,8 +57,7 @@ import {
 
 const ALL_YEARS_VALUE = ''
 
-const AREA_OR_RANDOM_WARNING =
-  'Selecione ao menos uma área ou ative o modo aleatório.'
+const AREA_OR_RANDOM_WARNING = 'Selecione ao menos uma área ou ative o modo aleatório.'
 
 type MockExamInfoModal = 'tips' | 'group' | null
 
@@ -155,21 +154,28 @@ export function MockExamConfigurator({
     }
   }, [singleAreaForTopics, selectedArea, setSelectedArea])
 
-  useEffect(() => {
+  const [prevSelectedAreaCount, setPrevSelectedAreaCount] = useState(selectedAreas.length)
+  if (selectedAreas.length !== prevSelectedAreaCount) {
+    setPrevSelectedAreaCount(selectedAreas.length)
     if (selectedAreas.length !== 1) {
       setSelectedTopicIds([])
     }
-  }, [selectedAreas])
+  }
 
   useEffect(() => {
     if (loading || areas.length === 0 || presetAppliedRef.current) return
     const pa = presetArea?.trim() ?? ''
     const pt = presetTopicoValue?.trim() ?? ''
     if (!pa || !areas.some((a) => a.value === pa)) return
-    presetAppliedRef.current = true
-    setRandomMode(false)
-    setSelectedAreas([pa])
-    pendingPresetTopicoRef.current = pt || null
+
+    async function applyPreset() {
+      presetAppliedRef.current = true
+      setRandomMode(false)
+      setSelectedAreas([pa])
+      pendingPresetTopicoRef.current = pt || null
+    }
+
+    void applyPreset()
   }, [loading, presetArea, presetTopicoValue, areas])
 
   useEffect(() => {
@@ -1564,11 +1570,17 @@ export function MockExamConfigurator({
                   <span className="broto-mock-exam-warning-modal__icon-wrap" aria-hidden>
                     <AlertTriangle size={22} strokeWidth={2.2} />
                   </span>
-                  <h2 id="mock-exam-selection-warning-title" className="broto-mock-exam-warning-modal__title">
+                  <h2
+                    id="mock-exam-selection-warning-title"
+                    className="broto-mock-exam-warning-modal__title"
+                  >
                     Atenção
                   </h2>
                 </div>
-                <p id="mock-exam-selection-warning-desc" className="broto-mock-exam-warning-modal__body">
+                <p
+                  id="mock-exam-selection-warning-desc"
+                  className="broto-mock-exam-warning-modal__body"
+                >
                   {AREA_OR_RANDOM_WARNING}
                 </p>
                 <button

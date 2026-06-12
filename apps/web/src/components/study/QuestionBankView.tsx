@@ -17,7 +17,10 @@ import { useProgress } from '@/hooks/useProgress'
 import { usePet } from '@/hooks/usePet'
 import { useDailyMissionsState } from '@/hooks/useDailyMissionsState'
 import { useRecentMistakes } from '@/hooks/useRecentMistakes'
-import { useQuestionBankAnswerStatus, type QuestionAnswerOutcome } from '@/hooks/useQuestionBankAnswerStatus'
+import {
+  useQuestionBankAnswerStatus,
+  type QuestionAnswerOutcome,
+} from '@/hooks/useQuestionBankAnswerStatus'
 import { useQuestionBankPriority } from '@/hooks/useQuestionBankPriority'
 import { StartPathsGrid } from '@/components/study/question-bank/StartPathsGrid'
 import { QuestionBankFocusBand } from '@/components/study/question-bank/QuestionBankFocusBand'
@@ -106,8 +109,7 @@ const AREA_HERO: Record<string, { kicker: string; blurb: string }> = {
   },
   matematica: {
     kicker: 'Matemática e suas Tecnologias',
-    blurb:
-      'Raciocínio, geometria, álgebra e dados — treina com foco no que ainda não dominaste.',
+    blurb: 'Raciocínio, geometria, álgebra e dados — treina com foco no que ainda não dominaste.',
   },
 }
 
@@ -207,7 +209,9 @@ function QbankPagedList({
               <button type="button" className="broto-qbank-card" onClick={() => openRow(row)}>
                 <div className="broto-qbank-card-top">
                   <div className="broto-qbank-card-badges">
-                    <span className="broto-qbank-badge broto-qbank-badge-year">ENEM {row.year}</span>
+                    <span className="broto-qbank-badge broto-qbank-badge-year">
+                      ENEM {row.year}
+                    </span>
                     <span
                       className="broto-qbank-badge broto-qbank-badge-topic"
                       style={{
@@ -222,9 +226,14 @@ function QbankPagedList({
                       <span className="broto-qbank-badge broto-qbank-badge-new">Nova</span>
                     ) : null}
                     {row.language ? (
-                      <span className="broto-qbank-badge broto-qbank-badge-year">{row.language}</span>
+                      <span className="broto-qbank-badge broto-qbank-badge-year">
+                        {row.language}
+                      </span>
                     ) : null}
-                    <QuestionBankAnswerStatusBadge outcome={outcome} loading={loadingAnswerStatus} />
+                    <QuestionBankAnswerStatusBadge
+                      outcome={outcome}
+                      loading={loadingAnswerStatus}
+                    />
                   </div>
                   <span className="broto-qbank-card-id">
                     {formatQuestionBankId(selectedArea, row.year, row.index)}
@@ -237,8 +246,7 @@ function QbankPagedList({
                 <div className="broto-qbank-card-bottom">
                   <div className="broto-qbank-card-meta">
                     <span className="broto-qbank-meta-item">
-                      <Clock size={12} aria-hidden />
-                      ~{estimatedMinutes(row.index)} min
+                      <Clock size={12} aria-hidden />~{estimatedMinutes(row.index)} min
                     </span>
                     <span className="broto-qbank-meta-item">
                       Dificuldade
@@ -486,11 +494,7 @@ function QbankExploreFiltersAndList(props: QbankExploreFiltersAndListProps) {
         <p className="broto-qbank-count">
           Exibindo <strong>{totalFiltered.toLocaleString('pt-BR')}</strong> questões de {areaLabel}
         </p>
-        <button
-          type="button"
-          className="broto-qbank-sort"
-          onClick={() => setSortRecent((v) => !v)}
-        >
+        <button type="button" className="broto-qbank-sort" onClick={() => setSortRecent((v) => !v)}>
           <SlidersHorizontal size={12} aria-hidden />
           {sortRecent ? 'Mais recentes' : 'Mais antigas'}
         </button>
@@ -561,7 +565,7 @@ export function QuestionBankView({
     isLanguageFilterEnabled,
   } = useQuestionsFilters({
     enableQuestionFetch: false,
-    preferredArea: embedded || bankCatalogOnly ? preferredArea ?? null : undefined,
+    preferredArea: embedded || bankCatalogOnly ? (preferredArea ?? null) : undefined,
     autoSelectFirstArea: !embedded && !bankCatalogOnly,
     initialYear: initialFilters?.year ?? '',
     initialTopico: initialFilters?.topic ?? '',
@@ -883,26 +887,21 @@ export function QuestionBankView({
                     )}
                     {embedded && !bankCatalogOnly ? (
                       <p className="broto-qbank-hero-band__desc broto-qbank-hero-band__desc--below-head">
-                        O Broto sugere por onde começar. Explora o catálogo completo só quando quiser.
+                        O Broto sugere por onde começar. Explora o catálogo completo só quando
+                        quiser.
                       </p>
                     ) : null}
                   </div>
                   <div className="broto-qbank-kpi-strip broto-qbank-kpi-strip--head" role="list">
                     <div className="broto-qbank-kpi broto-qbank-kpi--head" role="listitem">
                       <span className="broto-qbank-kpi__val broto-qbank-kpi__val--hero-primary">
-                        {loadingBank || loadingProgress
-                          ? '…'
-                          : totalInArea.toLocaleString('pt-BR')}
+                        {loadingBank || loadingProgress ? '…' : totalInArea.toLocaleString('pt-BR')}
                       </span>
                       <span className="broto-qbank-kpi__label">Questões</span>
                     </div>
                     <div className="broto-qbank-kpi broto-qbank-kpi--head" role="listitem">
                       <span className="broto-qbank-kpi__val broto-qbank-kpi__val--hero-sky">
-                        {loadingProgress
-                          ? '…'
-                          : totalInArea > 0
-                            ? `${pctCatalogAnswered}%`
-                            : '—'}
+                        {loadingProgress ? '…' : totalInArea > 0 ? `${pctCatalogAnswered}%` : '—'}
                       </span>
                       <span className="broto-qbank-kpi__label">Progresso</span>
                     </div>
@@ -949,32 +948,45 @@ export function QuestionBankView({
               ) : (
                 <div className="broto-qbank-start-with-performance">
                   <div className="broto-qbank-start-with-performance__main">
-                  {priorityResult ? (
-                    <StartPathsGrid
-                      tracks={priorityResult.tracks}
-                      onOpenRow={openRow}
-                      onExpandExplore={() => setExploreOpen(true)}
-                    />
-                  ) : (
-                    <div className="broto-qbank-skeletons" aria-hidden>
-                      <div className="broto-skeleton broto-qbank-skel-card" />
-                      <div className="broto-skeleton broto-qbank-skel-card" />
-                    </div>
-                  )}
+                    {priorityResult ? (
+                      <StartPathsGrid
+                        tracks={priorityResult.tracks}
+                        onOpenRow={openRow}
+                        onExpandExplore={() => setExploreOpen(true)}
+                      />
+                    ) : (
+                      <div className="broto-qbank-skeletons" aria-hidden>
+                        <div className="broto-skeleton broto-qbank-skel-card" />
+                        <div className="broto-skeleton broto-qbank-skel-card" />
+                      </div>
+                    )}
 
-                  {useGuidedTopicPanel ? (
-                    <div className="broto-qbank-focus-banco-stack">
-                      <div className="broto-qbank-focus-banco-row">
-                        <StudyAreaBankCard
-                          areaKey={selectedArea}
-                          onBankClick={() => navigate(`/study/${selectedArea}/banco`)}
-                          className="broto-qbank-focus-banco-row__bank"
-                        />
-                        <StudyAreaSessionCard
-                          areaKey={selectedArea}
-                          className="broto-qbank-focus-banco-row__session"
+                    {useGuidedTopicPanel ? (
+                      <div className="broto-qbank-focus-banco-stack">
+                        <div className="broto-qbank-focus-banco-row">
+                          <StudyAreaBankCard
+                            areaKey={selectedArea}
+                            onBankClick={() => navigate(`/study/${selectedArea}/banco`)}
+                            className="broto-qbank-focus-banco-row__bank"
+                          />
+                          <StudyAreaSessionCard
+                            areaKey={selectedArea}
+                            className="broto-qbank-focus-banco-row__session"
+                          />
+                        </div>
+                        <QuestionBankFocusBand
+                          primary={priorityResult?.primary ?? null}
+                          loading={loadingBank || loadingRecentMistakes}
+                          onStart={handleStartPrimary}
+                          areaAccent={getAreaColor(selectedArea)}
+                          selectedArea={selectedArea}
+                          areaLabel={areaLabel}
+                          areas={progress?.areas}
+                          daily={daily}
+                          studyTodayByArea={pet?.studyTodayByArea}
                         />
                       </div>
+                    ) : (
                       <QuestionBankFocusBand
                         primary={priorityResult?.primary ?? null}
                         loading={loadingBank || loadingRecentMistakes}
@@ -986,105 +998,156 @@ export function QuestionBankView({
                         daily={daily}
                         studyTodayByArea={pet?.studyTodayByArea}
                       />
-                    </div>
-                  ) : (
-                    <QuestionBankFocusBand
-                      primary={priorityResult?.primary ?? null}
-                      loading={loadingBank || loadingRecentMistakes}
-                      onStart={handleStartPrimary}
-                      areaAccent={getAreaColor(selectedArea)}
-                      selectedArea={selectedArea}
-                      areaLabel={areaLabel}
-                      areas={progress?.areas}
-                      daily={daily}
-                      studyTodayByArea={pet?.studyTodayByArea}
-                    />
-                  )}
+                    )}
 
-                  {embedded && selectedTopicoCatalog?.value ? (
-                    <div style={{ marginTop: 14 }}>
-                      <StudyPackageSimuladoSessionCard
-                        areaKey={selectedArea}
-                        topicoValue={selectedTopicoCatalog.value}
-                        topicoLabel={selectedTopicoCatalog.label}
-                        areaColor={getAreaColor(selectedArea)}
-                        onOpenModal={() => setSimuladoModalOpen(true)}
-                      />
-                    </div>
-                  ) : null}
-
-                  {!embedded ? (
-                    <Link
-                      className="broto-qbank-destaque broto-qbank-destaque--link"
-                      to="/study/mock-exam"
-                      aria-labelledby="broto-qbank-destaque-mock-title"
-                    >
-                      <div className="broto-qbank-destaque__icon" aria-hidden>
-                        <Brain size={22} strokeWidth={1.75} />
+                    {embedded && selectedTopicoCatalog?.value ? (
+                      <div style={{ marginTop: 14 }}>
+                        <StudyPackageSimuladoSessionCard
+                          areaKey={selectedArea}
+                          topicoValue={selectedTopicoCatalog.value}
+                          topicoLabel={selectedTopicoCatalog.label}
+                          areaColor={getAreaColor(selectedArea)}
+                          onOpenModal={() => setSimuladoModalOpen(true)}
+                        />
                       </div>
-                      <div className="broto-qbank-destaque__main">
-                        <h3
-                          id="broto-qbank-destaque-mock-title"
-                          className="broto-qbank-destaque__title"
-                        >
-                          Sessão ENEM
-                        </h3>
-                        <p className="broto-qbank-destaque__desc">
-                          Monte um bloco no <strong>estilo de um simulado</strong>: várias questões em sequência,
-                          com correção e resumo ao final. Você define quantidade, anos, áreas e tópicos — ou usa
-                          o modo aleatório — sem precisar cobrir as 90 questões da prova inteira.
-                        </p>
-                      </div>
-                      <ChevronRight
-                        className="broto-qbank-destaque__chev"
-                        size={22}
-                        strokeWidth={2}
-                        aria-hidden
-                      />
-                    </Link>
-                  ) : null}
+                    ) : null}
 
-                  <div className="broto-qbank-layout">
-                    <div className="broto-qbank-main-stack">
-                      {useGuidedTopicPanel ? (
-                        <>
-                          <StudyAreaTopicsPanel
-                            areaKey={selectedArea}
-                            topics={guidedTopics}
-                            compactTop
-                            showAiRecommendation={false}
-                            showBankInSidebar={false}
-                            onStartTopic={(_ak, topic) => {
-                              onSelectGuidedTopic!(topic)
-                            }}
-                            onBankClick={() => navigate(`/study/${selectedArea}/banco`)}
-                          />
-                          {exploreOpen ? (
-                            <section
-                              ref={exploreSectionRef}
-                              className="broto-qbank-explore broto-qbank-explore--guided-inline"
-                              aria-labelledby="broto-qbank-explore-guided-title"
-                            >
-                              <div className="broto-qbank-explore-guided-head">
-                                <div>
-                                  <h2
-                                    id="broto-qbank-explore-guided-title"
-                                    className="broto-qbank-explore-guided-title"
+                    {!embedded ? (
+                      <Link
+                        className="broto-qbank-destaque broto-qbank-destaque--link"
+                        to="/study/mock-exam"
+                        aria-labelledby="broto-qbank-destaque-mock-title"
+                      >
+                        <div className="broto-qbank-destaque__icon" aria-hidden>
+                          <Brain size={22} strokeWidth={1.75} />
+                        </div>
+                        <div className="broto-qbank-destaque__main">
+                          <h3
+                            id="broto-qbank-destaque-mock-title"
+                            className="broto-qbank-destaque__title"
+                          >
+                            Sessão ENEM
+                          </h3>
+                          <p className="broto-qbank-destaque__desc">
+                            Monte um bloco no <strong>estilo de um simulado</strong>: várias
+                            questões em sequência, com correção e resumo ao final. Você define
+                            quantidade, anos, áreas e tópicos — ou usa o modo aleatório — sem
+                            precisar cobrir as 90 questões da prova inteira.
+                          </p>
+                        </div>
+                        <ChevronRight
+                          className="broto-qbank-destaque__chev"
+                          size={22}
+                          strokeWidth={2}
+                          aria-hidden
+                        />
+                      </Link>
+                    ) : null}
+
+                    <div className="broto-qbank-layout">
+                      <div className="broto-qbank-main-stack">
+                        {useGuidedTopicPanel ? (
+                          <>
+                            <StudyAreaTopicsPanel
+                              areaKey={selectedArea}
+                              topics={guidedTopics}
+                              compactTop
+                              showAiRecommendation={false}
+                              showBankInSidebar={false}
+                              onStartTopic={(_ak, topic) => {
+                                onSelectGuidedTopic!(topic)
+                              }}
+                              onBankClick={() => navigate(`/study/${selectedArea}/banco`)}
+                            />
+                            {exploreOpen ? (
+                              <section
+                                ref={exploreSectionRef}
+                                className="broto-qbank-explore broto-qbank-explore--guided-inline"
+                                aria-labelledby="broto-qbank-explore-guided-title"
+                              >
+                                <div className="broto-qbank-explore-guided-head">
+                                  <div>
+                                    <h2
+                                      id="broto-qbank-explore-guided-title"
+                                      className="broto-qbank-explore-guided-title"
+                                    >
+                                      Explorar o banco — filtros e lista completa
+                                    </h2>
+                                    <p className="broto-qbank-explore-hint broto-qbank-explore-hint--block">
+                                      Opcional · para quem quer pesquisar
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="broto-btn-ghost broto-qbank-explore-collapse"
+                                    onClick={() => setExploreOpen(false)}
                                   >
-                                    Explorar o banco — filtros e lista completa
-                                  </h2>
-                                  <p className="broto-qbank-explore-hint broto-qbank-explore-hint--block">
-                                    Opcional · para quem quer pesquisar
-                                  </p>
+                                    Recolher
+                                  </button>
                                 </div>
-                                <button
-                                  type="button"
-                                  className="broto-btn-ghost broto-qbank-explore-collapse"
-                                  onClick={() => setExploreOpen(false)}
-                                >
-                                  Recolher
-                                </button>
-                              </div>
+                                <div className="broto-qbank-explore-body">
+                                  <QbankExploreFiltersAndList
+                                    searchInput={searchInput}
+                                    setSearchInput={setSearchInput}
+                                    yearOptions={yearOptions}
+                                    selectedYear={selectedYear}
+                                    setSelectedYear={setSelectedYear}
+                                    topicos={topicos}
+                                    selectedTopico={selectedTopico}
+                                    setSelectedTopico={setSelectedTopico}
+                                    isLanguageFilterEnabled={isLanguageFilterEnabled}
+                                    selectedLanguage={selectedLanguage}
+                                    setSelectedLanguage={setSelectedLanguage}
+                                    difficulty={difficulty}
+                                    setDifficulty={setDifficulty}
+                                    isLinguagensArea={isLinguagensArea}
+                                    hasFilterChips={hasFilterChips}
+                                    clearYear={clearYear}
+                                    clearTopico={clearTopico}
+                                    clearLanguage={clearLanguage}
+                                    totalFiltered={totalFiltered}
+                                    areaLabel={areaLabel}
+                                    sortRecent={sortRecent}
+                                    setSortRecent={setSortRecent}
+                                    listResetKey={listResetKey}
+                                    loadingBank={loadingBank}
+                                    filtered={filtered}
+                                    selectedArea={selectedArea}
+                                    openRow={openRow}
+                                    statusByQuestionId={statusByQuestionId}
+                                    loadingAnswerStatus={loadingAnswerStatus}
+                                  />
+                                </div>
+                              </section>
+                            ) : null}
+                          </>
+                        ) : (
+                          <>
+                            <TopicCarouselSection
+                              items={topicCarouselItems}
+                              loading={loadingBank}
+                              onSelect={(value) => {
+                                const id = topicos.find((x) => x.value === value)?.id
+                                if (id) {
+                                  setSelectedTopico(id)
+                                  setExploreOpen(true)
+                                }
+                              }}
+                            />
+
+                            <details
+                              className="broto-qbank-explore"
+                              open={exploreOpen}
+                              onToggle={(e) =>
+                                setExploreOpen((e.target as HTMLDetailsElement).open)
+                              }
+                            >
+                              <summary className="broto-qbank-explore-summary">
+                                Explorar o banco — filtros e lista completa
+                                <span className="broto-qbank-explore-hint">
+                                  Opcional · para quem quer pesquisar
+                                </span>
+                              </summary>
                               <div className="broto-qbank-explore-body">
                                 <QbankExploreFiltersAndList
                                   searchInput={searchInput}
@@ -1118,136 +1181,73 @@ export function QuestionBankView({
                                   loadingAnswerStatus={loadingAnswerStatus}
                                 />
                               </div>
-                            </section>
-                          ) : null}
-                        </>
-                      ) : (
-                        <>
-                          <TopicCarouselSection
-                            items={topicCarouselItems}
-                            loading={loadingBank}
-                            onSelect={(value) => {
-                              const id = topicos.find((x) => x.value === value)?.id
-                              if (id) {
-                                setSelectedTopico(id)
-                                setExploreOpen(true)
-                              }
-                            }}
-                          />
+                            </details>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
 
-                          <details
-                            className="broto-qbank-explore"
-                            open={exploreOpen}
-                            onToggle={(e) =>
-                              setExploreOpen((e.target as HTMLDetailsElement).open)
-                            }
-                          >
-                            <summary className="broto-qbank-explore-summary">
-                              Explorar o banco — filtros e lista completa
-                              <span className="broto-qbank-explore-hint">
-                                Opcional · para quem quer pesquisar
-                              </span>
-                            </summary>
-                            <div className="broto-qbank-explore-body">
-                              <QbankExploreFiltersAndList
-                                searchInput={searchInput}
-                                setSearchInput={setSearchInput}
-                                yearOptions={yearOptions}
-                                selectedYear={selectedYear}
-                                setSelectedYear={setSelectedYear}
-                                topicos={topicos}
-                                selectedTopico={selectedTopico}
-                                setSelectedTopico={setSelectedTopico}
-                                isLanguageFilterEnabled={isLanguageFilterEnabled}
-                                selectedLanguage={selectedLanguage}
-                                setSelectedLanguage={setSelectedLanguage}
-                                difficulty={difficulty}
-                                setDifficulty={setDifficulty}
-                                isLinguagensArea={isLinguagensArea}
-                                hasFilterChips={hasFilterChips}
-                                clearYear={clearYear}
-                                clearTopico={clearTopico}
-                                clearLanguage={clearLanguage}
-                                totalFiltered={totalFiltered}
-                                areaLabel={areaLabel}
-                                sortRecent={sortRecent}
-                                setSortRecent={setSortRecent}
-                                listResetKey={listResetKey}
-                                loadingBank={loadingBank}
-                                filtered={filtered}
-                                selectedArea={selectedArea}
-                                openRow={openRow}
-                                statusByQuestionId={statusByQuestionId}
-                                loadingAnswerStatus={loadingAnswerStatus}
-                              />
-                            </div>
-                          </details>
-                        </>
-                      )}
+                  <div className="broto-qbank-start-with-performance__rail">
+                    <PerformanceDonutCard
+                      accuracyPct={areaStat?.accuracyPct ?? 0}
+                      totalAnswered={areaStat?.totalAnswered ?? 0}
+                      totalInArea={totalInArea}
+                      loading={loadingProgress || loadingBank}
+                      correct={correct}
+                      errors={errors}
+                      pendingApprox={pendingApprox}
+                    />
+                    <WeakTopicsAside topicos={areaStat?.topicos} loading={loadingProgress} />
+                    <div className="broto-qbank-side-card">
+                      <h3 className="broto-qbank-side-title">Resumo nesta área</h3>
+                      <ul className="broto-qbank-breakdown">
+                        <li className="broto-qbank-bk-row">
+                          <span className="broto-qbank-bk-dot broto-qbank-bk-dot--teal" />
+                          <span className="broto-qbank-bk-label">Prática</span>
+                          <span className="broto-qbank-bk-val">
+                            {loadingProgress
+                              ? '…'
+                              : answered > 0
+                                ? `${answered} questões feitas`
+                                : 'Ainda não iniciaste'}
+                          </span>
+                        </li>
+                        <li className="broto-qbank-bk-row">
+                          <span className="broto-qbank-bk-dot broto-qbank-bk-dot--lime" />
+                          <span className="broto-qbank-bk-label">Acertos</span>
+                          <span className="broto-qbank-bk-val">
+                            {loadingProgress
+                              ? '…'
+                              : areaStat && areaStat.totalAnswered > 0
+                                ? `${correct} certas`
+                                : '—'}
+                          </span>
+                        </li>
+                        <li className="broto-qbank-bk-row">
+                          <span className="broto-qbank-bk-dot broto-qbank-bk-dot--coral" />
+                          <span className="broto-qbank-bk-label">A corrigir</span>
+                          <span className="broto-qbank-bk-val">
+                            {loadingProgress
+                              ? '…'
+                              : areaStat && areaStat.totalAnswered > 0
+                                ? errors > 0
+                                  ? `${errors} para rever`
+                                  : 'Nada pendente'
+                                : '—'}
+                          </span>
+                        </li>
+                        <li className="broto-qbank-bk-row">
+                          <span className="broto-qbank-bk-dot broto-qbank-bk-dot--muted" />
+                          <span className="broto-qbank-bk-label">Catálogo</span>
+                          <span className="broto-qbank-bk-val">
+                            {loadingBank ? '…' : `${pendingApprox} sem fazer (aprox.)`}
+                          </span>
+                        </li>
+                      </ul>
                     </div>
                   </div>
                 </div>
-
-                <div className="broto-qbank-start-with-performance__rail">
-                  <PerformanceDonutCard
-                    accuracyPct={areaStat?.accuracyPct ?? 0}
-                    totalAnswered={areaStat?.totalAnswered ?? 0}
-                    totalInArea={totalInArea}
-                    loading={loadingProgress || loadingBank}
-                    correct={correct}
-                    errors={errors}
-                    pendingApprox={pendingApprox}
-                  />
-                  <WeakTopicsAside topicos={areaStat?.topicos} loading={loadingProgress} />
-                  <div className="broto-qbank-side-card">
-                    <h3 className="broto-qbank-side-title">Resumo nesta área</h3>
-                    <ul className="broto-qbank-breakdown">
-                      <li className="broto-qbank-bk-row">
-                        <span className="broto-qbank-bk-dot broto-qbank-bk-dot--teal" />
-                        <span className="broto-qbank-bk-label">Prática</span>
-                        <span className="broto-qbank-bk-val">
-                          {loadingProgress
-                            ? '…'
-                            : answered > 0
-                              ? `${answered} questões feitas`
-                              : 'Ainda não iniciaste'}
-                        </span>
-                      </li>
-                      <li className="broto-qbank-bk-row">
-                        <span className="broto-qbank-bk-dot broto-qbank-bk-dot--lime" />
-                        <span className="broto-qbank-bk-label">Acertos</span>
-                        <span className="broto-qbank-bk-val">
-                          {loadingProgress
-                            ? '…'
-                            : areaStat && areaStat.totalAnswered > 0
-                              ? `${correct} certas`
-                              : '—'}
-                        </span>
-                      </li>
-                      <li className="broto-qbank-bk-row">
-                        <span className="broto-qbank-bk-dot broto-qbank-bk-dot--coral" />
-                        <span className="broto-qbank-bk-label">A corrigir</span>
-                        <span className="broto-qbank-bk-val">
-                          {loadingProgress
-                            ? '…'
-                            : areaStat && areaStat.totalAnswered > 0
-                              ? errors > 0
-                                ? `${errors} para rever`
-                                : 'Nada pendente'
-                              : '—'}
-                        </span>
-                      </li>
-                      <li className="broto-qbank-bk-row">
-                        <span className="broto-qbank-bk-dot broto-qbank-bk-dot--muted" />
-                        <span className="broto-qbank-bk-label">Catálogo</span>
-                        <span className="broto-qbank-bk-val">
-                          {loadingBank ? '…' : `${pendingApprox} sem fazer (aprox.)`}
-                        </span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
               )}
             </>
           )}

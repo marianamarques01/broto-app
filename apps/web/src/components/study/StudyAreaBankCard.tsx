@@ -8,7 +8,11 @@ export type StudyAreaBankCardProps = {
   className?: string
 }
 
-export function StudyAreaBankCard({ areaKey, onBankClick, className = '' }: StudyAreaBankCardProps) {
+export function StudyAreaBankCard({
+  areaKey,
+  onBankClick,
+  className = '',
+}: StudyAreaBankCardProps) {
   const cfg = AREA_CONFIG[areaKey]
 
   return (

@@ -11,7 +11,9 @@ export function isDisplayableEnemAreaKey(value: string): boolean {
   return isCountablePracticeArea(value)
 }
 
-export function filterDisplayAreas<T extends { value: string }>(areas: readonly T[] | undefined): T[] {
+export function filterDisplayAreas<T extends { value: string }>(
+  areas: readonly T[] | undefined,
+): T[] {
   if (!areas?.length) return []
   return areas.filter((a) => isDisplayableEnemAreaKey(a.value))
 }

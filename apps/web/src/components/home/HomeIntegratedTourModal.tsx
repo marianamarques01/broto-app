@@ -112,11 +112,7 @@ function HomeIntegratedTourModalInner({
   const bodyContent = tourBodyWithEmphasis(slide.body, slide.bodyEmphasis)
 
   return (
-    <div
-      className="broto-integrated-tour-backdrop"
-      role="presentation"
-      aria-hidden={false}
-    >
+    <div className="broto-integrated-tour-backdrop" role="presentation" aria-hidden={false}>
       <div
         ref={panelRef}
         className={`broto-integrated-tour${isNoteLayout ? ' broto-integrated-tour--note-slide' : ''}`}
@@ -153,7 +149,10 @@ function HomeIntegratedTourModalInner({
           {isNoteLayout ? (
             <div className="broto-integrated-tour__note">
               <div className="broto-integrated-tour__note-panel">
-                <h2 id="broto-integrated-tour-title" className="broto-integrated-tour__note-panel-title">
+                <h2
+                  id="broto-integrated-tour-title"
+                  className="broto-integrated-tour__note-panel-title"
+                >
                   {slide.title}
                 </h2>
                 <p className="broto-integrated-tour__note-panel-body">{bodyContent}</p>
@@ -201,7 +200,9 @@ function HomeIntegratedTourModalInner({
                             <Hi size={20} strokeWidth={2} aria-hidden />
                           </span>
                           <span className="broto-integrated-tour__highlight-copy">
-                            <span className="broto-integrated-tour__highlight-label">{h.label}</span>
+                            <span className="broto-integrated-tour__highlight-label">
+                              {h.label}
+                            </span>
                             <span className="broto-integrated-tour__highlight-hint">{h.hint}</span>
                           </span>
                         </li>

@@ -1,5 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { CalendarCheck, ClipboardList, GraduationCap, MessageCircle, type LucideIcon } from 'lucide-react'
+import {
+  CalendarCheck,
+  ClipboardList,
+  GraduationCap,
+  MessageCircle,
+  type LucideIcon,
+} from 'lucide-react'
 
 type MobileTabItem = {
   path: string
@@ -31,8 +37,7 @@ export function MobileTabBar() {
   function isStudyPathActive(): boolean {
     return (
       location.pathname === '/study' ||
-      (location.pathname.startsWith('/study/') &&
-        !location.pathname.startsWith('/study/mock-exam'))
+      (location.pathname.startsWith('/study/') && !location.pathname.startsWith('/study/mock-exam'))
     )
   }
 
@@ -83,22 +88,25 @@ export function MobileTabBar() {
           return (
             <li
               key={item.path + String(item.end)}
-              className={isCenter ? 'broto-mtab__item broto-mtab__item--center' : 'broto-mtab__item'}
+              className={
+                isCenter ? 'broto-mtab__item broto-mtab__item--center' : 'broto-mtab__item'
+              }
             >
               <NavLink
                 to={item.path}
                 end={item.end}
                 className={({ isActive }) => {
                   const studyActive = item.path === '/study' && isStudyPathActive()
-                  const mockActive =
-                    item.path === '/study/mock-exam' && isMockExamPathActive()
+                  const mockActive = item.path === '/study/mock-exam' && isMockExamPathActive()
                   const active =
                     item.path === '/study'
                       ? studyActive
                       : item.path === '/study/mock-exam'
                         ? mockActive
                         : isActive
-                  const base = isCenter ? 'broto-mtab__link broto-mtab__link--home' : 'broto-mtab__link'
+                  const base = isCenter
+                    ? 'broto-mtab__link broto-mtab__link--home'
+                    : 'broto-mtab__link'
                   return active ? `${base} broto-mtab__link--active` : base
                 }}
                 aria-label={item.ariaLabel ?? item.label}

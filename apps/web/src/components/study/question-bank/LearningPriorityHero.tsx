@@ -25,7 +25,9 @@ export function LearningPriorityHero({
   if (!primary) {
     return (
       <section className="broto-qbank-hero broto-qbank-hero--empty" aria-live="polite">
-        <p className="broto-qbank-hero-headline">Carrega o banco para veres sugestões personalizadas.</p>
+        <p className="broto-qbank-hero-headline">
+          Carrega o banco para veres sugestões personalizadas.
+        </p>
       </section>
     )
   }

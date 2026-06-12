@@ -22,7 +22,10 @@ export function PerformanceDonutCard({
     return (
       <div className="broto-qbank-donut-card">
         <h3 className="broto-qbank-side-title">Desempenho na área</h3>
-        <div className="broto-skeleton" style={{ height: 160, borderRadius: 20, margin: '0 auto' }} />
+        <div
+          className="broto-skeleton"
+          style={{ height: 160, borderRadius: 20, margin: '0 auto' }}
+        />
       </div>
     )
   }
@@ -60,12 +63,16 @@ export function PerformanceDonutCard({
         <li>
           <span className="broto-qbank-donut-dot" data-tone="ok" />
           Acertos
-          {hasData ? <span className="broto-qbank-donut-legend-pct">{Math.round(shareOk)}%</span> : null}
+          {hasData ? (
+            <span className="broto-qbank-donut-legend-pct">{Math.round(shareOk)}%</span>
+          ) : null}
         </li>
         <li>
           <span className="broto-qbank-donut-dot" data-tone="bad" />
           Erros
-          {hasData ? <span className="broto-qbank-donut-legend-pct">{Math.round(shareErr)}%</span> : null}
+          {hasData ? (
+            <span className="broto-qbank-donut-legend-pct">{Math.round(shareErr)}%</span>
+          ) : null}
         </li>
         <li>
           <span className="broto-qbank-donut-dot" data-tone="pend" />

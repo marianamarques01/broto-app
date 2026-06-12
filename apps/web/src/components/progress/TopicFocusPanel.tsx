@@ -46,22 +46,15 @@ function TopicRow({
 
   return (
     <div className="broto-prog-topic-chip-wrapper">
-      <div
-        className={`broto-topic-chip broto-topic-chip--${variant} broto-progress-topic-row`}
-      >
+      <div className={`broto-topic-chip broto-topic-chip--${variant} broto-progress-topic-row`}>
         <Icon size={16} className="broto-progress-topic-row__icon" aria-hidden />
         <div className="broto-progress-topic-row__body">
           <div className="broto-progress-topic-row__title">{topic.label}</div>
-          <div className="broto-progress-topic-row__meta">
-            {topic.totalAnswered} questões
-          </div>
+          <div className="broto-progress-topic-row__meta">{topic.totalAnswered} questões</div>
         </div>
         <span className="broto-progress-topic-row__pct">{topic.accuracyPct}%</span>
       </div>
-      <Link
-        to={`/study/${areaKey}`}
-        className="broto-progress-topic-cta"
-      >
+      <Link to={`/study/${areaKey}`} className="broto-progress-topic-cta">
         Abrir área
       </Link>
     </div>
@@ -97,30 +90,30 @@ export function TopicFocusPanel({ areas }: TopicFocusPanelProps) {
           Legenda: pelo menos 3 questões no tópico para entrar na lista.
         </p>
         <div className="broto-prog-topics broto-progress-topic-cols">
-        {fortes.length > 0 ? (
-          <div className="broto-prog-topic-group">
-            <h3 className="broto-prog-topic-heading broto-prog-topic-heading--forte">
-              <TrendingUp size={14} /> Pontos fortes
-            </h3>
-            <div className="broto-prog-topic-stack">
-              {fortes.map((t) => (
-                <TopicRow key={t.value} topic={t} variant="forte" areas={areas} />
-              ))}
+          {fortes.length > 0 ? (
+            <div className="broto-prog-topic-group">
+              <h3 className="broto-prog-topic-heading broto-prog-topic-heading--forte">
+                <TrendingUp size={14} /> Pontos fortes
+              </h3>
+              <div className="broto-prog-topic-stack">
+                {fortes.map((t) => (
+                  <TopicRow key={t.value} topic={t} variant="forte" areas={areas} />
+                ))}
+              </div>
             </div>
-          </div>
-        ) : null}
-        {fracos.length > 0 ? (
-          <div className="broto-prog-topic-group">
-            <h3 className="broto-prog-topic-heading broto-prog-topic-heading--fraco">
-              <TrendingDown size={14} /> A melhorar
-            </h3>
-            <div className="broto-prog-topic-stack">
-              {fracos.map((t) => (
-                <TopicRow key={t.value} topic={t} variant="fraco" areas={areas} />
-              ))}
+          ) : null}
+          {fracos.length > 0 ? (
+            <div className="broto-prog-topic-group">
+              <h3 className="broto-prog-topic-heading broto-prog-topic-heading--fraco">
+                <TrendingDown size={14} /> A melhorar
+              </h3>
+              <div className="broto-prog-topic-stack">
+                {fracos.map((t) => (
+                  <TopicRow key={t.value} topic={t} variant="fraco" areas={areas} />
+                ))}
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
         </div>
       </div>
     </section>

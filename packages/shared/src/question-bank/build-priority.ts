@@ -52,7 +52,10 @@ function rowKey(r: Pick<QuestionBankRow, 'year' | 'index' | 'language'>): string
   return getQuestionId(r)
 }
 
-function findRowForQuestionId(allInArea: QuestionBankRow[], questionId: string): QuestionBankRow | null {
+function findRowForQuestionId(
+  allInArea: QuestionBankRow[],
+  questionId: string,
+): QuestionBankRow | null {
   const parsed = parseQuestionId(questionId)
   if (!parsed) return null
   const found = allInArea.find(
@@ -164,9 +167,7 @@ export function buildQuestionBankPriority(params: {
   const newRows: QuestionBankSuggestedRow[] = []
   for (const tv of newTopicValues) {
     if (newRows.length >= Q_BANK_TRACK_ROW_LIMIT) break
-    const label =
-      allInArea.find((r) => r.topicoValue === tv)?.topicoLabel ??
-      tv.replace(/-/g, ' ')
+    const label = allInArea.find((r) => r.topicoValue === tv)?.topicoLabel ?? tv.replace(/-/g, ' ')
     const pool = allInArea
       .filter((r) => r.topicoValue === tv && !usedKeys.has(rowKey(r)))
       .sort((a, b) => b.year - a.year || a.index - b.index)
@@ -180,7 +181,12 @@ export function buildQuestionBankPriority(params: {
   }
 
   let coldRows: QuestionBankSuggestedRow[] = []
-  if (mistakeRows.length === 0 && weakRows.length === 0 && newRows.length === 0 && allInArea.length > 0) {
+  if (
+    mistakeRows.length === 0 &&
+    weakRows.length === 0 &&
+    newRows.length === 0 &&
+    allInArea.length > 0
+  ) {
     const pool = [...allInArea]
       .filter((r) => !usedKeys.has(rowKey(r)))
       .sort((a, b) => b.year - a.year || a.index - b.index)
@@ -241,9 +247,7 @@ export function buildQuestionBankPriority(params: {
     const r = weakRows[0]!
     const weakReason = r.reason.kind === 'weak' ? r.reason : null
     primary = {
-      headline: weakReason
-        ? `Reforço: ${weakReason.topicoLabel}`
-        : 'Reforço no tópico mais fraco',
+      headline: weakReason ? `Reforço: ${weakReason.topicoLabel}` : 'Reforço no tópico mais fraco',
       subline: weakReason
         ? `Acerto ~${Math.round(weakReason.accuracyPct)}% neste tópico.`
         : 'Prioridade nos tópicos com menos segurança.',

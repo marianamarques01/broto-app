@@ -37,10 +37,7 @@ describe('buildMockExamPayload', () => {
   })
 
   it('deduplica por questionId antes de amostrar', () => {
-    const pool = [
-      entry('2023-1', 'mat'),
-      entry('2023-1', 'mat', { year: 2023, index: 1 }),
-    ]
+    const pool = [entry('2023-1', 'mat'), entry('2023-1', 'mat', { year: 2023, index: 1 })]
     const r = buildMockExamPayload(1, true, [], pool)
     expect(r.ok).toBe(true)
     if (r.ok) expect(r.questionIds.length).toBe(1)
@@ -48,9 +45,7 @@ describe('buildMockExamPayload', () => {
 
   it('randomMode retorna N distintos quando pool permite', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.42)
-    const pool = Array.from({ length: 20 }, (_, i) =>
-      entry(`2023-${i + 1}`, 'mat'),
-    )
+    const pool = Array.from({ length: 20 }, (_, i) => entry(`2023-${i + 1}`, 'mat'))
     const r = buildMockExamPayload(7, true, [], pool)
     expect(r.ok).toBe(true)
     if (r.ok) {

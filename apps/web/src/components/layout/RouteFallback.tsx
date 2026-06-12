@@ -7,7 +7,10 @@ export function RouteFallback() {
       aria-label="Carregando página"
       style={{ width: '100%', justifyContent: 'center' }}
     >
-      <div className="broto-auth__card" style={{ maxWidth: 320, padding: '2rem', textAlign: 'center' }}>
+      <div
+        className="broto-auth__card"
+        style={{ maxWidth: 320, padding: '2rem', textAlign: 'center' }}
+      >
         <p className="broto-auth__title" style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>
           broto
         </p>

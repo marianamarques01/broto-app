@@ -45,10 +45,42 @@ export function StudyAreaCardPattern({ areaKey }: { areaKey: string }) {
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden
       >
-        <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.3" />
-        <circle cx="100" cy="100" r="40" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.2" />
-        <line x1="40" y1="100" x2="160" y2="100" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
-        <line x1="100" y1="40" x2="100" y2="160" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
+        <circle
+          cx="100"
+          cy="100"
+          r="60"
+          stroke="currentColor"
+          strokeWidth="1"
+          fill="none"
+          opacity="0.3"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="40"
+          stroke="currentColor"
+          strokeWidth="0.8"
+          fill="none"
+          opacity="0.2"
+        />
+        <line
+          x1="40"
+          y1="100"
+          x2="160"
+          y2="100"
+          stroke="currentColor"
+          strokeWidth="0.5"
+          opacity="0.2"
+        />
+        <line
+          x1="100"
+          y1="40"
+          x2="100"
+          y2="160"
+          stroke="currentColor"
+          strokeWidth="0.5"
+          opacity="0.2"
+        />
       </svg>
     )
   }
@@ -105,8 +137,24 @@ export function StudyAreaCardPattern({ areaKey }: { areaKey: string }) {
           opacity="0.15"
           rx="4"
         />
-        <line x1="50" y1="100" x2="150" y2="100" stroke="currentColor" strokeWidth="0.5" opacity="0.15" />
-        <line x1="100" y1="50" x2="100" y2="150" stroke="currentColor" strokeWidth="0.5" opacity="0.15" />
+        <line
+          x1="50"
+          y1="100"
+          x2="150"
+          y2="100"
+          stroke="currentColor"
+          strokeWidth="0.5"
+          opacity="0.15"
+        />
+        <line
+          x1="100"
+          y1="50"
+          x2="100"
+          y2="150"
+          stroke="currentColor"
+          strokeWidth="0.5"
+          opacity="0.15"
+        />
         <text x="70" y="90" fontSize="14" fill="currentColor" opacity="0.08" fontFamily="serif">
           ∑
         </text>

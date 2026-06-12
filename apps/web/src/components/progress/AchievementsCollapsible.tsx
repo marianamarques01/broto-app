@@ -35,7 +35,10 @@ export function AchievementsCollapsible({
     >
       <div className="broto-prog-card-head broto-prog-achievements-head">
         <div className="broto-prog-achievements-head-main">
-          <h2 id="progress-achievements-title" className="broto-prog-card-title broto-prog-achievements-title">
+          <h2
+            id="progress-achievements-title"
+            className="broto-prog-card-title broto-prog-achievements-title"
+          >
             Conquistas
           </h2>
         </div>
@@ -56,10 +59,7 @@ export function AchievementsCollapsible({
         aria-valuemax={achievements.length}
         aria-label="Progresso das conquistas"
       >
-        <div
-          className="broto-prog-achievements-track-fill"
-          style={{ width: `${progressPct}%` }}
-        />
+        <div className="broto-prog-achievements-track-fill" style={{ width: `${progressPct}%` }} />
       </div>
       <div className="broto-prog-achievements">
         {visible.map((a) => {
@@ -80,7 +80,12 @@ export function AchievementsCollapsible({
               {a.unlocked ? (
                 <CheckCircle2 size={17} className="broto-prog-achievement-check" aria-hidden />
               ) : (
-                <Lock size={14} className="broto-prog-achievement-lock" aria-hidden strokeWidth={2} />
+                <Lock
+                  size={14}
+                  className="broto-prog-achievement-lock"
+                  aria-hidden
+                  strokeWidth={2}
+                />
               )}
             </div>
           )

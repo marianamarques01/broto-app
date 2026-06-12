@@ -6,9 +6,7 @@ import {
 } from '@broto/shared'
 import { api } from '@/lib/api-client'
 
-const fetchSeries = createUserPerformanceSeriesFetcher((path, body) =>
-  api.post(path, body),
-)
+const fetchSeries = createUserPerformanceSeriesFetcher((path, body) => api.post(path, body))
 
 const invalidateListeners = new Set<() => void>()
 
@@ -40,9 +38,10 @@ export function usePerformanceSeries(period: PerformancePeriod): {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
-    void (async () => {
+
+    async function load() {
+      setLoading(true)
+      setError(null)
       try {
         const res = await fetchSeries(period)
         if (cancelled) return
@@ -55,7 +54,9 @@ export function usePerformanceSeries(period: PerformancePeriod): {
       } finally {
         if (!cancelled) setLoading(false)
       }
-    })()
+    }
+
+    void load()
     return () => {
       cancelled = true
     }

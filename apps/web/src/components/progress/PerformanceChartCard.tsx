@@ -71,7 +71,8 @@ export function PerformanceChartCard({ loadingProgress }: PerformanceChartCardPr
         ) : (
           <>
             <p className="broto-perf-card__subtitle">
-              {period === 'week' && 'Últimos 7 dias (UTC) — taxa de acerto por dia, dados da sua conta.'}
+              {period === 'week' &&
+                'Últimos 7 dias (UTC) — taxa de acerto por dia, dados da sua conta.'}
               {period === 'month' && 'Últimas 4 semanas — taxa de acerto agregada por semana.'}
               {period === 'all' && 'Histórico por mês civil — até 12 meses com atividade.'}
             </p>

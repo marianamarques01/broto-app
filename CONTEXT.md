@@ -12,7 +12,7 @@ Plataforma EdTech de preparação para o ENEM com:
 - **Shared** — `packages/shared/` — lógica de negócio platform-agnostic
 - **Backend** — `supabase/` — PostgreSQL, Auth, 19 Edge Functions (Deno)
 
-**Decisão atual (2026-06):** foco em web + admin + shared. Mobile nativo (`apps/mobile/`) está planejado para remoção — ver `.planning/PRODUCTION-ROADMAP.md` etapa 1.3.
+**Decisão atual (2026-06):** foco em web + admin + shared. O app mobile nativo foi removido do monorepo.
 
 ---
 

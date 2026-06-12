@@ -68,10 +68,7 @@ const ACHIEVEMENT_DEFS = [
   },
 ] as const
 
-export function buildAchievementRows(
-  totalAnswered: number,
-  accuracyPct: number,
-): AchievementRow[] {
+export function buildAchievementRows(totalAnswered: number, accuracyPct: number): AchievementRow[] {
   return ACHIEVEMENT_DEFS.map((a) => ({
     id: a.id,
     label: a.label,

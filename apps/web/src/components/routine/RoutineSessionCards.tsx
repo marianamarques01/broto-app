@@ -9,7 +9,9 @@ interface RoutineSessionCardsProps {
 
 function StatusPill({ session }: { session: RoutineSession }) {
   if (session.status === 'completed') {
-    return <span className="broto-routine-sess__pill broto-routine-sess__pill--done">Concluído</span>
+    return (
+      <span className="broto-routine-sess__pill broto-routine-sess__pill--done">Concluído</span>
+    )
   }
   if (session.status === 'active') {
     return (
@@ -102,7 +104,10 @@ export function RoutineSessionCards({ sessions }: RoutineSessionCardsProps) {
         if (s.locked) {
           return (
             <li key={s.id} className={className}>
-              <div className="broto-routine-sess__locked-wrap" title="Conclua a sessão anterior primeiro">
+              <div
+                className="broto-routine-sess__locked-wrap"
+                title="Conclua a sessão anterior primeiro"
+              >
                 {inner}
               </div>
             </li>

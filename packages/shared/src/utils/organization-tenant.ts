@@ -79,8 +79,7 @@ export function resolveClassTenantRow(
     return { kind: 'no-active-org' }
   }
   const classRow = isRecord(profileClasses) ? profileClasses : null
-  const orgFromClass =
-    classRow && isRecord(classRow.organizations) ? classRow.organizations : null
+  const orgFromClass = classRow && isRecord(classRow.organizations) ? classRow.organizations : null
   if (
     classRow &&
     orgFromClass &&

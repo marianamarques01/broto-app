@@ -1,10 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
-import {
-  requireUser,
-  requireClassAccess,
-  createServiceRoleClientUnsafe,
-} from '../_shared/authz.ts'
+import { requireUser, requireClassAccess, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
 
 const SERVICE_URL = Deno.env.get('NOTEBOOKLM_SERVICE_URL')!
 const SERVICE_SECRET =
@@ -53,11 +49,7 @@ serve(async (req) => {
     const adminClient = createServiceRoleClientUnsafe()
     const classAccessResult = await requireClassAccess(adminClient, user.id, class_id, 'teacher')
     if (classAccessResult.error) {
-      return json(
-        classAccessResult.error.status,
-        { error: classAccessResult.error.message },
-        cors,
-      )
+      return json(classAccessResult.error.status, { error: classAccessResult.error.message }, cors)
     }
     const { classData } = classAccessResult.data
 
@@ -109,10 +101,7 @@ serve(async (req) => {
       .single()
 
     if (!cls) {
-      await adminClient
-        .from('materials')
-        .update({ index_status: 'failed' })
-        .eq('id', material_id)
+      await adminClient.from('materials').update({ index_status: 'failed' }).eq('id', material_id)
       return json(404, { error: 'Turma não encontrada' }, cors)
     }
 
@@ -125,10 +114,7 @@ serve(async (req) => {
       })
 
       if (!createRes.ok) {
-        await adminClient
-          .from('materials')
-          .update({ index_status: 'failed' })
-          .eq('id', material_id)
+        await adminClient.from('materials').update({ index_status: 'failed' }).eq('id', material_id)
         return json(500, { error: 'Erro ao criar notebook' }, cors)
       }
 
@@ -165,21 +151,12 @@ serve(async (req) => {
       clearTimeout(timer)
 
       if (!indexRes.ok) {
-        await adminClient
-          .from('materials')
-          .update({ index_status: 'failed' })
-          .eq('id', material_id)
+        await adminClient.from('materials').update({ index_status: 'failed' }).eq('id', material_id)
         return json(500, { error: 'Erro ao indexar' }, cors)
       }
 
-      await adminClient
-        .from('materials')
-        .update({ index_status: 'indexed' })
-        .eq('id', material_id)
-      await adminClient
-        .from('classes')
-        .update({ notebook_status: 'ready' })
-        .eq('id', class_id)
+      await adminClient.from('materials').update({ index_status: 'indexed' }).eq('id', material_id)
+      await adminClient.from('classes').update({ notebook_status: 'ready' }).eq('id', class_id)
 
       return json(200, { success: true }, cors)
     } catch (err) {

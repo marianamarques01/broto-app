@@ -182,8 +182,8 @@ export function Progress() {
                   Visão geral
                 </h2>
                 <p className="broto-progress-slab__lede">
-                  Indicadores consolidados do seu histórico — o filtro do gráfico abaixo influencia a
-                  coluna “período”.
+                  Indicadores consolidados do seu histórico — o filtro do gráfico abaixo influencia
+                  a coluna “período”.
                 </p>
               </div>
               <ProgressKpiStrip items={kpiItems} loading={loadingProgress} asDiv />

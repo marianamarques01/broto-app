@@ -18,16 +18,24 @@ type AuthUserHint = {
   fullName?: string | null
 }
 
-async function fetchAdminProfile(userId: string, hint?: AuthUserHint): Promise<AdminProfile | null> {
-  const [{ data: userRow, error: userErr }, { data: memberships, error: memErr }] = await Promise.all([
-    supabase.from('users').select('email, nome, current_organization_id').eq('id', userId).maybeSingle(),
-    supabase
-      .from('organization_memberships')
-      .select('organization_id, role, joined_at')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .in('role', [...STAFF_MEMBERSHIP_ROLES]),
-  ])
+async function fetchAdminProfile(
+  userId: string,
+  hint?: AuthUserHint,
+): Promise<AdminProfile | null> {
+  const [{ data: userRow, error: userErr }, { data: memberships, error: memErr }] =
+    await Promise.all([
+      supabase
+        .from('users')
+        .select('email, nome, current_organization_id')
+        .eq('id', userId)
+        .maybeSingle(),
+      supabase
+        .from('organization_memberships')
+        .select('organization_id, role, joined_at')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .in('role', [...STAFF_MEMBERSHIP_ROLES]),
+    ])
 
   if (userErr) console.error('[admin-auth]', userErr.message)
   if (memErr) {
@@ -39,18 +47,17 @@ async function fetchAdminProfile(userId: string, hint?: AuthUserHint): Promise<A
 
   const storedOrgId = userRow?.current_organization_id ?? null
   const byStored = storedOrgId
-    ? memberships.find((m) => m.organization_id === storedOrgId) ?? null
+    ? (memberships.find((m) => m.organization_id === storedOrgId) ?? null)
     : null
 
   const chosen =
     byStored ??
     [...memberships].sort(
-      (a, b) =>
-        new Date(b.joined_at ?? 0).getTime() - new Date(a.joined_at ?? 0).getTime(),
+      (a, b) => new Date(b.joined_at ?? 0).getTime() - new Date(a.joined_at ?? 0).getTime(),
     )[0]
 
   const email = userRow?.email ?? hint?.email ?? ''
-  const full_name = userRow?.nome?.trim() ? userRow.nome : hint?.fullName ?? ''
+  const full_name = userRow?.nome?.trim() ? userRow.nome : (hint?.fullName ?? '')
 
   return {
     id: userId,

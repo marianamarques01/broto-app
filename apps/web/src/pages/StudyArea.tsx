@@ -1,11 +1,4 @@
-import {
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  type CSSProperties,
-} from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo, type CSSProperties } from 'react'
 import type { Question, StudyJourneyTab } from '@broto/shared'
 import {
   getQuestionId,
@@ -1570,9 +1563,7 @@ export function StudyArea() {
                 if (!selectedArea) return
                 const topico = hubTopics.find((t) => t.value === row.topicoValue) ?? {
                   value: row.topicoValue ?? '',
-                  label: row.topicoLabel?.trim()
-                    ? row.topicoLabel
-                    : (row.topicoValue ?? 'Tópico'),
+                  label: row.topicoLabel?.trim() ? row.topicoLabel : (row.topicoValue ?? 'Tópico'),
                   accuracy: null,
                   totalAnswered: 0,
                 }
@@ -1678,7 +1669,6 @@ export function StudyArea() {
                   </div>
                 }
               />
-
             </div>
 
             <StudyPackageLeaveDialog

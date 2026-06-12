@@ -210,7 +210,9 @@ function StepBrotoNome({
           autoComplete="off"
           maxLength={32}
         />
-        <p className="onb-hint">Ate 32 caracteres. Se deixar em branco, usamos &quot;Broto&quot;.</p>
+        <p className="onb-hint">
+          Ate 32 caracteres. Se deixar em branco, usamos &quot;Broto&quot;.
+        </p>
       </div>
     </div>
   )
@@ -753,12 +755,7 @@ export function Onboarding() {
         expandLinguagensIdiomas: cfg.expandLinguagensIdiomas,
       })
 
-      const built = buildMockExamPayload(
-        cfg.nQuestoes,
-        cfg.randomMode,
-        cfg.areaValues,
-        pool,
-      )
+      const built = buildMockExamPayload(cfg.nQuestoes, cfg.randomMode, cfg.areaValues, pool)
 
       if (!built.ok) {
         if (built.error.code === 'POOL_EMPTY') {

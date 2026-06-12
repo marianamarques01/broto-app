@@ -53,7 +53,11 @@ export function buildPracticeSessionSummary(
     }
 
     if (r.isCorrect) totalCorretas += 1
-    if (typeof r.timeSpentSec === 'number' && Number.isFinite(r.timeSpentSec) && r.timeSpentSec >= 0) {
+    if (
+      typeof r.timeSpentSec === 'number' &&
+      Number.isFinite(r.timeSpentSec) &&
+      r.timeSpentSec >= 0
+    ) {
       times.push(r.timeSpentSec)
     }
   }

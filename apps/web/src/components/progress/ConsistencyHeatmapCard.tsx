@@ -76,7 +76,7 @@ export function ConsistencyHeatmapCard({
     const months: string[] = []
 
     for (let c = 0; c < cols; c++) {
-      const col: typeof grid[number] = []
+      const col: (typeof grid)[number] = []
       const weekSunday = new Date(firstSunday)
       weekSunday.setDate(weekSunday.getDate() + c * 7)
 
@@ -87,7 +87,7 @@ export function ConsistencyHeatmapCard({
         prev.setDate(prev.getDate() - 7)
         months.push(
           weekSunday.getMonth() !== prev.getMonth()
-            ? MONTH_ABBR_PT[weekSunday.getMonth()] ?? ''
+            ? (MONTH_ABBR_PT[weekSunday.getMonth()] ?? '')
             : '',
         )
       }
@@ -98,7 +98,7 @@ export function ConsistencyHeatmapCard({
         const iso = dateISO(d)
         const future = d > today
         const outsideYear = d.getFullYear() !== yr
-        const answered = future || outsideYear ? 0 : map[iso]?.answered ?? 0
+        const answered = future || outsideYear ? 0 : (map[iso]?.answered ?? 0)
         const isToday = !future && iso === todayIso
         col.push({
           iso,
@@ -160,65 +160,68 @@ export function ConsistencyHeatmapCard({
       </div>
       <div className="broto-perf-card broto-prog-heat-perf-card">
         <div className="broto-prog-heat-panel broto-prog-heat-panel--github">
-        <div className="broto-prog-heat-wrap broto-prog-heat-wrap--github">
-          <div className="broto-prog-heat-github-inner">
-            <div className="broto-prog-heat-months" aria-hidden>
-              <span className="broto-prog-heat-months-spacer" />
-              {monthLabels.map((m, i) => (
-                <span key={i} className="broto-prog-heat-month-tick">
-                  {m}
-                </span>
-              ))}
-            </div>
-            <div className="broto-prog-heat-body-row">
-              <div className="broto-prog-heat-rows broto-prog-heat-rows--github" aria-hidden>
-                {HEATMAP_GITHUB_ROW_LABELS.map((lb, i) => (
-                  <span key={i} className="broto-prog-heat-row-label">
-                    {lb ?? '\u00a0'}
+          <div className="broto-prog-heat-wrap broto-prog-heat-wrap--github">
+            <div className="broto-prog-heat-github-inner">
+              <div className="broto-prog-heat-months" aria-hidden>
+                <span className="broto-prog-heat-months-spacer" />
+                {monthLabels.map((m, i) => (
+                  <span key={i} className="broto-prog-heat-month-tick">
+                    {m}
                   </span>
                 ))}
               </div>
-              <div
-                className="broto-prog-heat-grid broto-prog-heat-grid--github"
-                role="img"
-                aria-label="Mapa de calor de prática por dia, estilo contribuições"
-              >
-                {heatmapCells.map((col, ci) => (
-                  <div key={ci} className="broto-prog-heat-col broto-prog-heat-col--github">
-                    {col.map((cell) => {
-                      const tip = cell.future
-                        ? ''
-                        : cell.answered <= 0
-                          ? `${cell.iso}: sem atividade`
-                          : `${cell.iso}: ${cell.answered} questão${cell.answered === 1 ? '' : 'es'}`
-                      return (
-                        <div
-                          key={cell.iso}
-                          className={`broto-prog-heat-cell broto-prog-heat-cell--github broto-prog-heat-cell--${cell.level}${cell.future ? ' broto-prog-heat-cell--future' : ''}${cell.isToday ? ' broto-prog-heat-cell--today' : ''}`}
-                          title={tip}
-                        />
-                      )
-                    })}
-                  </div>
-                ))}
+              <div className="broto-prog-heat-body-row">
+                <div className="broto-prog-heat-rows broto-prog-heat-rows--github" aria-hidden>
+                  {HEATMAP_GITHUB_ROW_LABELS.map((lb, i) => (
+                    <span key={i} className="broto-prog-heat-row-label">
+                      {lb ?? '\u00a0'}
+                    </span>
+                  ))}
+                </div>
+                <div
+                  className="broto-prog-heat-grid broto-prog-heat-grid--github"
+                  role="img"
+                  aria-label="Mapa de calor de prática por dia, estilo contribuições"
+                >
+                  {heatmapCells.map((col, ci) => (
+                    <div key={ci} className="broto-prog-heat-col broto-prog-heat-col--github">
+                      {col.map((cell) => {
+                        const tip = cell.future
+                          ? ''
+                          : cell.answered <= 0
+                            ? `${cell.iso}: sem atividade`
+                            : `${cell.iso}: ${cell.answered} questão${cell.answered === 1 ? '' : 'es'}`
+                        return (
+                          <div
+                            key={cell.iso}
+                            className={`broto-prog-heat-cell broto-prog-heat-cell--github broto-prog-heat-cell--${cell.level}${cell.future ? ' broto-prog-heat-cell--future' : ''}${cell.isToday ? ' broto-prog-heat-cell--today' : ''}`}
+                            title={tip}
+                          />
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="broto-prog-heat-gh-footer">
-          <p className="broto-prog-heat-hint broto-prog-heat-hint--github">
-            Quanto mais questões no dia, mais intenso o verde. Contorno = hoje.
-          </p>
-          <div className="broto-prog-heat-legend broto-prog-heat-legend--github">
-            <span className="broto-prog-heat-legend__label">Menos</span>
-            <div className="broto-prog-heat-legend-boxes" aria-hidden>
-              {[0, 1, 2, 3, 4].map((lv) => (
-                <span key={lv} className={`broto-prog-heat-legend-box broto-prog-heat-legend-box--${lv}`} />
-              ))}
+          <div className="broto-prog-heat-gh-footer">
+            <p className="broto-prog-heat-hint broto-prog-heat-hint--github">
+              Quanto mais questões no dia, mais intenso o verde. Contorno = hoje.
+            </p>
+            <div className="broto-prog-heat-legend broto-prog-heat-legend--github">
+              <span className="broto-prog-heat-legend__label">Menos</span>
+              <div className="broto-prog-heat-legend-boxes" aria-hidden>
+                {[0, 1, 2, 3, 4].map((lv) => (
+                  <span
+                    key={lv}
+                    className={`broto-prog-heat-legend-box broto-prog-heat-legend-box--${lv}`}
+                  />
+                ))}
+              </div>
+              <span className="broto-prog-heat-legend__label">Mais</span>
             </div>
-            <span className="broto-prog-heat-legend__label">Mais</span>
           </div>
-        </div>
         </div>
       </div>
     </section>

@@ -197,10 +197,9 @@ export function Home() {
       revisaoLinha: reviewCopy.title,
       areaSlug: reviewCopy.areaSlug,
       topicAnswerCount: reviewCopy.topicAnswerCount,
-      contextualHint:
-        reviewCopy.topicAnswerCount === undefined ? reviewCopy.subtitle : undefined,
-      todayRoutineAreaLabel: today?.ehDescanso ? null : today?.area?.label ?? null,
-      todayRoutineAreaSlug: today?.ehDescanso ? null : today?.area?.value ?? null,
+      contextualHint: reviewCopy.topicAnswerCount === undefined ? reviewCopy.subtitle : undefined,
+      todayRoutineAreaLabel: today?.ehDescanso ? null : (today?.area?.label ?? null),
+      todayRoutineAreaSlug: today?.ehDescanso ? null : (today?.area?.value ?? null),
       todayRoutineMinutes: today?.ehDescanso ? undefined : today?.duracaoMin,
       todayIsRoutineRest: Boolean(today?.ehDescanso),
     }
@@ -267,9 +266,9 @@ export function Home() {
                         Faça sua primeira sessão
                       </h2>
                       <p className="broto-home-first-mock-cta__text">
-                        É uma experiência no <strong>estilo simulado</strong> — bloco com quantidade à sua escolha
-                        e tempo opcional. Em poucos minutos você experimenta o formato do ENEM e ganha um ponto
-                        de partida; recomendamos logo após o cadastro.
+                        É uma experiência no <strong>estilo simulado</strong> — bloco com quantidade
+                        à sua escolha e tempo opcional. Em poucos minutos você experimenta o formato
+                        do ENEM e ganha um ponto de partida; recomendamos logo após o cadastro.
                       </p>
                       <Link to="/study/mock-exam" className="broto-home-first-mock-cta__btn">
                         Começar sessão ENEM

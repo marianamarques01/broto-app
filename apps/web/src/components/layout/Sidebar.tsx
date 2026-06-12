@@ -1,13 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import {
-  Home,
-  CalendarCheck,
-  MessageCircle,
-  LogOut,
-  GraduationCap,
-  Settings,
-} from 'lucide-react'
+import { Home, CalendarCheck, MessageCircle, LogOut, GraduationCap, Settings } from 'lucide-react'
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
 
 const NAV_ITEMS: {
@@ -102,7 +95,11 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             <span className="broto-sidebar__link-label">{item.label}</span>
           </NavLink>
         ))}
-        <button type="button" className="broto-sidebar__link broto-sidebar__link--logout" onClick={handleSignOut}>
+        <button
+          type="button"
+          className="broto-sidebar__link broto-sidebar__link--logout"
+          onClick={handleSignOut}
+        >
           <LogOut size={20} className="broto-sidebar__link-icon" aria-hidden />
           <span className="broto-sidebar__link-label">Logout</span>
         </button>

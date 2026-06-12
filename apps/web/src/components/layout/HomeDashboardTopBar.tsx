@@ -38,15 +38,14 @@ export function HomeDashboardTopBar({
       </div>
       <div className="broto-topbar__actions">
         {enemLabel ? (
-          <span className="broto-enem-pill" title="Contagem regressiva até a primeira prova (referência ENEM 2026)">
+          <span
+            className="broto-enem-pill"
+            title="Contagem regressiva até a primeira prova (referência ENEM 2026)"
+          >
             {enemLabel}
           </span>
         ) : null}
-        <Link
-          id={mockExamAnchorId}
-          to="/study/mock-exam"
-          className="broto-home-mock-pill"
-        >
+        <Link id={mockExamAnchorId} to="/study/mock-exam" className="broto-home-mock-pill">
           <ClipboardList size={16} strokeWidth={2} aria-hidden />
           Sessão ENEM
         </Link>

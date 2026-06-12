@@ -61,8 +61,7 @@ export function HomeRightSidebar({
   )
 
   const achievements = useMemo(
-    () =>
-      buildAchievementRows(progress?.totalAnswered ?? 0, progress?.accuracyPct ?? 0),
+    () => buildAchievementRows(progress?.totalAnswered ?? 0, progress?.accuracyPct ?? 0),
     [progress?.totalAnswered, progress?.accuracyPct],
   )
 

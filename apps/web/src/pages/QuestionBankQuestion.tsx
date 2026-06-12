@@ -297,9 +297,7 @@ export function QuestionBankQuestion() {
                     ? `${currentIndex + 1} de ${sequence.length}`
                     : 'Questão avulsa'}
                 </strong>
-                <p>
-                  A navegação respeita os filtros e a busca usados no banco de questões.
-                </p>
+                <p>A navegação respeita os filtros e a busca usados no banco de questões.</p>
               </div>
               <div className="broto-qbank-question-aside-card">
                 <span className="broto-qbank-question-aside-label">Detalhes</span>
@@ -308,8 +306,7 @@ export function QuestionBankQuestion() {
                   {currentRow?.topicoLabel ?? 'Tópico geral'}
                 </p>
                 <p className="broto-qbank-question-meta">
-                  <Clock size={14} aria-hidden />
-                  ~{estimatedMinutes(questionRoute.index)} min
+                  <Clock size={14} aria-hidden />~{estimatedMinutes(questionRoute.index)} min
                 </p>
                 <p className="broto-qbank-question-meta">
                   <Gauge size={14} aria-hidden />

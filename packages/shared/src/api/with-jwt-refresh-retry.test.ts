@@ -15,9 +15,9 @@ describe('withJwtRefreshRetry', () => {
     })
     const refresh = vi.fn(async () => true)
 
-    await expect(
-      withJwtRefreshRetry(attempt, refresh, (e) => e instanceof E401),
-    ).resolves.toBe('ok')
+    await expect(withJwtRefreshRetry(attempt, refresh, (e) => e instanceof E401)).resolves.toBe(
+      'ok',
+    )
 
     expect(attempt).toHaveBeenCalledTimes(2)
     expect(refresh).toHaveBeenCalledTimes(1)
@@ -43,9 +43,9 @@ describe('withJwtRefreshRetry', () => {
     })
     const refresh = vi.fn(async () => true)
 
-    await expect(
-      withJwtRefreshRetry(attempt, refresh, (e) => e instanceof E401),
-    ).rejects.toThrow('nope')
+    await expect(withJwtRefreshRetry(attempt, refresh, (e) => e instanceof E401)).rejects.toThrow(
+      'nope',
+    )
 
     expect(attempt).toHaveBeenCalledTimes(1)
     expect(refresh).not.toHaveBeenCalled()

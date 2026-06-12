@@ -234,95 +234,106 @@ export function useQuestionsFilters(options?: {
   }, [baseUrl])
 
   useEffect(() => {
-    void loadInitialData()
+    async function load() {
+      await loadInitialData()
+    }
+
+    void load()
   }, [loadInitialData])
 
-  useEffect(() => {
-    if (!areas.length) return
+  const [prevAreasLength, setPrevAreasLength] = useState(0)
+  if (areas.length > 0 && areas.length !== prevAreasLength) {
+    setPrevAreasLength(areas.length)
     if (preferredArea != null && preferredArea !== '') {
       if (areas.some((a) => a.value === preferredArea)) {
         setSelectedArea(preferredArea)
       }
-      return
-    }
-    if (autoSelectFirstArea) {
+    } else if (autoSelectFirstArea) {
       setSelectedArea((cur) => cur || areas[0]!.value)
     }
-  }, [areas, preferredArea, autoSelectFirstArea])
+  }
 
   useEffect(() => {
-    if (!selectedArea) {
-      setTopicos([])
-      topicosRef.current = []
-      setSelectedTopico('')
-      setSelectedLanguage('')
-      return
-    }
-    fetchTopics(baseUrl, selectedArea)
-      .then((data) => {
+    async function loadTopics() {
+      if (!selectedArea) {
+        setTopicos([])
+        topicosRef.current = []
+        setSelectedTopico('')
+        setSelectedLanguage('')
+        return
+      }
+
+      try {
+        const data = await fetchTopics(baseUrl, selectedArea)
         const list = selectedArea === LINGUAGENS_AREA_VALUE ? [IDIOMAS_TOPIC, ...data] : data
         setTopicos(list)
         topicosRef.current = list
-      })
-      .catch((err) => {
+      } catch (err) {
         setTopicos([])
         topicosRef.current = []
         setError(err instanceof Error ? err.message : 'Erro ao carregar tópicos')
-      })
-    if (preserveInitialTopicFiltersRef.current) {
-      preserveInitialTopicFiltersRef.current = false
-      return
+      }
+
+      if (preserveInitialTopicFiltersRef.current) {
+        preserveInitialTopicFiltersRef.current = false
+        return
+      }
+      setSelectedTopico('')
+      setSelectedLanguage('')
     }
-    setSelectedTopico('')
-    setSelectedLanguage('')
+
+    void loadTopics()
   }, [selectedArea, baseUrl])
 
   const isIdiomasTopicSelected = selectedTopico === IDIOMAS_TOPIC_ID
 
   useEffect(() => {
-    if (!enableQuestionFetch || !selectedArea) {
-      setQuestions([])
-      setLoadingQuestions(false)
-      return
-    }
-    setLoadingQuestions(true)
-    setError(null)
-    const topicoValue = topicosRef.current.find((t) => t.id === selectedTopico)?.value
+    async function loadQuestions() {
+      if (!enableQuestionFetch || !selectedArea) {
+        setQuestions([])
+        setLoadingQuestions(false)
+        return
+      }
 
-    const run = async () => {
-      if (isIdiomasTopicSelected) {
-        const langs = selectedLanguage ? [selectedLanguage] : ['ingles', 'espanhol']
-        const results = await Promise.all(
-          langs.map((lang) =>
-            searchQuestions({
-              baseUrl,
-              area: selectedArea,
-              year: selectedYear || undefined,
-              language: lang,
-              limit: IDIOMAS_QUESTIONS_LIMIT,
-            }),
-          ),
-        )
-        setQuestions(results.flatMap((r) => r.questions))
-      } else {
-        const result = await searchQuestions({
-          baseUrl,
-          area: selectedArea,
-          year: selectedYear || undefined,
-          topicoId: selectedTopico || undefined,
-          topicoValue,
-          limit: QUESTIONS_LIMIT,
-        })
-        setQuestions(result.questions)
+      setLoadingQuestions(true)
+      setError(null)
+      const topicoValue = topicosRef.current.find((t) => t.id === selectedTopico)?.value
+
+      try {
+        if (isIdiomasTopicSelected) {
+          const langs = selectedLanguage ? [selectedLanguage] : ['ingles', 'espanhol']
+          const results = await Promise.all(
+            langs.map((lang) =>
+              searchQuestions({
+                baseUrl,
+                area: selectedArea,
+                year: selectedYear || undefined,
+                language: lang,
+                limit: IDIOMAS_QUESTIONS_LIMIT,
+              }),
+            ),
+          )
+          setQuestions(results.flatMap((r) => r.questions))
+        } else {
+          const result = await searchQuestions({
+            baseUrl,
+            area: selectedArea,
+            year: selectedYear || undefined,
+            topicoId: selectedTopico || undefined,
+            topicoValue,
+            limit: QUESTIONS_LIMIT,
+          })
+          setQuestions(result.questions)
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao buscar questoes')
+        setQuestions([])
+      } finally {
+        setLoadingQuestions(false)
       }
     }
 
-    run()
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : 'Erro ao buscar questoes')
-        setQuestions([])
-      })
-      .finally(() => setLoadingQuestions(false))
+    void loadQuestions()
   }, [
     enableQuestionFetch,
     baseUrl,

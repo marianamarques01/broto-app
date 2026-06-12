@@ -1,12 +1,8 @@
 import { useOrganization } from '@/contexts/OrganizationContext'
 
 export function OrganizationSwitcher() {
-  const {
-    memberships,
-    effectiveActiveOrganizationId,
-    setActiveOrganization,
-    loading,
-  } = useOrganization()
+  const { memberships, effectiveActiveOrganizationId, setActiveOrganization, loading } =
+    useOrganization()
 
   if (loading || memberships.length <= 1) return null
 
@@ -18,11 +14,7 @@ export function OrganizationSwitcher() {
       <select
         id="org-switcher"
         className="broto-input"
-        value={
-          effectiveActiveOrganizationId ??
-          memberships[0]?.organizationId ??
-          ''
-        }
+        value={effectiveActiveOrganizationId ?? memberships[0]?.organizationId ?? ''}
         onChange={(e) => {
           const id = e.target.value
           if (id) void setActiveOrganization(id)

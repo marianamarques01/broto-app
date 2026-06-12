@@ -1,9 +1,5 @@
 import { getQuestionId } from '../types/question'
-import {
-  MOCK_EXAM_AREA_LINGUAGENS,
-  MOCK_EXAM_YEAR_MAX,
-  MOCK_EXAM_YEAR_MIN,
-} from './constants'
+import { MOCK_EXAM_AREA_LINGUAGENS, MOCK_EXAM_YEAR_MAX, MOCK_EXAM_YEAR_MIN } from './constants'
 import type { MockExamPoolEntry } from './types'
 
 const topicMappingCache = new Map<string, Record<string, string>>()
@@ -44,10 +40,7 @@ async function fetchExamsYears(baseUrl: string): Promise<number[]> {
   if (!Array.isArray(data)) return []
   return data
     .map((e: { year?: number }) => Number(e?.year))
-    .filter(
-      (y: number) =>
-        Number.isFinite(y) && y >= MOCK_EXAM_YEAR_MIN && y <= MOCK_EXAM_YEAR_MAX,
-    )
+    .filter((y: number) => Number.isFinite(y) && y >= MOCK_EXAM_YEAR_MIN && y <= MOCK_EXAM_YEAR_MAX)
 }
 
 export interface LoadMockExamPoolParams {
@@ -72,7 +65,9 @@ function yearsToSearch(allYears: number[], filterYears: number[]): number[] {
  * Carrega referências de todas as questões do storage que obedecem aos filtros.
  * Espelha a lógica de `searchQuestions` em `apps/web/src/hooks/useQuestionsFilters.ts`.
  */
-export async function loadMockExamPool(params: LoadMockExamPoolParams): Promise<MockExamPoolEntry[]> {
+export async function loadMockExamPool(
+  params: LoadMockExamPoolParams,
+): Promise<MockExamPoolEntry[]> {
   const {
     baseUrl,
     randomMode,
@@ -101,8 +96,7 @@ export async function loadMockExamPool(params: LoadMockExamPoolParams): Promise<
     )
   }
 
-  const areaSet =
-    !randomMode && areaValues.length > 0 ? new Set(areaValues) : null
+  const areaSet = !randomMode && areaValues.length > 0 ? new Set(areaValues) : null
 
   const allRefs: MockExamPoolEntry[] = []
 

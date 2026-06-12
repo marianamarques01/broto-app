@@ -36,10 +36,7 @@ function mergeByAreaWithServer(
 ): DailyMissionsState['byArea'] {
   const server = sanitizeStudyTodayByArea(serverToday)
   if (Object.keys(server).length === 0) return daily.byArea
-  const keys = new Set([
-    ...Object.keys(daily.byArea),
-    ...Object.keys(server),
-  ])
+  const keys = new Set([...Object.keys(daily.byArea), ...Object.keys(server)])
   const out: DailyMissionsState['byArea'] = {}
   for (const k of keys) {
     const l = daily.byArea[k] ?? { answered: 0, correct: 0 }

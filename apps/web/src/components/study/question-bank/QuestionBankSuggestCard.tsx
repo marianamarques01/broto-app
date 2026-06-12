@@ -30,7 +30,11 @@ export function QuestionBankSuggestCard({
 
   return (
     <li>
-      <button type="button" className="broto-qbank-card broto-qbank-card--suggest" onClick={() => onOpen(row)}>
+      <button
+        type="button"
+        className="broto-qbank-card broto-qbank-card--suggest"
+        onClick={() => onOpen(row)}
+      >
         <span className="broto-qbank-suggest-reason">{reasonLabel}</span>
         <div className="broto-qbank-card-top">
           <div className="broto-qbank-card-badges">
@@ -62,7 +66,9 @@ export function QuestionBankSuggestCard({
         <p className="broto-qbank-card-preview">{row.preview}</p>
         <div className="broto-qbank-card-bottom">
           {compactMeta ? (
-            <span className="broto-qbank-meta-item broto-qbank-meta-item--muted">Toque para resolver</span>
+            <span className="broto-qbank-meta-item broto-qbank-meta-item--muted">
+              Toque para resolver
+            </span>
           ) : (
             <div className="broto-qbank-card-meta">
               <span className="broto-qbank-meta-item">
@@ -72,9 +78,15 @@ export function QuestionBankSuggestCard({
               <span className="broto-qbank-meta-item">
                 Dificuldade
                 <span className="broto-qbank-diff-dots" aria-hidden>
-                  <span className={`broto-qbank-diff-dot${dots >= 1 ? ' broto-qbank-diff-dot--on' : ''}`} />
-                  <span className={`broto-qbank-diff-dot${dots >= 2 ? ' broto-qbank-diff-dot--on' : ''}`} />
-                  <span className={`broto-qbank-diff-dot${dots >= 3 ? ' broto-qbank-diff-dot--on' : ''}`} />
+                  <span
+                    className={`broto-qbank-diff-dot${dots >= 1 ? ' broto-qbank-diff-dot--on' : ''}`}
+                  />
+                  <span
+                    className={`broto-qbank-diff-dot${dots >= 2 ? ' broto-qbank-diff-dot--on' : ''}`}
+                  />
+                  <span
+                    className={`broto-qbank-diff-dot${dots >= 3 ? ' broto-qbank-diff-dot--on' : ''}`}
+                  />
                 </span>
               </span>
             </div>

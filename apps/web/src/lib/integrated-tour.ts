@@ -271,7 +271,9 @@ export function readIntegratedTourPersist(): IntegratedTourPersist | null {
     }
     const step = typeof parsed.step === 'number' && parsed.step >= 0 ? parsed.step : 0
     const contentVersion =
-      typeof parsed.contentVersion === 'string' ? parsed.contentVersion : INTEGRATED_TOUR_CONTENT_VERSION
+      typeof parsed.contentVersion === 'string'
+        ? parsed.contentVersion
+        : INTEGRATED_TOUR_CONTENT_VERSION
     return { status: parsed.status, step, contentVersion }
   } catch {
     return null

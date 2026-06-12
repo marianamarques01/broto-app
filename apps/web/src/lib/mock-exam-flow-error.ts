@@ -10,7 +10,9 @@ export function formatMockExamFlowError(err: unknown): string {
   const raw = err instanceof Error ? err.message : String(err)
   const likelyNetwork =
     err instanceof TypeError ||
-    (typeof DOMException !== 'undefined' && err instanceof DOMException && err.name === 'NetworkError') ||
+    (typeof DOMException !== 'undefined' &&
+      err instanceof DOMException &&
+      err.name === 'NetworkError') ||
     /NetworkError when attempting|Failed to fetch|Load failed|Network request failed/i.test(raw)
 
   if (likelyNetwork) {

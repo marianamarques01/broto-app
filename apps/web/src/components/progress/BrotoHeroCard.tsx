@@ -157,7 +157,10 @@ export function BrotoHeroCard({
   )
 
   const phaseIndex = Math.max(0, FASE_ORDER.indexOf(fase))
-  const streakWeekFill = Math.min(100, (Math.min(streak, STREAK_WEEK_GOAL) / STREAK_WEEK_GOAL) * 100)
+  const streakWeekFill = Math.min(
+    100,
+    (Math.min(streak, STREAK_WEEK_GOAL) / STREAK_WEEK_GOAL) * 100,
+  )
 
   const handleRewardClick = useCallback(() => {
     if (!metaMet || loadingPet) return
@@ -192,9 +195,7 @@ export function BrotoHeroCard({
                 <span className="broto-hero-card__level-sep" aria-hidden>
                   ·
                 </span>
-                <span className="broto-hero-card__level-num">
-                  nv. {loadingPet ? '…' : nivel}
-                </span>
+                <span className="broto-hero-card__level-num">nv. {loadingPet ? '…' : nivel}</span>
               </p>
               <span className="broto-hero-card__mood-chip" title={emotional.moodLabel}>
                 <span className="broto-hero-card__mood-chip-emoji" aria-hidden>

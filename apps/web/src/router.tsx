@@ -29,7 +29,9 @@ const Landing = lazy(() => import('@/pages/Landing').then((m) => ({ default: m.L
 const Login = lazy(() => import('@/pages/Login').then((m) => ({ default: m.Login })))
 const Signup = lazy(() => import('@/pages/Signup').then((m) => ({ default: m.Signup })))
 const Onboarding = lazy(() => import('@/pages/Onboarding').then((m) => ({ default: m.Onboarding })))
-const AppShell = lazy(() => import('@/components/layout/AppShell').then((m) => ({ default: m.AppShell })))
+const AppShell = lazy(() =>
+  import('@/components/layout/AppShell').then((m) => ({ default: m.AppShell })),
+)
 const Home = lazy(() => import('@/pages/Home').then((m) => ({ default: m.Home })))
 const QuestionBankCatalog = lazy(() =>
   import('@/pages/QuestionBankCatalog').then((m) => ({ default: m.QuestionBankCatalog })),
@@ -43,10 +45,18 @@ const JoinClass = lazy(() => import('@/pages/JoinClass').then((m) => ({ default:
 const BrotoPage = lazy(() => import('@/pages/BrotoPage').then((m) => ({ default: m.BrotoPage })))
 const Settings = lazy(() => import('@/pages/Settings').then((m) => ({ default: m.Settings })))
 const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
-const MockExamConfig = lazy(() => import('@/pages/MockExamConfig').then((m) => ({ default: m.MockExamConfig })))
-const MockExamHistory = lazy(() => import('@/pages/MockExamHistory').then((m) => ({ default: m.MockExamHistory })))
-const MockExamPlay = lazy(() => import('@/pages/MockExamPlay').then((m) => ({ default: m.MockExamPlay })))
-const MockExamResult = lazy(() => import('@/pages/MockExamResult').then((m) => ({ default: m.MockExamResult })))
+const MockExamConfig = lazy(() =>
+  import('@/pages/MockExamConfig').then((m) => ({ default: m.MockExamConfig })),
+)
+const MockExamHistory = lazy(() =>
+  import('@/pages/MockExamHistory').then((m) => ({ default: m.MockExamHistory })),
+)
+const MockExamPlay = lazy(() =>
+  import('@/pages/MockExamPlay').then((m) => ({ default: m.MockExamPlay })),
+)
+const MockExamResult = lazy(() =>
+  import('@/pages/MockExamResult').then((m) => ({ default: m.MockExamResult })),
+)
 
 export const router = createBrowserRouter([
   { path: '/inicio', element: SuspenseWrapped(<Landing />) },

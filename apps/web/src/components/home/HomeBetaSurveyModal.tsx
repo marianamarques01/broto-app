@@ -54,11 +54,7 @@ export function HomeBetaSurveyModal({
   if (!open) return null
 
   return (
-    <div
-      className="broto-mock-exam-info-modal-backdrop"
-      role="presentation"
-      onClick={onDismiss}
-    >
+    <div className="broto-mock-exam-info-modal-backdrop" role="presentation" onClick={onDismiss}>
       <div
         className="broto-mock-exam-info-modal broto-home-beta-survey-modal"
         role="dialog"
@@ -91,7 +87,11 @@ export function HomeBetaSurveyModal({
           >
             Responder mais tarde
           </button>
-          <button type="button" className="broto-home-beta-survey-modal__done" onClick={onMarkAnswered}>
+          <button
+            type="button"
+            className="broto-home-beta-survey-modal__done"
+            onClick={onMarkAnswered}
+          >
             Já respondi!
           </button>
         </div>

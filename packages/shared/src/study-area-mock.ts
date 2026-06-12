@@ -487,7 +487,11 @@ Charges, tirinhas, propaganda, notícia, crônica, artigo de opinião e literatu
           'Um artigo afirma que “a pressa é inimiga da clareza” e em seguida descreve erros comuns em relatórios. A principal função da metáfora inicial é:',
         alternatives: [
           { letter: 'A', text: 'Antecipar o tom irónico do título', isCorrect: false },
-          { letter: 'B', text: 'Sintetizar a ideia de que rapidez compromete a compreensão', isCorrect: true },
+          {
+            letter: 'B',
+            text: 'Sintetizar a ideia de que rapidez compromete a compreensão',
+            isCorrect: true,
+          },
           { letter: 'C', text: 'Caracterizar o ritmo da linguagem oral', isCorrect: false },
           { letter: 'D', text: 'Substituir dados estatísticos', isCorrect: false },
           { letter: 'E', text: 'Indicar que o texto é literário-ficcional', isCorrect: false },
@@ -614,8 +618,16 @@ Esteja confortável para reconhecer **marcas de estilo** em trechos de: Gregóri
           'Em um conto, o narrador afirma que “ninguém sai ileso do próprio mito”. Esse tipo de formulação tende a configurar:',
         alternatives: [
           { letter: 'A', text: 'Descrição naturalista de laboratório', isCorrect: false },
-          { letter: 'B', text: 'Reflexão sobre identidade e narrativas que moldam o sujeito', isCorrect: true },
-          { letter: 'C', text: 'Relato estritamente documental sem camada simbólica', isCorrect: false },
+          {
+            letter: 'B',
+            text: 'Reflexão sobre identidade e narrativas que moldam o sujeito',
+            isCorrect: true,
+          },
+          {
+            letter: 'C',
+            text: 'Relato estritamente documental sem camada simbólica',
+            isCorrect: false,
+          },
           { letter: 'D', text: 'Panfleto publicitário', isCorrect: false },
           { letter: 'E', text: 'Manual de regras gramaticais', isCorrect: false },
         ],
@@ -628,7 +640,11 @@ Esteja confortável para reconhecer **marcas de estilo** em trechos de: Gregóri
         alternatives: [
           { letter: 'A', text: 'Tropicalismo dos anos 1970', isCorrect: false },
           { letter: 'B', text: 'Fitinha de frevo', isCorrect: false },
-          { letter: 'C', text: 'Marcas associáveis ao Arcadismo ou barroco tardio de feição culta', isCorrect: true },
+          {
+            letter: 'C',
+            text: 'Marcas associáveis ao Arcadismo ou barroco tardio de feição culta',
+            isCorrect: true,
+          },
           { letter: 'D', text: 'Poesia concreta', isCorrect: false },
           { letter: 'E', text: 'Cordel contemporâneo nordestino', isCorrect: false },
         ],
@@ -639,14 +655,22 @@ Esteja confortável para reconhecer **marcas de estilo** em trechos de: Gregóri
         question:
           'Trecho em 3ª pessoa com focalização limitada em um adolescente. O leitor pode afirmar, sem extrapolar:',
         alternatives: [
-          { letter: 'A', text: 'Todos os personagens pensam exatamente o que o narrador diz', isCorrect: false },
+          {
+            letter: 'A',
+            text: 'Todos os personagens pensam exatamente o que o narrador diz',
+            isCorrect: false,
+          },
           {
             letter: 'B',
             text: 'O acesso a pensamentos se restringe, em regra, à consciência acompanhada',
             isCorrect: true,
           },
           { letter: 'C', text: 'Há certeza de autobiografia real do autor', isCorrect: false },
-          { letter: 'D', text: 'O narrador é sempre personagem cúmplice em 1ª pessoa', isCorrect: false },
+          {
+            letter: 'D',
+            text: 'O narrador é sempre personagem cúmplice em 1ª pessoa',
+            isCorrect: false,
+          },
           { letter: 'E', text: 'O texto é epístola obrigatória', isCorrect: false },
         ],
         explanation:
@@ -781,7 +805,11 @@ Verbo-nome **exige** complemento fixo? Preposição **obrigatória**? **Caso** d
         question: 'Crase opcional por **eufonia** ocorre tipicamente em:',
         alternatives: [
           { letter: 'A', text: 'Substantivo masculino iniciado por consoante', isCorrect: false },
-          { letter: 'B', text: 'Palavra cujo início evita choque de sons iguais (ex.: *à_f* / gesto de pausa)', isCorrect: true },
+          {
+            letter: 'B',
+            text: 'Palavra cujo início evita choque de sons iguais (ex.: *à_f* / gesto de pausa)',
+            isCorrect: true,
+          },
           { letter: 'C', text: 'Todos os verbos no infinitivo', isCorrect: false },
           { letter: 'D', text: 'Pronomes oblíquos átonos', isCorrect: false },
           { letter: 'E', text: 'Qualquer substantivo feminino sem artigo', isCorrect: false },
@@ -885,7 +913,11 @@ Figuras, gráficos e botões de CTA participam do gênero publicitário ou infor
           'Texto A apresenta dados de pesquisa sem adjetivação; Texto B conclama boicote a uma marca. A classificação mais adequada seria:',
         alternatives: [
           { letter: 'A', text: 'Ambos editoriais', isCorrect: false },
-          { letter: 'B', text: 'A como notícia ou fato; B como texto de opinião ou campanha', isCorrect: true },
+          {
+            letter: 'B',
+            text: 'A como notícia ou fato; B como texto de opinião ou campanha',
+            isCorrect: true,
+          },
           { letter: 'C', text: 'Ambos são verbetes de enciclopédia', isCorrect: false },
           { letter: 'D', text: 'A é poesia épica; B é receita culinária', isCorrect: false },
           { letter: 'E', text: 'A é fábula; B é laudo pericial obrigatório', isCorrect: false },
@@ -903,8 +935,7 @@ Figuras, gráficos e botões de CTA participam do gênero publicitário ou infor
           { letter: 'D', text: 'Formalizar contrato jurídico', isCorrect: false },
           { letter: 'E', text: 'Registrar patente científica', isCorrect: false },
         ],
-        explanation:
-          'Imperativo + apelo visual = persuasão publicitária com CTA.',
+        explanation: 'Imperativo + apelo visual = persuasão publicitária com CTA.',
       },
       {
         question:
@@ -1019,10 +1050,18 @@ Emigração, mídia, tecnologia e bilinguismo produzem **hibridismos** e **empr�
           'Professor corrige sotaque de aluno dizendo que “falar certo é falar como TV”. O texto-base mais provável para o ENEM criticaria:',
         alternatives: [
           { letter: 'A', text: 'Uso de tecnologia', isCorrect: false },
-          { letter: 'B', text: 'Pressuposto de superioridade de uma variedade em detrimento de identidade regional', isCorrect: true },
+          {
+            letter: 'B',
+            text: 'Pressuposto de superioridade de uma variedade em detrimento de identidade regional',
+            isCorrect: true,
+          },
           { letter: 'C', text: 'Importância da audição', isCorrect: false },
           { letter: 'D', text: 'Existência de fonemas', isCorrect: false },
-          { letter: 'E', text: 'Diferença entre língua e dialeto (negação absoluta)', isCorrect: false },
+          {
+            letter: 'E',
+            text: 'Diferença entre língua e dialeto (negação absoluta)',
+            isCorrect: false,
+          },
         ],
         explanation:
           'Crítica típica ao preconceito linguístico: confundir prestígio social com correção absoluta.',
@@ -1041,8 +1080,7 @@ Emigração, mídia, tecnologia e bilinguismo produzem **hibridismos** e **empr�
           'Adequação discursiva: mesma língua, registros diferentes — formalidade contextual.',
       },
       {
-        question:
-          'Empréstimo lexical (*feedback*, *delivery*) indica:',
+        question: 'Empréstimo lexical (*feedback*, *delivery*) indica:',
         alternatives: [
           { letter: 'A', text: 'Erro de digitação', isCorrect: false },
           { letter: 'B', text: 'Contato cultural e necessidade denominativa', isCorrect: true },
@@ -1148,10 +1186,22 @@ Não projetar conceitos atuais sem mediação histórica; identifique **fontes**
         question:
           'Um documento de 1850 defende a continuidade do tráfico negreiro ilegal por “economia”. A análise histórica adequada associa o texto a:',
         alternatives: [
-          { letter: 'A', text: 'Defesa plebeu dos direitos trabalhistas urbanos', isCorrect: false },
-          { letter: 'B', text: 'Interesses escravocratas ligados a exportações de valor', isCorrect: true },
+          {
+            letter: 'A',
+            text: 'Defesa plebeu dos direitos trabalhistas urbanos',
+            isCorrect: false,
+          },
+          {
+            letter: 'B',
+            text: 'Interesses escravocratas ligados a exportações de valor',
+            isCorrect: true,
+          },
           { letter: 'C', text: 'Movimento abolicionista radical da Corte', isCorrect: false },
-          { letter: 'D', text: 'Industrialização massiva do Sudeste já consumada', isCorrect: false },
+          {
+            letter: 'D',
+            text: 'Industrialização massiva do Sudeste já consumada',
+            isCorrect: false,
+          },
           { letter: 'E', text: 'Confirmação da República federativa', isCorrect: false },
         ],
         explanation:
@@ -1183,7 +1233,11 @@ Não projetar conceitos atuais sem mediação histórica; identifique **fontes**
           'Cartaz dos anos 1970 elogia “grandes obras” e silencia greves. Cogita-se o contexto de:',
         alternatives: [
           { letter: 'A', text: 'Primeira República e cafeicultura', isCorrect: false },
-          { letter: 'B', text: 'Regime autoritário com propaganda de desenvolvimento', isCorrect: true },
+          {
+            letter: 'B',
+            text: 'Regime autoritário com propaganda de desenvolvimento',
+            isCorrect: true,
+          },
           { letter: 'C', text: 'Confederação do Equador', isCorrect: false },
           { letter: 'D', text: 'Diretas já plebiscito de 1824', isCorrect: false },
           { letter: 'E', text: 'Revolução Farroupilha isolada', isCorrect: false },
@@ -1292,8 +1346,7 @@ Mesmo fenômeno (migração, conflito ambiental) muda de significado se lido em 
           { letter: 'D', text: 'Latitude exclusivamente', isCorrect: false },
           { letter: 'E', text: 'Tipos de solo laterítico', isCorrect: false },
         ],
-        explanation:
-          'Reconhecimento diplomático é dimensão clássica da geografia política.',
+        explanation: 'Reconhecimento diplomático é dimensão clássica da geografia política.',
       },
       {
         question:
@@ -1301,7 +1354,11 @@ Mesmo fenômeno (migração, conflito ambiental) muda de significado se lido em 
         alternatives: [
           { letter: 'A', text: 'Isolamento comercial total', isCorrect: false },
           { letter: 'B', text: 'Intensificação de fluxos intra-bloco', isCorrect: true },
-          { letter: 'C', text: 'Extinção de fronteiras internas administrativas locais', isCorrect: false },
+          {
+            letter: 'C',
+            text: 'Extinção de fronteiras internas administrativas locais',
+            isCorrect: false,
+          },
           { letter: 'D', text: 'Congelamento de migrações', isCorrect: false },
           { letter: 'E', text: 'Eliminação de moeda nacional sem exceção', isCorrect: false },
         ],
@@ -1435,8 +1492,7 @@ Platão (Ideias, justiça na *República*), Aristóteles (virtude e meio-termo),
           { letter: 'D', text: 'Epicurismo sobre deuses intervenientes', isCorrect: false },
           { letter: 'E', text: 'Maquiavel sobre fortuna exclusiva', isCorrect: false },
         ],
-        explanation:
-          'Rawls diferencia desigualdades só se beneficiarem os menos favorecidos.',
+        explanation: 'Rawls diferencia desigualdades só se beneficiarem os menos favorecidos.',
       },
       {
         question:
@@ -1573,8 +1629,7 @@ Explicar desigualdade só por “natureza” ignora **história** e **instituiç
           { letter: 'D', text: 'Laboratório duplo-cego farmacêutico', isCorrect: false },
           { letter: 'E', text: 'Censo demográfico integral anual', isCorrect: false },
         ],
-        explanation:
-          'Etnografia busca compreensão densa (Geertz) via participação observacional.',
+        explanation: 'Etnografia busca compreensão densa (Geertz) via participação observacional.',
       },
       {
         question:
@@ -1705,10 +1760,22 @@ Interprete **perfil climático**, **hidrograma**, **rota de ciclone** e **cartas
         question:
           'Em região equatorial oceânica com alta insolação uniforme ao longo do ano, amplitude térmica diária tende a:',
         alternatives: [
-          { letter: 'A', text: 'Ser maior que anual média de altas latitudes interiores', isCorrect: false },
-          { letter: 'B', text: 'Permanecer moderada diariamente face à nuvenidade', isCorrect: true },
+          {
+            letter: 'A',
+            text: 'Ser maior que anual média de altas latitudes interiores',
+            isCorrect: false,
+          },
+          {
+            letter: 'B',
+            text: 'Permanecer moderada diariamente face à nuvenidade',
+            isCorrect: true,
+          },
           { letter: 'C', text: 'Zerar sempre', isCorrect: false },
-          { letter: 'D', text: 'Depender só da longitude absoluta ignorando mar', isCorrect: false },
+          {
+            letter: 'D',
+            text: 'Depender só da longitude absoluta ignorando mar',
+            isCorrect: false,
+          },
           { letter: 'E', text: 'Inverter com salinidade', isCorrect: false },
         ],
         explanation:
@@ -1718,7 +1785,11 @@ Interprete **perfil climático**, **hidrograma**, **rota de ciclone** e **cartas
         question:
           'Rio com planície de inundação ampla na foz transporta sedimentos finos que formam levee natural. Processo dominante na foz:',
         alternatives: [
-          { letter: 'A', text: 'Transporte e deposição fluvial em ambiente de baixa energia', isCorrect: true },
+          {
+            letter: 'A',
+            text: 'Transporte e deposição fluvial em ambiente de baixa energia',
+            isCorrect: true,
+          },
           { letter: 'B', text: 'Fusões magmáticas profundas exclusivas', isCorrect: false },
           { letter: 'C', text: 'Abrasão eólica em dunas polares', isCorrect: false },
           { letter: 'D', text: 'Cultura de coral em altiplano', isCorrect: false },
@@ -1824,16 +1895,23 @@ Polinização, purificação hídrica, regulação climática — frequentemente
     ],
     practiceQuestions: [
       {
-        question:
-          'Redução drástica de espécie herbívora pode, a médio prazo, provocar:',
+        question: 'Redução drástica de espécie herbívora pode, a médio prazo, provocar:',
         alternatives: [
-          { letter: 'A', text: 'Certeza de aumento ilimitado de todos os produtores', isCorrect: false },
+          {
+            letter: 'A',
+            text: 'Certeza de aumento ilimitado de todos os produtores',
+            isCorrect: false,
+          },
           {
             letter: 'B',
             text: 'Reorganização trófica — mais herbívoros competidores ou alteração vegetal, não linearidade simples',
             isCorrect: true,
           },
-          { letter: 'C', text: 'Desaparecimento de toda energia solar incidente', isCorrect: false },
+          {
+            letter: 'C',
+            text: 'Desaparecimento de toda energia solar incidente',
+            isCorrect: false,
+          },
           { letter: 'D', text: 'Fim do ciclo do nitrogênio', isCorrect: false },
           { letter: 'E', text: 'Cessação de decomposição fúngica global', isCorrect: false },
         ],
@@ -1841,8 +1919,7 @@ Polinização, purificação hídrica, regulação climática — frequentemente
           'Cascata trófica tem respostas dependentes de contexto; ENEM evita caos único, cobra tensões reguladoras.',
       },
       {
-        question:
-          'Lago eutrofizado por esgoto doméstico sem tratamento tende a:',
+        question: 'Lago eutrofizado por esgoto doméstico sem tratamento tende a:',
         alternatives: [
           { letter: 'A', text: 'Transparência alta e oligotrofia', isCorrect: false },
           {
@@ -1851,24 +1928,30 @@ Polinização, purificação hídrica, regulação climática — frequentemente
             isCorrect: true,
           },
           { letter: 'C', text: 'Congelamento permanente da cadeia alimentar', isCorrect: false },
-          { letter: 'D', text: 'Aumento homogêneo de pH acima de 12 em todos os pontos', isCorrect: false },
+          {
+            letter: 'D',
+            text: 'Aumento homogêneo de pH acima de 12 em todos os pontos',
+            isCorrect: false,
+          },
           { letter: 'E', text: 'Eliminação total de decompositores', isCorrect: false },
         ],
         explanation:
           'Nutrientes limitantes deixam de limitar algas → bloom → decomposição consome O₂ → anoxia.',
       },
       {
-        question:
-          'Corredor ecológico entre fragmentos florestais busca mitigar:',
+        question: 'Corredor ecológico entre fragmentos florestais busca mitigar:',
         alternatives: [
           { letter: 'A', text: 'Tectônica de placas', isCorrect: false },
-          { letter: 'B', text: 'Efeitos de fragmentação e isolamento populacional', isCorrect: true },
+          {
+            letter: 'B',
+            text: 'Efeitos de fragmentação e isolamento populacional',
+            isCorrect: true,
+          },
           { letter: 'C', text: 'Deriva continental exclusivamente', isCorrect: false },
           { letter: 'D', text: 'Fusão nuclear estelar', isCorrect: false },
           { letter: 'E', text: 'Marés neap sem lua', isCorrect: false },
         ],
-        explanation:
-          'Conectividade reduz efeitos de borda e permite fluxo gênico.',
+        explanation: 'Conectividade reduz efeitos de borda e permite fluxo gênico.',
       },
     ],
     mindMap: {
@@ -1966,8 +2049,7 @@ Combustíveis, plásticos, fármacos — interpretar fórmulas esqueléticas e p
     ],
     practiceQuestions: [
       {
-        question:
-          'Composto com grupo -COOH reage com NaOH aquoso produzindo principalmente:',
+        question: 'Composto com grupo -COOH reage com NaOH aquoso produzindo principalmente:',
         alternatives: [
           { letter: 'A', text: 'Éster', isCorrect: false },
           { letter: 'B', text: 'Sal carboxilato e água', isCorrect: true },
@@ -1975,15 +2057,21 @@ Combustíveis, plásticos, fármacos — interpretar fórmulas esqueléticas e p
           { letter: 'D', text: 'Haleto de alquila', isCorrect: false },
           { letter: 'E', text: 'Apenas hidrocarboneto apolar', isCorrect: false },
         ],
-        explanation:
-          'Neutralização ácido-base forma carboxilato dissolv + água.',
+        explanation: 'Neutralização ácido-base forma carboxilato dissolv + água.',
       },
       {
-        question:
-          'Molécula com fórmula C₄H₁₀ e ramificação apresenta frente à n-butano:',
+        question: 'Molécula com fórmula C₄H₁₀ e ramificação apresenta frente à n-butano:',
         alternatives: [
-          { letter: 'A', text: 'Mesma massa molecular mas menor ponto de ebulição em ramo (menor superfície)', isCorrect: true },
-          { letter: 'B', text: 'Sempre maior ponto de ebulição independentemente de ramificação', isCorrect: false },
+          {
+            letter: 'A',
+            text: 'Mesma massa molecular mas menor ponto de ebulição em ramo (menor superfície)',
+            isCorrect: true,
+          },
+          {
+            letter: 'B',
+            text: 'Sempre maior ponto de ebulição independentemente de ramificação',
+            isCorrect: false,
+          },
           { letter: 'C', text: 'Impossibilidade de isomeria', isCorrect: false },
           { letter: 'D', text: 'Formula diferente C₄H₈', isCorrect: false },
           { letter: 'E', text: 'Obrigatoriamente aromática', isCorrect: false },
@@ -1992,8 +2080,7 @@ Combustíveis, plásticos, fármacos — interpretar fórmulas esqueléticas e p
           'Isômeros constitucionais mesma fórmula; ramificação diminui empacotamento e forças intermoleculares → Tb menor.',
       },
       {
-        question:
-          'Éster metílico de ácido acético hidrolisado em meio ácido gera:',
+        question: 'Éster metílico de ácido acético hidrolisado em meio ácido gera:',
         alternatives: [
           { letter: 'A', text: 'Apenas metano', isCorrect: false },
           { letter: 'B', text: 'Ácido acético e metanol (equilíbrio)', isCorrect: true },
@@ -2001,8 +2088,7 @@ Combustíveis, plásticos, fármacos — interpretar fórmulas esqueléticas e p
           { letter: 'D', text: 'Glicerol e triacilglicerídeos sempre', isCorrect: false },
           { letter: 'E', text: 'Aminoácido livre', isCorrect: false },
         ],
-        explanation:
-          'Hidrólise de éster recupera álcool e ácido (catalisada).',
+        explanation: 'Hidrólise de éster recupera álcool e ácido (catalisada).',
       },
     ],
     mindMap: {
@@ -2100,8 +2186,7 @@ Organismos mantêm **não equilíbrio** dissipando energia — não viola 2ª le
     ],
     practiceQuestions: [
       {
-        question:
-          'Gás ideal expande isotermicamente absorvendo calor; energia interna:',
+        question: 'Gás ideal expande isotermicamente absorvendo calor; energia interna:',
         alternatives: [
           { letter: 'A', text: 'Aumenta sempre', isCorrect: false },
           { letter: 'B', text: 'Permanece constante (função só de T para ideal)', isCorrect: true },
@@ -2109,8 +2194,7 @@ Organismos mantêm **não equilíbrio** dissipando energia — não viola 2ª le
           { letter: 'D', text: 'Anula entropia', isCorrect: false },
           { letter: 'E', text: 'Independe de temperatura absoluta', isCorrect: false },
         ],
-        explanation:
-          'Para gás ideal, U depende apenas de T; isotérmico → ΔU = 0.',
+        explanation: 'Para gás ideal, U depende apenas de T; isotérmico → ΔU = 0.',
       },
       {
         question:
@@ -2130,7 +2214,11 @@ Organismos mantêm **não equilíbrio** dissipando energia — não viola 2ª le
           'Refrigerador retira calor do compartimento frio usando trabalho elétrico; sobre a 2ª lei:',
         alternatives: [
           { letter: 'A', text: 'Viola porque retira calor de fonte fria', isCorrect: false },
-          { letter: 'B', text: 'Não viola: trabalho externo aumenta entropia do ambiente suficiente', isCorrect: true },
+          {
+            letter: 'B',
+            text: 'Não viola: trabalho externo aumenta entropia do ambiente suficiente',
+            isCorrect: true,
+          },
           { letter: 'C', text: 'Implica eficiência = 1 necessariamente', isCorrect: false },
           { letter: 'D', text: 'Só funciona sem fonte quente', isCorrect: false },
           { letter: 'E', text: 'Anula gradient térmico global', isCorrect: false },
@@ -2234,21 +2322,27 @@ Interface (G1, S, G2) e mitose (PMAT); meiose reduz ploidia para gametas.`,
     ],
     practiceQuestions: [
       {
-        question:
-          'Célula vegetal colocada em meio hipertônico tende a:',
+        question: 'Célula vegetal colocada em meio hipertônico tende a:',
         alternatives: [
           { letter: 'A', text: 'Ganhar água até lise', isCorrect: false },
-          { letter: 'B', text: 'Perder água e apresentar plasmólise com parede mantida', isCorrect: true },
+          {
+            letter: 'B',
+            text: 'Perder água e apresentar plasmólise com parede mantida',
+            isCorrect: true,
+          },
           { letter: 'C', text: 'Congelar metabolismo sem troca de água', isCorrect: false },
-          { letter: 'D', text: 'Duplicar cloroplastos instantaneamente sem divisão', isCorrect: false },
+          {
+            letter: 'D',
+            text: 'Duplicar cloroplastos instantaneamente sem divisão',
+            isCorrect: false,
+          },
           { letter: 'E', text: 'Secretar parede externa se animal', isCorrect: false },
         ],
         explanation:
           'Osmose: água sai para meio mais concentrado; parede rígida impede ruptura como em osmose lise animal extrema.',
       },
       {
-        question:
-          'Bloqueio de formação do fuso mitótico impede célula de:',
+        question: 'Bloqueio de formação do fuso mitótico impede célula de:',
         alternatives: [
           { letter: 'A', text: 'Realizar tradução', isCorrect: false },
           { letter: 'B', text: 'Separar cromátides irmãs para núcleos filhos', isCorrect: true },
@@ -2256,12 +2350,10 @@ Interface (G1, S, G2) e mitose (PMAT); meiose reduz ploidia para gametas.`,
           { letter: 'D', text: 'Absorver luz nos tilacoides', isCorrect: false },
           { letter: 'E', text: 'Sintetizar RNA mensageiro', isCorrect: false },
         ],
-        explanation:
-          'Fuso microtubular essencial à anafase/telófase de segregação cromossômica.',
+        explanation: 'Fuso microtubular essencial à anafase/telófase de segregação cromossômica.',
       },
       {
-        question:
-          'Organela rica em enzimas hidrolíticas acidófilas digerindo macromoléculas:',
+        question: 'Organela rica em enzimas hidrolíticas acidófilas digerindo macromoléculas:',
         alternatives: [
           { letter: 'A', text: 'Cloroplasto', isCorrect: false },
           { letter: 'B', text: 'Lisossomo', isCorrect: true },
@@ -2269,8 +2361,7 @@ Interface (G1, S, G2) e mitose (PMAT); meiose reduz ploidia para gametas.`,
           { letter: 'D', text: 'Nucleolo durante tradução', isCorrect: false },
           { letter: 'E', text: 'Centrossomo digestivo', isCorrect: false },
         ],
-        explanation:
-          'Lisossomos degradam material endógeno e fagocitado com pH baixo.',
+        explanation: 'Lisossomos degradam material endógeno e fagocitado com pH baixo.',
       },
     ],
     mindMap: {
@@ -2364,8 +2455,7 @@ Afim, quadrática, modular, exponencial, logarítmica. **Composição** f(g(x)) 
     ],
     practiceQuestions: [
       {
-        question:
-          'f(x) = x² − 4x + 3. O menor valor em ℝ é:',
+        question: 'f(x) = x² − 4x + 3. O menor valor em ℝ é:',
         alternatives: [
           { letter: 'A', text: '-1', isCorrect: true },
           { letter: 'B', text: '0', isCorrect: false },
@@ -2373,12 +2463,10 @@ Afim, quadrática, modular, exponencial, logarítmica. **Composição** f(g(x)) 
           { letter: 'D', text: '3', isCorrect: false },
           { letter: 'E', text: '4', isCorrect: false },
         ],
-        explanation:
-          'Vértice em x = -b/(2a) = 2 → f(2) = 4 - 8 + 3 = -1.',
+        explanation: 'Vértice em x = -b/(2a) = 2 → f(2) = 4 - 8 + 3 = -1.',
       },
       {
-        question:
-          '|x − 1| < 3 equivale a:',
+        question: '|x − 1| < 3 equivale a:',
         alternatives: [
           { letter: 'A', text: 'x < 4', isCorrect: false },
           { letter: 'B', text: '-2 < x < 4', isCorrect: true },
@@ -2386,12 +2474,10 @@ Afim, quadrática, modular, exponencial, logarítmica. **Composição** f(g(x)) 
           { letter: 'D', text: 'x < 2 ou x > 4', isCorrect: false },
           { letter: 'E', text: 'Conjunto vazio', isCorrect: false },
         ],
-        explanation:
-          'Distância de x a 1 menor que 3 → intervalo centrado em 1 com raio 3.',
+        explanation: 'Distância de x a 1 menor que 3 → intervalo centrado em 1 com raio 3.',
       },
       {
-        question:
-          'Se g(x)=x+1 e f(x)=x², então f(g(2)) vale:',
+        question: 'Se g(x)=x+1 e f(x)=x², então f(g(2)) vale:',
         alternatives: [
           { letter: 'A', text: '5', isCorrect: false },
           { letter: 'B', text: '9', isCorrect: true },
@@ -2399,8 +2485,7 @@ Afim, quadrática, modular, exponencial, logarítmica. **Composição** f(g(x)) 
           { letter: 'D', text: '3', isCorrect: false },
           { letter: 'E', text: '12', isCorrect: false },
         ],
-        explanation:
-          'g(2)=3; f(3)=9.',
+        explanation: 'g(2)=3; f(3)=9.',
       },
     ],
     mindMap: {
@@ -2498,8 +2583,7 @@ Correlação **não** implica causalidade; viés amostral distorce inferência.`
     ],
     practiceQuestions: [
       {
-        question:
-          'Dado honesto lançado duas vezes. Probabilidade da soma ser 7:',
+        question: 'Dado honesto lançado duas vezes. Probabilidade da soma ser 7:',
         alternatives: [
           { letter: 'A', text: '1/12', isCorrect: false },
           { letter: 'B', text: '1/6', isCorrect: true },
@@ -2507,12 +2591,10 @@ Correlação **não** implica causalidade; viés amostral distorce inferência.`
           { letter: 'D', text: '7/36', isCorrect: false },
           { letter: 'E', text: '1/36', isCorrect: false },
         ],
-        explanation:
-          'Pares (1,6)...(6,1) são 6 de 36 resultados → 1/6.',
+        explanation: 'Pares (1,6)...(6,1) são 6 de 36 resultados → 1/6.',
       },
       {
-        question:
-          'Em urna 3 brancas e 2 pretas sem reposição, P(2ª branca | 1ª branca):',
+        question: 'Em urna 3 brancas e 2 pretas sem reposição, P(2ª branca | 1ª branca):',
         alternatives: [
           { letter: 'A', text: '3/5', isCorrect: false },
           { letter: 'B', text: '1/2', isCorrect: true },
@@ -2520,12 +2602,10 @@ Correlação **não** implica causalidade; viés amostral distorce inferência.`
           { letter: 'D', text: '2/5', isCorrect: false },
           { letter: 'E', text: '3/10', isCorrect: false },
         ],
-        explanation:
-          'Após 1ª branca restam 2 brancas e 2 pretas → 2/4 = 1/2.',
+        explanation: 'Após 1ª branca restam 2 brancas e 2 pretas → 2/4 = 1/2.',
       },
       {
-        question:
-          'Conjunto {2, 4, 6, 100} tem mediana:',
+        question: 'Conjunto {2, 4, 6, 100} tem mediana:',
         alternatives: [
           { letter: 'A', text: '4', isCorrect: false },
           { letter: 'B', text: '5', isCorrect: true },
@@ -2533,8 +2613,7 @@ Correlação **não** implica causalidade; viés amostral distorce inferência.`
           { letter: 'D', text: '25', isCorrect: false },
           { letter: 'E', text: '100', isCorrect: false },
         ],
-        explanation:
-          'Quatro elementos: mediana = média dos dois centrais ordenados (4+6)/2 = 5.',
+        explanation: 'Quatro elementos: mediana = média dos dois centrais ordenados (4+6)/2 = 5.',
       },
     ],
     mindMap: {
@@ -2628,8 +2707,7 @@ J = C·i·t em mesma unidade de tempo; montante M = C + J. Compostos: capitaliza
     ],
     practiceQuestions: [
       {
-        question:
-          'Salário 1200 aumenta 15%; depois há corte de 8% sobre o valor novo. Resultado:',
+        question: 'Salário 1200 aumenta 15%; depois há corte de 8% sobre o valor novo. Resultado:',
         alternatives: [
           { letter: 'A', text: '1200 exato', isCorrect: false },
           { letter: 'B', text: '1242', isCorrect: true },
@@ -2637,12 +2715,10 @@ J = C·i·t em mesma unidade de tempo; montante M = C + J. Compostos: capitaliza
           { letter: 'D', text: '1150', isCorrect: false },
           { letter: 'E', text: '1320', isCorrect: false },
         ],
-        explanation:
-          '1200·1,15 = 1380; 1380·0,92 = 1242.',
+        explanation: '1200·1,15 = 1380; 1380·0,92 = 1242.',
       },
       {
-        question:
-          'Em mapa, 2 cm representam 5 km reais. Razão de escala (mesma unidade):',
+        question: 'Em mapa, 2 cm representam 5 km reais. Razão de escala (mesma unidade):',
         alternatives: [
           { letter: 'A', text: '1 : 250000', isCorrect: true },
           { letter: 'B', text: '1 : 25000', isCorrect: false },
@@ -2650,12 +2726,10 @@ J = C·i·t em mesma unidade de tempo; montante M = C + J. Compostos: capitaliza
           { letter: 'D', text: '2 : 5', isCorrect: false },
           { letter: 'E', text: '1 : 5000', isCorrect: false },
         ],
-        explanation:
-          '5 km = 500000 cm; 2 cm : 500000 cm → 1 : 250000.',
+        explanation: '5 km = 500000 cm; 2 cm : 500000 cm → 1 : 250000.',
       },
       {
-        question:
-          'De 40 alunos, 15 faltaram. Percentual de comparecimento:',
+        question: 'De 40 alunos, 15 faltaram. Percentual de comparecimento:',
         alternatives: [
           { letter: 'A', text: '37,5%', isCorrect: false },
           { letter: 'B', text: '62,5%', isCorrect: true },
@@ -2663,8 +2737,7 @@ J = C·i·t em mesma unidade de tempo; montante M = C + J. Compostos: capitaliza
           { letter: 'D', text: '40%', isCorrect: false },
           { letter: 'E', text: '25%', isCorrect: false },
         ],
-        explanation:
-          '25 presentes / 40 = 62,5%.',
+        explanation: '25 presentes / 40 = 62,5%.',
       },
     ],
     mindMap: {
@@ -2760,8 +2833,7 @@ Cuidado com **repetição** permitida ou indistinguibilidade (anagrama com letra
     ],
     practiceQuestions: [
       {
-        question:
-          'Quantos números de 3 algarismos distintos usando {1,2,3,4}?',
+        question: 'Quantos números de 3 algarismos distintos usando {1,2,3,4}?',
         alternatives: [
           { letter: 'A', text: '24', isCorrect: true },
           { letter: 'B', text: '12', isCorrect: false },
@@ -2769,12 +2841,10 @@ Cuidado com **repetição** permitida ou indistinguibilidade (anagrama com letra
           { letter: 'D', text: '4', isCorrect: false },
           { letter: 'E', text: '81', isCorrect: false },
         ],
-        explanation:
-          '4 escolhas centena, 3 restantes dezena, 2 unidade → 4·3·2=24.',
+        explanation: '4 escolhas centena, 3 restantes dezena, 2 unidade → 4·3·2=24.',
       },
       {
-        question:
-          'Comissão de 3 pessoas de grupo de 7 (ordem irrelevante):',
+        question: 'Comissão de 3 pessoas de grupo de 7 (ordem irrelevante):',
         alternatives: [
           { letter: 'A', text: 'P(7,3)=210', isCorrect: false },
           { letter: 'B', text: 'C(7,3)=35', isCorrect: true },
@@ -2782,12 +2852,10 @@ Cuidado com **repetição** permitida ou indistinguibilidade (anagrama com letra
           { letter: 'D', text: '21', isCorrect: false },
           { letter: 'E', text: '720', isCorrect: false },
         ],
-        explanation:
-          'Combinação: 7!/(3!4!)=35.',
+        explanation: 'Combinação: 7!/(3!4!)=35.',
       },
       {
-        question:
-          'Senha de 4 dígitos decimais (0-9) com repetição permitida:',
+        question: 'Senha de 4 dígitos decimais (0-9) com repetição permitida:',
         alternatives: [
           { letter: 'A', text: '5040', isCorrect: false },
           { letter: 'B', text: '10000', isCorrect: true },
@@ -2795,8 +2863,7 @@ Cuidado com **repetição** permitida ou indistinguibilidade (anagrama com letra
           { letter: 'D', text: '10^3', isCorrect: false },
           { letter: 'E', text: '9^4', isCorrect: false },
         ],
-        explanation:
-          '10 opções por casa → 10⁴.',
+        explanation: '10 opções por casa → 10⁴.',
       },
     ],
     mindMap: {
@@ -2884,9 +2951,7 @@ export function mergeTopicCatalogWithStats(
     if (catValues.has(raw) || catValues.has(resolved)) continue
     const labelFromCatalog = catalog.find((c) => c.value === resolved)?.label
     const label =
-      s.label?.trim() ||
-      (labelFromCatalog?.trim() ? labelFromCatalog : undefined) ||
-      resolved
+      s.label?.trim() || (labelFromCatalog?.trim() ? labelFromCatalog : undefined) || resolved
     merged.push({
       value: raw,
       label,

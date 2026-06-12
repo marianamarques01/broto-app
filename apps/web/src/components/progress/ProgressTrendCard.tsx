@@ -182,9 +182,7 @@ export function ProgressTrendCard({
                   {buckets.map((b, i) => {
                     const x = padL + i * (barW + gap)
                     const hFill =
-                      b.answered > 0
-                        ? Math.max((b.answered / maxAnswered) * barMaxH, 8)
-                        : 0
+                      b.answered > 0 ? Math.max((b.answered / maxAnswered) * barMaxH, 8) : 0
                     const y = yBase - hFill
                     const title = `${b.label}: ${b.answered} quest. · ${b.accuracyPct !== null ? `${b.accuracyPct}% acerto` : '—'}`
                     return (

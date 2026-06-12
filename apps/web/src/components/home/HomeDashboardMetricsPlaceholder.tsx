@@ -15,10 +15,7 @@ const MOCK_BAR_FILLS = [
 
 function buildChartPoints(values: number[], w: number, h: number, pad: number): [number, number][] {
   const step = (w - pad * 2) / (values.length - 1)
-  return values.map((p, i) => [
-    pad + i * step,
-    h - pad - (p / 100) * (h - pad * 2),
-  ])
+  return values.map((p, i) => [pad + i * step, h - pad - (p / 100) * (h - pad * 2)])
 }
 
 /** Curva suave (cúbica) passando pelos pontos — visual mais orgânico que linhas retas. */
@@ -157,7 +154,11 @@ export function HomeDashboardMetricsPlaceholder() {
                 </feMerge>
               </filter>
             </defs>
-            <path d={fillD} fill={`url(#${rid}-area)`} className="broto-home-metrics-placeholder__area-fill" />
+            <path
+              d={fillD}
+              fill={`url(#${rid}-area)`}
+              className="broto-home-metrics-placeholder__area-fill"
+            />
             <path
               d={pathD}
               fill="none"

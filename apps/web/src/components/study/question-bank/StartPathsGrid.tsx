@@ -33,7 +33,7 @@ export function StartPathsGrid({ tracks, onOpenRow, onExpandExplore }: StartPath
           const isExplore = track.id === 'freeExplore'
           const canAct = isExplore ? Boolean(onExpandExplore) : Boolean(first)
           const hint =
-            (isExplore || (!isExplore && track.rows.length > 0))
+            isExplore || (!isExplore && track.rows.length > 0)
               ? null
               : track.emptyHint.trim()
                 ? track.emptyHint

@@ -5,7 +5,10 @@ export interface WeakTopicsAsideProps {
   loading: boolean
 }
 
-function priorityLabel(accuracyPct: number, answered: number): { text: string; tone: 'high' | 'mid' | 'low' } {
+function priorityLabel(
+  accuracyPct: number,
+  answered: number,
+): { text: string; tone: 'high' | 'mid' | 'low' } {
   if (answered < 2) return { text: 'A calibrar', tone: 'low' }
   if (accuracyPct < 45) return { text: 'Prioridade alta', tone: 'high' }
   if (accuracyPct < 65) return { text: 'Prioridade média', tone: 'mid' }

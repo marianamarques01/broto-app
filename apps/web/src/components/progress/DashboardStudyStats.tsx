@@ -90,9 +90,7 @@ export function DashboardStudyStats({ className }: DashboardStudyStatsProps) {
           </div>
           <div className="broto-stat-item__val">
             {loadingProgress ? (
-              <span className="broto-stat-item__val-main broto-stat-item__val-main--muted">
-                —
-              </span>
+              <span className="broto-stat-item__val-main broto-stat-item__val-main--muted">—</span>
             ) : (
               <span className="broto-stat-item__val-main">{totalAnswered}</span>
             )}
@@ -108,9 +106,7 @@ export function DashboardStudyStats({ className }: DashboardStudyStatsProps) {
           </div>
           <div className="broto-stat-item__val broto-stat-item__val--inline">
             {loading || loadingPet ? (
-              <span className="broto-stat-item__val-main broto-stat-item__val-main--muted">
-                —
-              </span>
+              <span className="broto-stat-item__val-main broto-stat-item__val-main--muted">—</span>
             ) : goalMinutesPlanned === 0 ? (
               <>
                 <span className="broto-stat-item__val-main">0m</span>

@@ -37,7 +37,11 @@ function functionsBaseUrl(): string {
 /** Firefox: DOMException "NetworkError"; Chrome: TypeError "Failed to fetch" — em geral rede ou CORS. */
 function isLikelyBrowserNetworkFailure(e: unknown): boolean {
   if (e instanceof TypeError && /fetch|network|abort/i.test(e.message)) return true
-  if (typeof DOMException !== 'undefined' && e instanceof DOMException && e.name === 'NetworkError') {
+  if (
+    typeof DOMException !== 'undefined' &&
+    e instanceof DOMException &&
+    e.name === 'NetworkError'
+  ) {
     return true
   }
   const msg = e instanceof Error ? e.message : String(e)
@@ -46,7 +50,10 @@ function isLikelyBrowserNetworkFailure(e: unknown): boolean {
   )
 }
 
-async function invokeOnce<T>(path: string, options: InvokeOptions & { publicEndpoint?: boolean }): Promise<T> {
+async function invokeOnce<T>(
+  path: string,
+  options: InvokeOptions & { publicEndpoint?: boolean },
+): Promise<T> {
   const fnName = pathToFunctionName(path)
   /** Não usar a chave `public` (reservada / minify) — e força signup a sempre enviar anon JWT. */
   const useAnonBearer = options.publicEndpoint === true || fnName === 'auth-signup'

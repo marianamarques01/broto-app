@@ -56,7 +56,9 @@ const EMPTY_DAY_MAP_SERVER = Object.freeze(
  * Snapshot estável para `useSyncExternalStore`: mesma referência enquanto o JSON do store não muda.
  * Evita loop infinito de re-renders (objeto novo a cada getSnapshot).
  */
-export function getPerformanceDayMapSnapshot(): Readonly<Record<string, { answered: number; correct: number }>> {
+export function getPerformanceDayMapSnapshot(): Readonly<
+  Record<string, { answered: number; correct: number }>
+> {
   const store = readStore()
   const json = JSON.stringify(store.days)
   if (json !== cachedDayMapJson) {

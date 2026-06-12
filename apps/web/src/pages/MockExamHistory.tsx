@@ -77,7 +77,11 @@ export function MockExamHistory() {
   }, [])
 
   useEffect(() => {
-    void load()
+    async function fetchHistory() {
+      await load()
+    }
+
+    void fetchHistory()
   }, [load])
 
   const handleClearAll = useCallback(async () => {
@@ -115,7 +119,10 @@ export function MockExamHistory() {
         subtitle="Histórico de blocos tipo simulado ENEM"
         variant="study"
       />
-      <div className="broto-main-inner" style={{ maxWidth: 720, margin: '0 auto', padding: '20px 18px' }}>
+      <div
+        className="broto-main-inner"
+        style={{ maxWidth: 720, margin: '0 auto', padding: '20px 18px' }}
+      >
         <div className="broto-mock-exam-history-toolbar">
           <Link
             to="/study/mock-exam"
@@ -167,14 +174,27 @@ export function MockExamHistory() {
               <br />
               Faça uma sessão (estilo simulado) para ver o histórico aqui.
             </p>
-            <Link to="/study/mock-exam" className="broto-btn-primary broto-btn-primary--inline" style={{ padding: '12px 28px' }}>
+            <Link
+              to="/study/mock-exam"
+              className="broto-btn-primary broto-btn-primary--inline"
+              style={{ padding: '12px 28px' }}
+            >
               Montar sessão
             </Link>
           </div>
         ) : null}
 
         {!loading && sessions.length > 0 ? (
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <ul
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+          >
             {sessions.map((s) => {
               const done = s.completedAt != null
               const sum = isPracticeSessionSummary(s.summary) ? s.summary : null
@@ -183,7 +203,9 @@ export function MockExamHistory() {
                 <li key={s.sessionId} className="broto-card broto-mock-exam-session">
                   <div className="broto-mock-exam-session__header">
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{formatWhen(s.createdAt)}</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>
+                        {formatWhen(s.createdAt)}
+                      </div>
                       <div className="broto-mock-exam-session__meta">
                         <span className="broto-muted" style={{ fontSize: '0.78rem' }}>
                           {s.questionCount} questões · {areasLabel}
@@ -198,7 +220,9 @@ export function MockExamHistory() {
                           </span>
                         )}
                         {sum ? (
-                          <span className={`broto-mock-exam-badge broto-mock-exam-badge--score ${scoreBadgeClass(sum.percentualGeral)}`}>
+                          <span
+                            className={`broto-mock-exam-badge broto-mock-exam-badge--score ${scoreBadgeClass(sum.percentualGeral)}`}
+                          >
                             {sum.percentualGeral}%
                           </span>
                         ) : null}
@@ -259,12 +283,16 @@ export function MockExamHistory() {
             aria-labelledby="broto-mock-history-clear-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="broto-mock-history-clear-title" className="broto-mock-exam-session-exit-modal__title">
+            <h2
+              id="broto-mock-history-clear-title"
+              className="broto-mock-exam-session-exit-modal__title"
+            >
               Limpar todo o histórico?
             </h2>
             <p className="broto-mock-exam-history-confirm__text">
-              Todas as sessões desta lista serão removidas. Esta ação não pode ser desfeita. Suas respostas
-              já registradas permanecem na conta, mas deixam de estar ligadas a essas sessões.
+              Todas as sessões desta lista serão removidas. Esta ação não pode ser desfeita. Suas
+              respostas já registradas permanecem na conta, mas deixam de estar ligadas a essas
+              sessões.
             </p>
             <div className="broto-mock-exam-session-exit-modal__actions">
               <button
@@ -301,12 +329,15 @@ export function MockExamHistory() {
             aria-labelledby="broto-mock-history-delete-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="broto-mock-history-delete-title" className="broto-mock-exam-session-exit-modal__title">
+            <h2
+              id="broto-mock-history-delete-title"
+              className="broto-mock-exam-session-exit-modal__title"
+            >
               Excluir esta sessão?
             </h2>
             <p className="broto-mock-exam-history-confirm__text">
-              O bloco sai do histórico. Se estiver em andamento, você não poderá retomá-lo por aqui. Respostas
-              enviadas continuam na sua conta, sem vínculo com esta sessão.
+              O bloco sai do histórico. Se estiver em andamento, você não poderá retomá-lo por aqui.
+              Respostas enviadas continuam na sua conta, sem vínculo com esta sessão.
             </p>
             <div className="broto-mock-exam-session-exit-modal__actions">
               <button

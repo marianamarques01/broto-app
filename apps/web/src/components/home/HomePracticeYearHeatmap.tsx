@@ -1,6 +1,19 @@
 import { useMemo } from 'react'
 
-const MONTH_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+const MONTH_SHORT = [
+  'jan',
+  'fev',
+  'mar',
+  'abr',
+  'mai',
+  'jun',
+  'jul',
+  'ago',
+  'set',
+  'out',
+  'nov',
+  'dez',
+]
 
 const DOW_LEFT = ['Seg', '', 'Qua', '', 'Sex', '', 'Dom']
 
@@ -156,18 +169,18 @@ export function HomePracticeYearHeatmap({
               </span>
             ))}
           </div>
-          <div className="broto-practice-year-heatmap__grid" role="grid" aria-label={`Prática em ${year}`}>
+          <div
+            className="broto-practice-year-heatmap__grid"
+            role="grid"
+            aria-label={`Prática em ${year}`}
+          >
             {columns.map((col, ci) => (
               <div key={ci} className="broto-practice-year-heatmap__week" role="presentation">
                 {col.map((cell) => (
                   <div
                     key={cell.iso}
                     role="gridcell"
-                    title={
-                      cell.inYear
-                        ? `${cell.iso}: ${cell.answered} questão(ões)`
-                        : cell.iso
-                    }
+                    title={cell.inYear ? `${cell.iso}: ${cell.answered} questão(ões)` : cell.iso}
                     className={[
                       'broto-practice-year-heatmap__cell',
                       `broto-practice-year-heatmap__cell--lvl-${cell.level}`,
