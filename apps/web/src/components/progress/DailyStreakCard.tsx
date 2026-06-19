@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Check, Flame, Sprout } from 'lucide-react'
 
-/** Alinhado a HomePetBanner e DashboardStudyStats. */
+/** Alinhado a HomePetBanner (meta gamificada do dia). */
 const META_QUESTOES_DIA = 5
 
 function dateISO(d: Date): string {

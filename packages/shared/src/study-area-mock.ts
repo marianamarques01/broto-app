@@ -2962,11 +2962,6 @@ export function mergeTopicCatalogWithStats(
   return merged
 }
 
-/** Get topics for an area (mock) */
-export function getMockTopics(areaKey: string): TopicOption[] {
-  return MOCK_TOPICS[areaKey] ?? []
-}
-
 /** Get or "generate" a study package (mock) */
 export async function getMockStudyPackage(
   areaKey: string,

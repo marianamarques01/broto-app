@@ -4,11 +4,9 @@ import { createUserProgressFetcher, type ProgressData } from '@broto/shared'
 
 export type { ProgressData, AreaStat, TopicoStat } from '@broto/shared'
 
-const { useHook, refresh, refreshIfStale } = createCachedHook<ProgressData>(
+const { useHook, refresh } = createCachedHook<ProgressData>(
   createUserProgressFetcher((path) => api.get(path)),
 )
-
-export { refreshIfStale as refreshProgressIfStale }
 
 export const refreshProgress = refresh
 

@@ -5,11 +5,9 @@ import { createUserMeFetcher } from '@broto/shared'
 
 export type { UserProfile } from '@broto/shared'
 
-const { useHook, refresh, refreshIfStale } = createCachedHook<UserProfile>(
+const { useHook, refresh } = createCachedHook<UserProfile>(
   createUserMeFetcher((path) => api.get(path)),
 )
-
-export { refreshIfStale as refreshUserIfStale }
 
 export const refreshUser = refresh
 

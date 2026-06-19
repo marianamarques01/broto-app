@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
 
-/** Alinhado a Home.tsx e DashboardStudyStats (meta gamificada do dia). */
+/** Alinhado a Home.tsx (meta gamificada do dia). */
 const META_QUESTOES_DIA = 5
 
 export type PetBannerNextSteps = {

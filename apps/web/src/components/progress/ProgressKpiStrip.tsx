@@ -9,15 +9,12 @@ export interface ProgressKpiItem {
 interface ProgressKpiStripProps {
   items: ProgressKpiItem[]
   loading?: boolean
-  /** Quando true, renderiza um `div` (use quando o strip estiver dentro de uma `<section>` pai). */
-  asDiv?: boolean
 }
 
-export function ProgressKpiStrip({ items, loading, asDiv }: ProgressKpiStripProps) {
-  const Tag = asDiv ? 'div' : 'section'
+export function ProgressKpiStrip({ items, loading }: ProgressKpiStripProps) {
   return (
-    <Tag
-      id={asDiv ? undefined : 'progress-kpis'}
+    <section
+      id="progress-kpis"
       className={`broto-progress-kpi-strip${loading ? ' broto-progress-kpi-strip--loading' : ''}`}
       aria-label="Resumo de desempenho"
     >
@@ -35,6 +32,6 @@ export function ProgressKpiStrip({ items, loading, asDiv }: ProgressKpiStripProp
           ) : null}
         </div>
       ))}
-    </Tag>
+    </section>
   )
 }

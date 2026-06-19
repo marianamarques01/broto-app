@@ -2,7 +2,6 @@ import type {
   BuildHomeTimelineParams,
   HomeTimelineEvent,
   HomeTimelineEventStatus,
-  HomeTimelineFilter,
 } from '../types/home-schedule'
 
 function clamp(n: number, lo: number, hi: number): number {
@@ -143,16 +142,5 @@ export function buildHomeTimelineEvents(p: BuildHomeTimelineParams): HomeTimelin
             : 'pending',
   })
 
-  return events
-}
-
-export function filterHomeTimelineEvents(
-  events: HomeTimelineEvent[],
-  filter: HomeTimelineFilter,
-): HomeTimelineEvent[] {
-  if (filter === 'all') return events
-  if (filter === 'study') return events.filter((e) => e.kind === 'study')
-  if (filter === 'missions') return events.filter((e) => e.kind === 'mission')
-  if (filter === 'review') return events.filter((e) => e.kind === 'review')
   return events
 }

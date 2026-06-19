@@ -1,12 +1,9 @@
-/** Missão diária mínima para texto de XP na timeline (web / mobile). */
+/** @deprecated Sem consumidores — removido da API pública em 2026-06. */
 export type MissionTimelineXpHintInput = {
   title: string
   xp: number
 }
 
-/**
- * Texto curto de XP para cards da timeline (ex.: "10 XP por questão").
- */
 export function missionTimelineXpHint(m: MissionTimelineXpHintInput): string {
   const match = /^(\d+)\s+questões\b/i.exec(m.title.trim())
   if (match) {
