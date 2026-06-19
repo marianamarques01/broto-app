@@ -22,7 +22,7 @@ export function rollupTopicPerformanceSlug(areaKey: string): string {
   return `${AREA_ROLLUP_PREFIX}${areaKey}`
 }
 
-/** topico_value (slug) → área ENEM (alinhado a user-progress e AREA_CONFIG do app). */
+/** topico_value (slug) → área ENEM — manter sincronizado com `packages/shared/src/lib/topico-to-area.ts`. */
 export const TOPICO_TO_AREA: Record<string, string> = {
   'interpretacao-textual': 'linguagens',
   'interpretacao-texto': 'linguagens',

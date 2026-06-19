@@ -1,17 +1,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
+import { isRecord, parseUserOnboardingBody } from '../_shared/edge-api-types.ts'
 
 const HORARIO_SET = new Set(['manha', 'tarde', 'noite'])
 
 function clampInt(n: number, min: number, max: number): number {
   if (!Number.isFinite(n)) return min
   return Math.min(max, Math.max(min, Math.round(n)))
-}
-
-function parseBody(raw: unknown): Record<string, unknown> | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
-  return raw as Record<string, unknown>
 }
 
 function isMissingPetsNomeError(err: { message?: string } | null | undefined): boolean {
@@ -39,7 +35,7 @@ serve(async (req) => {
     }
     const { user } = authResult.data
 
-    const raw = parseBody(await req.json().catch(() => null))
+    const raw = parseUserOnboardingBody(await req.json().catch(() => null))
     if (!raw) {
       return json(400, { error: 'JSON inválido' }, cors)
     }
@@ -58,8 +54,8 @@ serve(async (req) => {
     )
 
     const niveis: Record<string, string | null> = {}
-    if (raw.niveis && typeof raw.niveis === 'object' && !Array.isArray(raw.niveis)) {
-      for (const [k, v] of Object.entries(raw.niveis as Record<string, unknown>)) {
+    if (raw.niveis && isRecord(raw.niveis)) {
+      for (const [k, v] of Object.entries(raw.niveis)) {
         const key = String(k).slice(0, 64)
         if (v === null || v === undefined) {
           niveis[key] = null

@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { areaKeyForPracticeAnswer, isCountablePracticeArea } from '../_shared/enem-topic-area.ts'
 import { createServiceRoleClientUnsafe, requireUser } from '../_shared/authz.ts'
+import { parsePetMePatchBody } from '../_shared/edge-api-types.ts'
 
 type Fase = 'semente' | 'muda' | 'planta' | 'flor' | 'especial'
 
@@ -30,11 +31,11 @@ function isMissingPetsNomeError(err: { message?: string } | null | undefined): b
 }
 
 function parseNomeBody(raw: unknown): string | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
-  const o = raw as Record<string, unknown>
-  const fromNome = typeof o.nome === 'string' ? o.nome : ''
-  const fromBroto = typeof o.brotoNome === 'string' ? o.brotoNome : ''
-  const s = (fromNome.trim() ? fromNome : fromBroto).trim().slice(0, 32)
+  const body = parsePetMePatchBody(raw)
+  if (!body) return null
+  const fromNome = body.nome?.trim() ?? ''
+  const fromBroto = body.brotoNome?.trim() ?? ''
+  const s = (fromNome || fromBroto).slice(0, 32)
   return s
 }
 

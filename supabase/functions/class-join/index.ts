@@ -38,7 +38,7 @@ serve(async (req) => {
     })
 
     if (rpcError) {
-      const hint = (rpcError as Record<string, unknown>).hint ?? ''
+      const hint = rpcError.hint ?? ''
       if (hint === 'INVALID_INPUT') return json(400, { error: rpcError.message }, cors)
       if (hint === 'CLASS_NOT_FOUND') return json(404, { error: rpcError.message }, cors)
       if (hint === 'USER_NOT_FOUND') return json(404, { error: rpcError.message }, cors)

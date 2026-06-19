@@ -6,3 +6,11 @@ export interface SubmitAnswerPayload {
   /** Quando presente, grava vínculo com `practice_sessions` (sessão tipo simulado). */
   sessionId?: string
 }
+
+export interface SubmitAnswerResponse {
+  success: true
+  xpGained: number
+  missionBonusXp: number
+  missionCompletedIndexes: number[]
+  newLevel: number
+}

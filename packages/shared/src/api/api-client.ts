@@ -3,6 +3,8 @@
  * Platform-specific `invoke` implementations live in each app.
  */
 
+import { isRecord } from '../utils/is-record'
+
 export class ApiError extends Error {
   status: number
   body?: unknown
@@ -54,11 +56,10 @@ export function mergeParamsIntoBody(
  * Extract a human-readable error message from a parsed response body.
  */
 export function extractErrorMessage(data: unknown, fallbackStatus: number): string {
-  if (data && typeof data === 'object') {
-    const d = data as Record<string, unknown>
-    if (typeof d.error === 'string') return d.error
-    if (typeof d.message === 'string') return d.message
-    if (typeof d.msg === 'string') return d.msg
+  if (isRecord(data)) {
+    if (typeof data.error === 'string') return data.error
+    if (typeof data.message === 'string') return data.message
+    if (typeof data.msg === 'string') return data.msg
   }
   return `Erro ${fallbackStatus}`
 }

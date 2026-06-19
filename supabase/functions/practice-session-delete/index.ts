@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
+import { parsePracticeSessionDeleteBody } from '../_shared/edge-api-types.ts'
 
 /**
  * Remove sessões `student_mock` do usuário.
@@ -24,9 +25,11 @@ serve(async (req) => {
     }
     const { user } = authResult.data
 
-    const raw = (await req.json().catch(() => null)) as Record<string, unknown> | null
-    const sessionId = typeof raw?.sessionId === 'string' ? raw.sessionId.trim() : ''
-    const deleteAll = raw?.deleteAll === true
+    const parsed = parsePracticeSessionDeleteBody(await req.json().catch(() => null))
+    if (!parsed) {
+      return json(400, { error: 'sessionId ou deleteAll é obrigatório' }, cors)
+    }
+    const { sessionId, deleteAll } = parsed
 
     if (deleteAll && sessionId.length > 0) {
       return json(400, { error: 'Envie sessionId ou deleteAll, não ambos' }, cors)

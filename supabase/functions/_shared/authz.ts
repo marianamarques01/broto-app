@@ -8,11 +8,14 @@
 // - Never trust DB values blindly: validate role strings against known set
 // - service_role client bypasses RLS — callers MUST validate authorization first
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import {
+  createTypedAnonClient,
+  createTypedServiceRoleClient,
+  type TypedSupabaseClient,
+} from './database.ts'
+import type { ClassesRow, OrganizationMembershipRow, UsersRow } from '../../database.types.ts'
 
 // ---- Types ----
-
-type SupabaseClient = ReturnType<typeof createClient>
 
 /** Supabase Auth user (subset of fields used in authz). */
 interface AuthUser {
@@ -82,8 +85,8 @@ function meetsMinRole(actual: string, minimum: MembershipRole): boolean {
  *
  * Named "Unsafe" intentionally to force callers to acknowledge the risk.
  */
-export function createServiceRoleClientUnsafe(): SupabaseClient {
-  return createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+export function createServiceRoleClientUnsafe(): TypedSupabaseClient {
+  return createTypedServiceRoleClient()
 }
 
 /**
@@ -100,7 +103,7 @@ export function createServiceRoleClientUnsafe(): SupabaseClient {
  */
 export async function requireUser(
   req: Request,
-): Promise<AuthzResult<{ user: AuthUser; supabaseAuthed: SupabaseClient }>> {
+): Promise<AuthzResult<{ user: AuthUser; supabaseAuthed: TypedSupabaseClient }>> {
   const authHeader = req.headers.get('Authorization')?.trim()
 
   // Reject missing / malformed header — never treat "Bearer <anon_key>" as a user JWT (see api-clients).
@@ -113,11 +116,7 @@ export async function requireUser(
    * client and call `getUser()` with no args. `getUser(jwt)` with a raw string is brittle in Deno
    * (false 401s → web api-client signs the user out on every action).
    */
-  const supabaseAuthed = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } },
-  )
+  const supabaseAuthed = createTypedAnonClient(authHeader)
 
   const {
     data: { user },
@@ -147,7 +146,7 @@ export async function requireUser(
  * @param minRole - Optional minimum role required
  */
 export async function requireMembership(
-  adminClient: SupabaseClient,
+  adminClient: TypedSupabaseClient,
   userId: string,
   organizationId: string,
   minRole?: MembershipRole,
@@ -172,10 +171,11 @@ export async function requireMembership(
     }
   }
 
+  const row = data as OrganizationMembershipRow
+
   // Fail closed: if the DB contains a role value we don't recognize, deny access
-  const rawRole = (data as Record<string, unknown>).role as string
-  if (!isValidRole(rawRole)) {
-    console.error('[authz] unknown role value in DB:', rawRole, 'for user:', userId)
+  if (!isValidRole(row.role)) {
+    console.error('[authz] unknown role value in DB:', row.role, 'for user:', userId)
     return {
       data: null,
       error: { status: 403, message: 'Role inválida — acesso negado' },
@@ -183,12 +183,12 @@ export async function requireMembership(
   }
 
   const membership: Membership = {
-    id: data.id as string,
-    user_id: data.user_id as string,
-    organization_id: data.organization_id as string,
-    role: rawRole,
+    id: row.id,
+    user_id: row.user_id,
+    organization_id: row.organization_id,
+    role: row.role as MembershipRole,
     status: 'active',
-    joined_at: (data.joined_at as string) ?? null,
+    joined_at: row.joined_at ?? null,
   }
 
   if (minRole && !meetsMinRole(membership.role, minRole)) {
@@ -225,7 +225,7 @@ export async function requireMembership(
  * @param minRole - Optional minimum role in the class's organization
  */
 export async function requireClassAccess(
-  adminClient: SupabaseClient,
+  adminClient: TypedSupabaseClient,
   userId: string,
   classId: string,
   minRole?: MembershipRole,
@@ -250,12 +250,7 @@ export async function requireClassAccess(
     return { data: null, error: { status: 404, message: 'Turma não encontrada' } }
   }
 
-  const classData = classRow as {
-    id: string
-    organization_id: string
-    name: string
-    is_active: boolean
-  }
+  const classData = classRow as ClassesRow
 
   // Fail closed: class without organization_id should not grant access
   if (!classData.organization_id) {
@@ -300,7 +295,7 @@ export async function requireClassAccess(
  * @param userId - Authenticated user ID (from requireUser)
  */
 export async function resolveActiveContext(
-  adminClient: SupabaseClient,
+  adminClient: TypedSupabaseClient,
   userId: string,
 ): Promise<AuthzResult<ActiveContext>> {
   const { data: userRow, error: userError } = await adminClient
@@ -318,9 +313,9 @@ export async function resolveActiveContext(
     return { data: null, error: { status: 404, message: 'Usuário não encontrado' } }
   }
 
-  const row = userRow as Record<string, unknown>
-  const organizationId = (row.current_organization_id as string) ?? null
-  const classId = (row.current_class_id as string) ?? null
+  const row = userRow as Pick<UsersRow, 'current_organization_id' | 'current_class_id'>
+  const organizationId = row.current_organization_id ?? null
+  const classId = row.current_class_id ?? null
 
   // No active organization — valid state (e.g., new user, ENEM26 only)
   if (!organizationId) {
@@ -358,7 +353,7 @@ export async function resolveActiveContext(
       }
     }
 
-    if ((classRow as Record<string, unknown>).organization_id !== organizationId) {
+    if ((classRow as Pick<ClassesRow, 'organization_id'>).organization_id !== organizationId) {
       // Class belongs to different org — INCONSISTENT
       return {
         data: { userId, organizationId, classId: null, membership, isValid: false },

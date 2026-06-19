@@ -1,6 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
+import { parsePracticeSessionCreateBody } from '../_shared/edge-api-types.ts'
+import type { PracticeSessionInsert } from '../../database.types.ts'
 
 const KIND_DEFAULT = 'student_mock'
 
@@ -21,41 +23,29 @@ serve(async (req) => {
     }
     const { user } = authResult.data
 
-    const raw = (await req.json().catch(() => null)) as Record<string, unknown> | null
-    const questionIdsRaw = raw?.questionIds
-    const configRaw = raw?.config
-    const kindRaw = raw?.kind
-
-    if (!Array.isArray(questionIdsRaw) || questionIdsRaw.length === 0) {
+    const parsed = parsePracticeSessionCreateBody(await req.json().catch(() => null))
+    if (!parsed) {
       return json(400, { error: 'questionIds deve ser um array não vazio' }, cors)
     }
-    const questionIds = questionIdsRaw
-      .map((x) => (typeof x === 'string' ? x.trim() : ''))
-      .filter(Boolean)
-    if (questionIds.length === 0) {
-      return json(400, { error: 'Nenhum questionId válido' }, cors)
-    }
-
-    const config =
-      configRaw !== null && typeof configRaw === 'object' && !Array.isArray(configRaw)
-        ? (configRaw as Record<string, unknown>)
-        : {}
-
-    const kind = typeof kindRaw === 'string' && kindRaw.trim() ? kindRaw.trim() : KIND_DEFAULT
+    const { questionIds, config: configRaw, kind: kindRaw } = parsed
+    const config = configRaw ?? {}
+    const kind = kindRaw ?? KIND_DEFAULT
     if (kind !== 'student_mock' && kind !== 'class_assignment') {
       return json(400, { error: 'kind inválido' }, cors)
     }
 
     const admin = createServiceRoleClientUnsafe()
 
+    const insertRow: PracticeSessionInsert = {
+      user_id: user.id,
+      kind,
+      config,
+      question_ids: questionIds,
+    }
+
     const { data: row, error: insErr } = await admin
       .from('practice_sessions')
-      .insert({
-        user_id: user.id,
-        kind,
-        config,
-        question_ids: questionIds,
-      } as Record<string, unknown>)
+      .insert(insertRow)
       .select('id')
       .maybeSingle()
 
@@ -64,7 +54,7 @@ serve(async (req) => {
       return json(500, { error: 'Erro ao criar sessão' }, cors)
     }
 
-    const id = (row as { id?: string }).id
+    const id = row.id
     if (!id) {
       return json(500, { error: 'Sessão sem id' }, cors)
     }

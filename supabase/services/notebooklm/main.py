@@ -126,6 +126,25 @@ def _verify_secret(authorization: Optional[str] = Header(None)):
 # ---------------------------------------------------------------------------
 
 
+class AreaPerformance(BaseModel):
+    accuracy: Optional[float] = Field(None, description="Taxa de acerto 0–1")
+    weak_topics: list[str] = Field(default_factory=list, description="Tópicos com menor desempenho")
+
+
+class RoutineDayItem(BaseModel):
+    day: str
+    area: str
+    topics: list[str] = Field(default_factory=list)
+    hours: float = 0.0
+    tip: str = ""
+
+
+class RoutineWeekData(BaseModel):
+    week: list[RoutineDayItem] = Field(default_factory=list)
+    summary: str = ""
+    raw_response: Optional[str] = Field(None, description="Resposta bruta quando JSON inválido")
+
+
 class CreateNotebookRequest(BaseModel):
     class_id: str = Field(..., description="ID da turma no Supabase")
     class_name: str = Field(..., description="Nome da turma (usado como título do notebook)")
@@ -171,7 +190,7 @@ class RoutineRequest(BaseModel):
     user_id: str = Field(..., description="ID do aluno")
     hours_per_day: float = Field(..., description="Horas disponíveis por dia")
     exam_date: str = Field(..., description="Data do ENEM (YYYY-MM-DD)")
-    performance: dict = Field(
+    performance: dict[str, AreaPerformance] = Field(
         default_factory=dict,
         description=(
             "Desempenho por área. Ex: "
@@ -181,7 +200,7 @@ class RoutineRequest(BaseModel):
 
 
 class RoutineResponse(BaseModel):
-    routine: dict
+    routine: RoutineWeekData
     message: str
 
 
@@ -234,14 +253,14 @@ Responda APENAS com um JSON válido no formato:
 """
 
 
-def _format_performance(perf: dict) -> str:
+def _format_performance(perf: dict[str, AreaPerformance]) -> str:
     """Formata dicionário de performance para o prompt."""
     if not perf:
         return "  (sem dados de desempenho disponíveis)"
     lines = []
     for area, data in perf.items():
-        acc = data.get("accuracy", "?")
-        weak = ", ".join(data.get("weak_topics", [])) or "nenhum identificado"
+        acc = data.accuracy if data.accuracy is not None else "?"
+        weak = ", ".join(data.weak_topics) or "nenhum identificado"
         lines.append(f"  - {area}: acurácia {acc}, tópicos fracos: {weak}")
     return "\n".join(lines)
 
@@ -372,11 +391,12 @@ async def generate_routine(req: RoutineRequest, authorization: Optional[str] = H
         answer = answer.strip()
 
         try:
-            routine_data = json.loads(answer)
-        except json.JSONDecodeError:
+            parsed = json.loads(answer)
+            routine_data = RoutineWeekData.model_validate(parsed)
+        except (json.JSONDecodeError, ValueError):
             # Se não parseou, retorna como texto livre
             logger.warning("Resposta da rotina não é JSON válido, retornando como texto")
-            routine_data = {"raw_response": answer, "week": [], "summary": ""}
+            routine_data = RoutineWeekData(raw_response=answer, week=[], summary="")
 
         return RoutineResponse(routine=routine_data, message="Rotina gerada com sucesso.")
     except HTTPException:

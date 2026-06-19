@@ -1,3 +1,4 @@
+import { isRecord } from '../utils/is-record'
 import { MOCK_EXAM_TIME_LIMIT_MINUTES_MAX, MOCK_EXAM_TIME_LIMIT_MINUTES_MIN } from './constants'
 
 export function clampMockExamTimeLimitMinutes(n: number): number {
@@ -7,8 +8,8 @@ export function clampMockExamTimeLimitMinutes(n: number): number {
 
 /** Lê `timeLimitMinutes` gravado em `practice_sessions.config` (JSON). */
 export function timeLimitMinutesFromPracticeConfig(config: unknown): number | null {
-  if (!config || typeof config !== 'object' || Array.isArray(config)) return null
-  const raw = (config as Record<string, unknown>).timeLimitMinutes
+  if (!isRecord(config)) return null
+  const raw = config.timeLimitMinutes
   if (raw === null || raw === undefined) return null
   const n = typeof raw === 'number' ? raw : Number(raw)
   if (!Number.isFinite(n) || n <= 0) return null

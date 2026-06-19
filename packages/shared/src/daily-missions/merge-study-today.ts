@@ -1,7 +1,7 @@
 import { sanitizeStudyTodayByArea } from '../enem-area-display'
-import type { DailyMissionsState } from '../types/daily-missions'
+import type { DailyMissionsState, StudyTodayByArea } from '../types/daily-missions'
 
-export type StudyTodayByArea = Record<string, { answered: number; correct: number }>
+export type { StudyTodayByArea, StudyTodayAreaCount } from '../types/daily-missions'
 
 /**
  * Mescla contagens locais (`daily-missions`) com `studyTodayByArea` do servidor,

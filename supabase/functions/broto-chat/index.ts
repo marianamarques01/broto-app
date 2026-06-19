@@ -1,12 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
+import {
+  parseBrotoChatBody,
+  parseNotebookLmChatResponse,
+} from '../_shared/edge-api-types.ts'
 
 const SERVICE_URL = Deno.env.get('NOTEBOOKLM_SERVICE_URL')!
 const SERVICE_SECRET =
   Deno.env.get('SERVICE_SECRET') ?? Deno.env.get('NOTEBOOKLM_INTERNAL_SECRET') ?? ''
-
-type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
 const MAX_MESSAGE_LENGTH = 4000
 const MAX_MESSAGES = 50
@@ -41,10 +43,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    // Input validation
-    const payload = (await req.json().catch(() => null)) as { messages?: ChatMessage[] } | null
-    const messages = payload?.messages
-    if (!Array.isArray(messages) || messages.length === 0) {
+    const messages = parseBrotoChatBody(await req.json().catch(() => null))
+    if (!messages) {
       return json(400, { error: 'messages é obrigatório' }, cors)
     }
 
@@ -124,8 +124,8 @@ serve(async (req) => {
       return json(502, { error: 'Erro no servico do Broto', details: errBody || undefined }, cors)
     }
 
-    const chatJson = (await chatRes.json().catch(() => null)) as { answer?: string } | null
-    const message = chatJson?.answer?.trim() ?? ''
+    const chatJson = parseNotebookLmChatResponse(await chatRes.json().catch(() => null))
+    const message = chatJson?.answer.trim() ?? ''
 
     if (!message) return json(502, { error: 'Resposta vazia do servico' }, cors)
 

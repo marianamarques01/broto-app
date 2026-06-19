@@ -1,9 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
-
-const DEFAULT_LIMIT = 50
-const MAX_LIMIT = 100
+import { parsePracticeSessionListBody } from '../_shared/edge-api-types.ts'
+import type { PracticeSessionRow } from '../../database.types.ts'
 
 serve(async (req) => {
   const cors = getCorsHeaders(req)
@@ -22,11 +21,7 @@ serve(async (req) => {
     }
     const { user } = authResult.data
 
-    const raw = (await req.json().catch(() => ({}))) as Record<string, unknown>
-    let limit = DEFAULT_LIMIT
-    if (typeof raw.limit === 'number' && Number.isFinite(raw.limit)) {
-      limit = Math.min(MAX_LIMIT, Math.max(1, Math.floor(raw.limit)))
-    }
+    const { limit } = parsePracticeSessionListBody(await req.json().catch(() => ({})))
 
     const admin = createServiceRoleClientUnsafe()
 
@@ -43,13 +38,13 @@ serve(async (req) => {
       return json(500, { error: 'Erro ao listar sessões' }, cors)
     }
 
-    const sessions = (rows ?? []).map((row: Record<string, unknown>) => {
+    const sessions = (rows ?? []).map((row: PracticeSessionRow) => {
       const qids = row.question_ids
       const n = Array.isArray(qids) ? qids.length : 0
       return {
-        sessionId: String(row.id ?? ''),
-        createdAt: String(row.created_at ?? ''),
-        completedAt: row.completed_at != null ? String(row.completed_at) : null,
+        sessionId: row.id,
+        createdAt: row.created_at,
+        completedAt: row.completed_at,
         summary: row.summary ?? null,
         config: row.config ?? null,
         questionCount: n,

@@ -2,15 +2,15 @@
  * Bônus de XP das missões diárias ao concluir metas — alinhado a
  * `apps/web/src/lib/build-daily-missions.ts`. Manter regras sincronizadas.
  */
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import type { TypedSupabaseClient } from './database.ts'
+import type { TopicPerformanceRow, UserQuestionAnswerRow } from '../../database.types.ts'
 import {
   areaKeyForPracticeAnswer,
   isCountablePracticeArea,
-  areaKeyFromTopico,
   AREA_ROLLUP_PREFIX,
 } from './enem-topic-area.ts'
 
-type ServiceClient = ReturnType<typeof createClient>
+type ServiceClient = TypedSupabaseClient
 
 /** Mesma ordem padrão que `build-daily-missions.ts` (fallbacks). */
 const DEFAULT_MISSION_AREAS = ['matematica', 'linguagens', 'ciencias-humanas'] as const
@@ -67,13 +67,10 @@ const AREA_ORDER: { value: string }[] = [
   { value: 'matematica' },
 ]
 
-type TpRow = {
-  topico_value: string
-  total_answered: number
-  total_correct: number
-  accuracy_pct: number
-  area_key?: string | null
-}
+type TpRow = Pick<
+  TopicPerformanceRow,
+  'topico_value' | 'total_answered' | 'total_correct' | 'accuracy_pct' | 'area_key'
+>
 
 export type StudyTodayByArea = Record<string, { answered: number; correct: number }>
 
@@ -99,11 +96,10 @@ export async function fetchStudyTodayByArea(
     return {}
   }
 
-  const answers = (todayRows ?? []) as {
-    question_id: string
-    acertou: boolean
-    answer_area_key?: string | null
-  }[]
+  const answers = (todayRows ?? []) as Pick<
+    UserQuestionAnswerRow,
+    'question_id' | 'acertou' | 'answer_area_key'
+  >[]
   const qids = [...new Set(answers.map((a) => a.question_id))]
   const topicByQid = new Map<string, string | null>()
   if (qids.length > 0) {
@@ -116,8 +112,7 @@ export async function fetchStudyTodayByArea(
       console.error('[daily-mission-bonus] mapping:', mapErr)
     } else {
       for (const row of maps ?? []) {
-        const rec = row as { question_id?: string; topico_value?: string }
-        if (rec.question_id) topicByQid.set(rec.question_id, rec.topico_value ?? null)
+        if (row.question_id) topicByQid.set(row.question_id, row.topico_value ?? null)
       }
     }
   }
@@ -247,13 +242,19 @@ export async function missionAreasForUser(
   return pickMissionAreasFromTopicPerformance((rows ?? []) as TpRow[])
 }
 
-/** Aplica +1 resposta na área da questão (espelha o insert já persistido). */
+/** Aplica +1 resposta na área da questão — mesma regra que `fetchStudyTodayByArea` / `pet-me`. */
 export function applyAnswerToStudyToday(
   map: StudyTodayByArea,
-  topico: string | undefined,
+  attribution: {
+    topicoSlug?: string | null
+    clientAreaKey?: string | null
+  },
   isCorrect: boolean,
 ): StudyTodayByArea {
-  const area = areaKeyFromTopico(topico)
+  const area = areaKeyForPracticeAnswer({
+    topicoSlug: attribution.topicoSlug,
+    clientAreaKey: attribution.clientAreaKey,
+  })
   if (!isCountablePracticeArea(area)) return map
   const next: StudyTodayByArea = { ...map }
   const cur = next[area] ?? { answered: 0, correct: 0 }

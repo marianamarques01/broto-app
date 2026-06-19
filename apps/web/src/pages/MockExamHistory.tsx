@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { api } from '@/lib/api-client'
-import { formatPracticeSessionAreasLabel, type PracticeSessionSummary } from '@broto/shared'
+import { formatPracticeSessionAreasLabel, isPracticeSessionSummary, type PracticeSessionSummary } from '@broto/shared'
 import {
   ArrowLeft,
   ClipboardList,
@@ -23,20 +23,9 @@ type SessionListItem = {
   sessionId: string
   createdAt: string
   completedAt: string | null
-  summary: unknown
+  summary: PracticeSessionSummary | null
   config: unknown
   questionCount: number
-}
-
-function isPracticeSessionSummary(raw: unknown): raw is PracticeSessionSummary {
-  if (!raw || typeof raw !== 'object') return false
-  const o = raw as Record<string, unknown>
-  if (typeof o.percentualGeral !== 'number') return false
-  if (typeof o.totalQuestoes !== 'number') return false
-  if (typeof o.totalCorretas !== 'number') return false
-  if (!o.porArea || typeof o.porArea !== 'object') return false
-  if (!o.porTopico || typeof o.porTopico !== 'object') return false
-  return true
 }
 
 function formatWhen(iso: string): string {

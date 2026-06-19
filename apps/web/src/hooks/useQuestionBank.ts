@@ -1,10 +1,18 @@
 import type { Exam, Question, QuestionBankRow, Topico } from '@broto/shared'
+import {
+  fetchExams,
+  fetchQuestionDetail,
+  loadExamDetails,
+  loadTopicMapping,
+  buildTopicQuestionSet,
+  IDIOMAS_TOPIC_ID,
+  LINGUAGENS_AREA_VALUE,
+  QUESTION_BANK_YEAR_MAX,
+} from '@broto/shared'
+
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useClass } from '@/hooks/useClass'
-import { IDIOMAS_TOPIC_ID, LINGUAGENS_AREA_VALUE } from '@/hooks/useQuestionsFilters'
-
-const EXAM_YEAR_MIN = 2015
-const EXAM_YEAR_MAX = 2023
+import { getStaticStorageBaseUrl } from '@/lib/static-storage-url'
 
 export type { QuestionBankRow }
 
@@ -23,59 +31,9 @@ const TOPIC_DOT_CLASSES = [
   'broto-qbank-topic-dot--violet',
 ]
 
-function getBaseUrl(_orgSlug?: string | null): string {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  if (!supabaseUrl) return ''
-  const base = `${supabaseUrl}/storage/v1/object/public/static`
-  return base
-}
-
 /** Base URL dos JSON estáticos do banco (detalhes das questões). */
 export function getQuestionBankStaticBaseUrl(): string {
-  return getBaseUrl(null)
-}
-
-const topicMappingCache = new Map<string, Record<string, string>>()
-const examDetailsCache = new Map<
-  string,
-  {
-    year: number
-    questions: Array<{ title: string; index: number; discipline: string; language?: string | null }>
-  }
->()
-
-async function loadTopicMapping(baseUrl: string): Promise<Record<string, string>> {
-  if (topicMappingCache.has(baseUrl)) return topicMappingCache.get(baseUrl)!
-  const res = await fetch(`${baseUrl}/data/question-topic-mapping.json`)
-  if (!res.ok) return {}
-  const data = (await res.json()) as { mapping?: Record<string, string> }
-  const mapping = data?.mapping && typeof data.mapping === 'object' ? data.mapping : {}
-  topicMappingCache.set(baseUrl, mapping)
-  return mapping
-}
-
-async function loadExamDetails(baseUrl: string, year: number) {
-  const key = `${baseUrl}::${year}`
-  if (examDetailsCache.has(key)) return examDetailsCache.get(key)!
-  const res = await fetch(`${baseUrl}/${year}/details.json`)
-  if (!res.ok) return null
-  const data = await res.json()
-  if (!data || !Array.isArray(data.questions)) return null
-  examDetailsCache.set(key, data)
-  return data
-}
-
-async function fetchExams(baseUrl: string): Promise<Exam[]> {
-  const res = await fetch(`${baseUrl}/exams.json`)
-  if (!res.ok) return []
-  const data = await res.json()
-  if (!Array.isArray(data)) return []
-  return data
-    .map((e: { year?: number; title?: string }) => ({
-      year: Number(e?.year),
-      title: String(e?.title ?? ''),
-    }))
-    .filter((e: Exam) => e.year >= EXAM_YEAR_MIN && e.year <= EXAM_YEAR_MAX)
+  return getStaticStorageBaseUrl(null)
 }
 
 function simplifyTitle(raw: string): string {
@@ -118,36 +76,7 @@ export async function fetchQuestionDetailForBank(
   index: number,
   language?: string | null,
 ): Promise<Question | null> {
-  const paths = language
-    ? [
-        `${baseUrl}/${year}/questions/${index}-${language}/details.json`,
-        `${baseUrl}/${year}/questions/${index}/details.json`,
-      ]
-    : [`${baseUrl}/${year}/questions/${index}/details.json`]
-
-  for (const path of paths) {
-    const res = await fetch(path)
-    if (res.ok) {
-      const q = await res.json()
-      return {
-        title: q.title,
-        statement: q.alternativesIntroduction ?? null,
-        index: q.index,
-        year: q.year ?? year,
-        discipline: q.discipline ?? null,
-        language: q.language ?? language ?? null,
-        context: q.context ?? null,
-        alternatives: (q.alternatives ?? []).map(
-          (a: { letter: string; text?: string | null; isCorrect?: boolean }) => ({
-            letter: a.letter,
-            text: a.text ?? null,
-            isCorrect: a.isCorrect ?? false,
-          }),
-        ),
-      }
-    }
-  }
-  return null
+  return fetchQuestionDetail(baseUrl, year, index, language)
 }
 
 type BuildParams = {
@@ -190,15 +119,11 @@ async function buildQuestionBankRows(p: BuildParams): Promise<{
 
   let topicQuestionSet: Set<string> | null = null
   if (topicoId && topicoId !== IDIOMAS_TOPIC_ID && topicoValue) {
-    topicQuestionSet = new Set(
-      Object.entries(topicMapping)
-        .filter(([, v]) => v === topicoValue)
-        .map(([k]) => k),
-    )
+    topicQuestionSet = buildTopicQuestionSet(topicMapping, topicoValue)
   }
 
   const isIdiomas = area === LINGUAGENS_AREA_VALUE && topicoId === IDIOMAS_TOPIC_ID
-  const maxYear = yearsToScan.length > 0 ? Math.max(...yearsToScan) : EXAM_YEAR_MAX
+  const maxYear = yearsToScan.length > 0 ? Math.max(...yearsToScan) : QUESTION_BANK_YEAR_MAX
 
   const allDetails = await Promise.all(
     yearsToScan.map((y) => loadExamDetails(baseUrl, y).then((d) => ({ y, d }))),
@@ -312,7 +237,7 @@ export function useQuestionBank(params: {
   catalogReady: boolean
 }) {
   const { organization } = useClass()
-  const baseUrl = getBaseUrl(organization?.slug ?? null)
+  const baseUrl = getStaticStorageBaseUrl(organization?.slug ?? null)
 
   const {
     selectedArea,

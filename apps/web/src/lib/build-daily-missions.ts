@@ -1,9 +1,10 @@
 import { AREA_CONFIG } from '@/lib/area-config'
-import type { AreaStat } from '@/hooks/useProgress'
+import type { AreaStat } from '@broto/shared'
 import {
   DAILY_MISSION_VOLUME_QUEST_GOAL,
   mergeByAreaWithServer,
   type DailyMissionsState,
+  type StudyTodayByArea,
 } from '@broto/shared'
 
 /** Regras de missões/XP: manter alinhadas a `supabase/functions/_shared/daily-mission-bonus.ts`. */
@@ -37,7 +38,7 @@ export function buildDailyMissions(
   areas: AreaStat[] | undefined,
   daily: DailyMissionsState,
   /** Contagens do dia vindas do banco (`pet-me`) para alinhar missões ao servidor. */
-  studyTodayByArea?: Record<string, { answered: number; correct: number }>,
+  studyTodayByArea?: StudyTodayByArea,
 ): DailyMissionItem[] {
   const byArea = mergeByAreaWithServer(daily, studyTodayByArea)
   const sortedKeys = areas?.length

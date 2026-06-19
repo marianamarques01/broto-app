@@ -1,10 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
-
-function isStringArray(v: unknown): v is string[] {
-  return Array.isArray(v) && v.every((x) => typeof x === 'string')
-}
+import { parsePracticeSessionProgressBody } from '../_shared/edge-api-types.ts'
 
 serve(async (req) => {
   const cors = getCorsHeaders(req)
@@ -25,41 +22,16 @@ serve(async (req) => {
     }
     const { user } = authResult.data
 
-    const raw = (await req.json().catch(() => null)) as Record<string, unknown> | null
-    const sessionId = typeof raw?.sessionId === 'string' ? raw.sessionId.trim() : ''
-    const progressRaw = raw?.progress
-
-    if (!sessionId) {
-      return json(400, { error: 'sessionId é obrigatório' }, cors)
+    const parsed = parsePracticeSessionProgressBody(await req.json().catch(() => null))
+    if (!parsed) {
+      return json(400, { error: 'sessionId e progress são obrigatórios' }, cors)
     }
-    if (
-      progressRaw === null ||
-      progressRaw === undefined ||
-      typeof progressRaw !== 'object' ||
-      Array.isArray(progressRaw)
-    ) {
-      return json(400, { error: 'progress deve ser um objeto JSON' }, cors)
-    }
+    const { sessionId, progress } = parsed
+    const currentIndex = progress.currentIndex
+    const skippedQuestionIds = progress.skippedQuestionIds
 
-    const p = progressRaw as Record<string, unknown>
-    const currentIndexRaw = p.currentIndex
-    const skippedRaw = p.skippedQuestionIds
-
-    if (
-      typeof currentIndexRaw !== 'number' ||
-      !Number.isFinite(currentIndexRaw) ||
-      currentIndexRaw < 0
-    ) {
+    if (currentIndex < 0) {
       return json(400, { error: 'progress.currentIndex inválido' }, cors)
-    }
-    const currentIndex = Math.floor(currentIndexRaw)
-
-    let skippedQuestionIds: string[] = []
-    if (skippedRaw !== undefined && skippedRaw !== null) {
-      if (!isStringArray(skippedRaw)) {
-        return json(400, { error: 'progress.skippedQuestionIds deve ser string[]' }, cors)
-      }
-      skippedQuestionIds = skippedRaw.map((s) => s.trim()).filter(Boolean)
     }
 
     const admin = createServiceRoleClientUnsafe()

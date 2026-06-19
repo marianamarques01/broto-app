@@ -3,6 +3,7 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { api } from '@/lib/api-client'
 import type { PracticeSessionAnswerReviewItem, PracticeSessionSummary } from '@broto/shared'
+import { isPracticeSessionSummary } from '@broto/shared'
 import { AREA_CONFIG } from '@/lib/area-config'
 import { Home, Loader2, RotateCcw, History } from 'lucide-react'
 
@@ -37,17 +38,6 @@ function scoreColor(pct: number): string {
 
 const RING_R = 58
 const RING_C = 2 * Math.PI * RING_R
-
-function isPracticeSessionSummary(raw: unknown): raw is PracticeSessionSummary {
-  if (!raw || typeof raw !== 'object') return false
-  const o = raw as Record<string, unknown>
-  if (typeof o.percentualGeral !== 'number') return false
-  if (typeof o.totalQuestoes !== 'number') return false
-  if (typeof o.totalCorretas !== 'number') return false
-  if (!o.porArea || typeof o.porArea !== 'object') return false
-  if (!o.porTopico || typeof o.porTopico !== 'object') return false
-  return true
-}
 
 export function MockExamResult() {
   const location = useLocation()

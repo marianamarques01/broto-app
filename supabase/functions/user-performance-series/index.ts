@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createTypedAnonClient, createTypedServiceRoleClient } from '../_shared/database.ts'
+import { parsePerformanceSeriesBody } from '../_shared/edge-api-types.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 
 type PerformancePeriod = 'week' | 'month' | 'all'
@@ -133,11 +134,7 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) return json(401, { error: 'Unauthorized' }, cors)
 
-    const supabaseAuthed = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } },
-    )
+    const supabaseAuthed = createTypedAnonClient(authHeader)
 
     const {
       data: { user },
@@ -145,15 +142,9 @@ serve(async (req) => {
     } = await supabaseAuthed.auth.getUser()
     if (authError || !user) return json(401, { error: 'Unauthorized' }, cors)
 
-    const raw = (await req.json().catch(() => null)) as Record<string, unknown> | null
-    const periodRaw = raw?.period
-    const period: PerformancePeriod =
-      periodRaw === 'month' || periodRaw === 'all' ? periodRaw : 'week'
+    const { period } = parsePerformanceSeriesBody(await req.json().catch(() => null))
 
-    const admin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
+    const admin = createTypedServiceRoleClient()
 
     const today = new Date()
     const start = new Date(

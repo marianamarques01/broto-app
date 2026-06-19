@@ -17,14 +17,22 @@ const ENEM_AREA_KEYS = new Set([
   'matematica',
 ])
 
+export type EnemAreaKey =
+  | 'linguagens'
+  | 'ciencias-humanas'
+  | 'ciencias-natureza'
+  | 'matematica'
+
+const ENEM_AREA_KEY_SET: ReadonlySet<string> = ENEM_AREA_KEYS
+
 /** Aceita apenas slug canónico; evita enviar placeholders (`outros`) que a Edge ignora como `answer_area_key`. */
 export function parseEnemAreaKey(raw: unknown): string | undefined {
   if (typeof raw !== 'string') return undefined
   const t = raw.trim()
-  return ENEM_AREA_KEYS.has(t) ? t : undefined
+  return ENEM_AREA_KEY_SET.has(t) ? (t as EnemAreaKey) : undefined
 }
 
 /** Área contável em progresso e missões — exclui bucket interno `outros`. */
 export function isCountablePracticeArea(areaKey: string): boolean {
-  return areaKey !== 'outros' && ENEM_AREA_KEYS.has(areaKey)
+  return areaKey !== 'outros' && ENEM_AREA_KEY_SET.has(areaKey)
 }

@@ -1,3 +1,5 @@
+import type { StudyTodayByArea } from './daily-missions'
+
 export interface PetData {
   /** Nome de exibição do Broto (mascote). */
   nome: string
@@ -12,7 +14,7 @@ export interface PetData {
   /** Soma dos `tempo_resposta` (segundos) das respostas de hoje (UTC), quando o backend envia. */
   tempoEstudoSegHoje?: number
   /** Contagens do dia (UTC) por área derivadas do banco — alinha missões ao servidor. */
-  studyTodayByArea?: Record<string, { answered: number; correct: number }>
+  studyTodayByArea?: StudyTodayByArea
 }
 
 export const FASE_EMOJI: Record<PetData['fase'], string> = {

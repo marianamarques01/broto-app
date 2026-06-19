@@ -1,3 +1,13 @@
+/** Prefixo de rollup quando não há tópico mapeado — alinhado a `supabase/functions/_shared/enem-topic-area.ts`. */
+export const AREA_ROLLUP_PREFIX = '__area__:'
+
+const ENEM_AREA_KEY_SET = new Set<string>([
+  'linguagens',
+  'ciencias-humanas',
+  'ciencias-natureza',
+  'matematica',
+])
+
 /** topico_value (slug) → área ENEM (alinhado a user-progress e AREA_CONFIG do app). */
 export const TOPICO_TO_AREA: Record<string, string> = {
   'interpretacao-textual': 'linguagens',
@@ -25,5 +35,9 @@ export const TOPICO_TO_AREA: Record<string, string> = {
 
 export function areaKeyFromTopico(topico: string | null | undefined): string {
   if (!topico) return 'outros'
+  if (topico.startsWith(AREA_ROLLUP_PREFIX)) {
+    const slug = topico.slice(AREA_ROLLUP_PREFIX.length)
+    return ENEM_AREA_KEY_SET.has(slug) ? slug : 'outros'
+  }
   return TOPICO_TO_AREA[topico] ?? 'outros'
 }

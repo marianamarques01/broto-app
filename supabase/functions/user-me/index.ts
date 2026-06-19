@@ -1,5 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createTypedAnonClient, createTypedServiceRoleClient } from '../_shared/database.ts'
+import { isRecord } from '../_shared/edge-api-types.ts'
+import type { UsersRow } from '../../database.types.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 
 serve(async (req) => {
@@ -16,11 +18,7 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) return json(401, { error: 'Unauthorized' }, cors)
 
-    const supabaseAuthed = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } },
-    )
+    const supabaseAuthed = createTypedAnonClient(authHeader)
 
     const {
       data: { user },
@@ -28,10 +26,7 @@ serve(async (req) => {
     } = await supabaseAuthed.auth.getUser()
     if (authError || !user) return json(401, { error: 'Unauthorized' }, cors)
 
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
+    const supabaseAdmin = createTypedServiceRoleClient()
 
     const { data, error } = await supabaseAdmin
       .from('users')
@@ -49,12 +44,24 @@ serve(async (req) => {
       return json(404, { error: 'Perfil não encontrado' }, cors)
     }
 
-    const dataEnem = data.data_enem != null ? String(data.data_enem).slice(0, 10) : null
+    const profileRow = data as Pick<
+      UsersRow,
+      | 'id'
+      | 'nome'
+      | 'email'
+      | 'image'
+      | 'onboarding_done'
+      | 'data_enem'
+      | 'horas_disponiveis_por_dia'
+      | 'onboarding_profile'
+    >
 
-    const rawProfile = (data as { onboarding_profile?: unknown }).onboarding_profile
+    const dataEnem = profileRow.data_enem != null ? String(profileRow.data_enem).slice(0, 10) : null
+
+    const rawProfile = profileRow.onboarding_profile
     let onboardingProfile: unknown = null
-    if (rawProfile && typeof rawProfile === 'object' && !Array.isArray(rawProfile)) {
-      const p = rawProfile as Record<string, unknown>
+    if (rawProfile && isRecord(rawProfile)) {
+      const p = rawProfile
       const faculdade = typeof p.faculdade === 'string' ? p.faculdade : ''
       const curso = typeof p.curso === 'string' ? p.curso : ''
       const metaNota = typeof p.metaNota === 'number' ? p.metaNota : Number(p.metaNota) || 0
@@ -62,9 +69,9 @@ serve(async (req) => {
         ? (p.horarios as unknown[]).filter((h): h is string => typeof h === 'string')
         : []
       let niveis: Record<string, string | null> = {}
-      if (p.niveis && typeof p.niveis === 'object' && !Array.isArray(p.niveis)) {
+      if (p.niveis && isRecord(p.niveis)) {
         niveis = Object.fromEntries(
-          Object.entries(p.niveis as Record<string, unknown>).map(([k, v]) => [
+          Object.entries(p.niveis).map(([k, v]) => [
             k,
             v === null || v === undefined ? null : typeof v === 'string' ? v : null,
           ]),
@@ -76,13 +83,13 @@ serve(async (req) => {
     return json(
       200,
       {
-        id: data.id,
-        nome: data.nome ?? '',
-        email: data.email ?? '',
-        image: data.image,
-        onboardingDone: Boolean(data.onboarding_done),
+        id: profileRow.id,
+        nome: profileRow.nome ?? '',
+        email: profileRow.email ?? '',
+        image: profileRow.image,
+        onboardingDone: Boolean(profileRow.onboarding_done),
         dataEnem,
-        horasDisponiveisPorDia: data.horas_disponiveis_por_dia ?? 2,
+        horasDisponiveisPorDia: profileRow.horas_disponiveis_por_dia ?? 2,
         onboardingProfile,
       },
       cors,

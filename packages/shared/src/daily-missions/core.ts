@@ -1,5 +1,6 @@
 import type { IStorage } from '../storage/istorage'
 import type { AreaKey, DailyMissionsState } from '../types/daily-missions'
+import { isRecord } from '../utils/is-record'
 import { todayLocalISO } from '../utils/today-local-iso'
 
 export { todayLocalISO }
@@ -20,10 +21,10 @@ function parseStoredState(raw: string, date: string): DailyMissionsState {
     throw err
   }
 
-  if (!parsed || typeof parsed !== 'object') {
+  if (!isRecord(parsed)) {
     throw new Error('daily-missions: formato de estado inválido')
   }
-  const o = parsed as Record<string, unknown>
+  const o = parsed
   if (!o.date || typeof o.date !== 'string') throw new Error('daily-missions: campo date inválido')
   if (o.date !== date) return emptyState(date)
   if (!o.byArea || typeof o.byArea !== 'object')

@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
+import { parsePracticeSessionCompleteBody } from '../_shared/edge-api-types.ts'
 
 serve(async (req) => {
   const cors = getCorsHeaders(req)
@@ -21,20 +22,11 @@ serve(async (req) => {
     }
     const { user } = authResult.data
 
-    const raw = (await req.json().catch(() => null)) as Record<string, unknown> | null
-    const sessionId = typeof raw?.sessionId === 'string' ? raw.sessionId.trim() : ''
-    const summary = raw?.summary
-
-    if (!sessionId) {
+    const parsed = parsePracticeSessionCompleteBody(await req.json().catch(() => null))
+    if (!parsed) {
       return json(400, { error: 'sessionId é obrigatório' }, cors)
     }
-    if (
-      summary !== null &&
-      summary !== undefined &&
-      (typeof summary !== 'object' || Array.isArray(summary))
-    ) {
-      return json(400, { error: 'summary deve ser um objeto JSON' }, cors)
-    }
+    const { sessionId, summary } = parsed
 
     const admin = createServiceRoleClientUnsafe()
 

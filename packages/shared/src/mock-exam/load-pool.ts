@@ -1,47 +1,7 @@
 import { getQuestionId } from '../types/question'
 import { MOCK_EXAM_AREA_LINGUAGENS, MOCK_EXAM_YEAR_MAX, MOCK_EXAM_YEAR_MIN } from './constants'
 import type { MockExamPoolEntry } from './types'
-
-const topicMappingCache = new Map<string, Record<string, string>>()
-
-async function loadTopicMapping(baseUrl: string): Promise<Record<string, string>> {
-  if (topicMappingCache.has(baseUrl)) return topicMappingCache.get(baseUrl)!
-  const res = await fetch(`${baseUrl}/data/question-topic-mapping.json`)
-  if (!res.ok) return {}
-  const data = (await res.json()) as { mapping?: Record<string, string> }
-  const mapping = data?.mapping && typeof data.mapping === 'object' ? data.mapping : {}
-  topicMappingCache.set(baseUrl, mapping)
-  return mapping
-}
-
-const examDetailsCache = new Map<
-  string,
-  {
-    year: number
-    questions: Array<{ title: string; index: number; discipline: string; language?: string | null }>
-  }
->()
-
-async function loadExamDetails(baseUrl: string, year: number) {
-  const key = `${baseUrl}::${year}`
-  if (examDetailsCache.has(key)) return examDetailsCache.get(key)!
-  const res = await fetch(`${baseUrl}/${year}/details.json`)
-  if (!res.ok) return null
-  const data = await res.json()
-  if (!data || !Array.isArray(data.questions)) return null
-  examDetailsCache.set(key, data)
-  return data
-}
-
-async function fetchExamsYears(baseUrl: string): Promise<number[]> {
-  const res = await fetch(`${baseUrl}/exams.json`)
-  if (!res.ok) return []
-  const data = await res.json()
-  if (!Array.isArray(data)) return []
-  return data
-    .map((e: { year?: number }) => Number(e?.year))
-    .filter((y: number) => Number.isFinite(y) && y >= MOCK_EXAM_YEAR_MIN && y <= MOCK_EXAM_YEAR_MAX)
-}
+import { loadExamDetails, loadTopicMapping, fetchExams } from '../question-bank/static-storage'
 
 export interface LoadMockExamPoolParams {
   baseUrl: string
@@ -63,7 +23,7 @@ function yearsToSearch(allYears: number[], filterYears: number[]): number[] {
 
 /**
  * Carrega referências de todas as questões do storage que obedecem aos filtros.
- * Espelha a lógica de `searchQuestions` em `apps/web/src/hooks/useQuestionsFilters.ts`.
+ * Core de filtros em `@broto/shared/question-bank/filters-core`.
  */
 export async function loadMockExamPool(
   params: LoadMockExamPoolParams,
@@ -80,7 +40,8 @@ export async function loadMockExamPool(
 
   if (!baseUrl) return []
 
-  const examsYears = await fetchExamsYears(baseUrl)
+  const exams = await fetchExams(baseUrl)
+  const examsYears = exams.map((e) => e.year)
   const yearsFiltered = yearsToSearch(examsYears, years)
 
   const needTopic = !randomMode && topicoValues.length > 0
