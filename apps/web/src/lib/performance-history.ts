@@ -1,5 +1,5 @@
 export type { PerformancePeriod, PerformanceBucket } from '@broto/shared'
-import type { PerformanceBucket, PerformancePeriod } from '@broto/shared'
+import { todayLocalISO, type PerformanceBucket, type PerformancePeriod } from '@broto/shared'
 
 const STORAGE_KEY = 'broto:perf-days:v1'
 
@@ -16,14 +16,6 @@ export function subscribePerformanceHistory(cb: () => void): () => void {
 
 function notify(): void {
   listeners.forEach((l) => l())
-}
-
-function todayLocalISO(): string {
-  const d = new Date()
-  const yyyy = String(d.getFullYear())
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
 }
 
 function readStore(): Store {

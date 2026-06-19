@@ -2,9 +2,10 @@ import { useId } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
+import { DAILY_MISSION_VOLUME_QUEST_GOAL } from '@broto/shared'
 
 /** Alinhado a Home.tsx (meta gamificada do dia). */
-const META_QUESTOES_DIA = 5
+const META_QUESTOES_DIA = DAILY_MISSION_VOLUME_QUEST_GOAL
 
 export type PetBannerNextSteps = {
   revisaoLinha: string

@@ -1,4 +1,4 @@
-import { isAreaRollupTopicValue, type TopicoStat } from '@broto/shared'
+import { isAreaRollupTopicValue, UNCLASSIFIED_TOPIC_KEY, type TopicoStat } from '@broto/shared'
 
 export interface WeakTopicsAsideProps {
   topicos: TopicoStat[] | undefined
@@ -27,7 +27,7 @@ export function WeakTopicsAside({ topicos, loading }: WeakTopicsAsideProps) {
 
   const rows = [...(topicos ?? [])]
     .filter((t) => !isAreaRollupTopicValue(t.value))
-    .filter((t) => t.value !== '__broto_sem_classificacao__')
+    .filter((t) => t.value !== UNCLASSIFIED_TOPIC_KEY)
     .filter((t) => t.totalAnswered >= 1)
     .sort((a, b) => a.accuracyPct - b.accuracyPct)
     .slice(0, 6)

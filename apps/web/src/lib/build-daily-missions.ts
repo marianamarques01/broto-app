@@ -1,13 +1,16 @@
 import { AREA_CONFIG } from '@/lib/area-config'
 import type { AreaStat } from '@/hooks/useProgress'
-import { sanitizeStudyTodayByArea, type DailyMissionsState } from '@broto/shared'
+import {
+  DAILY_MISSION_VOLUME_QUEST_GOAL,
+  mergeByAreaWithServer,
+  type DailyMissionsState,
+} from '@broto/shared'
 
 /** Regras de missões/XP: manter alinhadas a `supabase/functions/_shared/daily-mission-bonus.ts`. */
 
 const DEFAULT_MISSION_AREAS = ['matematica', 'linguagens', 'ciencias-humanas'] as const
 
-/** Meta mínima de questões por missão de volume (primeiras duas); também fallback na UI do banco. */
-export const DAILY_MISSION_VOLUME_QUEST_GOAL = 5
+export { DAILY_MISSION_VOLUME_QUEST_GOAL }
 
 /** Extrai N de títulos como "5 questões de Matemática…" para barras de progresso. */
 export function parseDailyMissionQuestionCount(title: string): number | null {
@@ -28,25 +31,6 @@ export interface DailyMissionItem {
   areaKey: string
   done: boolean
   locked: boolean
-}
-
-function mergeByAreaWithServer(
-  daily: DailyMissionsState,
-  serverToday?: Record<string, { answered: number; correct: number }>,
-): DailyMissionsState['byArea'] {
-  const server = sanitizeStudyTodayByArea(serverToday)
-  if (Object.keys(server).length === 0) return daily.byArea
-  const keys = new Set([...Object.keys(daily.byArea), ...Object.keys(server)])
-  const out: DailyMissionsState['byArea'] = {}
-  for (const k of keys) {
-    const l = daily.byArea[k] ?? { answered: 0, correct: 0 }
-    const s = server[k] ?? { answered: 0, correct: 0 }
-    out[k] = {
-      answered: Math.max(l.answered, s.answered),
-      correct: Math.max(l.correct, s.correct),
-    }
-  }
-  return out
 }
 
 export function buildDailyMissions(
@@ -101,8 +85,9 @@ export function buildDailyMissions(
         : 'Acerto atual: —',
     xp: 50,
     areaKey: missionAreas[2],
-    done: areaAnswered(missionAreas[2]) >= 5 && (areaAccuracy(missionAreas[2]) ?? 0) >= 70,
-    locked: areaAnswered(missionAreas[2]) < 5,
+    done: areaAnswered(missionAreas[2]) >= DAILY_MISSION_VOLUME_QUEST_GOAL &&
+      (areaAccuracy(missionAreas[2]) ?? 0) >= 70,
+    locked: areaAnswered(missionAreas[2]) < DAILY_MISSION_VOLUME_QUEST_GOAL,
   }
   return [m0, m1, m2]
 }

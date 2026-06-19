@@ -1,5 +1,5 @@
 import type { AreaStat } from '@/hooks/useProgress'
-import { sanitizeStudyTodayByArea, type DailyMissionsState } from '@broto/shared'
+import { mergeByAreaWithServer, type DailyMissionsState } from '@broto/shared'
 import { AREA_CONFIG } from '@/lib/area-config'
 import { buildDailyMissions } from '@/lib/build-daily-missions'
 
@@ -20,25 +20,6 @@ export interface RoutineSession {
 }
 
 const START_LABELS = ['08:00', '09:05', '10:00', '14:00'] as const
-
-function mergeByAreaWithServer(
-  daily: DailyMissionsState,
-  serverToday?: Record<string, { answered: number; correct: number }>,
-): DailyMissionsState['byArea'] {
-  const server = sanitizeStudyTodayByArea(serverToday)
-  if (Object.keys(server).length === 0) return daily.byArea
-  const keys = new Set([...Object.keys(daily.byArea), ...Object.keys(server)])
-  const out: DailyMissionsState['byArea'] = {}
-  for (const k of keys) {
-    const l = daily.byArea[k] ?? { answered: 0, correct: 0 }
-    const s = server[k] ?? { answered: 0, correct: 0 }
-    out[k] = {
-      answered: Math.max(l.answered, s.answered),
-      correct: Math.max(l.correct, s.correct),
-    }
-  }
-  return out
-}
 
 function pickTopicLabel(areaKey: string, areas: AreaStat[] | undefined): string {
   const a = areas?.find((x) => x.value === areaKey)

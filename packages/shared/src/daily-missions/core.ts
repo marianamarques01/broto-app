@@ -1,15 +1,10 @@
 import type { IStorage } from '../storage/istorage'
 import type { AreaKey, DailyMissionsState } from '../types/daily-missions'
+import { todayLocalISO } from '../utils/today-local-iso'
+
+export { todayLocalISO }
 
 export const DAILY_MISSIONS_STORAGE_KEY = 'broto:daily-missions:v1'
-
-function todayLocalISO(): string {
-  const d = new Date()
-  const yyyy = String(d.getFullYear())
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
-}
 
 function emptyState(date: string): DailyMissionsState {
   return { date, byArea: {} }

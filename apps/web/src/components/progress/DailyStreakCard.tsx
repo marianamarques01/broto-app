@@ -1,18 +1,15 @@
 import { useMemo } from 'react'
 import { Check, Flame, Sprout } from 'lucide-react'
+import { DAILY_MISSION_VOLUME_QUEST_GOAL, todayLocalISO } from '@broto/shared'
 
 /** Alinhado a HomePetBanner (meta gamificada do dia). */
-const META_QUESTOES_DIA = 5
+const META_QUESTOES_DIA = DAILY_MISSION_VOLUME_QUEST_GOAL
 
 function dateISO(d: Date): string {
   const yyyy = d.getFullYear()
   const mm = String(d.getMonth() + 1).padStart(2, '0')
   const dd = String(d.getDate()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd}`
-}
-
-function todayLocalISO(): string {
-  return dateISO(new Date())
 }
 
 /** Segunda da semana local (00:00 lógico ao meio-dia para evitar DST). */
