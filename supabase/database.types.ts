@@ -115,6 +115,41 @@ export type Database = {
           },
         ]
       }
+      data_quality_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          question_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          question_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          question_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'data_quality_events_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       enrollments: {
         Row: {
           class_id: string
@@ -461,6 +496,7 @@ export type Database = {
           id: string
           last_practiced: string | null
           mastery_level: string | null
+          p_know: number
           topico_value: string
           total_answered: number
           total_correct: number
@@ -472,6 +508,7 @@ export type Database = {
           id?: string
           last_practiced?: string | null
           mastery_level?: string | null
+          p_know?: number
           topico_value: string
           total_answered?: number
           total_correct?: number
@@ -483,6 +520,7 @@ export type Database = {
           id?: string
           last_practiced?: string | null
           mastery_level?: string | null
+          p_know?: number
           topico_value?: string
           total_answered?: number
           total_correct?: number

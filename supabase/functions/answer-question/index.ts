@@ -4,23 +4,18 @@ import { parseAnswerQuestionBody } from '../_shared/edge-api-types.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
 import type {
   PetsRow,
-  TopicPerformanceInsert,
-  TopicPerformanceRow,
   UserQuestionAnswerInsert,
   UsersRow,
   PracticeSessionRow,
 } from '../../database.types.ts'
+import { applyTopicPerformanceUpdate } from '../_shared/answer-question-p-know.ts'
 import {
   applyAnswerToStudyToday,
   computeMissionBonusXp,
   fetchStudyTodayByArea,
   missionAreasForUser,
 } from '../_shared/daily-mission-bonus.ts'
-import {
-  areaKeyForPracticeAnswer,
-  isCountablePracticeArea,
-  rollupTopicPerformanceSlug,
-} from '../_shared/enem-topic-area.ts'
+import { todayUtcISO, yesterdayUtcISO } from '../_shared/calendar-day.ts'
 
 /** +10 XP por resposta, +5 se acertou (alinhado ao spec em docs/broto-f4-area-de-estudo.md). */
 const XP_PER_ANSWER = 10
@@ -124,49 +119,16 @@ serve(async (req) => {
         ? String(mapRows[0].topico_value ?? '').trim() || undefined
         : undefined
 
-    const effectiveTopico =
-      mappedTopico ??
-      (validatedAnswerAreaKey ? rollupTopicPerformanceSlug(validatedAnswerAreaKey) : undefined)
+    const tpResult = await applyTopicPerformanceUpdate(admin, {
+      userId: user.id,
+      questionId,
+      isCorrect,
+      mappedTopico,
+      clientAreaKey: validatedAnswerAreaKey,
+    })
 
-    if (effectiveTopico) {
-      const { data: existing } = await admin
-        .from('topic_performance')
-        .select('total_answered, total_correct')
-        .eq('user_id', user.id)
-        .eq('topico_value', effectiveTopico)
-        .maybeSingle()
-
-      const existingRow = existing as Pick<
-        TopicPerformanceRow,
-        'total_answered' | 'total_correct'
-      > | null
-      const ta = (Number(existingRow?.total_answered) || 0) + 1
-      const tc = (Number(existingRow?.total_correct) || 0) + (isCorrect ? 1 : 0)
-      const acc = ta > 0 ? Math.round((tc / ta) * 10000) / 100 : 0
-
-      const resolvedArea = areaKeyForPracticeAnswer({
-        topicoSlug: mappedTopico,
-        clientAreaKey: validatedAnswerAreaKey,
-      })
-      const areaKeyToStore = isCountablePracticeArea(resolvedArea) ? resolvedArea : null
-
-      const tpUpsert: TopicPerformanceInsert = {
-        user_id: user.id,
-        topico_value: effectiveTopico,
-        total_answered: ta,
-        total_correct: tc,
-        accuracy_pct: acc,
-        last_practiced: new Date().toISOString(),
-        area_key: areaKeyToStore,
-      }
-
-      const { error: tpErr } = await admin.from('topic_performance').upsert(tpUpsert, {
-        onConflict: 'user_id,topico_value',
-      })
-
-      if (tpErr) {
-        console.error('[answer-question] topic_performance upsert:', tpErr)
-      }
+    if (tpResult.status === 'error') {
+      return json(500, { error: tpResult.message }, cors)
     }
 
     const missionAreas = await missionAreasForUser(admin, user.id)
@@ -212,10 +174,8 @@ serve(async (req) => {
       return json(500, { error: 'Erro ao atualizar pet' }, cors)
     }
 
-    const todayStr = new Date().toISOString().slice(0, 10)
-    const y = new Date()
-    y.setUTCDate(y.getUTCDate() - 1)
-    const yesterdayStr = y.toISOString().slice(0, 10)
+    const todayStr = todayUtcISO()
+    const yesterdayStr = yesterdayUtcISO()
 
     const { data: urow, error: userSelErr } = await admin
       .from('users')
@@ -225,28 +185,30 @@ serve(async (req) => {
 
     if (userSelErr) {
       console.error('[answer-question] user select:', userSelErr)
-    } else {
-      const u = urow as Pick<UsersRow, 'last_study_date' | 'streak'> | null
-      const lastRaw = u?.last_study_date
-      const last = lastRaw != null ? String(lastRaw).slice(0, 10) : null
-      let newStreak = Number(u?.streak) || 0
+      return json(500, { error: 'Erro ao atualizar sequência' }, cors)
+    }
 
-      if (last !== todayStr) {
-        if (last === yesterdayStr) {
-          newStreak = newStreak + 1
-        } else {
-          newStreak = 1
-        }
-        const { error: streakErr } = await admin
-          .from('users')
-          .update({
-            streak: newStreak,
-            last_study_date: todayStr,
-          })
-          .eq('id', user.id)
-        if (streakErr) {
-          console.error('[answer-question] streak update:', streakErr)
-        }
+    const u = urow as Pick<UsersRow, 'last_study_date' | 'streak'> | null
+    const lastRaw = u?.last_study_date
+    const last = lastRaw != null ? String(lastRaw).slice(0, 10) : null
+    let newStreak = Number(u?.streak) || 0
+
+    if (last !== todayStr) {
+      if (last === yesterdayStr) {
+        newStreak = newStreak + 1
+      } else {
+        newStreak = 1
+      }
+      const { error: streakErr } = await admin
+        .from('users')
+        .update({
+          streak: newStreak,
+          last_study_date: todayStr,
+        })
+        .eq('id', user.id)
+      if (streakErr) {
+        console.error('[answer-question] streak update:', streakErr)
+        return json(500, { error: 'Erro ao atualizar sequência' }, cors)
       }
     }
 
