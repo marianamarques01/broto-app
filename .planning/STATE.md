@@ -70,7 +70,7 @@ npm run test:functions
 | 3.2 Deploy admin | Pendente (`apps/admin/vercel.json` ausente) |
 | 3.3 Deploy functions | **Concluída** | Deploy 2026-06-21 (`npm run deploy:functions`), 19/19 |
 | 3.4 RLS staging | Pendente |
-| 3.5 Observabilidade | Pendente |
+| 3.5 Observabilidade | **Parcial (web MVP)** | Sentry em `apps/web`; admin + edge functions pendentes |
 
 ### Trilha Type Safety / Supabase (passes P6–P9)
 
@@ -120,4 +120,5 @@ npm run test:functions
 
 1. **Redeploy** se o repo local divergir do ar (último asset Vercel ~2026-06-12): push na `main` ou promote no dashboard
 2. **`npm run deploy:functions`** após mudanças em `supabase/functions/`
-3. **Fase 3.2** (admin) ou **3.5** (Sentry)
+3. **Fase 3.5** — configurar `VITE_SENTRY_DSN` na Vercel + smoke `window.__brotoSentryTest?.()` (ver `docs/observability.md`)
+4. **Fase 3.2** (admin) quando houver professores em uso

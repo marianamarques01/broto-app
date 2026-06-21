@@ -62,7 +62,10 @@ Referência: `apps/web/.env.example`.
 | `VITE_SUPABASE_ANON_KEY` | Sim | Anon key do projeto |
 | `VITE_BETA_FEEDBACK_FORM_URL` | Não | Formulário de feedback |
 | `VITE_APP_INTEGRATED_TOUR` | Não | `false` desliga tour |
-| `VITE_SENTRY_DSN` | Não | Fase 3.5 |
+| `VITE_SENTRY_DSN` | Não | Sentry — ver `docs/observability.md` |
+| `SENTRY_AUTH_TOKEN` | Não | Upload source maps (build only) |
+| `SENTRY_ORG` | Não | Slug org Sentry (build only) |
+| `SENTRY_PROJECT` | Não | Slug projeto Sentry (build only) |
 
 Após alterar `VITE_*`, **redeploy** (valores embutidos no build).
 
@@ -120,3 +123,4 @@ Vercel → Deployments → promote deployment anterior.
 - `docs/deploy-functions.md` — deploy Edge Functions
 - `scripts/verify-production-cors.sh`
 - `.planning/PRODUCTION-ROADMAP.md` — Fase 3.1
+- `docs/observability.md` — Sentry (fase 3.5)
