@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { parseSessionIdBody } from '../_shared/edge-api-types.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
+import type { PracticeSessionRow, UserQuestionAnswerRow } from '../../database.types.ts'
 
 serve(async (req) => {
   const cors = getCorsHeaders(req)
@@ -43,25 +44,17 @@ serve(async (req) => {
     if (!row) {
       return json(404, { error: 'Sessão não encontrada' }, cors)
     }
-    if ((row as { user_id?: string }).user_id !== user.id) {
+    const sessionRow = row as PracticeSessionRow
+    if (sessionRow.user_id !== user.id) {
       return json(403, { error: 'Sessão de outro usuário' }, cors)
     }
 
-    const r = row as {
-      id: string
-      created_at: string
-      completed_at: string | null
-      kind: string
-      config: unknown
-      question_ids: unknown
-      summary: unknown
-      progress: unknown
-    }
-
-    const questionIds = Array.isArray(r.question_ids) ? r.question_ids.map(String) : []
+    const questionIds = Array.isArray(sessionRow.question_ids)
+      ? sessionRow.question_ids.map(String)
+      : []
 
     let sessionAnswers: { questionId: string; isCorrect: boolean }[] = []
-    if (!r.completed_at && questionIds.length > 0) {
+    if (!sessionRow.completed_at && questionIds.length > 0) {
       const { data: ansRows, error: ansErr } = await admin
         .from('user_question_answers')
         .select('question_id, acertou, created_at')
@@ -74,7 +67,7 @@ serve(async (req) => {
       } else if (Array.isArray(ansRows)) {
         const latest = new Map<string, boolean>()
         for (const a of ansRows) {
-          const ar = a as { question_id?: string; acertou?: boolean }
+          const ar = a as Pick<UserQuestionAnswerRow, 'question_id' | 'acertou'>
           const qid = typeof ar.question_id === 'string' ? ar.question_id.trim() : ''
           if (!qid) continue
           latest.set(qid, ar.acertou === true)
@@ -89,14 +82,14 @@ serve(async (req) => {
     return json(
       200,
       {
-        sessionId: r.id,
-        createdAt: r.created_at,
-        completedAt: r.completed_at,
-        kind: r.kind,
-        config: r.config,
+        sessionId: sessionRow.id,
+        createdAt: sessionRow.created_at,
+        completedAt: sessionRow.completed_at,
+        kind: sessionRow.kind,
+        config: sessionRow.config,
         questionIds,
-        summary: r.summary,
-        progress: r.progress ?? null,
+        summary: sessionRow.summary,
+        progress: sessionRow.progress ?? null,
         sessionAnswers,
       },
       cors,

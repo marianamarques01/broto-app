@@ -1,0 +1,72 @@
+---
+description: Padrões para Edge Functions Deno — authz, CORS, validação, testes
+globs: supabase/functions/**/*
+alwaysApply: false
+---
+
+# Edge Functions (Supabase / Deno)
+
+## Template para nova function
+
+```typescript
+import { corsHeaders, handleCors } from '../_shared/cors.ts'
+import { requireUser, requireMembership } from '../_shared/authz.ts'
+
+Deno.serve(async (req) => {
+  const cors = handleCors(req)
+  if (cors) return cors
+
+  try {
+    const { user, supabase } = await requireUser(req)
+    // validar input
+    // lógica de negócio
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (err) {
+    // mapear para status HTTP apropriado
+  }
+})
+```
+
+## Obrigatório em toda function
+
+1. **CORS** via `_shared/cors.ts` — `handleCors` no início
+2. **Auth** via `_shared/authz.ts` — nunca confiar só no JWT decode manual
+3. **Validação de input** — UUID, campos required, tipos
+4. **Respostas JSON** com `Content-Type: application/json`
+5. **Status codes corretos** — 400 input, 401 auth, 403 forbidden, 500 internal
+
+## service_role
+
+- Função `createServiceRoleClientUnsafe()` bypassa RLS
+- Usar **somente** após `requireUser` / `requireMembership` validarem o caller
+- Documentar no código por que service_role é necessário naquele caso
+
+## Imports
+
+- Deno ESM: `https://esm.sh/@supabase/supabase-js@2`
+- **Sem** Node.js built-ins incompatíveis com Deno Deploy
+- Shared logic entre functions → `supabase/functions/_shared/`
+
+## Testes
+
+- `Deno.test` para validação e authz
+- Referência: `supabase/functions/auth-signup/validate_test.ts`
+- Testes não devem precisar de rede (mock Supabase client)
+
+## Deploy
+
+- Uma function por pasta em `supabase/functions/<nome>/index.ts`
+- Após deploy: testar OPTIONS + POST com JWT válido/inválido
+- Atualizar `ALLOWED_ORIGINS` se novo domínio de frontend
+
+## Multi-tenant
+
+Antes de query em `classes`, `materials`, `practice_sessions`:
+
+1. Resolver `organization_id` do contexto do usuário
+2. Verificar membership ativa
+3. Filtrar por `organization_id` — nunca retornar dados cross-tenant
+
+Consultar `docs/multi-tenant/multi-tenant-permissions-matrix.md`.

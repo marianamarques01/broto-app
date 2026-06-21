@@ -1,79 +1,123 @@
----
-gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: codebase-consolidation
-status: consolidation-phases-complete
-stopped_at: Phases 2–4 delivered in repo; planning docs reconciled 2026-04-05
-last_updated: "2026-04-05T12:00:00.000Z"
-progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 5
-  completed_plans: 5
+# Estado do projeto — Broto
+
+**Última atualização:** 2026-06-21  
+**Fonte de verdade** para status de execução. O `PRODUCTION-ROADMAP.md` descreve o plano; este arquivo descreve **onde estamos**.
+
 ---
 
-# Project State
+## Gates locais (hoje)
 
-## Project Reference
+```bash
+npm run format:check && npm run lint && npm run typecheck && npm run test:shared && npm run test:web && npm run build
+npm run test:functions
+```
 
-See: .planning/PROJECT.md
+| Gate | Status |
+|------|--------|
+| `format:check` | Verde |
+| `lint` | Verde (3 warnings em `Onboarding.tsx` exhaustive-deps — conhecido, fora de escopo) |
+| `typecheck` | Verde (web + admin) |
+| `test:shared` | Verde — **38 testes** (8 arquivos Vitest) |
+| `test:web` | Verde — **12 testes** (`api-client.test.ts`) |
+| `test:functions` | Verde — **5 arquivos** Deno (`authz`, `cors`, `daily-mission-bonus`, `edge-api-types`, `validate`) |
+| `build` | Verde (web + admin) |
+| CI GitHub (`.github/workflows/ci.yml`) | lint, typecheck, test:shared, test:web, test:functions, build |
 
-**Core value:** A maintainable, consistent monorepo where business logic lives in one place, bugs are fixed once, and developers can work across apps without friction.
-**Current focus:** Encerramento operacional multi-tenant (RLS/CORS em staging) e backlog de consolidação residual — ver `.planning/NEXT-REFACTOR-PLAN.md` **Fase E** e ROADMAP «Follow-ups».
+**Produção web:** [www.brotoenem.com.br](https://www.brotoenem.com.br) (Vercel). CORS: `npm run verify:cors` → verde.
 
-## Current Position
+---
 
-- Phase 01 (tooling-hygiene-security): **closed** (5/5 plans delivered)
-- Phase 02 (bug fixes and error propagation): **closed** (cache refresh coalescing, 401 pipeline, ClassContext errors, daily-missions propagation)
-- Phase 03 (code consolidation): **closed** com excepção documentada em ROADMAP (area-config com ícones por app)
-- Phase 04 (tests & resilience): **closed** (Vitest + testes em `packages/shared`, retry nos API clients, erros visíveis em `useQuestionsFilters` / missões)
+## Inventário técnico
 
-## Performance Metrics
+| Item | Contagem / nota |
+|------|-----------------|
+| Edge functions | 19 (`supabase/functions/*/index.ts`) |
+| Módulos `_shared` | 9 arquivos TS + 4 `*_test.ts` em `_shared` |
+| Migrations versionadas | 26 (`supabase/migrations/`) |
+| `database.types.ts` | CLI gerado + aliases Row (script P8) |
+| Apps ativos | `apps/web`, `apps/admin` |
+| Mobile | **Removido** (2026-06) |
+| `StudyArea.tsx` | ~139 linhas (extraído para `study-area/*` — P2 parcial) |
+| `app.css` | ~23k linhas — ainda monolítico |
 
-**Velocity:**
+---
 
-- Total plans completed: 5 (Phase 1) + implementation wave (Phases 2–4, sem PLAN.md por fase)
-- Average duration: —
-- Total execution time: —
+## Roadmap de produção — progresso
 
-**By Phase:**
+### Fase 1 — Fundação
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 1 | 5 | — | — |
-| 2–4 | impl | — | — |
+| Etapa | Status | Notas |
+|-------|--------|-------|
+| 1.1 CI mínimo | **Concluída** | `.github/workflows/ci.yml` |
+| 1.2 Admin typecheck | **Concluída** | `npm run typecheck` verde |
+| 1.3 Remover mobile | **Concluída** | `apps/mobile/` ausente |
+| 1.4 Higiene repo | **Parcial** | `.venv`/assets grandes ainda em CONCERNS |
 
-**Recent Trend:**
+### Fase 2 — Qualidade
 
-- Milestone consolidation sync: 2026-04-05 (`ROADMAP.md`, `STATE.md`, `REQUIREMENTS.md`, nota em `NEXT-REFACTOR-PLAN.md`)
+| Etapa | Status | Notas |
+|-------|--------|-------|
+| 2.1 Arquivos gigantes | **Parcial** | StudyArea refatorado; `app.css` e outros componentes grandes pendentes |
+| 2.2 Consolidar shared | **Parcial** | `filters-core.ts`, daily-missions, enem-area em shared |
+| 2.3 Testes edge (Deno) | **Parcial** | P8+P9: authz, cors, daily-mission-bonus, edge-api-types, validate |
+| 2.4 Testes web (Vitest) | **Concluída** | Vitest + 12 testes `api-client.test.ts`, CI `test:web` |
 
-## Accumulated Context
+### Fase 3 — Produção
 
-### Decisions
+| Etapa | Status |
+|-------|--------|
+| 3.1 Deploy web | **Concluída** | Live em `www.brotoenem.com.br`; docs + `vercel.json` |
+| 3.2 Deploy admin | Pendente (`apps/admin/vercel.json` ausente) |
+| 3.3 Deploy functions | **Concluída** | Deploy 2026-06-21 (`npm run deploy:functions`), 19/19 |
+| 3.4 RLS staging | Pendente |
+| 3.5 Observabilidade | Pendente |
 
-- **Area config:** Não movido integralmente para `@broto/shared` — ícones RN (`lucide-react-native` + tokens) vs web (`lucide-react` + hex); critério de produto para uma fonte única de metadados **sem** componentes.
-- **Fase E multi-tenant:** Continua a exigir validação humana (matriz RLS, `ALLOWED_ORIGINS` em produção), independentemente do fecho das fases 2–4.
+### Trilha Type Safety / Supabase (passes P6–P9)
 
-### Pending Todos
+| Passe | Status | Entregas principais |
+|-------|--------|---------------------|
+| P6 | Concluído | Typed clients, constantes missão, `topico-labels.ts` |
+| P7 | Concluído | `requireUser()` em 6 functions, `area_key` migration, `database.types.ts` CLI |
+| P8 | Concluído | `scripts/gen-database-types.sh`, drift `user_question_answers` (Opção A), casts Row, Deno.test inicial |
+| P9 | **Concluído** | authz membership/class (mock), `cors_test.ts`, `edge-api-types_test.ts` |
 
-- EXECUTAR matriz / smoke tests RLS e checklist `docs/multi-tenant/*` em staging (Fase E).
-- Opcional: CONS-03, CONS-05, BUGF-05 (ver ROADMAP «Follow-ups»).
+---
 
-### Blockers/Concerns
+## Backend — decisões recentes
 
-- Nenhum bloqueador técnico declarado para o merge do trabalho de consolidação; CI local: `format:check`, `typecheck`, `build`, `test` (shared) verdes na última verificação da sprint.
+- **`topic_performance.area_key`:** Opção A — coluna versionada (`20260619120000`), backfill SQL, upsert em `answer-question`
+- **Auth edge:** 17/19 functions com `requireUser()`; exceções: `auth-signup` (público + service role), helpers em `_shared/authz.ts`
+- **`user_question_answers` drift (P8 Opção A):** migration `20260620120000` versiona colunas legado prod; **aplicada em remoto** (2026-06-20); runtime usa `answer_area_key` + `acertou` — sem DROP
 
-### Quick Tasks Completed
+---
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260506-sjk | Criar card de progresso semanal no dashboard Broto Web | 2026-05-06 | 4695069d | [260506-sjk-criar-card-de-progresso-semanal-no-dashb](./quick/260506-sjk-criar-card-de-progresso-semanal-no-dashb/) |
-| 260508-g04 | Reposicionar card semanal abaixo do Broto e deixar desempenho por área ao lado | 2026-05-08 | 96551b59 | [260508-g04-reposicionar-card-semanal-abaixo-do-brot](./quick/260508-g04-reposicionar-card-semanal-abaixo-do-brot/) |
+## Dívida conhecida (priorizada)
 
-## Session Continuity
+1. Testes web adicionais (hooks além de `api-client`)
+2. Testes Deno adicionais (`resolveActiveContext`, JWT mock em `requireUser`)
+3. `app.css` monolítico (~23k linhas)
+4. `.planning/codebase/*` — análise de abril/2026, **arquivada** (ver nota abaixo)
+5. Assets/binários e `.venv` no git (CONCERNS)
+6. `Onboarding.tsx` exhaustive-deps (escopo grande)
 
-Last activity: 2026-05-08 - Completed quick task 260508-g04: Reposicionar card semanal abaixo do Broto e deixar desempenho por área ao lado
+---
 
-Last session: 2026-04-05
-Stopped at: Documentação GSD alinhada ao estado entregue no código (fases 2–4)
-Resume file: None
+## Documentação
+
+| Documento | Papel |
+|-----------|--------|
+| `CONTEXT.md` | Índice mestre — ler primeiro |
+| `.planning/STATE.md` | **Este arquivo** — status atual |
+| `.planning/PRODUCTION-ROADMAP.md` | Plano + prompts por etapa |
+| `.planning/PROJECT.md` | Escopo do milestone de consolidação |
+| `docs/CHECKLIST-PR.md` | Checklist de PR |
+| `docs/deprecated/*` | ROADMAP/REQUIREMENTS antigos (histórico) |
+| `.planning/codebase/*` | Snapshot **2026-04-02** — consultar com cautela |
+
+---
+
+## Próximo passo recomendado
+
+1. **Redeploy** se o repo local divergir do ar (último asset Vercel ~2026-06-12): push na `main` ou promote no dashboard
+2. **`npm run deploy:functions`** após mudanças em `supabase/functions/`
+3. **Fase 3.2** (admin) ou **3.5** (Sentry)

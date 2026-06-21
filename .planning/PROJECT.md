@@ -1,92 +1,72 @@
-# Broto EdTech — Codebase Consolidation
+# Broto EdTech — Consolidação do monorepo
+
+**Última atualização:** 2026-06-19  
+**Status de execução:** `.planning/STATE.md`
 
 ## What This Is
 
-Broto is an EdTech platform for ENEM exam preparation, with a web app (React/Vite) for students, an admin dashboard for teachers, and a Supabase backend with AI-powered study features via Google NotebookLM. The native mobile app (`apps/mobile/`) was removed in 2026-06; this milestone focuses on consolidating the remaining codebase — eliminating duplication, fixing critical bugs, standardizing patterns, and establishing a healthy foundation for future feature development.
+Broto is an EdTech platform for ENEM exam preparation, with a web app (React/Vite) for students, an admin dashboard for teachers, and a Supabase backend with AI-powered study features via Google NotebookLM. The native mobile app was removed in 2026-06; active work is web + admin + shared + supabase hardening toward production.
 
 ## Core Value
 
-A maintainable, consistent monorepo where business logic lives in one place (`packages/shared`), bugs are fixed once, and developers can work across apps without friction.
+A maintainable, consistent monorepo where business logic lives in one place (`packages/shared`), backend auth/types are explicit, and CI gates prevent regressions.
 
 ## Requirements
 
 ### Validated
 
-- ✓ Web student app for ENEM preparation — existing
-- ✓ Admin dashboard for teachers to manage classes, students, materials — existing
-- ✓ Supabase auth with email/password login — existing
-- ✓ Question bank with area/topic filtering and search — existing
-- ✓ AI chat assistant via Google NotebookLM integration — existing
-- ✓ Daily missions system for study gamification — existing
-- ✓ Student progress tracking (areas, topics, accuracy) — existing
-- ✓ Class enrollment and organization management — existing
-- ✓ Cached data hooks pattern with `@broto/shared` createCachedStore — existing
-- ✓ Turborepo monorepo with shared types package — existing
+- ✓ Web student app for ENEM preparation
+- ✓ Admin dashboard (classes, students, materials)
+- ✓ Supabase auth (email/password)
+- ✓ Question bank with area/topic filtering (`filters-core` in shared)
+- ✓ AI chat via NotebookLM (`broto-chat`)
+- ✓ Daily missions + progress tracking
+- ✓ Class enrollment and multi-tenant RLS (PR-08)
+- ✓ CI pipeline (lint, typecheck, test:shared, build)
+- ✓ Typecheck verde (web + admin)
+- ✓ Edge functions com `_shared/authz.ts` + `_shared/cors.ts`
+- ✓ `database.types.ts` gerado via Supabase CLI (linked)
 
 ### Active
 
-- [ ] Eliminate cross-app code duplication (~25% of codebase)
-- [ ] Fix critical race conditions (cache store, 401 handler)
-- [ ] Standardize code formatting and naming conventions across all apps
-- [ ] Move shared business logic to `packages/shared`
-- [ ] Add retry logic and proper error handling to API clients
-- [ ] Remove dead code (.venv from git, optimize SVG assets, audit packages/ui)
-- [ ] Fix CORS to fail closed (reject non-whitelisted origins)
-- [ ] Establish automated testing foundation
+- [ ] Testes Deno nas edge functions (`authz`, validação)
+- [ ] Testes Vitest no web (api-client, hooks críticos)
+- [ ] Deploy produção (web, admin, functions) — Fase 3 do roadmap
+- [ ] RLS validado em staging
+- [ ] Observabilidade (Sentry)
+- [ ] Higiene repo (`.venv`, assets grandes — ver CONCERNS)
+- [ ] Extrair CSS monolítico (`app.css` ~23k linhas)
+- [ ] Reconciliar drift schema prod ↔ migrations (`user_question_answers`)
 
-### Out of Scope
+### Out of Scope (este milestone)
 
-- New features (new screens, new capabilities) — this milestone is consolidation only
-- Backend migration away from Supabase — too large, separate initiative
-- Full service layer abstraction — incremental improvement, not rewrite
-- Onboarding completion — separate feature milestone
-- CI/CD pipeline setup — separate ops milestone
+- Reescrever backend fora do Supabase
+- Novas features de produto grandes (landing B2B, etc.) sem gate de qualidade
+- `apps/mobile` — removido
 
 ## Context
 
-**Current state:** The codebase grew organically with mobile-first development, then web was added by copying and adapting mobile code. The mobile app was removed in 2026-06; active apps are `apps/web`, `apps/admin`, and `packages/shared`. Residual duplication between web and shared is being consolidated incrementally.
+**Current state (2026-06-19):** Fase 1 do roadmap em grande parte concluída (CI, typecheck, mobile removido). Fase 2 parcial (StudyArea refatorado, shared filters). Passes P6/P7 entregaram type safety no Supabase. Próximo: Passe 8 ou Fase 2.3 (testes edge).
 
-**Critical bugs identified:**
-1. Race condition in `packages/shared/src/hooks/create-cached-hook.ts` — `inflight` flag can allow duplicate requests
-2. Race condition in API client 401 handler — boolean `handlingUnauthorized` flag is not atomic
-3. Silent error swallowing in ClassContext, daily-missions, broto-chat
+**Gates:** `npm run format:check && npm run lint && npm run typecheck && npm run test:shared && npm run build` — verdes.
 
-**Health grades:** Duplication: D, Consistency: D, Tests: F, Fragility: D, Coupling: C-, Architecture: C
-
-**Codebase map:** Full analysis available in `.planning/codebase/` (7 documents + CRITICAL-ANALYSIS.md)
+**Planning docs:** `.planning/STATE.md` é a fonte de verdade; `.planning/codebase/*` é snapshot de abril/2026 (arquivado).
 
 ## Constraints
 
-- **Tech stack**: Existing stack is fixed (React/Vite, Supabase, TypeScript) — no migrations
-- **Incremental**: Changes must be backward-compatible; apps must keep working throughout
-- **No feature regression**: All existing functionality must continue working after consolidation
-- **Monorepo structure**: Keep Turborepo, apps/*, packages/* structure
+- **Tech stack** fixo: React/Vite, Supabase, TypeScript
+- **Incremental** — apps funcionando a cada passo
+- **Diff mínimo** em passes de engenharia (P6–P8)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Consolidate to `packages/shared` first | Reduces duplication before standardizing patterns | — Pending |
-| Fix race conditions before refactoring | Critical bugs could mask other issues | — Pending |
-| Standardize on web conventions (camelCase, single quotes, no semicolons) | Web/admin are the active apps after mobile removal | — Pending |
-| Keep `createCachedHook` per-app (React isolation) | Intentional pattern to avoid dual-React issues in monorepo | — Pending |
-
-## Evolution
-
-This document evolves at phase transitions and milestone boundaries.
-
-**After each phase transition:**
-1. Requirements invalidated? -> Move to Out of Scope with reason
-2. Requirements validated? -> Move to Validated with phase reference
-3. New requirements emerged? -> Add to Active
-4. Decisions to log? -> Add to Key Decisions
-5. "What This Is" still accurate? -> Update if drifted
-
-**After each milestone:**
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
+| Remover mobile | Web é produto principal | ✅ 2026-06 |
+| `requireUser()` centralizado | Fail closed, menos boilerplate | ✅ P7 |
+| `area_key` versionado em `topic_performance` | Missões diárias sem fallback silencioso | ✅ P7 + migration remota |
+| Tipos via `gen types --linked` | Sem Docker local | ✅ P7 |
+| `legacyUnauthorizedMessage` | Preservar 401 "Unauthorized" em endpoints legados | ✅ P7 |
 
 ---
-*Last updated: 2026-06-11 after mobile removal (PRODUCTION-ROADMAP etapa 1.3)*
+*Atualizar este arquivo em marcos de fase; detalhe operacional em STATE.md.*

@@ -167,7 +167,7 @@ export function StudyPackageLeaveDialog({
   stageCount,
   onContinue,
   onSaveAndLeave,
-  onDiscardAndLeave,
+  onDiscardAndLeave: _onDiscardAndLeave,
 }: {
   open: boolean
   completedCount: number

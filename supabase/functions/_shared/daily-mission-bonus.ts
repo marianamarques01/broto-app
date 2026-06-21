@@ -7,58 +7,15 @@ import type { TopicPerformanceRow, UserQuestionAnswerRow } from '../../database.
 import {
   areaKeyForPracticeAnswer,
   isCountablePracticeArea,
-  AREA_ROLLUP_PREFIX,
+  TOPICO_TO_AREA,
 } from './enem-topic-area.ts'
+import {
+  DAILY_MISSION_VOLUME_QUEST_GOAL,
+  DEFAULT_MISSION_AREAS,
+  DAILY_MISSION_XP_REWARDS,
+} from './daily-mission-constants.ts'
 
 type ServiceClient = TypedSupabaseClient
-
-/** Mesma ordem padrão que `build-daily-missions.ts` (fallbacks). */
-const DEFAULT_MISSION_AREAS = ['matematica', 'linguagens', 'ciencias-humanas'] as const
-
-const XP_MISSION_0 = 30
-const XP_MISSION_1 = 20
-const XP_MISSION_2 = 50
-
-/** topico_value → área + label — espelha `user-progress/index.ts`. */
-const TOPICO: Record<string, { area: string; label: string }> = {
-  'interpretacao-textual': { area: 'linguagens', label: 'Interpretação Textual' },
-  'interpretacao-texto': { area: 'linguagens', label: 'Interpretação Textual' },
-  literatura: { area: 'linguagens', label: 'Literatura Brasileira' },
-  gramatica: { area: 'linguagens', label: 'Gramática e Norma Culta' },
-  'generos-textuais': { area: 'linguagens', label: 'Gêneros Textuais' },
-  'variacoes-linguisticas': { area: 'linguagens', label: 'Variações Linguísticas' },
-  'historia-brasil': { area: 'ciencias-humanas', label: 'História do Brasil' },
-  'geografia-politica': { area: 'ciencias-humanas', label: 'Geografia Política' },
-  filosofia: { area: 'ciencias-humanas', label: 'Filosofia' },
-  sociologia: { area: 'ciencias-humanas', label: 'Sociologia' },
-  'geografia-fisica': { area: 'ciencias-humanas', label: 'Geografia Física' },
-  genetica: { area: 'ciencias-natureza', label: 'Genética' },
-  ecologia: { area: 'ciencias-natureza', label: 'Ecologia' },
-  'quimica-organica': { area: 'ciencias-natureza', label: 'Química Orgânica' },
-  termodinamica: { area: 'ciencias-natureza', label: 'Termodinâmica' },
-  citologia: { area: 'ciencias-natureza', label: 'Citologia' },
-  funcoes: { area: 'matematica', label: 'Funções' },
-  'geometria-plana': { area: 'matematica', label: 'Geometria Plana' },
-  probabilidade: { area: 'matematica', label: 'Probabilidade e Estatística' },
-  porcentagem: { area: 'matematica', label: 'Porcentagem e Razão' },
-  combinatoria: { area: 'matematica', label: 'Análise Combinatória' },
-  [`${AREA_ROLLUP_PREFIX}linguagens`]: {
-    area: 'linguagens',
-    label: 'Prática registrada nesta área',
-  },
-  [`${AREA_ROLLUP_PREFIX}ciencias-humanas`]: {
-    area: 'ciencias-humanas',
-    label: 'Prática registrada nesta área',
-  },
-  [`${AREA_ROLLUP_PREFIX}ciencias-natureza`]: {
-    area: 'ciencias-natureza',
-    label: 'Prática registrada nesta área',
-  },
-  [`${AREA_ROLLUP_PREFIX}matematica`]: {
-    area: 'matematica',
-    label: 'Prática registrada nesta área',
-  },
-}
 
 const AREA_ORDER: { value: string }[] = [
   { value: 'linguagens' },
@@ -133,7 +90,7 @@ export async function fetchStudyTodayByArea(
 }
 
 /** Áreas com acumulado histórico, ordenadas por pior acerto (como na Home). */
-function pickMissionAreasFromTopicPerformance(rows: TpRow[]): [string, string, string] {
+export function pickMissionAreasFromTopicPerformance(rows: TpRow[]): [string, string, string] {
   const areaMap = new Map<string, { value: string; totalAnswered: number; totalCorrect: number }>()
 
   for (const a of AREA_ORDER) {
@@ -141,13 +98,13 @@ function pickMissionAreasFromTopicPerformance(rows: TpRow[]): [string, string, s
   }
 
   for (const r of rows) {
-    const meta = TOPICO[r.topico_value]
     const fromDb = r.area_key && String(r.area_key).trim()
+    const fromTopico = TOPICO_TO_AREA[r.topico_value]
     const resolved =
       fromDb && areaMap.has(fromDb)
         ? fromDb
-        : meta?.area && areaMap.has(meta.area)
-          ? meta.area
+        : fromTopico && areaMap.has(fromTopico)
+          ? fromTopico
           : null
     if (!resolved) continue
 
@@ -189,9 +146,10 @@ function missionCompletionFlags(
   const acc2 = a2.answered === 0 ? null : Math.round((a2.correct / a2.answered) * 100)
 
   /** Volume missões – alinhado a `DAILY_MISSION_VOLUME_QUEST_GOAL` em `build-daily-missions.ts`. */
-  const m0 = a0.answered >= 5
-  const m1 = a1.answered >= 5 && a0.answered >= 5
-  const m2 = a2.answered >= 5 && (acc2 ?? 0) >= 70
+  const m0 = a0.answered >= DAILY_MISSION_VOLUME_QUEST_GOAL
+  const m1 =
+    a1.answered >= DAILY_MISSION_VOLUME_QUEST_GOAL && a0.answered >= DAILY_MISSION_VOLUME_QUEST_GOAL
+  const m2 = a2.answered >= DAILY_MISSION_VOLUME_QUEST_GOAL && (acc2 ?? 0) >= 70
   return [m0, m1, m2]
 }
 
@@ -205,20 +163,21 @@ export function computeMissionBonusXp(args: {
   let bonusXp = 0
   const completedIndexes: number[] = []
   if (!bef[0] && aft[0]) {
-    bonusXp += XP_MISSION_0
+    bonusXp += DAILY_MISSION_XP_REWARDS[0]
     completedIndexes.push(0)
   }
   if (!bef[1] && aft[1]) {
-    bonusXp += XP_MISSION_1
+    bonusXp += DAILY_MISSION_XP_REWARDS[1]
     completedIndexes.push(1)
   }
   if (!bef[2] && aft[2]) {
-    bonusXp += XP_MISSION_2
+    bonusXp += DAILY_MISSION_XP_REWARDS[2]
     completedIndexes.push(2)
   }
   return { bonusXp, completedIndexes }
 }
 
+/** Requer coluna `topic_performance.area_key` (migration 20260619120000). Fallback TOPICO_TO_AREA em pickMissionAreasFromTopicPerformance. */
 export async function missionAreasForUser(
   admin: ServiceClient,
   userId: string,
@@ -229,15 +188,8 @@ export async function missionAreasForUser(
     .eq('user_id', userId)
 
   if (error) {
-    const { data: rows2, error: err2 } = await admin
-      .from('topic_performance')
-      .select('topico_value, total_answered, total_correct, accuracy_pct')
-      .eq('user_id', userId)
-    if (err2) {
-      console.error('[daily-mission-bonus] topic_performance:', err2)
-      return [DEFAULT_MISSION_AREAS[0], DEFAULT_MISSION_AREAS[1], DEFAULT_MISSION_AREAS[2]]
-    }
-    return pickMissionAreasFromTopicPerformance((rows2 ?? []) as TpRow[])
+    console.error('[daily-mission-bonus] topic_performance:', error)
+    return [DEFAULT_MISSION_AREAS[0], DEFAULT_MISSION_AREAS[1], DEFAULT_MISSION_AREAS[2]]
   }
   return pickMissionAreasFromTopicPerformance((rows ?? []) as TpRow[])
 }

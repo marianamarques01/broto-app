@@ -1,0 +1,89 @@
+---
+description: Deploy, CI/CD, env vars, observabilidade, checklist pré-produção
+alwaysApply: true
+---
+
+# Produção e operações
+
+## Roadmap
+
+Seguir `.planning/PRODUCTION-ROADMAP.md` — não pular fases.
+
+Ordem: **Fundação → Qualidade → Produção → Features**
+
+## CI/CD (obrigatório antes de produção)
+
+Pipeline mínimo em `.github/workflows/ci.yml`:
+
+```
+lint → typecheck → test → build
+```
+
+Nenhum merge na `main` com CI vermelho.
+
+## Deploy por módulo
+
+| Módulo | Host | Config |
+|--------|------|--------|
+| Web | Vercel | `apps/web/vercel.json` |
+| Admin | Vercel (ou similar) | `apps/admin/vercel.json` (criar) |
+| Edge functions | Supabase CLI | `scripts/deploy-functions.sh` |
+| DB | Supabase migrations | `supabase db push` / CI migration |
+
+## Variáveis de ambiente
+
+### Web (`apps/web/.env.example`)
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_SENTRY_DSN` (opcional)
+
+### Admin (`apps/admin/.env.example`)
+- Mesmas vars Supabase do web
+
+### Edge functions (Supabase dashboard / secrets)
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ALLOWED_ORIGINS` (domínios de produção, separados por vírgula)
+- Secrets NotebookLM conforme `supabase/services/notebooklm/`
+
+**Nunca** commitar valores reais.
+
+## Pré-deploy checklist
+
+- [ ] `npm run build` verde em web e admin
+- [ ] `ALLOWED_ORIGINS` inclui URL de produção
+- [ ] RLS validado em staging (`docs/multi-tenant/`)
+- [ ] `.env.example` atualizado
+- [ ] Sem `dist/` no git
+- [ ] Sentry ou observabilidade configurado (fase 3.5)
+
+## Observabilidade
+
+- Erros em produção → Sentry (web, admin)
+- Edge functions → capturar exceções não tratadas
+- Não depender só de `console.error`
+
+## Higiene de repositório
+
+```gitignore
+# Já configurado — verificar que não vazou:
+.env
+dist/
+node_modules/
+.expo/
+```
+
+Se `dist/` foi commitado antes: `git rm -r --cached dist/ apps/web/dist/`
+
+## Rollback
+
+- Vercel: redeploy do commit anterior
+- Edge functions: `supabase functions deploy <nome>` da versão anterior
+- DB: migrations são forward-only — testar em staging antes de prod
+
+## Pós-deploy smoke test
+
+1. Login aluno (web)
+2. Responder uma questão
+3. Login professor (admin)
+4. Listar turma
+5. `curl -X OPTIONS` na edge function com Origin válido e inválido

@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, requireClassAccess, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
+import type { MaterialsRow } from '../../database.types.ts'
 
 const SERVICE_URL = Deno.env.get('NOTEBOOKLM_SERVICE_URL')!
 const SERVICE_SECRET =
@@ -64,11 +65,16 @@ serve(async (req) => {
       return json(404, { error: 'Material não encontrado' }, cors)
     }
 
+    const materialRow = material as Pick<
+      MaterialsRow,
+      'title' | 'type' | 'source_url' | 'class_id' | 'organization_id'
+    >
+
     // Belt-and-suspenders: material must belong to the authorized class AND same org
-    if (material.class_id !== class_id) {
+    if (materialRow.class_id !== class_id) {
       console.error(
         '[material-index] cross-tenant attempt: material.class_id',
-        material.class_id,
+        materialRow.class_id,
         '!== requested class_id',
         class_id,
         'by user',
@@ -76,10 +82,10 @@ serve(async (req) => {
       )
       return json(403, { error: 'Material não pertence à turma informada' }, cors)
     }
-    if (material.organization_id !== classData.organization_id) {
+    if (materialRow.organization_id !== classData.organization_id) {
       console.error(
         '[material-index] org mismatch: material.organization_id',
-        material.organization_id,
+        materialRow.organization_id,
         '!== class.organization_id',
         classData.organization_id,
         'by user',
@@ -128,13 +134,13 @@ serve(async (req) => {
     // Build indexing payload
     const sourcePayload: Record<string, string> = { class_id }
 
-    if (material.type === 'text') {
+    if (materialRow.type === 'text') {
       sourcePayload.source_type = 'text'
-      sourcePayload.text = material.source_url
-      sourcePayload.title = material.title
+      sourcePayload.text = materialRow.source_url
+      sourcePayload.title = materialRow.title
     } else {
       sourcePayload.source_type = 'url'
-      sourcePayload.url = material.source_url
+      sourcePayload.url = materialRow.source_url
     }
 
     // Send for indexing with timeout

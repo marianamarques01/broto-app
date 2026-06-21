@@ -27,10 +27,10 @@ broto/
 │   └── shared/       # Tipos, hooks core, API helpers, mock-exam, missions
 ├── supabase/
 │   ├── functions/    # Edge Functions Deno
-│   ├── migrations/   # SQL (23+ migrations, multi-tenant RLS)
+│   ├── migrations/   # SQL (24+ migrations, multi-tenant RLS)
 │   └── services/     # NotebookLM (Python)
 ├── docs/             # Documentação de produto e multi-tenant
-└── .planning/        # Roadmaps GSD e produção
+└── .planning/        # STATE.md, PRODUCTION-ROADMAP, PROJECT; codebase/ = snapshot abr/2026
 ```
 
 **Workspaces:** npm + Turborepo. Comandos na raiz:
@@ -64,6 +64,8 @@ npm run lint         # ESLint
 
 | Documento | Conteúdo |
 |-----------|----------|
+| `docs/deploy-web.md` | Deploy Vercel do web aluno |
+| `docs/deploy-functions.md` | Deploy Edge Functions + CORS produção |
 | `docs/multi-tenant/multi-tenant-ground-truth.md` | Modelo de organizações e memberships |
 | `docs/multi-tenant/multi-tenant-permissions-matrix.md` | Quem pode o quê |
 | `docs/multi-tenant/multi-tenant-implementation-pr-checklist.md` | Checklist RLS/CORS |
@@ -71,7 +73,8 @@ npm run lint         # ESLint
 | `docs/broto-f2-admin.md` | Features do admin |
 | `docs/db.md` | Schema e tabelas |
 | `.planning/PRODUCTION-ROADMAP.md` | **Plano para produção com prompts** |
-| `.planning/NEXT-REFACTOR-PLAN.md` | Histórico de consolidação v1.1 |
+| `.planning/STATE.md` | **Status atual** (gates, progresso, próximo passo) |
+| `docs/deprecated/NEXT-REFACTOR-PLAN.md` | Histórico de consolidação v1.1 |
 
 ---
 
@@ -99,10 +102,11 @@ npm run test:shared   # ou npm run test quando web tiver testes
 npm run build
 ```
 
-**Estado conhecido (2026-06-11):**
-- `test:shared` — 19 testes, verde
-- `typecheck` — admin quebrado (`router.tsx:72`) até etapa 1.2 do roadmap
-- CI — inexistente até etapa 1.1
+**Estado conhecido (2026-06-19):** ver `.planning/STATE.md`
+
+- `test:shared` — 38 testes, verde
+- `typecheck` — verde (web + admin)
+- CI — `.github/workflows/ci.yml` (lint, typecheck, test:shared, build)
 
 ---
 

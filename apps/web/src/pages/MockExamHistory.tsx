@@ -2,7 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { api } from '@/lib/api-client'
-import { formatPracticeSessionAreasLabel, isPracticeSessionSummary, type PracticeSessionSummary } from '@broto/shared'
+import {
+  formatPracticeSessionAreasLabel,
+  isPracticeSessionSummary,
+  type PracticeSessionSummary,
+} from '@broto/shared'
 import {
   ArrowLeft,
   ClipboardList,

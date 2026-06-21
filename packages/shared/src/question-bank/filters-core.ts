@@ -34,7 +34,11 @@ export function resolveYearsToSearch(exams: Exam[], yearFilter?: string): number
   return exams.map((e) => e.year).sort((a, b) => b - a)
 }
 
-export function questionRefKeys(year: number, index: number, language?: string | null): {
+export function questionRefKeys(
+  year: number,
+  index: number,
+  language?: string | null,
+): {
   full: string
   alt: string
 } {
@@ -113,8 +117,7 @@ export function deriveFilterFlags(selectedArea: string, selectedTopico: string) 
   return {
     isLinguagensArea: selectedArea === LINGUAGENS_AREA_VALUE,
     isIdiomasTopicSelected,
-    isLanguageFilterEnabled:
-      selectedArea === LINGUAGENS_AREA_VALUE && isIdiomasTopicSelected,
+    isLanguageFilterEnabled: selectedArea === LINGUAGENS_AREA_VALUE && isIdiomasTopicSelected,
   }
 }
 
@@ -177,8 +180,13 @@ export async function searchIdiomasQuestions(params: {
   selectedLanguage: string
   limitPerLanguage?: number
 }): Promise<Question[]> {
-  const { baseUrl, area, year, selectedLanguage, limitPerLanguage = IDIOMAS_QUESTIONS_LIMIT } =
-    params
+  const {
+    baseUrl,
+    area,
+    year,
+    selectedLanguage,
+    limitPerLanguage = IDIOMAS_QUESTIONS_LIMIT,
+  } = params
   const langs = idiomasLanguagesForFetch(selectedLanguage)
   const results = await Promise.all(
     langs.map((lang) =>

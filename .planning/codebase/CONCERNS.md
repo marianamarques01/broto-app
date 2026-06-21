@@ -1,6 +1,7 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-04-02
+**Analysis Date:** 2026-04-02  
+**⚠️ Snapshot histórico** — muitos itens já foram endereçados (CI, typecheck, CORS `_shared`, mobile removido, StudyArea). Cruze com `.planning/STATE.md` antes de priorizar fixes.
 
 ## Tech Debt
 

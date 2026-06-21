@@ -1,0 +1,76 @@
+---
+description: Regras de segurança — auth, RLS, CORS, XSS, secrets, input validation
+alwaysApply: true
+---
+
+# Segurança
+
+## Princípio geral: fail closed
+
+Dúvida, role desconhecida, membership ausente, origin não listada → **negar acesso**.
+
+## Autenticação e autorização
+
+### Client (web/admin)
+- Usar Supabase Auth — nunca armazenar senha em localStorage custom
+- Anon key (`VITE_SUPABASE_ANON_KEY`) no client é esperado — não é secret
+- Verificar roles via `organization_memberships` no admin
+
+### Edge functions
+- **Sempre** chamar `requireUser()` antes de lógica de negócio
+- Operações por turma: `requireClassAccess()` ou `requireMembership()`
+- `createServiceRoleClientUnsafe()` **só** após validar authz manualmente
+- Referência: `supabase/functions/_shared/authz.ts`
+
+## CORS
+
+- Usar `supabase/functions/_shared/cors.ts`
+- Produção: `ALLOWED_ORIGINS` com domínios explícitos (sem `*`)
+- Origem não listada → rejeitar (não fail open)
+
+## RLS (Row Level Security)
+
+- Toda tabela com dados de usuário/org deve ter RLS habilitado
+- Mudanças de schema → nova migration + verificar matrix em `docs/multi-tenant/`
+- Testar cenário cross-tenant: usuário A não acessa dados da org B
+
+## Validação de input
+
+### Edge functions
+- Validar UUID com regex antes de queries
+- Campos obrigatórios → 400 com mensagem clara
+- Nunca passar input do usuário direto para SQL raw
+
+### Signup
+- Rate limiting em `auth-signup`
+- Validação em `auth-signup/validate.ts`
+
+## XSS e conteúdo HTML
+
+### Web
+- HTML de questões ENEM → **DOMPurify** com allowlist
+- Referência: `apps/web/src/components/questions/QuestionPlayer.tsx`
+
+### Shared
+- `questionFieldMarkdownToHtml` gera HTML — consumidor deve sanitizar
+- Não confiar em conteúdo de banco como seguro
+
+## Secrets
+
+| Pode no client | Nunca no client / git |
+|----------------|----------------------|
+| `VITE_SUPABASE_URL` | `SUPABASE_SERVICE_ROLE_KEY` |
+| `VITE_SUPABASE_ANON_KEY` | API keys NotebookLM |
+| `VITE_SENTRY_DSN` (público por design) | Senhas, tokens privados |
+
+- `.env` sempre gitignored
+- Manter `.env.example` atualizado (sem valores reais)
+
+## Checklist rápido para PR com auth/dados
+
+- [ ] Authz verificado na edge function?
+- [ ] Input validado?
+- [ ] RLS cobre o caso?
+- [ ] CORS restritivo?
+- [ ] HTML sanitizado no render?
+- [ ] Nenhum secret no diff?

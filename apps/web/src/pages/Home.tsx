@@ -1,4 +1,4 @@
-import { useMemo, useSyncExternalStore, useEffect, useState, useCallback } from 'react'
+import { useMemo, useEffect, useState, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet, FASE_LABEL } from '@/hooks/usePet'
@@ -10,14 +10,8 @@ import { ProgressKpiStrip } from '@/components/progress/ProgressKpiStrip'
 import { AreaPerformanceTable } from '@/components/progress/AreaPerformanceTable'
 import { gerarRotina } from '@/lib/routine'
 import { DEFAULT_AREAS } from '@/lib/default-areas'
-import {
-  getPerformanceDayMapSnapshot,
-  getPerformanceDayMapServerSnapshot,
-  subscribePerformanceHistory,
-} from '@/lib/performance-history'
 import { HomeRightSidebar } from '@/components/home/HomeRightSidebar'
 import { HomePetBanner } from '@/components/home/HomePetBanner'
-import { HomePracticeYearHeatmap } from '@/components/home/HomePracticeYearHeatmap'
 import { buildFlashcardReviewCopy } from '@broto/shared'
 import { ClipboardCheck } from 'lucide-react'
 import {
@@ -95,12 +89,6 @@ export function Home() {
   const fase = pet?.fase ?? 'semente'
   const plantLine = plantStatusLine(fase)
   const streak = pet?.streak ?? 0
-
-  const performanceDayMap = useSyncExternalStore(
-    subscribePerformanceHistory,
-    getPerformanceDayMapSnapshot,
-    getPerformanceDayMapServerSnapshot,
-  )
 
   const { buckets: historyBuckets } = usePerformanceSeries('month')
 

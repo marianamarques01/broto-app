@@ -17,11 +17,7 @@ const ENEM_AREA_KEYS = new Set([
   'matematica',
 ])
 
-export type EnemAreaKey =
-  | 'linguagens'
-  | 'ciencias-humanas'
-  | 'ciencias-natureza'
-  | 'matematica'
+export type EnemAreaKey = 'linguagens' | 'ciencias-humanas' | 'ciencias-natureza' | 'matematica'
 
 const ENEM_AREA_KEY_SET: ReadonlySet<string> = ENEM_AREA_KEYS
 

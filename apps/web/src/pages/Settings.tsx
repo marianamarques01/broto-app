@@ -6,7 +6,7 @@ import { api } from '@/lib/api-client'
 import { resetPracticeHistoryFromServer } from '@/lib/reset-practice-history'
 import { supabase } from '@/lib/supabase'
 import { requestIntegratedTourReplay } from '@/lib/integrated-tour'
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle,

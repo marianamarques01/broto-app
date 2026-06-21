@@ -1,0 +1,36 @@
+---
+description: Contexto mestre do Broto — ler CONTEXT.md e roadmap antes de qualquer tarefa
+alwaysApply: true
+---
+
+# Contexto do projeto Broto
+
+## Antes de codar
+
+1. Ler `CONTEXT.md` na raiz do repositório
+2. Ler `.planning/STATE.md` para gates e progresso atual
+3. Se a tarefa for de produção/refactor: ler `.planning/PRODUCTION-ROADMAP.md`
+4. Identificar em qual app/módulo a mudança pertence (web, admin, shared, supabase)
+
+## Escopo atual
+
+- **Produto principal:** `apps/web` (aluno ENEM)
+- **Admin:** `apps/admin` (professor)
+- **Lógica compartilhada:** `packages/shared` (sem React/RN)
+- **Backend:** `supabase/functions` + migrations
+- **Mobile nativo:** em remoção — não adicionar features em `apps/mobile`
+
+## Comandos de verificação (rodar antes de concluir)
+
+```bash
+npm run format:check && npm run lint && npm run typecheck && npm run test:shared && npm run build
+```
+
+## Documentação de domínio obrigatória para mudanças multi-tenant
+
+- `docs/multi-tenant/multi-tenant-ground-truth.md`
+- `docs/multi-tenant/multi-tenant-permissions-matrix.md`
+
+## Decisão arquitetural
+
+Refatorar incrementalmente. **Não** reescrever do zero — backend (19 edge functions, RLS) e `@broto/shared` são ativos valiosos.

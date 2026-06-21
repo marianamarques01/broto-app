@@ -1,0 +1,75 @@
+---
+description: Clean code, TypeScript strict, testes, ESLint, formatação
+alwaysApply: true
+---
+
+# Qualidade de código
+
+## Princípios
+
+1. **Diff mínimo** — resolver o problema pedido, sem refatorar o unrelated
+2. **Comportamento preservado** — refactor não muda UX sem pedido explícito
+3. **Código autoexplicativo** — comentários só para lógica não óbvia de negócio
+4. **Testes para lógica pura** — shared e edge functions têm prioridade
+
+## TypeScript
+
+- `strict: true` via `tsconfig.base.json` — não desabilitar
+- Evitar `any` — usar tipos de `@broto/shared` ou inferência
+- Prefixar args não usados com `_` (ESLint)
+- Rodar `npm run typecheck` antes de concluir
+
+## ESLint
+
+- `packages/shared`: `no-restricted-imports` bloqueia React/RN
+- `no-floating-promises` em apps — async errors devem ser tratados
+- `react-hooks/exhaustive-deps` — não suprimir sem justificativa
+
+## Formatação
+
+- Prettier é a fonte de verdade
+- `npm run format:check` deve passar
+- Não misturar estilos (semicolons, aspas) — seguir o projeto
+
+## Testes
+
+| Camada | Framework | Meta |
+|--------|-----------|------|
+| `packages/shared` | Vitest | Toda lógica pura nova |
+| `apps/web` | Vitest (a configurar) | api-client, hooks críticos |
+| Edge functions | Deno.test | authz, validação, cors |
+
+Rodar: `npm run test:shared` (mínimo) ou `npm run test`
+
+## Error handling
+
+- API clients: usar `withExponentialBackoff` e `withJwtRefreshRetry` de shared
+- Não engolir erros silenciosamente em contexts/hooks
+- 401 → pipeline de refresh/re-login (já implementado — não reintroduzir race conditions)
+- UI: mostrar estado de erro ao usuário quando fetch falhar
+
+## Nomenclatura
+
+- Arquivos: camelCase para hooks (`useAuth.ts`), PascalCase para componentes
+- Exports web: **named exports** em páginas e componentes
+- Edge functions: kebab-case no nome da pasta (`practice-session-create`)
+
+## Anti-patterns a evitar
+
+- Arquivo novo com 500+ linhas
+- Copiar hook inteiro entre apps em vez de extrair para shared
+- `console.log` de debug em produção (usar Sentry quando disponível)
+- `fetch` direto sem passar pelo api-client padronizado
+- Commitar `dist/` ou artefatos de build
+
+## Antes de marcar tarefa como concluída
+
+```bash
+npm run format:check
+npm run lint
+npm run typecheck
+npm run test:shared
+npm run build
+```
+
+Todos verdes, ou documentar falha conhecida com issue/link para etapa do roadmap.

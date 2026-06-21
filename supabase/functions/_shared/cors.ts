@@ -64,7 +64,8 @@ export function isOriginBlocked(corsHeaders: Record<string, string>): boolean {
  * The __blocked marker is stripped before spreading into response headers.
  */
 export function json(status: number, body: unknown, cors: Record<string, string>): Response {
-  const { __blocked: _, ...safeHeaders } = cors
+  const { __blocked: _blocked, ...safeHeaders } = cors
+  void _blocked
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json', ...safeHeaders },

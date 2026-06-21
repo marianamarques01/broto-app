@@ -1,9 +1,19 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createTypedServiceRoleClient } from '../_shared/database.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { areaKeyForPracticeAnswer, isCountablePracticeArea } from '../_shared/enem-topic-area.ts'
-import { createServiceRoleClientUnsafe, requireUser } from '../_shared/authz.ts'
+import {
+  createServiceRoleClientUnsafe,
+  legacyUnauthorizedMessage,
+  requireUser,
+} from '../_shared/authz.ts'
 import { parsePetMePatchBody } from '../_shared/edge-api-types.ts'
+import type {
+  PetsRow,
+  QuestionTopicMappingRow,
+  UserQuestionAnswerRow,
+  UsersRow,
+} from '../../database.types.ts'
 
 type Fase = 'semente' | 'muda' | 'planta' | 'flor' | 'especial'
 
@@ -124,25 +134,17 @@ serve(async (req) => {
       return json(200, { ok: true, nome: nomeTrim }, cors)
     }
 
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) return json(401, { error: 'Unauthorized' }, cors)
+    const authResult = await requireUser(req)
+    if (authResult.error) {
+      return json(
+        authResult.error.status,
+        { error: legacyUnauthorizedMessage(authResult.error.message) },
+        cors,
+      )
+    }
+    const { user } = authResult.data
 
-    const supabaseAuthed = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } },
-    )
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAuthed.auth.getUser()
-    if (authError || !user) return json(401, { error: 'Unauthorized' }, cors)
-
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
+    const supabaseAdmin = createTypedServiceRoleClient()
 
     const usersRow = await supabaseAdmin
       .from('users')
@@ -153,9 +155,9 @@ serve(async (req) => {
       console.error('pet-me:', usersRow.error)
       return json(500, { error: usersRow.error.message }, cors)
     }
-    const urow = usersRow.data
+    const urow = usersRow.data as Pick<UsersRow, 'streak'> | null
 
-    let pet = null as { xp?: number; nivel?: number; nome?: string } | null
+    let pet = null as Pick<PetsRow, 'xp' | 'nivel' | 'nome'> | null
     const withNome = await supabaseAdmin
       .from('pets')
       .select('xp, nivel, nome')
@@ -202,12 +204,10 @@ serve(async (req) => {
       return json(500, { error: todayErr.message }, cors)
     }
 
-    const answers = (todayRows ?? []) as {
-      question_id: string
-      acertou: boolean
-      tempo_resposta: number | null
-      answer_area_key?: string | null
-    }[]
+    const answers = (todayRows ?? []) as Pick<
+      UserQuestionAnswerRow,
+      'question_id' | 'acertou' | 'tempo_resposta' | 'answer_area_key'
+    >[]
     const questoesHoje = answers.length
     const acertosHoje = answers.filter((r) => r.acertou === true).length
     const tempoEstudoSegHoje = answers.reduce((s, r) => {
@@ -227,7 +227,7 @@ serve(async (req) => {
         console.error('pet-me mapping:', mapErr)
       } else {
         for (const row of maps ?? []) {
-          const rec = row as { question_id?: string; topico_value?: string }
+          const rec = row as Pick<QuestionTopicMappingRow, 'question_id' | 'topico_value'>
           if (rec.question_id) topicByQid.set(rec.question_id, rec.topico_value ?? null)
         }
       }

@@ -1,7 +1,14 @@
 import type { Topico } from '../types/question'
-import { MOCK_EXAM_AREA_LINGUAGENS, MOCK_EXAM_YEAR_MAX, MOCK_EXAM_YEAR_MIN } from '../mock-exam/constants'
+import {
+  MOCK_EXAM_AREA_LINGUAGENS,
+  MOCK_EXAM_YEAR_MAX,
+  MOCK_EXAM_YEAR_MIN,
+} from '../mock-exam/constants'
 
-export { MOCK_EXAM_YEAR_MIN as QUESTION_BANK_YEAR_MIN, MOCK_EXAM_YEAR_MAX as QUESTION_BANK_YEAR_MAX }
+export {
+  MOCK_EXAM_YEAR_MIN as QUESTION_BANK_YEAR_MIN,
+  MOCK_EXAM_YEAR_MAX as QUESTION_BANK_YEAR_MAX,
+}
 export { MOCK_EXAM_AREA_LINGUAGENS as LINGUAGENS_AREA_VALUE }
 
 export const QUESTIONS_LIMIT = 10

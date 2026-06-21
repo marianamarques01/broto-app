@@ -16,7 +16,11 @@ import {
   fetchStudyTodayByArea,
   missionAreasForUser,
 } from '../_shared/daily-mission-bonus.ts'
-import { rollupTopicPerformanceSlug } from '../_shared/enem-topic-area.ts'
+import {
+  areaKeyForPracticeAnswer,
+  isCountablePracticeArea,
+  rollupTopicPerformanceSlug,
+} from '../_shared/enem-topic-area.ts'
 
 /** +10 XP por resposta, +5 se acertou (alinhado ao spec em docs/broto-f4-area-de-estudo.md). */
 const XP_PER_ANSWER = 10
@@ -140,6 +144,12 @@ serve(async (req) => {
       const tc = (Number(existingRow?.total_correct) || 0) + (isCorrect ? 1 : 0)
       const acc = ta > 0 ? Math.round((tc / ta) * 10000) / 100 : 0
 
+      const resolvedArea = areaKeyForPracticeAnswer({
+        topicoSlug: mappedTopico,
+        clientAreaKey: validatedAnswerAreaKey,
+      })
+      const areaKeyToStore = isCountablePracticeArea(resolvedArea) ? resolvedArea : null
+
       const tpUpsert: TopicPerformanceInsert = {
         user_id: user.id,
         topico_value: effectiveTopico,
@@ -147,6 +157,7 @@ serve(async (req) => {
         total_correct: tc,
         accuracy_pct: acc,
         last_practiced: new Date().toISOString(),
+        area_key: areaKeyToStore,
       }
 
       const { error: tpErr } = await admin.from('topic_performance').upsert(tpUpsert, {

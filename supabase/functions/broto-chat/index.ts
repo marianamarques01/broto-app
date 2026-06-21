@@ -1,10 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createTypedServiceRoleClient } from '../_shared/database.ts'
+import type { UsersRow } from '../../database.types.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
-import {
-  parseBrotoChatBody,
-  parseNotebookLmChatResponse,
-} from '../_shared/edge-api-types.ts'
+import { parseBrotoChatBody, parseNotebookLmChatResponse } from '../_shared/edge-api-types.ts'
+import { legacyUnauthorizedMessage, requireUser } from '../_shared/authz.ts'
 
 const SERVICE_URL = Deno.env.get('NOTEBOOKLM_SERVICE_URL')!
 const SERVICE_SECRET =
@@ -24,24 +23,17 @@ serve(async (req) => {
     if (isOriginBlocked(cors)) return json(403, { error: 'Origin not allowed' }, {})
     if (req.method !== 'POST') return json(405, { error: 'Method not allowed' }, cors)
 
-    const authHeader = req.headers.get('Authorization') ?? ''
+    const authResult = await requireUser(req)
+    if (authResult.error) {
+      return json(
+        authResult.error.status,
+        { error: legacyUnauthorizedMessage(authResult.error.message) },
+        cors,
+      )
+    }
+    const { user } = authResult.data
 
-    const supabaseAuthed = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } },
-    )
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAuthed.auth.getUser()
-    if (authError || !user) return json(401, { error: 'Unauthorized' }, cors)
-
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
+    const supabaseAdmin = createTypedServiceRoleClient()
 
     const messages = parseBrotoChatBody(await req.json().catch(() => null))
     if (!messages) {
@@ -79,8 +71,7 @@ serve(async (req) => {
 
     if (userRowError) return json(500, { error: 'Erro ao buscar turma do usuario' }, cors)
 
-    const classId =
-      (userRow as { current_class_id?: string | null } | null)?.current_class_id ?? null
+    const classId = (userRow as Pick<UsersRow, 'current_class_id'> | null)?.current_class_id ?? null
     if (!classId) return json(400, { error: 'Usuario sem turma ativa' }, cors)
 
     // Verify enrollment — user must be enrolled in the class

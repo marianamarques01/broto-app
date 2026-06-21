@@ -368,4 +368,9 @@ export async function resolveActiveContext(
   }
 }
 
+/** Preserva wording legado ("Unauthorized") em endpoints que migraram de auth inline. */
+export function legacyUnauthorizedMessage(message: string): string {
+  return message === 'Authorization header required' ? 'Unauthorized' : message
+}
+
 export type { AuthUser, Membership, MembershipRole, ActiveContext, AuthzResult }

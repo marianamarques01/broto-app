@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createTypedServiceRoleClient } from '../_shared/database.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
+import type { QuestionTopicMappingRow, UserQuestionAnswerRow } from '../../database.types.ts'
+import { legacyUnauthorizedMessage, requireUser } from '../_shared/authz.ts'
+
 const MAX_ROWS = 120
 
 serve(async (req) => {
@@ -14,25 +17,17 @@ serve(async (req) => {
     if (isOriginBlocked(cors)) return json(403, { error: 'Origin not allowed' }, {})
     if (req.method !== 'GET') return json(405, { error: 'Method not allowed' }, cors)
 
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) return json(401, { error: 'Unauthorized' }, cors)
+    const authResult = await requireUser(req)
+    if (authResult.error) {
+      return json(
+        authResult.error.status,
+        { error: legacyUnauthorizedMessage(authResult.error.message) },
+        cors,
+      )
+    }
+    const { user } = authResult.data
 
-    const supabaseAuthed = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } },
-    )
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAuthed.auth.getUser()
-    if (authError || !user) return json(401, { error: 'Unauthorized' }, cors)
-
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
+    const supabaseAdmin = createTypedServiceRoleClient()
 
     const { data: ansRows, error: ansErr } = await supabaseAdmin
       .from('user_question_answers')
@@ -47,7 +42,7 @@ serve(async (req) => {
       return json(500, { error: ansErr.message }, cors)
     }
 
-    const rows = (ansRows ?? []) as { question_id?: string; created_at?: string }[]
+    const rows = (ansRows ?? []) as Pick<UserQuestionAnswerRow, 'question_id' | 'created_at'>[]
     const qids = [...new Set(rows.map((r) => String(r.question_id ?? '')).filter(Boolean))]
 
     const topicoByQid = new Map<string, string | null>()
@@ -61,7 +56,7 @@ serve(async (req) => {
         console.error('user-recent-mistakes mapping:', mapErr)
       } else {
         for (const m of mapRows ?? []) {
-          const mr = m as { question_id?: string; topico_value?: string | null }
+          const mr = m as Pick<QuestionTopicMappingRow, 'question_id' | 'topico_value'>
           const qid = String(mr.question_id ?? '')
           if (qid && !topicoByQid.has(qid)) {
             topicoByQid.set(qid, mr.topico_value != null ? String(mr.topico_value) : null)

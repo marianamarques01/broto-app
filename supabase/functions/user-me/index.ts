@@ -1,8 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createTypedAnonClient, createTypedServiceRoleClient } from '../_shared/database.ts'
+import { createTypedServiceRoleClient } from '../_shared/database.ts'
 import { isRecord } from '../_shared/edge-api-types.ts'
 import type { UsersRow } from '../../database.types.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
+import { legacyUnauthorizedMessage, requireUser } from '../_shared/authz.ts'
 
 serve(async (req) => {
   const cors = getCorsHeaders(req)
@@ -15,16 +16,15 @@ serve(async (req) => {
     if (isOriginBlocked(cors)) return json(403, { error: 'Origin not allowed' }, {})
     if (req.method !== 'GET') return json(405, { error: 'Method not allowed' }, cors)
 
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) return json(401, { error: 'Unauthorized' }, cors)
-
-    const supabaseAuthed = createTypedAnonClient(authHeader)
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAuthed.auth.getUser()
-    if (authError || !user) return json(401, { error: 'Unauthorized' }, cors)
+    const authResult = await requireUser(req)
+    if (authResult.error) {
+      return json(
+        authResult.error.status,
+        { error: legacyUnauthorizedMessage(authResult.error.message) },
+        cors,
+      )
+    }
+    const { user } = authResult.data
 
     const supabaseAdmin = createTypedServiceRoleClient()
 

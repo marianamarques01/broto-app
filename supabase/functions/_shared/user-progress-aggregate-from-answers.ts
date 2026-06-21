@@ -5,7 +5,6 @@
  * apareçam nos indicadores da web/mobile.
  */
 
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import {
   AREA_ROLLUP_PREFIX,
   areaKeyForPracticeAnswer,
@@ -13,39 +12,13 @@ import {
   isEnemAreaKey,
   rollupTopicPerformanceSlug,
 } from './enem-topic-area.ts'
-
-export const TOPICO_LABELS: Record<string, string> = {
-  'interpretacao-textual': 'Interpretação Textual',
-  'interpretacao-texto': 'Interpretação Textual',
-  literatura: 'Literatura Brasileira',
-  gramatica: 'Gramática e Norma Culta',
-  'generos-textuais': 'Gêneros Textuais',
-  'variacoes-linguisticas': 'Variações Linguísticas',
-  'historia-brasil': 'História do Brasil',
-  'geografia-politica': 'Geografia Política',
-  filosofia: 'Filosofia',
-  sociologia: 'Sociologia',
-  'geografia-fisica': 'Geografia Física',
-  genetica: 'Genética',
-  ecologia: 'Ecologia',
-  'quimica-organica': 'Química Orgânica',
-  termodinamica: 'Termodinâmica',
-  citologia: 'Citologia',
-  funcoes: 'Funções',
-  'geometria-plana': 'Geometria Plana',
-  probabilidade: 'Probabilidade e Estatística',
-  porcentagem: 'Porcentagem e Razão',
-  combinatoria: 'Análise Combinatória',
-  [`${AREA_ROLLUP_PREFIX}linguagens`]: 'Prática registrada nesta área',
-  [`${AREA_ROLLUP_PREFIX}ciencias-humanas`]: 'Prática registrada nesta área',
-  [`${AREA_ROLLUP_PREFIX}ciencias-natureza`]: 'Prática registrada nesta área',
-  [`${AREA_ROLLUP_PREFIX}matematica`]: 'Prática registrada nesta área',
-  __broto_sem_classificacao__: 'Respostas ainda não classificadas pelo catálogo',
-}
+import type { TypedSupabaseClient } from './database.ts'
+import { TOPICO_LABELS } from './topico-labels.ts'
+import type { QuestionTopicMappingRow, UserQuestionAnswerRow } from '../../database.types.ts'
 
 /** Primeiro topico determinístico por questão (= menor slug), alinhado a `answer-question` com order. */
 export async function fetchFirstTopicByQuestionBatch(
-  admin: SupabaseClient,
+  admin: TypedSupabaseClient,
   questionIds: string[],
   chunkSize: number,
 ): Promise<Map<string, string>> {
@@ -63,10 +36,7 @@ export async function fetchFirstTopicByQuestionBatch(
       console.error('[user-progress-aggregate] mapping batch:', error)
       continue
     }
-    const rows = (data ?? []) as {
-      question_id?: string
-      topico_value?: string
-    }[]
+    const rows = (data ?? []) as Pick<QuestionTopicMappingRow, 'question_id' | 'topico_value'>[]
     for (const r of rows) {
       const qid = typeof r.question_id === 'string' ? r.question_id.trim() : ''
       const tv = typeof r.topico_value === 'string' ? r.topico_value.trim() : ''
@@ -259,7 +229,7 @@ function finalizeAgg(
 const ANSWERS_PAGE = 2800
 
 export async function computeUserProgressPayload(
-  admin: SupabaseClient,
+  admin: TypedSupabaseClient,
   userId: string,
   areaOrder: readonly { value: string; label: string }[],
 ): Promise<{
@@ -284,11 +254,10 @@ export async function computeUserProgressPayload(
       console.error('[user-progress-aggregate] answers page:', error)
       throw error
     }
-    const page = (data ?? []) as {
-      question_id: string
-      acertou: boolean
-      answer_area_key?: string | null
-    }[]
+    const page = (data ?? []) as Pick<
+      UserQuestionAnswerRow,
+      'question_id' | 'acertou' | 'answer_area_key'
+    >[]
     if (page.length === 0) break
 
     const missingIds = new Set<string>()

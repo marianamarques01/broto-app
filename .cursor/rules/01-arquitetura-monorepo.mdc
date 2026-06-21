@@ -1,0 +1,58 @@
+---
+description: Regras de arquitetura do monorepo Turborepo — shared, apps, adapters
+alwaysApply: true
+---
+
+# Arquitetura do monorepo
+
+## Camadas
+
+```
+apps/web, apps/admin     → UI, rotas, contexts, componentes
+packages/shared          → lógica pura, tipos, fetchers, hooks core
+supabase/functions       → API serverless, authz, validação
+```
+
+## Regras de dependência
+
+| Permitido | Proibido |
+|-----------|----------|
+| `apps/*` → `@broto/shared` | `apps/web` → `apps/admin` |
+| `apps/*` → `@supabase/supabase-js` | `apps/admin` → `apps/web` |
+| `supabase/functions` → `_shared/*` | `packages/shared` → `react` / `react-native` |
+| Edge functions → Deno ESM | `packages/shared` → `expo*` |
+
+## packages/shared é platform-agnostic
+
+- **Sem** imports de React, React Native, Expo, DOM APIs
+- Plataforma específica → **adapter pattern** em cada app:
+  - Web: `apps/web/src/lib/adapters/local-storage-adapter.ts`
+  - Storage interface: `packages/shared/src/storage/istorage.ts`
+
+## Onde colocar código novo
+
+| Tipo | Destino |
+|------|---------|
+| Tipo/interface de domínio | `packages/shared/src/types/` |
+| Lógica de filtro, cálculo, payload | `packages/shared/src/` |
+| Componente visual | `apps/web` ou `apps/admin` |
+| Endpoint HTTP | `supabase/functions/<nome>/index.ts` |
+| Policy SQL / migration | `supabase/migrations/` |
+
+## Convenções por app
+
+**Web:** named exports, hooks em `hooks/`, páginas em `pages/`
+
+**Admin:** mesmo padrão do web
+
+**Edge functions:** usar `_shared/authz.ts` e `_shared/cors.ts` — nunca duplicar lógica de auth
+
+## Duplicação
+
+Antes de copiar código entre apps, verificar se já existe em `@broto/shared`. Se a lógica for 80%+ igual, extrair para shared com testes Vitest.
+
+## Tamanho de arquivo
+
+- Alvo: **< 400 linhas** por arquivo TS/TSX
+- Se passar de 600 linhas: extrair hooks e subcomponentes na mesma sessão de refactor
+- CSS monolítico (`app.css`): extrair por feature, não adicionar blocos enormes

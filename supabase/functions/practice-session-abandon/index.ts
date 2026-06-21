@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
 import { parseSessionIdBody } from '../_shared/edge-api-types.ts'
+import type { PracticeSessionRow } from '../../database.types.ts'
 
 /**
  * Encerra uma sessão em andamento sem concluir: remove a linha de `practice_sessions`.
@@ -46,7 +47,7 @@ serve(async (req) => {
       return json(404, { error: 'Sessão não encontrada' }, cors)
     }
 
-    const r = row as { user_id?: string; completed_at?: string | null }
+    const r = row as Pick<PracticeSessionRow, 'user_id' | 'completed_at'>
     if (r.user_id !== user.id) {
       return json(403, { error: 'Sessão de outro usuário' }, cors)
     }

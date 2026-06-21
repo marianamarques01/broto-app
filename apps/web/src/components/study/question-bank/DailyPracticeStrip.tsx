@@ -1,7 +1,4 @@
-import {
-  buildDailyMissions,
-  parseDailyMissionQuestionCount,
-} from '@/lib/build-daily-missions'
+import { buildDailyMissions, parseDailyMissionQuestionCount } from '@/lib/build-daily-missions'
 import { DAILY_MISSION_VOLUME_QUEST_GOAL, type DailyMissionsState } from '@broto/shared'
 import type { AreaStat } from '@/hooks/useProgress'
 import { AREA_CONFIG } from '@/lib/area-config'

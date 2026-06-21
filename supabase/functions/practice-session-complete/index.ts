@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
 import { parsePracticeSessionCompleteBody } from '../_shared/edge-api-types.ts'
+import type { PracticeSessionRow } from '../../database.types.ts'
 
 serve(async (req) => {
   const cors = getCorsHeaders(req)
@@ -43,7 +44,7 @@ serve(async (req) => {
     if (!existing) {
       return json(404, { error: 'Sessão não encontrada' }, cors)
     }
-    if ((existing as { user_id?: string }).user_id !== user.id) {
+    if ((existing as Pick<PracticeSessionRow, 'user_id'>).user_id !== user.id) {
       return json(403, { error: 'Sessão de outro usuário' }, cors)
     }
 

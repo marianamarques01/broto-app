@@ -1,7 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createTypedAnonClient, createTypedServiceRoleClient } from '../_shared/database.ts'
+import { createTypedServiceRoleClient } from '../_shared/database.ts'
 import { parsePerformanceSeriesBody } from '../_shared/edge-api-types.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
+import type { UserQuestionAnswerRow } from '../../database.types.ts'
+import { legacyUnauthorizedMessage, requireUser } from '../_shared/authz.ts'
 
 type PerformancePeriod = 'week' | 'month' | 'all'
 
@@ -131,16 +133,15 @@ serve(async (req) => {
     if (isOriginBlocked(cors)) return json(403, { error: 'Origin not allowed' }, {})
     if (req.method !== 'POST') return json(405, { error: 'Method not allowed' }, cors)
 
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) return json(401, { error: 'Unauthorized' }, cors)
-
-    const supabaseAuthed = createTypedAnonClient(authHeader)
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAuthed.auth.getUser()
-    if (authError || !user) return json(401, { error: 'Unauthorized' }, cors)
+    const authResult = await requireUser(req)
+    if (authResult.error) {
+      return json(
+        authResult.error.status,
+        { error: legacyUnauthorizedMessage(authResult.error.message) },
+        cors,
+      )
+    }
+    const { user } = authResult.data
 
     const { period } = parsePerformanceSeriesBody(await req.json().catch(() => null))
 
@@ -174,7 +175,7 @@ serve(async (req) => {
       return json(500, { error: error.message }, cors)
     }
 
-    const list = (rows ?? []) as { created_at: string; acertou: boolean }[]
+    const list = (rows ?? []) as Pick<UserQuestionAnswerRow, 'created_at' | 'acertou'>[]
     const buckets = aggregateRows(list, period)
 
     return json(200, { period, buckets }, cors)

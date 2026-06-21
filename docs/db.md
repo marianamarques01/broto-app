@@ -30,6 +30,7 @@ Referência do PostgreSQL no **Supabase**: schemas internos (`auth`, `storage`, 
 | Origem | Uso |
 |--------|-----|
 | `supabase/migrations/*.sql` | Schema esperado no repo (organizations, classes, materials, RLS, etc.) |
+| `scripts/gen-database-types.sh` | Regenerar `supabase/database.types.ts` via CLI linkado (`SUPABASE_DB_PASSWORD` na sessão) |
 | Dashboard Supabase → Table Editor | Estado real do projeto hospedado |
 | Este `db.md` | Visão geral + alertas; pode estar defasado em detalhe |
 

@@ -4,9 +4,7 @@ import { createPetMeFetcher, type PetData } from '@broto/shared'
 
 export { FASE_EMOJI, FASE_LABEL, type PetData } from '@broto/shared'
 
-const { useHook, refresh } = createCachedHook<PetData>(
-  createPetMeFetcher((path) => api.get(path)),
-)
+const { useHook, refresh } = createCachedHook<PetData>(createPetMeFetcher((path) => api.get(path)))
 
 export const refreshPet = refresh
 

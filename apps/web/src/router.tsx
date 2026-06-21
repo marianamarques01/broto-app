@@ -26,6 +26,12 @@ function NotFound() {
 }
 
 const Landing = lazy(() => import('@/pages/Landing').then((m) => ({ default: m.Landing })))
+const InstitutionsLanding = lazy(() =>
+  import('@/pages/InstitutionsLanding').then((m) => ({ default: m.InstitutionsLanding })),
+)
+const LandingPage = lazy(() =>
+  import('@/pages/LandingPage').then((m) => ({ default: m.LandingPage })),
+)
 const Login = lazy(() => import('@/pages/Login').then((m) => ({ default: m.Login })))
 const Signup = lazy(() => import('@/pages/Signup').then((m) => ({ default: m.Signup })))
 const Onboarding = lazy(() => import('@/pages/Onboarding').then((m) => ({ default: m.Onboarding })))
@@ -60,6 +66,8 @@ const MockExamResult = lazy(() =>
 
 export const router = createBrowserRouter([
   { path: '/inicio', element: SuspenseWrapped(<Landing />) },
+  { path: '/instituicoes', element: SuspenseWrapped(<InstitutionsLanding />) },
+  { path: '/landing-page', element: SuspenseWrapped(<LandingPage />) },
   { path: '/login', element: SuspenseWrapped(<Login />) },
   { path: '/signup', element: SuspenseWrapped(<Signup />) },
   { path: '/onboarding', element: SuspenseWrapped(<Onboarding />) },

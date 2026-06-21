@@ -42,7 +42,9 @@ export function useQuestionsFilters(options?: {
   const [areas, setAreas] = useState<Awaited<ReturnType<typeof fetchAreas>>>([])
   const [topicos, setTopicos] = useState<Awaited<ReturnType<typeof fetchTopics>>>([])
   const [exams, setExams] = useState<Awaited<ReturnType<typeof fetchExams>>>([])
-  const [questions, setQuestions] = useState<Awaited<ReturnType<typeof searchQuestions>>['questions']>([])
+  const [questions, setQuestions] = useState<
+    Awaited<ReturnType<typeof searchQuestions>>['questions']
+  >([])
   const [loading, setLoading] = useState(true)
   const [loadingQuestions, setLoadingQuestions] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +56,7 @@ export function useQuestionsFilters(options?: {
   const preserveInitialTopicFiltersRef = useRef(
     Boolean(options?.initialTopico || options?.initialLanguage),
   )
+  const areasInitializedRef = useRef(false)
 
   const loadInitialData = useCallback(async () => {
     setLoading(true)
@@ -70,12 +73,31 @@ export function useQuestionsFilters(options?: {
   }, [baseUrl])
 
   useEffect(() => {
-    void loadInitialData()
-  }, [loadInitialData])
+    let cancelled = false
 
-  const [prevAreasLength, setPrevAreasLength] = useState(0)
-  if (areas.length > 0 && areas.length !== prevAreasLength) {
-    setPrevAreasLength(areas.length)
+    void (async () => {
+      try {
+        const [areasData, examsData] = await Promise.all([fetchAreas(baseUrl), fetchExams(baseUrl)])
+        if (cancelled) return
+        setAreas(areasData)
+        setExams(examsData)
+        setError(null)
+      } catch (err) {
+        if (cancelled) return
+        setError(err instanceof Error ? err.message : 'Erro ao carregar dados')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [baseUrl])
+
+  useEffect(() => {
+    if (areas.length === 0 || areasInitializedRef.current) return
+    areasInitializedRef.current = true
     setSelectedArea((cur) =>
       resolveSelectedAreaAfterCatalogLoad(areas, {
         preferredArea,
@@ -83,7 +105,7 @@ export function useQuestionsFilters(options?: {
         currentSelectedArea: cur,
       }),
     )
-  }
+  }, [areas, preferredArea, autoSelectFirstArea])
 
   useEffect(() => {
     async function loadTopics() {
@@ -154,27 +176,38 @@ export function useQuestionsFilters(options?: {
   ])
 
   useEffect(() => {
-    async function loadQuestions() {
+    let cancelled = false
+
+    void (async () => {
       if (!enableQuestionFetch || !selectedArea) {
-        setQuestions([])
-        setLoadingQuestions(false)
+        if (!cancelled) {
+          setQuestions([])
+          setLoadingQuestions(false)
+        }
         return
       }
 
-      setLoadingQuestions(true)
-      setError(null)
+      if (!cancelled) {
+        setLoadingQuestions(true)
+        setError(null)
+      }
 
       try {
-        setQuestions(await fetchQuestionsForFilters())
+        const nextQuestions = await fetchQuestionsForFilters()
+        if (!cancelled) setQuestions(nextQuestions)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao buscar questoes')
-        setQuestions([])
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Erro ao buscar questoes')
+          setQuestions([])
+        }
       } finally {
-        setLoadingQuestions(false)
+        if (!cancelled) setLoadingQuestions(false)
       }
-    }
+    })()
 
-    void loadQuestions()
+    return () => {
+      cancelled = true
+    }
   }, [enableQuestionFetch, selectedArea, fetchQuestionsForFilters])
 
   const retry = useCallback(() => {

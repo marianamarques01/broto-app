@@ -1,7 +1,7 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Class, Organization } from '@broto/shared'
-import { mapOrganizationRow, resolveClassTenantRow } from '@broto/shared'
+import { mapOrganizationRow, resolveClassTenantRow, isRecord } from '@broto/shared'
 import { useOrganization } from '@/contexts/OrganizationContext'
 
 type ClassContextType = {
@@ -92,10 +92,9 @@ export function ClassProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const profileRecord = profile as Record<string, unknown> | null
       const resolution = resolveClassTenantRow(
         effectiveActiveOrganizationId,
-        profileRecord?.classes,
+        isRecord(profile) ? profile.classes : null,
       )
 
       if (resolution.kind === 'no-active-org') {

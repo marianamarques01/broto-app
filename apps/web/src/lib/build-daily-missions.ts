@@ -2,14 +2,14 @@ import { AREA_CONFIG } from '@/lib/area-config'
 import type { AreaStat } from '@broto/shared'
 import {
   DAILY_MISSION_VOLUME_QUEST_GOAL,
+  DEFAULT_MISSION_AREAS,
+  DAILY_MISSION_XP_REWARDS,
   mergeByAreaWithServer,
   type DailyMissionsState,
   type StudyTodayByArea,
 } from '@broto/shared'
 
 /** Regras de missões/XP: manter alinhadas a `supabase/functions/_shared/daily-mission-bonus.ts`. */
-
-const DEFAULT_MISSION_AREAS = ['matematica', 'linguagens', 'ciencias-humanas'] as const
 
 export { DAILY_MISSION_VOLUME_QUEST_GOAL }
 
@@ -65,7 +65,7 @@ export function buildDailyMissions(
   const m0 = {
     title: `${DAILY_MISSION_VOLUME_QUEST_GOAL} questões de ${areaLabel(missionAreas[0])}`,
     subtitle: 'Área com maior oportunidade',
-    xp: 30,
+    xp: DAILY_MISSION_XP_REWARDS[0],
     areaKey: missionAreas[0],
     done: areaAnswered(missionAreas[0]) >= DAILY_MISSION_VOLUME_QUEST_GOAL,
     locked: false,
@@ -73,7 +73,7 @@ export function buildDailyMissions(
   const m1 = {
     title: `${DAILY_MISSION_VOLUME_QUEST_GOAL} questões de ${areaLabel(missionAreas[1])}`,
     subtitle: 'Continue progredindo',
-    xp: 20,
+    xp: DAILY_MISSION_XP_REWARDS[1],
     areaKey: missionAreas[1],
     done: areaAnswered(missionAreas[1]) >= DAILY_MISSION_VOLUME_QUEST_GOAL,
     locked: areaAnswered(missionAreas[0]) < DAILY_MISSION_VOLUME_QUEST_GOAL,
@@ -84,9 +84,10 @@ export function buildDailyMissions(
       areaAccuracy(missionAreas[2]) !== null
         ? `Acerto atual: ${areaAccuracy(missionAreas[2])}%`
         : 'Acerto atual: —',
-    xp: 50,
+    xp: DAILY_MISSION_XP_REWARDS[2],
     areaKey: missionAreas[2],
-    done: areaAnswered(missionAreas[2]) >= DAILY_MISSION_VOLUME_QUEST_GOAL &&
+    done:
+      areaAnswered(missionAreas[2]) >= DAILY_MISSION_VOLUME_QUEST_GOAL &&
       (areaAccuracy(missionAreas[2]) ?? 0) >= 70,
     locked: areaAnswered(missionAreas[2]) < DAILY_MISSION_VOLUME_QUEST_GOAL,
   }
