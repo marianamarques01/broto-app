@@ -23,6 +23,11 @@ import {
 } from '@broto/shared'
 import { Clock } from 'lucide-react'
 import { trackMvpFunnelStep } from '@/lib/mvp-funnel'
+import {
+  MOCK_EXAM_PROGRESS_SAVE_ERROR_MESSAGE,
+  MOCK_EXAM_SAVE_ERROR_MESSAGE,
+  patchWithOneRetry,
+} from '@/lib/mock-exam-session-persist'
 
 function formatElapsed(totalSec: number): string {
   const h = Math.floor(totalSec / 3600)
@@ -100,6 +105,17 @@ export function MockExamPlay() {
     answerFeedbackModeFromPracticeConfig(state?.config),
   )
   const finishingRef = useRef(false)
+  const pendingResultRef = useRef<{
+    sid: string
+    navigationState: {
+      summary: ReturnType<typeof buildPracticeSessionSummary>
+      sessionId: string
+      answerReview: PracticeSessionAnswerReviewItem[]
+      showAnswerReview: boolean
+    }
+  } | null>(null)
+  const [finalizeError, setFinalizeError] = useState<string | null>(null)
+  const [progressSaveError, setProgressSaveError] = useState<string | null>(null)
   const [answersByQuestionId, setAnswersByQuestionId] = useState<
     Record<string, { isCorrect: boolean } | undefined>
   >({})
@@ -250,12 +266,53 @@ export function MockExamPlay() {
     })
   }, [])
 
-  const finalizeExam = useCallback(() => {
+  const persistFinalResult = useCallback(
+    async (sid: string, summaryToPersist: ReturnType<typeof buildPracticeSessionSummary>) => {
+      await patchWithOneRetry(() =>
+        api.patch('/api/practice-session/complete', {
+          sessionId: sid,
+          summary: summaryToPersist,
+        }),
+      )
+    },
+    [],
+  )
+
+  const navigateToResult = useCallback(
+    (
+      sid: string,
+      navigationState: NonNullable<typeof pendingResultRef.current>['navigationState'],
+    ) => {
+      navigate(`/study/mock-exam/result?sessionId=${encodeURIComponent(sid)}`, {
+        state: navigationState,
+      })
+    },
+    [navigate],
+  )
+
+  const retryFinalizeSave = useCallback(async () => {
+    const pending = pendingResultRef.current
+    if (!pending || finishingRef.current) return
+    finishingRef.current = true
+    setFinalizingVisible(true)
+    setFinalizeError(null)
+    try {
+      await persistFinalResult(pending.sid, pending.navigationState.summary)
+      navigateToResult(pending.sid, pending.navigationState)
+    } catch {
+      setFinalizeError(MOCK_EXAM_SAVE_ERROR_MESSAGE)
+      finishingRef.current = false
+      setFinalizingVisible(false)
+    }
+  }, [navigateToResult, persistFinalResult])
+
+  const finalizeExam = useCallback(async () => {
     const list = questions
     const sid = sessionId
     if (!list || !sid || finishingRef.current) return
     finishingRef.current = true
     setFinalizingVisible(true)
+    setFinalizeError(null)
     const summary = buildPracticeSessionSummary(resultsRef.current, list, topicByQuestionId)
     const questionsById = new Map(list.map((question) => [getQuestionId(question), question]))
     const answerReview: PracticeSessionAnswerReviewItem[] = resultsRef.current.map((result) => {
@@ -273,24 +330,38 @@ export function MockExamPlay() {
     })
     const summaryToPersist =
       answerFeedbackMode === 'final' ? { ...summary, respostas: answerReview } : summary
-    void api
-      .patch('/api/practice-session/complete', { sessionId: sid, summary: summaryToPersist })
-      .catch(() => {})
-    navigate(`/study/mock-exam/result?sessionId=${encodeURIComponent(sid)}`, {
-      state: {
-        summary: summaryToPersist,
-        sessionId: sid,
-        answerReview,
-        showAnswerReview: answerFeedbackMode === 'final',
-      },
-    })
-  }, [questions, sessionId, navigate, topicByQuestionId, answerFeedbackMode])
+    const navigationState = {
+      summary: summaryToPersist,
+      sessionId: sid,
+      answerReview,
+      showAnswerReview: answerFeedbackMode === 'final',
+    }
+    pendingResultRef.current = { sid, navigationState }
+    try {
+      await persistFinalResult(sid, summaryToPersist)
+      navigateToResult(sid, navigationState)
+    } catch {
+      setFinalizeError(MOCK_EXAM_SAVE_ERROR_MESSAGE)
+      finishingRef.current = false
+      setFinalizingVisible(false)
+    }
+  }, [
+    questions,
+    sessionId,
+    topicByQuestionId,
+    answerFeedbackMode,
+    persistFinalResult,
+    navigateToResult,
+  ])
 
   useEffect(() => {
     if (timeLimitMinutes == null || !questions?.length || !sessionId) return
     const limitSec = timeLimitMinutes * 60
     if (elapsedSec < limitSec) return
-    finalizeExam()
+    if (finishingRef.current) return
+    queueMicrotask(() => {
+      void finalizeExam()
+    })
   }, [elapsedSec, timeLimitMinutes, questions, sessionId, finalizeExam])
 
   const handlePrevious = useCallback(() => {
@@ -309,7 +380,7 @@ export function MockExamPlay() {
     const list = questions
     if (!list) return
     if (index >= list.length - 1) {
-      if (allAnswered) finalizeExam()
+      if (allAnswered) void finalizeExam()
       return
     }
     setIndex((i) => i + 1)
@@ -333,20 +404,23 @@ export function MockExamPlay() {
     const sid = sessionId
     if (!sid) return
     setExitBusy('save')
+    setProgressSaveError(null)
     try {
-      await api.patch('/api/practice-session/progress', {
-        sessionId: sid,
-        progress: {
-          currentIndex: index,
-          skippedQuestionIds: [...skippedIds],
-        },
-      })
+      await patchWithOneRetry(() =>
+        api.patch('/api/practice-session/progress', {
+          sessionId: sid,
+          progress: {
+            currentIndex: index,
+            skippedQuestionIds: [...skippedIds],
+          },
+        }),
+      )
+      setExitModalOpen(false)
       navigate('/study/mock-exam')
     } catch {
-      // falha silenciosa
+      setProgressSaveError(MOCK_EXAM_PROGRESS_SAVE_ERROR_MESSAGE)
     } finally {
       setExitBusy(null)
-      setExitModalOpen(false)
     }
   }, [sessionId, index, skippedIds, navigate])
 
@@ -356,12 +430,12 @@ export function MockExamPlay() {
     setExitBusy('discard')
     try {
       await api.post('/api/practice-session/abandon', { sessionId: sid })
-      navigate('/study/mock-exam')
-    } catch {
-      // falha silenciosa
+    } catch (err) {
+      console.warn('[MockExamPlay] falha ao abandonar sessão', err)
     } finally {
       setExitBusy(null)
       setExitModalOpen(false)
+      navigate('/study/mock-exam')
     }
   }, [sessionId, navigate])
 
@@ -570,13 +644,26 @@ export function MockExamPlay() {
       <MockExamSessionExitModal
         open={exitModalOpen}
         onClose={() => {
-          if (!exitBusy) setExitModalOpen(false)
+          if (!exitBusy) {
+            setProgressSaveError(null)
+            setExitModalOpen(false)
+          }
         }}
         onSaveAndExit={handleSaveAndExit}
         onExitWithoutSave={handleExitWithoutSave}
         busyAction={exitBusy}
         isDiagnostic={state?.isDiagnostic ?? false}
+        saveError={progressSaveError}
       />
+
+      {finalizeError ? (
+        <div className="broto-toast" role="alert" aria-live="assertive">
+          <span>{finalizeError}</span>
+          <button type="button" onClick={() => void retryFinalizeSave()}>
+            Salvar de novo
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -5,6 +5,7 @@ interface MockExamSessionExitModalProps {
   onExitWithoutSave: () => void
   busyAction: 'save' | 'discard' | null
   isDiagnostic?: boolean
+  saveError?: string | null
 }
 
 export function MockExamSessionExitModal({
@@ -14,6 +15,7 @@ export function MockExamSessionExitModal({
   onExitWithoutSave,
   busyAction,
   isDiagnostic = false,
+  saveError = null,
 }: MockExamSessionExitModalProps) {
   if (!open) return null
 
@@ -47,6 +49,11 @@ export function MockExamSessionExitModal({
             personalizar seus estudos desde o começo.
           </p>
         )}
+        {saveError ? (
+          <div className="broto-error-banner" role="alert">
+            {saveError}
+          </div>
+        ) : null}
         <div className="broto-mock-exam-session-exit-modal__actions">
           <button
             type="button"
