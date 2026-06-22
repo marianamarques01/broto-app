@@ -18,11 +18,12 @@ describe('hojeIdx', () => {
     expect(hojeIdx()).toBe(expectedHojeIdxFromUtc(now))
   })
 
-  it('usa UTC, não timezone local — 21h BRT ainda é "hoje" no streak', () => {
+  it('usa UTC, não timezone local — meia-noite UTC é segunda (idx 0)', () => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-06-21T21:00:00-03:00'))
+    // 2026-06-22T00:00:00Z = domingo 21h em BRT; streak/rotina usam dia UTC
+    vi.setSystemTime(new Date('2026-06-22T00:00:00Z'))
     const now = new Date()
-    expect(now.getDay()).not.toBe(now.getUTCDay())
+    expect(hojeIdx()).toBe(0)
     expect(hojeIdx()).toBe(expectedHojeIdxFromUtc(now))
   })
 })
