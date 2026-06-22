@@ -125,7 +125,9 @@ export function StudyAreaJourneyView({
 
               {activeTab === 'flashcards' && (
                 <FlashcardDeck
-                  cards={pkg.flashcards}
+                  topicKey={pkg.topicoValue}
+                  areaKey={pkg.areaKey}
+                  contentCards={pkg.flashcards}
                   areaColor={areaColor}
                   onDone={() => {
                     onMarkDone('flashcards')

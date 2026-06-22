@@ -185,6 +185,71 @@ export type Database = {
           },
         ]
       }
+      flashcard_reviews: {
+        Row: {
+          area_key: string
+          card_id: string
+          created_at: string | null
+          difficulty: number
+          due: string
+          elapsed_days: number
+          id: string
+          lapses: number
+          last_review: string | null
+          reps: number
+          scheduled_days: number
+          stability: number
+          state: number
+          topic_key: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          area_key: string
+          card_id: string
+          created_at?: string | null
+          difficulty?: number
+          due?: string
+          elapsed_days?: number
+          id?: string
+          lapses?: number
+          last_review?: string | null
+          reps?: number
+          scheduled_days?: number
+          stability?: number
+          state?: number
+          topic_key: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          area_key?: string
+          card_id?: string
+          created_at?: string | null
+          difficulty?: number
+          due?: string
+          elapsed_days?: number
+          id?: string
+          lapses?: number
+          last_review?: string | null
+          reps?: number
+          scheduled_days?: number
+          stability?: number
+          state?: number
+          topic_key?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'flashcard_reviews_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       materials: {
         Row: {
           class_id: string
@@ -878,3 +943,5 @@ export type EnrollmentsRow = Database['public']['Tables']['enrollments']['Row']
 export type OrganizationsRow = Database['public']['Tables']['organizations']['Row']
 export type MaterialsRow = Database['public']['Tables']['materials']['Row']
 export type QuestionTopicMappingRow = Database['public']['Tables']['question_topic_mapping']['Row']
+export type FlashcardReviewsRow = Database['public']['Tables']['flashcard_reviews']['Row']
+export type FlashcardReviewsInsert = Database['public']['Tables']['flashcard_reviews']['Insert']

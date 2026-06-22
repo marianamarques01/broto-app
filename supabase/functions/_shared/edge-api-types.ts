@@ -217,3 +217,25 @@ export function parseNotebookLmChatResponse(raw: unknown): NotebookLmChatRespons
   if (!answer.trim()) return null
   return { answer, class_id }
 }
+
+export type FlashcardReviewBody = {
+  card_id: string
+  topic_key?: string
+  area_key?: string
+  rating: number
+}
+
+const FLASHCARD_REVIEW_RATINGS = new Set([1, 3, 4])
+
+export function parseFlashcardReviewBody(raw: unknown): FlashcardReviewBody | null {
+  const o = parseJsonBody(raw)
+  if (!o) return null
+  const card_id = typeof o.card_id === 'string' ? o.card_id.trim() : ''
+  const rating = typeof o.rating === 'number' ? o.rating : Number(o.rating)
+  if (!card_id || !Number.isFinite(rating) || !FLASHCARD_REVIEW_RATINGS.has(rating)) {
+    return null
+  }
+  const topic_key = typeof o.topic_key === 'string' ? o.topic_key.trim() : undefined
+  const area_key = typeof o.area_key === 'string' ? o.area_key.trim() : undefined
+  return { card_id, topic_key, area_key, rating }
+}
