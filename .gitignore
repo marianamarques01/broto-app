@@ -30,8 +30,15 @@ android/
 ### macOS
 .DS_Store
 
-### Supabase CLI temp
-supabase/.temp/linked-project.json
+### Supabase CLI temp (local only — never deploy)
+supabase/.temp/
+
+### Local dev artifacts (keep on disk, do not commit)
+.backup/
+.commit-msg-tmp
+.cursor/plans/
+.playwright-mcp/
+lp-desktop-hero.png
 
 ### Python
 .venv/
