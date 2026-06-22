@@ -1,0 +1,66 @@
+# Config Supabase CLI — monorepo Broto
+# https://supabase.com/docs/guides/functions/function-configuration
+
+project_id = "lfhsugwhnjqudqomzegp"
+
+# GoTrue emite JWT ES256; gateway rejeita com verify_jwt ligado.
+# Auth continua em cada handler via requireUser().
+[functions.answer-question]
+verify_jwt = false
+
+[functions.auth-signup]
+verify_jwt = false
+
+[functions.broto-chat]
+verify_jwt = false
+
+[functions.class-join]
+verify_jwt = false
+
+[functions.flashcard-review]
+verify_jwt = false
+
+[functions.material-index]
+verify_jwt = false
+
+[functions.pet-me]
+verify_jwt = false
+
+[functions.practice-session-abandon]
+verify_jwt = false
+
+[functions.practice-session-complete]
+verify_jwt = false
+
+[functions.practice-session-create]
+verify_jwt = false
+
+[functions.practice-session-delete]
+verify_jwt = false
+
+[functions.practice-session-get]
+verify_jwt = false
+
+[functions.practice-session-list]
+verify_jwt = false
+
+[functions.practice-session-progress]
+verify_jwt = false
+
+[functions.user-me]
+verify_jwt = false
+
+[functions.user-onboarding]
+verify_jwt = false
+
+[functions.user-performance-series]
+verify_jwt = false
+
+[functions.user-progress]
+verify_jwt = false
+
+[functions.user-recent-mistakes]
+verify_jwt = false
+
+[functions.user-reset-practice]
+verify_jwt = false
