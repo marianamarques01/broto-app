@@ -9,7 +9,7 @@ import { PetCard } from '@/components/pet/PetCard'
 import { HomeDashboardTopBar } from '@/components/layout/HomeDashboardTopBar'
 import { ProgressKpiStrip } from '@/components/progress/ProgressKpiStrip'
 import { AreaPerformanceTable } from '@/components/progress/AreaPerformanceTable'
-import { gerarRotina } from '@/lib/routine'
+import { useRoutinePlan } from '@/hooks/useRoutinePlan'
 import { DEFAULT_AREAS } from '@/lib/default-areas'
 import { resolveRoutineAreasForUser } from '@/lib/onboarding-routine'
 import { HomeRightSidebar } from '@/components/home/HomeRightSidebar'
@@ -89,11 +89,7 @@ export function Home() {
     [loadingUser, loadingProgress, progress?.areas, totalAnswered, profile],
   )
   const loading = loadingUser || loadingProgress
-
-  const rotina = useMemo(
-    () => (!loading ? gerarRotina(areasForRoutine, horasPorDia) : []),
-    [loading, areasForRoutine, horasPorDia],
-  )
+  const { rotina } = useRoutinePlan(areasForRoutine, horasPorDia, !loading)
   const diaHoje = useMemo(() => rotina.find((d) => d.ehHoje), [rotina])
 
   const fase = pet?.fase ?? 'semente'

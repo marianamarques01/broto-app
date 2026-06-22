@@ -60,6 +60,8 @@ Deno.serve(async (req) => {
 - Uma function por pasta em `supabase/functions/<nome>/index.ts`
 - Após deploy: testar OPTIONS + POST com JWT válido/inválido
 - Atualizar `ALLOWED_ORIGINS` se novo domínio de frontend
+- **Backup** antes de alterar `_shared/` ou secrets em prod: ver `docs/routine-generate.md` e `docs/deploy-functions.md`
+- Rotina inteligente (`routine-generate`): `docs/routine-generate.md`
 
 ## Multi-tenant
 

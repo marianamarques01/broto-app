@@ -18,7 +18,8 @@ import { usePerformanceSeries } from '@/hooks/usePerformanceSeries'
 import { BookOpen, Plus } from 'lucide-react'
 import { getAreaColor, getAreaIcon } from '@/lib/area-config'
 import { DEFAULT_AREAS } from '@/lib/default-areas'
-import { gerarRotina, getSegundaDaSemana, formatarSemana } from '@/lib/routine'
+import { getSegundaDaSemana, formatarSemana } from '@/lib/routine'
+import { useRoutinePlan } from '@/hooks/useRoutinePlan'
 import { resolveRoutineAreasForUser } from '@/lib/onboarding-routine'
 import { buildRoutineSessions, countCompletedSessions } from '@/lib/routine-sessions'
 
@@ -118,15 +119,12 @@ export function Routine() {
         : DEFAULT_AREAS,
     [loading, progress?.areas, totalAnswered, user],
   )
+  const { rotina, loading: loadingRoutine } = useRoutinePlan(areas, horasPorDia, !loading)
+  const loadingWithRoutine = loading || loadingRoutine
   const goalMin = Math.round(horasPorDia * 60)
 
   const showOnboardingBanner =
     !bannerDismissedLocal && shouldShowRoutineOnboardingBanner(totalAnswered, user)
-
-  const rotina = useMemo(
-    () => (!loading ? gerarRotina(areas, horasPorDia) : []),
-    [loading, areas, horasPorDia],
-  )
 
   const sessions = useMemo(
     () => (!loading ? buildRoutineSessions(areas, horasPorDia, pet?.studyTodayByArea) : []),
@@ -157,7 +155,7 @@ export function Routine() {
     <>
       <TopBar variant="study" title="Rotina" />
       <div className="broto-main-inner broto-main-inner--study broto-routine-page">
-        {loading ? (
+        {loadingWithRoutine ? (
           <div className="broto-routine-skeleton" aria-busy="true" aria-live="polite">
             <div className="broto-routine-skeleton__hero broto-skeleton" />
             <div className="broto-routine-skeleton__tabs broto-skeleton" />

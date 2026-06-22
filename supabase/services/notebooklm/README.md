@@ -160,30 +160,39 @@ curl http://localhost:8000/health
 
 ## Integração com Edge Functions do Supabase
 
-A Edge Function `material-index` já chama `NOTEBOOKLM_SERVICE_URL`. Configure essa variável no Supabase para apontar para este serviço:
+| Edge Function | Endpoint Python | Secrets |
+|---------------|-----------------|---------|
+| `material-index` | `/notebook/add-source`, etc. | `NOTEBOOKLM_SERVICE_URL`, `SERVICE_SECRET` |
+| `broto-chat` | `/notebook/chat` | idem |
+| **`routine-generate`** | `/routine/generate` | idem (+ `FASTAPI_URL` opcional como override) |
+
+Configure no Supabase Dashboard → Edge Functions → Secrets:
 
 ```bash
-# No Supabase Dashboard → Edge Functions → Environment Variables
-NOTEBOOKLM_SERVICE_URL=https://seu-servidor.com  # ou http://localhost:8000 para dev
+NOTEBOOKLM_SERVICE_URL=https://seu-servidor.railway.app
+SERVICE_SECRET=…
+# FASTAPI_URL opcional — ver docs/routine-generate.md
 ```
 
-Para a nova Edge Function `broto-chat` (a ser criada):
+**Documentação completa da rotina:** [docs/routine-generate.md](../../../docs/routine-generate.md) (fallback em 3 camadas, testes, deploy, contrato de payload).
+
+Exemplo de chamada autenticada (padrão das edges):
 
 ```typescript
-// supabase/functions/broto-chat/index.ts
-const res = await fetch(`${Deno.env.get("NOTEBOOKLM_SERVICE_URL")}/notebook/chat`, {
-  method: "POST",
+const base = Deno.env.get('NOTEBOOKLM_SERVICE_URL')!
+const secret = Deno.env.get('SERVICE_SECRET') ?? ''
+
+await fetch(`${base}/notebook/chat`, {
+  method: 'POST',
   headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${Deno.env.get("NOTEBOOKLM_SERVICE_SECRET")}`,
+    'Content-Type': 'application/json',
+    ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
   },
-  body: JSON.stringify({
-    class_id: classId,
-    question: userQuestion,
-    user_id: userId,
-  }),
-});
+  body: JSON.stringify({ class_id, question, user_id }),
+})
 ```
+
+> **Contrato `/routine/generate`:** o Python exige `class_id` e `performance` por área; a edge `routine-generate` ainda envia lista de tópicos com `p_know`. Até alinhar, produção usa fallback local na edge. Detalhes em [docs/routine-generate.md](../../../docs/routine-generate.md#contrato-fastapi-edge-vs-python).
 
 ## Notas importantes
 

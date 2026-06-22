@@ -94,3 +94,7 @@ export function buildDailyMissions(
   }
   return [m0, m1, m2]
 }
+
+export function countCompletedDailyMissions(missions: DailyMissionItem[]): number {
+  return missions.filter((m) => m.done).length
+}

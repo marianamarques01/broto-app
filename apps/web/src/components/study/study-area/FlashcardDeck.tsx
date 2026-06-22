@@ -89,22 +89,19 @@ export function FlashcardDeck({
   const [nextDue, setNextDue] = useState<string | null>(null)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [flipped, setFlipped] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [internalLoading, setInternalLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [ratingPending, setRatingPending] = useState(false)
 
   useEffect(() => {
-    if (!userId) {
-      setLoading(false)
-      return
-    }
+    if (!userId) return
 
     const uid = userId
     let cancelled = false
 
     async function load() {
-      setLoading(true)
+      setInternalLoading(true)
       setLoadError(null)
       setCurrentIdx(0)
       setFlipped(false)
@@ -126,7 +123,7 @@ export function FlashcardDeck({
           setDueCards([])
         }
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setInternalLoading(false)
       }
     }
 
@@ -135,6 +132,8 @@ export function FlashcardDeck({
       cancelled = true
     }
   }, [topicKey, userId, areaKey, contentCards.length])
+
+  const loading = Boolean(userId) && internalLoading
 
   const dueItem = dueCards[currentIdx]
   const card = dueItem ? resolveCardContent(dueItem, topicKey, contentCards) : null

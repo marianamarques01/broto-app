@@ -26,8 +26,7 @@ export function useStreakFreezeToast(
   const eventKey = loading ? null : (latestFreezeEventId ?? null)
   const [dismissedKey, setDismissedKey] = useState<string | null>(null)
 
-  const shouldShow =
-    eventKey != null && !readFreezeToastSeen(eventKey) && dismissedKey !== eventKey
+  const shouldShow = eventKey != null && !readFreezeToastSeen(eventKey) && dismissedKey !== eventKey
 
   useEffect(() => {
     if (!shouldShow || !eventKey) return

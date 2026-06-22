@@ -9,7 +9,7 @@ import {
   type HomeTimelineEvent,
 } from '@broto/shared'
 import type { DiaRotina } from '@/lib/routine'
-import { buildDailyMissions } from '@/lib/build-daily-missions'
+import { buildDailyMissions, countCompletedDailyMissions } from '@/lib/build-daily-missions'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet } from '@/hooks/usePet'
 import { usePerformanceDayMap } from '@/hooks/usePerformanceSeries'
@@ -65,6 +65,7 @@ export function HomeRightSidebar({
     () => buildDailyMissions(progress?.areas, pet?.studyTodayByArea),
     [progress?.areas, pet?.studyTodayByArea],
   )
+  const missionsDone = countCompletedDailyMissions(missions)
 
   const review = useMemo(() => buildFlashcardReviewCopy(progress?.areas), [progress?.areas])
 
@@ -124,6 +125,7 @@ export function HomeRightSidebar({
         streak={pet?.streak ?? 0}
         streakFreezes={pet?.streakFreezes ?? 0}
         questoesHoje={questoesHoje}
+        missionsDone={missionsDone}
         loading={loadingPet}
         performanceDayMap={performanceDayMap}
       />

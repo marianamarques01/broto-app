@@ -36,7 +36,7 @@ enem-mobile/
 | Web (aluno) | React 18, Vite, React Router, inline styles |
 | Admin (professor) | React 18, Vite, React Router, inline styles |
 | Backend | Supabase (PostgreSQL, Auth, Storage, Edge Functions) |
-| IA | NotebookLM (chat com materiais da turma); rotina semanal **no cliente** (algoritmo deterministico); servico Python `POST /routine/generate` **opcional** (evolucao futura, nao ligado ao UI hoje) |
+| IA | NotebookLM (chat com materiais da turma); rotina semanal via **`routine-generate`** (edge + `p_know`) com fallback **`gerarRotina`** no client; FastAPI `POST /routine/generate` tentado quando `NOTEBOOKLM_SERVICE_URL`/`FASTAPI_URL` configurados — ver [routine-generate.md](./routine-generate.md) |
 | Monorepo | Turborepo, npm workspaces |
 | Linguagem | TypeScript em todo o projeto |
 
@@ -61,7 +61,7 @@ O app original, construido com React Native e Expo. Oferece a experiencia comple
 - **Questoes** — Selecao de area, filtros por ano/topico/idioma, player de questoes com alternativas
 - **Estudar** — Visao do Broto (pet) com nivel, XP, fase atual, areas para focar
 - **Progresso** — Taxa de acerto geral, desempenho por area (barras), pontos fortes e fracos por topico
-- **Rotina** — Calendario semanal gerado **no app** por algoritmo deterministico (`gerarRotina`: prioriza areas mais fracas, horas/dia, padrao semanal); **nao** depende de NotebookLM para montar a grade
+- **Rotina** — No **web**: edge `routine-generate` + `gerarRotina`. No **mobile** (legado): apenas algoritmo local
 
 **Telas de autenticacao:**
 - Login e Signup com design visual elaborado (gradientes, fireflies animados, broto flutuante)
@@ -90,7 +90,7 @@ Versao desktop do app mobile, adaptada para telas maiores com layout de sidebar:
 | `/` | Home | Pet card, CTA de estudo, areas para focar |
 | `/study` | Study | Seletor de area + filtros + player de questoes |
 | `/progress` | Progress | Estatisticas gerais, barras por area, topicos fortes/fracos |
-| `/routine` | Routine | Calendario semanal + card do dia + proximos dias |
+| `/routine` | Routine | Calendario semanal + sessoes do dia; prioridade via edge `routine-generate` (fallback local) |
 | `/join-class` | JoinClass | Entrar em turma via codigo |
 | `/broto` | BrotoPage | Chat com IA (NotebookLM) |
 
@@ -193,6 +193,9 @@ Componentes de UI compartilhados entre admin e web (inline styles, sem Tailwind)
 | `answer-question` | POST | Registrar resposta e atualizar pet/progresso |
 | `user-progress` | GET | Estatisticas de desempenho por area/topico |
 | `broto-chat` | POST | Chat com IA usando materiais da turma |
+| `routine-generate` | POST | Rotina inteligente: `topic_performance` + perfil → FastAPI ou fallback por `p_know` |
+
+Documentacao detalhada da rotina: [docs/routine-generate.md](./routine-generate.md).
 
 ### Storage
 
@@ -216,7 +219,7 @@ Componentes de UI compartilhados entre admin e web (inline styles, sem Tailwind)
 3. Study: escolhe area → filtros → responde questoes
 4. Cada resposta → POST /api/answer/question → atualiza pet (XP) + progresso
 5. Progress: ve taxa de acerto por area, topicos fortes/fracos
-6. Routine: rotina semanal gerada no app (algoritmo deterministico; prioriza areas fracas; futuro: LLM para refinar)
+6. Routine: `useRoutinePlan` chama `routine-generate` → reordena areas por prioridade da edge → `gerarRotina` monta a grade semanal; se a edge falhar, so o algoritmo local
 7. Broto Chat: tira duvidas com IA baseada nos materiais da turma
 ```
 
@@ -257,17 +260,26 @@ O pet virtual do aluno evolui com o estudo:
 
 ### Geracao de Rotina
 
-**Implementacao atual (web e mobile):** rotina semanal **no cliente**, funcao **`gerarRotina`** (`apps/web/src/lib/routine.ts` e equivalente no mobile). Regras:
-- Areas ordenadas por menor taxa de acerto (prioriza pontos fracos)
+**Implementacao atual (web):** fluxo em tres camadas — ver [docs/routine-generate.md](./routine-generate.md).
+
+1. **Edge `routine-generate`** — le `topic_performance` (`p_know`, `topico_value`, `area_key`) e perfil (`hours_per_day`, `exam_date`, `target_score`). Tenta `POST {NOTEBOOKLM_SERVICE_URL}/routine/generate` (timeout 10s, `SERVICE_SECRET`). Se falhar ou URL ausente, fallback local na edge: ate 5 sessoes ordenadas por **menor `p_know`**.
+2. **Web `useRoutinePlan`** — `POST /api/routine/generate` via `api-client`. Reordena areas com `applySessionPriorityToAreas` e monta a semana com **`gerarRotina`** (`packages/shared/src/routine/generate-routine.ts`).
+3. **Fallback final no client** — se a edge retornar erro/rede, `gerarRotina(areas, horasPorDia)` sozinho (prioridade por menor acerto).
+
+Regras de `gerarRotina` (grade de 7 dias):
+
+- Areas ordenadas por menor taxa de acerto (ou ordem vinda da edge)
 - Horas disponiveis por dia do aluno
-- Padrao semanal: Seg-Sex estudo (rotacionando areas), Sab revisao, Dom descanso
-- Topicos de foco: a partir dos topicos com menor acerto na area do dia
+- Padrao semanal: rotacao de areas Seg-Sab, domingo descanso
+- Topicos de foco: menores acertos na area do dia
 
-**Missao do dia (mobile):** `lib/missions/daily-missions.ts` apenas contabiliza **respostas do dia** por area (AsyncStorage) para missoes diarias — **nao** e o mesmo modulo da **semana** da rotina.
+**Meta diaria na Home:** card “Meta hoje” mede **missões concluidas** (`X / 3`), nao questoes brutas — ver `build-daily-missions.ts` e `DailyStreakCard`.
 
-**Evolucao planejada:** apos onboarding rico (meta, nota-alvo aproximada, nivel por area, horas), a **primeira** rotina deixa de ser so a regra generica e passa a refletir esse contexto; depois **adapta-se ao desempenho real**. Uma **LLM** (ou o endpoint abaixo) pode **refinar texto e sugestoes**; o algoritmo deterministico permanece **fallback** quando IA nao estiver disponivel.
+**Mobile (`apps/mobile/`):** ainda usa apenas `gerarRotina` local (sem `routine-generate`). O app mobile esta em remocao; referencia historica.
 
-**Servico Python (opcional):** `supabase/services/notebooklm/main.py` expoe `POST /routine/generate` — **nao esta conectado a nenhum frontend** hoje; reservado para rotina enriquecida por IA quando for integrado.
+**FastAPI Python:** `supabase/services/notebooklm/main.py` expoe `POST /routine/generate` (NotebookLM). **Conectado via edge**, mas o **contrato de payload ainda difere** (Python exige `class_id` + `performance` por area; a edge envia lista de topicos com `p_know`). Enquanto nao alinhar, producao usa fallback local na edge na pratica.
+
+**Evolucao planejada:** alinhar contrato edge ↔ Python para rotina enriquecida por IA; onboarding estendido (meta, nota-alvo, nivel por area) ja parcialmente no perfil (`user-me`).
 
 ---
 
@@ -277,7 +289,7 @@ O sistema integra com o NotebookLM do Google principalmente para:
 
 1. **Broto Chat**: O aluno conversa com uma IA com acesso aos materiais da turma. O professor faz upload → materiais indexados no NotebookLM → perguntas e respostas contextualizadas.
 
-2. **Rotina (futuro / opcional):** o mesmo servico FastAPI (`supabase/services/notebooklm/`) pode, no futuro, complementar a rotina com texto e sugestoes via `POST /routine/generate`. **A UI da rotina semanal nao usa NotebookLM hoje** — usa o algoritmo local descrito em [Geracao de Rotina](#geracao-de-rotina).
+2. **Rotina inteligente:** a edge **`routine-generate`** chama o mesmo FastAPI (`NOTEBOOKLM_SERVICE_URL` ou `FASTAPI_URL` opcional) em `/routine/generate`. A UI web consome a edge em Home e `/routine`. Enquanto o contrato Python nao estiver alinhado, o fallback por **`p_know`** na edge + **`gerarRotina`** no client garantem a grade semanal. Detalhes: [docs/routine-generate.md](./routine-generate.md).
 
 ---
 
@@ -288,6 +300,17 @@ O sistema integra com o NotebookLM do Google principalmente para:
 VITE_SUPABASE_URL=https://<projeto>.supabase.co
 VITE_SUPABASE_ANON_KEY=<chave-anon-publica>
 ```
+
+### Edge Functions (Supabase Secrets — nao vao no Vite)
+
+| Secret | Uso |
+|--------|-----|
+| `NOTEBOOKLM_SERVICE_URL` | FastAPI Python (chat, materiais, **rotina**) |
+| `SERVICE_SECRET` | Bearer nas chamadas ao Python |
+| `FASTAPI_URL` | Opcional — override de URL so para `routine-generate` |
+| `ALLOWED_ORIGINS` | CORS producao |
+
+Ver [docs/deploy-functions.md](./deploy-functions.md) e [docs/routine-generate.md](./routine-generate.md).
 
 ### Mobile (`apps/mobile/`)
 Configurado via constantes do Expo.
@@ -327,7 +350,7 @@ npm run typecheck                 # Todos os apps
 | F0 | Fundacao | Completa | Monorepo, schema novo, migracao mobile |
 | F1 | Admin Dashboard | Completa | Painel do professor com turmas, materiais, indicadores |
 | F2 | Web Aluno | Completa | Versao desktop do app do aluno |
-| F3 | IA & Rotina | Em parte | Chat + materiais (NotebookLM); rotina semanal ja no cliente; integracao opcional `/routine/generate` e onboarding estendido planejados |
+| F3 | IA & Rotina | Em parte | Chat + materiais (NotebookLM); **`routine-generate` no web** com fallback; alinhar contrato FastAPI ↔ edge; onboarding estendido em progresso |
 
 ---
 
@@ -348,6 +371,8 @@ npm run typecheck                 # Todos os apps
 7. **Inline styles**: Os apps web usam inline styles ao inves de Tailwind para manter simplicidade e evitar configuracao adicional.
 
 8. **Chave anon vs service_role**: Apps de browser DEVEM usar a chave `anon`. A chave `service_role` bypassa RLS e so deve ser usada em backend/edge functions.
+
+9. **Rotina inteligente (`routine-generate`)**: Web chama edge → edge tenta FastAPI → fallback por `p_know` → client usa `gerarRotina` se a edge falhar. URL do Python: `FASTAPI_URL` ou `NOTEBOOKLM_SERVICE_URL`. Documentacao: [docs/routine-generate.md](./routine-generate.md).
 
 ---
 

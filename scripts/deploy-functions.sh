@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy de todas as Edge Functions do monorepo (19 handlers).
+# Deploy de todas as Edge Functions do monorepo (20 handlers).
 #
 # Pré-requisitos:
 #   - supabase login (ou SUPABASE_ACCESS_TOKEN)

@@ -1,11 +1,10 @@
-import { useId } from 'react'
+import { useId, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { usePet, FASE_EMOJI, FASE_LABEL } from '@/hooks/usePet'
-import { DAILY_MISSION_VOLUME_QUEST_GOAL } from '@broto/shared'
-
-/** Alinhado a Home.tsx (meta gamificada do dia). */
-const META_QUESTOES_DIA = DAILY_MISSION_VOLUME_QUEST_GOAL
+import { useProgress } from '@/hooks/useProgress'
+import { buildDailyMissions, countCompletedDailyMissions } from '@/lib/build-daily-missions'
+import { DAILY_MISSION_SLOT_COUNT } from '@broto/shared'
 
 export type PetBannerNextSteps = {
   revisaoLinha: string
@@ -109,6 +108,14 @@ function routineSecondStep(ns: PetBannerNextSteps): { to: string; title: string;
 
 export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
   const { pet, loading } = usePet()
+  const { progress } = useProgress()
+
+  const missions = useMemo(
+    () => buildDailyMissions(progress?.areas, pet?.studyTodayByArea),
+    [progress?.areas, pet?.studyTodayByArea],
+  )
+  const missionsDone = countCompletedDailyMissions(missions)
+  const missionsTotal = DAILY_MISSION_SLOT_COUNT
 
   const fase = pet?.fase ?? 'semente'
   const brotoNome = pet?.nome?.trim() || 'Broto'
@@ -118,9 +125,9 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
   const questoesHoje = pet?.questoesHoje ?? 0
   const acertosHoje = pet?.acertosHoje ?? 0
   const streak = pet?.streak ?? 0
-  const metaCount = Math.min(questoesHoje, META_QUESTOES_DIA)
+  const metaCount = Math.min(missionsDone, missionsTotal)
   const hitPct = questoesHoje > 0 ? Math.round((acertosHoje / questoesHoje) * 100) : null
-  const metaPct = loading ? 0 : Math.round((metaCount / META_QUESTOES_DIA) * 100)
+  const metaPct = loading ? 0 : Math.round((metaCount / missionsTotal) * 100)
   const xpPct = loading ? 0 : Math.min(100, Math.max(0, xpInLevel))
 
   /** Diâmetro do anel XP — anel mais justo ao emoji (tamanho do emoji só no CSS). */
@@ -156,7 +163,7 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
               <div className="broto-home-pet-banner__micro-head">
                 <span className="broto-home-pet-banner__micro-label">Meta do dia</span>
                 <span className="broto-home-pet-banner__micro-nums">
-                  {loading ? '…' : `${metaCount}/${META_QUESTOES_DIA}`}
+                  {loading ? '…' : `${metaCount}/${missionsTotal}`}
                 </span>
               </div>
               <div className="broto-home-pet-banner__micro-track">
@@ -220,9 +227,7 @@ export function HomePetBanner({ nextSteps = null }: HomePetBannerProps) {
                     <>
                       <span className="broto-home-pet-banner__sq-metric-num">{metaCount}</span>
                       <span className="broto-home-pet-banner__sq-metric-sep">/</span>
-                      <span className="broto-home-pet-banner__sq-metric-den">
-                        {META_QUESTOES_DIA}
-                      </span>
+                      <span className="broto-home-pet-banner__sq-metric-den">{missionsTotal}</span>
                     </>
                   )}
                 </span>

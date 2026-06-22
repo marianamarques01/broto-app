@@ -1,9 +1,6 @@
 import { useMemo } from 'react'
 import { Check, Flame, Sprout } from 'lucide-react'
-import { DAILY_MISSION_VOLUME_QUEST_GOAL, streakFreezeDisplayLabel, todayUtcISO } from '@broto/shared'
-
-/** Alinhado a HomePetBanner (meta gamificada do dia). */
-const META_QUESTOES_DIA = DAILY_MISSION_VOLUME_QUEST_GOAL
+import { DAILY_MISSION_SLOT_COUNT, streakFreezeDisplayLabel, todayUtcISO } from '@broto/shared'
 
 function dateUtcISO(d: Date): string {
   const yyyy = d.getUTCFullYear()
@@ -27,10 +24,16 @@ const DAY_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 type DayState = 'future' | 'complete' | 'today-ring' | 'missed'
 
-function dayState(isFuture: boolean, isToday: boolean, answered: number): DayState {
+function dayState(
+  isFuture: boolean,
+  isToday: boolean,
+  answered: number,
+  missionsDone: number,
+  missionsTotal: number,
+): DayState {
   if (isFuture) return 'future'
   if (isToday) {
-    if (answered >= META_QUESTOES_DIA) return 'complete'
+    if (missionsDone >= missionsTotal) return 'complete'
     return 'today-ring'
   }
   if (answered >= 1) return 'complete'
@@ -41,6 +44,8 @@ interface DailyStreakCardProps {
   streak: number
   streakFreezes?: number
   questoesHoje: number
+  missionsDone: number
+  missionsTotal?: number
   loading?: boolean
   performanceDayMap: Readonly<Record<string, { answered: number; correct: number }>>
 }
@@ -49,6 +54,8 @@ export function DailyStreakCard({
   streak,
   streakFreezes = 0,
   questoesHoje,
+  missionsDone,
+  missionsTotal = DAILY_MISSION_SLOT_COUNT,
   loading,
   performanceDayMap,
 }: DailyStreakCardProps) {
@@ -66,15 +73,15 @@ export function DailyStreakCard({
       let answered = performanceDayMap[iso]?.answered ?? 0
       if (isToday) answered = Math.max(answered, questoesHoje)
 
-      const state = dayState(isFuture, isToday, answered)
+      const state = dayState(isFuture, isToday, answered, missionsDone, missionsTotal)
 
       days.push({ iso, label: DAY_SHORT[i] ?? '', state })
     }
     return days
-  }, [performanceDayMap, questoesHoje, todayIso])
+  }, [performanceDayMap, questoesHoje, missionsDone, missionsTotal, todayIso])
 
-  const metaCount = Math.min(questoesHoje, META_QUESTOES_DIA)
-  const missionsPct = Math.round((metaCount / META_QUESTOES_DIA) * 100)
+  const metaCount = Math.min(missionsDone, missionsTotal)
+  const missionsPct = Math.round((metaCount / missionsTotal) * 100)
 
   return (
     <section className="broto-daily-streak" aria-label="Sequência e meta diária">
@@ -98,7 +105,10 @@ export function DailyStreakCard({
             )}
           </p>
           {!loading && streak > 0 ? (
-            <p className="broto-daily-streak__freeze" title="Ganhe 1 freeze a cada 7 dias consecutivos (máx. 3)">
+            <p
+              className="broto-daily-streak__freeze"
+              title="Ganhe 1 freeze a cada 7 dias consecutivos (máx. 3)"
+            >
               {streakFreezeDisplayLabel(streak, streakFreezes)}
             </p>
           ) : null}
@@ -136,10 +146,13 @@ export function DailyStreakCard({
             '…'
           ) : (
             <>
-              <strong>{questoesHoje}</strong>
+              <strong>{missionsDone}</strong>
               <span className="broto-daily-streak__meta-sep"> / </span>
-              <span className="broto-daily-streak__meta-den">{META_QUESTOES_DIA}</span>
-              <span className="broto-daily-streak__meta-unit"> questões</span>
+              <span className="broto-daily-streak__meta-den">{missionsTotal}</span>
+              <span className="broto-daily-streak__meta-unit">
+                {' '}
+                {missionsTotal === 1 ? 'missão' : 'missões'}
+              </span>
             </>
           )}
         </p>

@@ -2,10 +2,7 @@ export const STREAK_FREEZE_REWARD_DAYS = 7
 export const STREAK_FREEZE_MAX = 3
 
 /** Dias até ganhar o próximo freeze (null se já tem o máximo disponível). */
-export function daysUntilNextStreakFreeze(
-  streak: number,
-  streakFreezes: number,
-): number | null {
+export function daysUntilNextStreakFreeze(streak: number, streakFreezes: number): number | null {
   if (streakFreezes >= STREAK_FREEZE_MAX) return null
   if (streak <= 0) return STREAK_FREEZE_REWARD_DAYS
   const mod = streak % STREAK_FREEZE_REWARD_DAYS

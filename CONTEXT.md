@@ -10,7 +10,7 @@ Plataforma EdTech de preparação para o ENEM com:
 - **Web (aluno)** — `apps/web/` — produto principal
 - **Admin (professor)** — `apps/admin/` — turmas, materiais, indicadores
 - **Shared** — `packages/shared/` — lógica de negócio platform-agnostic
-- **Backend** — `supabase/` — PostgreSQL, Auth, 19 Edge Functions (Deno)
+- **Backend** — `supabase/` — PostgreSQL, Auth, 20 Edge Functions (Deno)
 
 **Decisão atual (2026-06):** foco em web + admin + shared. O app mobile nativo foi removido do monorepo.
 
@@ -66,6 +66,7 @@ npm run lint         # ESLint
 |-----------|----------|
 | `docs/deploy-web.md` | Deploy Vercel do web aluno |
 | `docs/deploy-functions.md` | Deploy Edge Functions + CORS produção |
+| `docs/routine-generate.md` | Rotina inteligente: edge, FastAPI, fallback, testes, deploy |
 | `docs/multi-tenant/multi-tenant-ground-truth.md` | Modelo de organizações e memberships |
 | `docs/multi-tenant/multi-tenant-permissions-matrix.md` | Quem pode o quê |
 | `docs/multi-tenant/multi-tenant-implementation-pr-checklist.md` | Checklist RLS/CORS |
@@ -87,6 +88,7 @@ npm run lint         # ESLint
 | API client web | `apps/web/src/lib/api-client.ts` |
 | Shared exports | `packages/shared/src/index.ts` |
 | Authz backend | `supabase/functions/_shared/authz.ts` |
+| Rotina inteligente | `docs/routine-generate.md`, `supabase/functions/routine-generate/` |
 | CORS backend | `supabase/functions/_shared/cors.ts` |
 | RLS migrations | `supabase/migrations/20260410120000_pr08_rls_membership_core.sql` |
 
