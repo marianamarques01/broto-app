@@ -661,6 +661,38 @@ export type Database = {
           },
         ]
       }
+      streak_freeze_events: {
+        Row: {
+          created_at: string
+          freeze_number: number
+          id: string
+          streak_at_time: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          freeze_number: number
+          id?: string
+          streak_at_time: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          freeze_number?: number
+          id?: string
+          streak_at_time?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'streak_freeze_events_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       users: {
         Row: {
           cidade: string | null
@@ -687,10 +719,19 @@ export type Database = {
           nota_enem_anterior: number | null
           onboarding_done: boolean
           onboarding_profile: Json | null
+          onboarding_routine_banner_shown: boolean
+          onboarding_completed_at: string | null
           periodo_preferido: string | null
           streak: number
+          streak_freezes: number
+          strong_areas: string[]
+          target_score: number | null
+          total_freezes_earned: number
           telefone: string | null
           updated_at: string
+          weak_areas: string[]
+          hours_per_day: number
+          exam_date: string | null
         }
         Insert: {
           cidade?: string | null
@@ -704,8 +745,10 @@ export type Database = {
           dias_disponiveis?: Json | null
           email: string
           estado?: string | null
+          exam_date?: string | null
           faculdade_desejada?: string | null
           horas_disponiveis_por_dia?: number
+          hours_per_day?: number
           id: string
           image?: string | null
           last_study_date?: string | null
@@ -715,12 +758,19 @@ export type Database = {
           nivel_redacao?: string | null
           nome: string
           nota_enem_anterior?: number | null
+          onboarding_completed_at?: string | null
           onboarding_done?: boolean
           onboarding_profile?: Json | null
+          onboarding_routine_banner_shown?: boolean
           periodo_preferido?: string | null
           streak?: number
+          streak_freezes?: number
+          strong_areas?: string[]
+          target_score?: number | null
+          total_freezes_earned?: number
           telefone?: string | null
           updated_at?: string
+          weak_areas?: string[]
         }
         Update: {
           cidade?: string | null
@@ -734,8 +784,10 @@ export type Database = {
           dias_disponiveis?: Json | null
           email?: string
           estado?: string | null
+          exam_date?: string | null
           faculdade_desejada?: string | null
           horas_disponiveis_por_dia?: number
+          hours_per_day?: number
           id?: string
           image?: string | null
           last_study_date?: string | null
@@ -745,12 +797,19 @@ export type Database = {
           nivel_redacao?: string | null
           nome?: string
           nota_enem_anterior?: number | null
+          onboarding_completed_at?: string | null
           onboarding_done?: boolean
           onboarding_profile?: Json | null
+          onboarding_routine_banner_shown?: boolean
           periodo_preferido?: string | null
           streak?: number
+          streak_freezes?: number
+          strong_areas?: string[]
+          target_score?: number | null
+          total_freezes_earned?: number
           telefone?: string | null
           updated_at?: string
+          weak_areas?: string[]
         }
         Relationships: [
           {
@@ -945,3 +1004,6 @@ export type MaterialsRow = Database['public']['Tables']['materials']['Row']
 export type QuestionTopicMappingRow = Database['public']['Tables']['question_topic_mapping']['Row']
 export type FlashcardReviewsRow = Database['public']['Tables']['flashcard_reviews']['Row']
 export type FlashcardReviewsInsert = Database['public']['Tables']['flashcard_reviews']['Insert']
+export type StreakFreezeEventsRow = Database['public']['Tables']['streak_freeze_events']['Row']
+export type StreakFreezeEventsInsert =
+  Database['public']['Tables']['streak_freeze_events']['Insert']

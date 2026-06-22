@@ -9,6 +9,10 @@ export interface PetData {
   fase: 'semente' | 'muda' | 'planta' | 'flor' | 'especial'
   humor: number
   streak: number
+  /** Freezes disponíveis (0–3) para proteger a sequência. */
+  streakFreezes?: number
+  /** ID do último evento de freeze consumido — para toast na home. */
+  latestFreezeEventId?: string | null
   questoesHoje: number
   acertosHoje: number
   /** Soma dos `tempo_resposta` (segundos) das respostas de hoje (UTC), quando o backend envia. */

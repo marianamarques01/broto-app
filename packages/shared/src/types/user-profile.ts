@@ -16,4 +16,12 @@ export interface UserProfile {
   dataEnem: string | null
   horasDisponiveisPorDia: number
   onboardingProfile?: OnboardingProfilePersisted | null
+  /** Horas/dia estruturadas pós-onboarding (espelha `hours_per_day`). */
+  hoursPerDay?: number
+  examDate?: string | null
+  targetScore?: number | null
+  strongAreas?: string[]
+  weakAreas?: string[]
+  onboardingRoutineBannerShown?: boolean
+  onboardingCompletedAt?: string | null
 }

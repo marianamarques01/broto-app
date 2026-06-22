@@ -122,6 +122,7 @@ export function HomeRightSidebar({
     >
       <DailyStreakCard
         streak={pet?.streak ?? 0}
+        streakFreezes={pet?.streakFreezes ?? 0}
         questoesHoje={questoesHoje}
         loading={loadingPet}
         performanceDayMap={performanceDayMap}

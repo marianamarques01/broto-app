@@ -9,6 +9,10 @@ import { api } from '@/lib/api-client'
 import { formatMockExamFlowError } from '@/lib/mock-exam-flow-error'
 import { getQuestionsStaticBaseUrl } from '@/lib/questions-static-base'
 import { markIntegratedTourTriggerFromOnboarding } from '@/lib/integrated-tour'
+import {
+  buildOnboardingRoutineInput,
+  generateAndSaveOnboardingRoutine,
+} from '@/lib/onboarding-routine'
 import { trackMvpFunnelStep } from '@/lib/mvp-funnel'
 import {
   buildMockExamPayload,
@@ -672,6 +676,15 @@ function buildOnboardingBody(data: OnboardingState) {
   }
 }
 
+async function completeOnboardingWithRoutine(
+  body: ReturnType<typeof buildOnboardingBody>,
+  examDate: string | null | undefined,
+): Promise<void> {
+  await api.post('/api/user/onboarding', body)
+  const routineInput = buildOnboardingRoutineInput(body, examDate)
+  generateAndSaveOnboardingRoutine(routineInput)
+}
+
 /* ── Main Component ─────────────────────────────────────── */
 
 export function Onboarding() {
@@ -716,18 +729,20 @@ export function Onboarding() {
     setSaveError(null)
     setSaveLoading(true)
     try {
-      await api.post('/api/user/onboarding', buildOnboardingBody(data))
+      const body = buildOnboardingBody(data)
+      await completeOnboardingWithRoutine(body, user?.dataEnem)
       await Promise.all([refreshUser(), refreshAuthUser()])
       await refreshPet()
       trackMvpFunnelStep('onboarding_complete', { via: 'finish_no_mock' })
       markIntegratedTourTriggerFromOnboarding()
-      navigate('/?cta=primeiro-simulado')
+      navigate('/routine')
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : 'Erro ao salvar')
+      console.error('[onboarding] falha', e)
+      navigate('/')
     } finally {
       setSaveLoading(false)
     }
-  }, [data, navigate])
+  }, [data, navigate, refreshAuthUser, user])
 
   const handleSimulado = useCallback(async () => {
     setSimuladoError(null)
@@ -740,7 +755,8 @@ export function Onboarding() {
     const cfg = ONBOARDING_DIAGNOSTIC_MOCK_CFG
     setSimuladoLoading(true)
     try {
-      await api.post('/api/user/onboarding', buildOnboardingBody(data))
+      const body = buildOnboardingBody(data)
+      await completeOnboardingWithRoutine(body, user?.dataEnem)
       await Promise.all([refreshUser(), refreshAuthUser()])
       await refreshPet()
       trackMvpFunnelStep('onboarding_complete', { via: 'mock_exam_flow' })
@@ -805,28 +821,31 @@ export function Onboarding() {
     } finally {
       setSimuladoLoading(false)
     }
-  }, [navigate, organization?.slug, data])
+  }, [navigate, organization?.slug, data, user, refreshAuthUser])
 
   const handleSkipAll = useCallback(async () => {
     try {
-      await api.post('/api/user/onboarding', {
+      const body = {
         brotoNome: 'Broto',
         faculdade: '',
         curso: '',
         metaNota: 0,
         niveis: {},
         horasPorDia: 2,
-        horarios: [],
-      })
+        horarios: [] as Horario[],
+      }
+      await completeOnboardingWithRoutine(body, user?.dataEnem)
       await Promise.all([refreshUser(), refreshAuthUser()])
       await refreshPet()
       trackMvpFunnelStep('onboarding_complete', { via: 'skip_wizard' })
-    } catch {
-      // ainda navega — usuario pode editar perfil depois
+      markIntegratedTourTriggerFromOnboarding()
+      navigate('/routine')
+    } catch (err) {
+      console.error('[onboarding] falha', err)
+      markIntegratedTourTriggerFromOnboarding()
+      navigate('/')
     }
-    markIntegratedTourTriggerFromOnboarding()
-    navigate('/?cta=primeiro-simulado')
-  }, [navigate])
+  }, [navigate, refreshAuthUser, user])
 
   const nome = user?.nome?.split(' ')[0] ?? ''
 

@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { deriveStrongWeakAreas } from '../_shared/onboarding-cold-start.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
 import { isRecord, parseUserOnboardingBody } from '../_shared/edge-api-types.ts'
@@ -85,13 +86,30 @@ serve(async (req) => {
       horarios,
     }
 
+    const { strongAreas, weakAreas } = deriveStrongWeakAreas(niveis)
+
     const admin = createServiceRoleClientUnsafe()
+    const { data: existingRow } = await admin
+      .from('users')
+      .select('data_enem')
+      .eq('id', user.id)
+      .maybeSingle()
+    const examDate =
+      existingRow?.data_enem != null ? String(existingRow.data_enem).slice(0, 10) : null
+
     const { error } = await admin
       .from('users')
       .update({
         horas_disponiveis_por_dia: horasPorDia,
+        hours_per_day: horasPorDia,
+        target_score: metaNota > 0 ? metaNota : null,
+        exam_date: examDate,
+        strong_areas: strongAreas,
+        weak_areas: weakAreas,
         onboarding_profile: onboardingProfile,
         onboarding_done: true,
+        onboarding_completed_at: new Date().toISOString(),
+        onboarding_routine_banner_shown: false,
       })
       .eq('id', user.id)
 

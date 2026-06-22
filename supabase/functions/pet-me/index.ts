@@ -152,14 +152,25 @@ serve(async (req) => {
 
     const usersRow = await supabaseAdmin
       .from('users')
-      .select('streak')
+      .select('streak, streak_freezes')
       .eq('id', user.id)
       .maybeSingle()
     if (usersRow.error) {
       console.error('pet-me:', usersRow.error)
       return json(500, { error: usersRow.error.message }, cors)
     }
-    const urow = usersRow.data as Pick<UsersRow, 'streak'> | null
+    const urow = usersRow.data as Pick<UsersRow, 'streak' | 'streak_freezes'> | null
+
+    const { data: latestFreezeRow, error: latestFreezeErr } = await supabaseAdmin
+      .from('streak_freeze_events')
+      .select('id')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (latestFreezeErr) {
+      console.error('pet-me streak_freeze_events:', latestFreezeErr)
+    }
 
     let pet = null as Pick<PetsRow, 'xp' | 'nivel' | 'nome'> | null
     const withNome = await supabaseAdmin
@@ -193,6 +204,11 @@ serve(async (req) => {
         ? brotoNomeRaw.trim()
         : 'Broto'
     const streak = urow?.streak ?? 0
+    const streakFreezes = urow?.streak_freezes ?? 0
+    const latestFreezeEventId =
+      latestFreezeRow && typeof latestFreezeRow === 'object' && 'id' in latestFreezeRow
+        ? String(latestFreezeRow.id)
+        : null
 
     const start = startOfUtcDayIso()
 
@@ -261,6 +277,8 @@ serve(async (req) => {
         fase: faseFromNivel(nivel),
         humor,
         streak,
+        streakFreezes,
+        latestFreezeEventId,
         questoesHoje,
         acertosHoje,
         tempoEstudoSegHoje,

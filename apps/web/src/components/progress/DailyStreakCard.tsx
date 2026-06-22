@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Check, Flame, Sprout } from 'lucide-react'
-import { DAILY_MISSION_VOLUME_QUEST_GOAL, todayUtcISO } from '@broto/shared'
+import { DAILY_MISSION_VOLUME_QUEST_GOAL, streakFreezeDisplayLabel, todayUtcISO } from '@broto/shared'
 
 /** Alinhado a HomePetBanner (meta gamificada do dia). */
 const META_QUESTOES_DIA = DAILY_MISSION_VOLUME_QUEST_GOAL
@@ -39,6 +39,7 @@ function dayState(isFuture: boolean, isToday: boolean, answered: number): DaySta
 
 interface DailyStreakCardProps {
   streak: number
+  streakFreezes?: number
   questoesHoje: number
   loading?: boolean
   performanceDayMap: Readonly<Record<string, { answered: number; correct: number }>>
@@ -46,6 +47,7 @@ interface DailyStreakCardProps {
 
 export function DailyStreakCard({
   streak,
+  streakFreezes = 0,
   questoesHoje,
   loading,
   performanceDayMap,
@@ -95,6 +97,11 @@ export function DailyStreakCard({
               </>
             )}
           </p>
+          {!loading && streak > 0 ? (
+            <p className="broto-daily-streak__freeze" title="Ganhe 1 freeze a cada 7 dias consecutivos (máx. 3)">
+              {streakFreezeDisplayLabel(streak, streakFreezes)}
+            </p>
+          ) : null}
         </div>
         <Sprout size={20} strokeWidth={1.75} className="broto-daily-streak__broto" aria-hidden />
       </header>

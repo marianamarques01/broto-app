@@ -2,6 +2,7 @@ import { useMemo, useEffect, useState, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet, FASE_LABEL } from '@/hooks/usePet'
+import { useStreakFreezeToast } from '@/hooks/useStreakFreezeToast'
 import { usePerformanceSeries } from '@/hooks/usePerformanceSeries'
 import { useUser } from '@/hooks/useUser'
 import { PetCard } from '@/components/pet/PetCard'
@@ -10,6 +11,7 @@ import { ProgressKpiStrip } from '@/components/progress/ProgressKpiStrip'
 import { AreaPerformanceTable } from '@/components/progress/AreaPerformanceTable'
 import { gerarRotina } from '@/lib/routine'
 import { DEFAULT_AREAS } from '@/lib/default-areas'
+import { resolveRoutineAreasForUser } from '@/lib/onboarding-routine'
 import { HomeRightSidebar } from '@/components/home/HomeRightSidebar'
 import { HomePetBanner } from '@/components/home/HomePetBanner'
 import { buildFlashcardReviewCopy } from '@broto/shared'
@@ -74,10 +76,18 @@ export function Home() {
   const { user: profile, loading: loadingUser } = useUser()
   const { progress, loading: loadingProgress } = useProgress()
   const { pet, loading: loadingPet } = usePet()
+  const showFreezeToast = useStreakFreezeToast(pet?.latestFreezeEventId, loadingPet)
 
   const firstName = profile?.nome?.split(' ')[0] ?? 'Aluno'
-  const horasPorDia = profile?.horasDisponiveisPorDia ?? 2
-  const areasForRoutine = progress?.areas?.length ? progress.areas : DEFAULT_AREAS
+  const horasPorDia = profile?.hoursPerDay ?? profile?.horasDisponiveisPorDia ?? 2
+  const totalAnswered = progress?.totalAnswered ?? 0
+  const areasForRoutine = useMemo(
+    () =>
+      !loadingUser && !loadingProgress
+        ? resolveRoutineAreasForUser(progress?.areas, totalAnswered, profile, DEFAULT_AREAS)
+        : DEFAULT_AREAS,
+    [loadingUser, loadingProgress, progress?.areas, totalAnswered, profile],
+  )
   const loading = loadingUser || loadingProgress
 
   const rotina = useMemo(
@@ -95,7 +105,6 @@ export function Home() {
   const hasData = !loadingProgress && progress !== null && progress.totalAnswered > 0
   const areasForProgress = progress?.areas ?? DEFAULT_AREAS
   const accuracyPct = progress?.accuracyPct ?? 0
-  const totalAnswered = progress?.totalAnswered ?? 0
 
   const estTotalStudyMin = Math.round(totalAnswered * 2.5)
   const estTotalHours = estTotalStudyMin / 60
@@ -334,6 +343,12 @@ export function Home() {
         onDismiss={handleBetaSurveyDismiss}
         onMarkAnswered={handleBetaSurveyMarked}
       />
+
+      {showFreezeToast ? (
+        <div className="broto-toast broto-toast--info" role="status" aria-live="polite">
+          <span>Freeze usado — seu streak continua! 🔥</span>
+        </div>
+      ) : null}
     </div>
   )
 }

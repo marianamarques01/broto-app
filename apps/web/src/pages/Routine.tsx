@@ -7,13 +7,19 @@ import { RoutineSessionCards } from '@/components/routine/RoutineSessionCards'
 import { RoutineAreaPerformance } from '@/components/routine/RoutineAreaPerformance'
 import { RoutineWeekBars } from '@/components/routine/RoutineWeekBars'
 import { RoutineBrotoTip } from '@/components/routine/RoutineBrotoTip'
+import {
+  RoutineOnboardingBanner,
+  shouldShowRoutineOnboardingBanner,
+} from '@/components/routine/RoutineOnboardingBanner'
 import { useUser } from '@/hooks/useUser'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet } from '@/hooks/usePet'
 import { usePerformanceSeries } from '@/hooks/usePerformanceSeries'
 import { BookOpen, Plus } from 'lucide-react'
 import { getAreaColor, getAreaIcon } from '@/lib/area-config'
+import { DEFAULT_AREAS } from '@/lib/default-areas'
 import { gerarRotina, getSegundaDaSemana, formatarSemana } from '@/lib/routine'
+import { resolveRoutineAreasForUser } from '@/lib/onboarding-routine'
 import { buildRoutineSessions, countCompletedSessions } from '@/lib/routine-sessions'
 
 const WD_UP = [
@@ -60,6 +66,7 @@ export function Routine() {
   const { buckets: weekBuckets } = usePerformanceSeries('week')
 
   const [tab, setTab] = useState<RoutineTab>('hoje')
+  const [bannerDismissedLocal, setBannerDismissedLocal] = useState(false)
 
   const focusTabAt = useCallback((next: RoutineTab) => {
     setTab(next)
@@ -102,9 +109,19 @@ export function Routine() {
   }
 
   const loading = loadingUser || loadingProgress
-  const horasPorDia = user?.horasDisponiveisPorDia ?? 2
-  const areas = useMemo(() => progress?.areas ?? [], [progress])
+  const horasPorDia = user?.hoursPerDay ?? user?.horasDisponiveisPorDia ?? 2
+  const totalAnswered = progress?.totalAnswered ?? 0
+  const areas = useMemo(
+    () =>
+      !loading
+        ? resolveRoutineAreasForUser(progress?.areas, totalAnswered, user, DEFAULT_AREAS)
+        : DEFAULT_AREAS,
+    [loading, progress?.areas, totalAnswered, user],
+  )
   const goalMin = Math.round(horasPorDia * 60)
+
+  const showOnboardingBanner =
+    !bannerDismissedLocal && shouldShowRoutineOnboardingBanner(totalAnswered, user)
 
   const rotina = useMemo(
     () => (!loading ? gerarRotina(areas, horasPorDia) : []),
@@ -150,6 +167,12 @@ export function Routine() {
         ) : (
           <div className="broto-routine-layout">
             <div className="broto-routine-primary">
+              {showOnboardingBanner && user ? (
+                <RoutineOnboardingBanner
+                  userId={user.id}
+                  onDismissed={() => setBannerDismissedLocal(true)}
+                />
+              ) : null}
               <RoutineHeroHeader dateLine={dateLine} completed={completed} total={totalSess} />
 
               <div className="broto-routine-toolbar">

@@ -31,7 +31,7 @@ serve(async (req) => {
     const { data, error } = await supabaseAdmin
       .from('users')
       .select(
-        'id, nome, email, image, onboarding_done, data_enem, horas_disponiveis_por_dia, onboarding_profile',
+        'id, nome, email, image, onboarding_done, data_enem, horas_disponiveis_por_dia, onboarding_profile, hours_per_day, exam_date, target_score, strong_areas, weak_areas, onboarding_routine_banner_shown, onboarding_completed_at',
       )
       .eq('id', user.id)
       .maybeSingle()
@@ -54,9 +54,18 @@ serve(async (req) => {
       | 'data_enem'
       | 'horas_disponiveis_por_dia'
       | 'onboarding_profile'
+      | 'hours_per_day'
+      | 'exam_date'
+      | 'target_score'
+      | 'strong_areas'
+      | 'weak_areas'
+      | 'onboarding_routine_banner_shown'
+      | 'onboarding_completed_at'
     >
 
     const dataEnem = profileRow.data_enem != null ? String(profileRow.data_enem).slice(0, 10) : null
+    const examDate =
+      profileRow.exam_date != null ? String(profileRow.exam_date).slice(0, 10) : dataEnem
 
     const rawProfile = profileRow.onboarding_profile
     let onboardingProfile: unknown = null
@@ -90,6 +99,17 @@ serve(async (req) => {
         onboardingDone: Boolean(profileRow.onboarding_done),
         dataEnem,
         horasDisponiveisPorDia: profileRow.horas_disponiveis_por_dia ?? 2,
+        hoursPerDay: profileRow.hours_per_day ?? profileRow.horas_disponiveis_por_dia ?? 2,
+        examDate,
+        targetScore: profileRow.target_score ?? null,
+        strongAreas: Array.isArray(profileRow.strong_areas)
+          ? profileRow.strong_areas.filter((a): a is string => typeof a === 'string')
+          : [],
+        weakAreas: Array.isArray(profileRow.weak_areas)
+          ? profileRow.weak_areas.filter((a): a is string => typeof a === 'string')
+          : [],
+        onboardingRoutineBannerShown: Boolean(profileRow.onboarding_routine_banner_shown),
+        onboardingCompletedAt: profileRow.onboarding_completed_at ?? null,
         onboardingProfile,
       },
       cors,

@@ -15,7 +15,8 @@ import {
   fetchStudyTodayByArea,
   missionAreasForUser,
 } from '../_shared/daily-mission-bonus.ts'
-import { todayUtcISO, yesterdayUtcISO } from '../_shared/calendar-day.ts'
+import { todayUtcISO } from '../_shared/calendar-day.ts'
+import { planStreakUpdate } from '../_shared/streak-freeze.ts'
 
 /** +10 XP por resposta, +5 se acertou (alinhado ao spec em docs/broto-f4-area-de-estudo.md). */
 const XP_PER_ANSWER = 10
@@ -175,11 +176,10 @@ serve(async (req) => {
     }
 
     const todayStr = todayUtcISO()
-    const yesterdayStr = yesterdayUtcISO()
 
     const { data: urow, error: userSelErr } = await admin
       .from('users')
-      .select('streak, last_study_date')
+      .select('streak, last_study_date, streak_freezes, total_freezes_earned')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -188,27 +188,45 @@ serve(async (req) => {
       return json(500, { error: 'Erro ao atualizar sequência' }, cors)
     }
 
-    const u = urow as Pick<UsersRow, 'last_study_date' | 'streak'> | null
-    const lastRaw = u?.last_study_date
-    const last = lastRaw != null ? String(lastRaw).slice(0, 10) : null
-    let newStreak = Number(u?.streak) || 0
+    const u = urow as Pick<
+      UsersRow,
+      'last_study_date' | 'streak' | 'streak_freezes' | 'total_freezes_earned'
+    > | null
 
-    if (last !== todayStr) {
-      if (last === yesterdayStr) {
-        newStreak = newStreak + 1
-      } else {
-        newStreak = 1
-      }
+    const streakPlan = planStreakUpdate(
+      {
+        streak: Number(u?.streak) || 0,
+        lastStudyDate: u?.last_study_date ?? null,
+        streakFreezes: Number(u?.streak_freezes) || 0,
+        totalFreezesEarned: Number(u?.total_freezes_earned) || 0,
+      },
+      todayStr,
+    )
+
+    if (streakPlan.shouldUpdate) {
       const { error: streakErr } = await admin
         .from('users')
         .update({
-          streak: newStreak,
+          streak: streakPlan.newStreak,
           last_study_date: todayStr,
+          streak_freezes: streakPlan.newStreakFreezes,
+          total_freezes_earned: streakPlan.newTotalFreezesEarned,
         })
         .eq('id', user.id)
       if (streakErr) {
         console.error('[answer-question] streak update:', streakErr)
         return json(500, { error: 'Erro ao atualizar sequência' }, cors)
+      }
+
+      if (streakPlan.consumeFreeze && streakPlan.freezeNumber != null) {
+        const { error: freezeEvtErr } = await admin.from('streak_freeze_events').insert({
+          user_id: user.id,
+          streak_at_time: Number(u?.streak) || 0,
+          freeze_number: streakPlan.freezeNumber,
+        })
+        if (freezeEvtErr) {
+          console.error('[answer-question] streak_freeze_events insert:', freezeEvtErr)
+        }
       }
     }
 
