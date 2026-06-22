@@ -3,8 +3,11 @@ import type { AreaStat } from '../types/dashboard-progress'
 const LABELS_DIA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 const LABELS_DIA_CURTO = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 
+// UTC para consistência com streak/missões (server-side usa todayUtcISO).
+// Alunos no Brasil (UTC-3): "hoje" vira às 21h local, igual ao streak.
+// Documentado em: docs/adr/001-timezone-utc.md
 export function hojeIdx(): number {
-  const d = new Date().getDay()
+  const d = new Date().getUTCDay()
   return d === 0 ? 6 : d - 1
 }
 
