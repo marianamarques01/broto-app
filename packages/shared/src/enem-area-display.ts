@@ -1,4 +1,4 @@
-import { isCountablePracticeArea } from './enem-area-key'
+import { isCountablePracticeArea } from './lib/topico-to-area'
 import type { AreaStat, ProgressData } from './types/dashboard-progress'
 
 /** Bucket interno para respostas sem área ENEM — nunca exibir na UI. */

@@ -1,13 +1,17 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createTypedServiceRoleClient } from '../_shared/database.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
-import { areaKeyForPracticeAnswer, isCountablePracticeArea } from '../_shared/enem-topic-area.ts'
+import {
+  areaKeyForPracticeAnswer,
+  isCountablePracticeArea,
+} from '@broto/shared/lib/topico-to-area.ts'
 import {
   createServiceRoleClientUnsafe,
   legacyUnauthorizedMessage,
   requireUser,
 } from '../_shared/authz.ts'
 import { parsePetMePatchBody } from '../_shared/edge-api-types.ts'
+import { startOfUtcDayIso } from '../_shared/calendar-day.ts'
 import type {
   PetsRow,
   QuestionTopicMappingRow,
@@ -190,14 +194,13 @@ serve(async (req) => {
         : 'Broto'
     const streak = urow?.streak ?? 0
 
-    const start = new Date()
-    start.setUTCHours(0, 0, 0, 0)
+    const start = startOfUtcDayIso()
 
     const { data: todayRows, error: todayErr } = await supabaseAdmin
       .from('user_question_answers')
       .select('question_id, acertou, tempo_resposta, answer_area_key')
       .eq('user_id', user.id)
-      .gte('created_at', start.toISOString())
+      .gte('created_at', start)
 
     if (todayErr) {
       console.error('pet-me today answers:', todayErr)

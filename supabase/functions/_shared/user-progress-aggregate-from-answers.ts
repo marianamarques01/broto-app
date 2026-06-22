@@ -1,6 +1,6 @@
 /**
  * Progresso por área/tópico a partir de `user_question_answers` — mesma árvore de decisão
- * que `areaKeyForPracticeAnswer` (`enem-topic-area.ts`) em `daily-mission-bonus`.
+ * que `areaKeyForPracticeAnswer` (`topico-to-area.ts`) em `daily-mission-bonus`.
  * Garante que respostas persistidas mesmo sem atualização prévia em `topic_performance`
  * apareçam nos indicadores da web/mobile.
  */
@@ -11,10 +11,14 @@ import {
   isCountablePracticeArea,
   isEnemAreaKey,
   rollupTopicPerformanceSlug,
-} from './enem-topic-area.ts'
+} from '@broto/shared/lib/topico-to-area.ts'
 import type { TypedSupabaseClient } from './database.ts'
-import { TOPICO_LABELS } from './topico-labels.ts'
-import type { QuestionTopicMappingRow, UserQuestionAnswerRow } from '../../database.types.ts'
+import { TOPICO_LABELS } from '@broto/shared/lib/topico-labels.ts'
+import type {
+  QuestionTopicMappingRow,
+  TopicPerformanceRow,
+  UserQuestionAnswerRow,
+} from '../../database.types.ts'
 
 /** Primeiro topico determinístico por questão (= menor slug), alinhado a `answer-question` com order. */
 export async function fetchFirstTopicByQuestionBatch(
@@ -89,6 +93,7 @@ export type MutableAgg = {
           totalAnswered: number
           totalCorrect: number
           accuracyPct: number
+          pKnow?: number
         }
       >
     }
@@ -111,6 +116,7 @@ export function createEmptyAgg(areaOrder: readonly { value: string; label: strin
           totalAnswered: number
           totalCorrect: number
           accuracyPct: number
+          pKnow?: number
         }
       >
     }
@@ -226,6 +232,41 @@ function finalizeAgg(
   }
 }
 
+async function fetchPKnowByTopic(
+  admin: TypedSupabaseClient,
+  userId: string,
+): Promise<Map<string, number>> {
+  const out = new Map<string, number>()
+  const { data, error } = await admin
+    .from('topic_performance')
+    .select('topico_value, p_know')
+    .eq('user_id', userId)
+
+  if (error) {
+    console.error('[user-progress-aggregate] topic_performance p_know:', error)
+    return out
+  }
+
+  for (const row of (data ?? []) as Pick<TopicPerformanceRow, 'topico_value' | 'p_know'>[]) {
+    const key = typeof row.topico_value === 'string' ? row.topico_value.trim() : ''
+    const pk = Number(row.p_know)
+    if (key && Number.isFinite(pk)) out.set(key, pk)
+  }
+  return out
+}
+
+function mergePKnowIntoAreas(areas: unknown[], pKnowByTopic: ReadonlyMap<string, number>): void {
+  for (const area of areas) {
+    if (!area || typeof area !== 'object' || !('topicos' in area)) continue
+    const topicos = (area as { topicos: Array<{ value: string; pKnow?: number }> }).topicos
+    if (!Array.isArray(topicos)) continue
+    for (const t of topicos) {
+      const pk = pKnowByTopic.get(t.value)
+      if (pk != null) t.pKnow = pk
+    }
+  }
+}
+
 const ANSWERS_PAGE = 2800
 
 export async function computeUserProgressPayload(
@@ -277,5 +318,8 @@ export async function computeUserProgressPayload(
     from += ANSWERS_PAGE
   }
 
-  return finalizeAgg(state, areaOrder)
+  const payload = finalizeAgg(state, areaOrder)
+  const pKnowByTopic = await fetchPKnowByTopic(admin, userId)
+  mergePKnowIntoAreas(payload.areas, pKnowByTopic)
+  return payload
 }

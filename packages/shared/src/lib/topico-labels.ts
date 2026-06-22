@@ -1,9 +1,4 @@
-/**
- * Labels de `topico_value` — manter sincronizado com
- * `packages/shared/src/lib/topico-to-area.ts` (áreas) e `user-progress-aggregate-from-answers.ts`.
- */
-import { AREA_ROLLUP_PREFIX } from './enem-topic-area.ts'
-
+/** Labels de `topico_value` — fonte única; edge functions importam via `@broto/shared/` (deno.json). */
 export const TOPICO_LABELS: Record<string, string> = {
   'interpretacao-textual': 'Interpretação Textual',
   'interpretacao-texto': 'Interpretação Textual',
@@ -26,9 +21,9 @@ export const TOPICO_LABELS: Record<string, string> = {
   probabilidade: 'Probabilidade e Estatística',
   porcentagem: 'Porcentagem e Razão',
   combinatoria: 'Análise Combinatória',
-  [`${AREA_ROLLUP_PREFIX}linguagens`]: 'Prática registrada nesta área',
-  [`${AREA_ROLLUP_PREFIX}ciencias-humanas`]: 'Prática registrada nesta área',
-  [`${AREA_ROLLUP_PREFIX}ciencias-natureza`]: 'Prática registrada nesta área',
-  [`${AREA_ROLLUP_PREFIX}matematica`]: 'Prática registrada nesta área',
+  '__area__:linguagens': 'Prática registrada nesta área',
+  '__area__:ciencias-humanas': 'Prática registrada nesta área',
+  '__area__:ciencias-natureza': 'Prática registrada nesta área',
+  '__area__:matematica': 'Prática registrada nesta área',
   __broto_sem_classificacao__: 'Respostas ainda não classificadas pelo catálogo',
 }

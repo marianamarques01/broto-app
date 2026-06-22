@@ -8,7 +8,7 @@ import {
   areaKeyForPracticeAnswer,
   isCountablePracticeArea,
   TOPICO_TO_AREA,
-} from './enem-topic-area.ts'
+} from '@broto/shared/lib/topico-to-area.ts'
 import {
   DAILY_MISSION_VOLUME_QUEST_GOAL,
   DEFAULT_MISSION_AREAS,

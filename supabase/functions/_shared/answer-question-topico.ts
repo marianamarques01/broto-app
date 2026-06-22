@@ -1,4 +1,4 @@
-import { rollupTopicPerformanceSlug } from './enem-topic-area.ts'
+import { rollupTopicPerformanceSlug } from '@broto/shared/lib/topico-to-area.ts'
 
 export type QuestionTopicoHints = {
   topico_value?: string | null

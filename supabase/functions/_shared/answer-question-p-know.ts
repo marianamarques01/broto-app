@@ -1,7 +1,10 @@
 import type { TypedSupabaseClient } from './database.ts'
 import type { TopicPerformanceInsert, TopicPerformanceRow } from '../../database.types.ts'
 import { BKT_DEFAULT_P_KNOW, updatePKnow } from './bkt.ts'
-import { areaKeyForPracticeAnswer, isCountablePracticeArea } from './enem-topic-area.ts'
+import {
+  areaKeyForPracticeAnswer,
+  isCountablePracticeArea,
+} from '@broto/shared/lib/topico-to-area.ts'
 import { resolveEffectiveTopico, type QuestionTopicoHints } from './answer-question-topico.ts'
 
 export type TopicPerformanceUpdateResult =
