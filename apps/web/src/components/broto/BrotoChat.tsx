@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react'
+import { isClassAiChatReady } from '@broto/shared'
 import { api, ApiError } from '@/lib/api-client'
+import { useClass } from '@/hooks/useClass'
 import { Send } from 'lucide-react'
 
 export interface BrotoChatMessage {
@@ -10,15 +12,19 @@ export interface BrotoChatMessage {
 export const BROTO_WELCOME_TEXT =
   'Oi! Sou o Broto, seu assistente de estudos. Como posso te ajudar?'
 
-/** Aviso exibido nas superfícies do Broto IA (funcionalidade ainda não finalizada). */
-export const BROTO_IA_NOT_READY_NOTICE =
-  'O Broto IA ainda não está pronto: você pode testar a interface, mas respostas e disponibilidade podem variar até o lançamento oficial.'
+export const BROTO_CHAT_ERROR_TEXT = 'Não consegui responder agora. Tente de novo.'
 
-export function BrotoIaNotReadyBanner(props: { className?: string }) {
-  const cls = props.className ?? 'broto-chat__feature-notice'
+export function BrotoChatUnavailableState(props: { className?: string }) {
+  const cls = props.className ?? 'broto-chat__unavailable'
   return (
     <div className={cls} role="status">
-      {BROTO_IA_NOT_READY_NOTICE}
+      <span className="broto-chat__unavailable-icon" aria-hidden>
+        {'\u{1F4DA}'}
+      </span>
+      <p className="broto-chat__unavailable-title">Chat disponível em breve</p>
+      <p className="broto-chat__unavailable-sub">
+        Será ativado quando seu professor adicionar materiais da turma.
+      </p>
     </div>
   )
 }
@@ -51,9 +57,7 @@ export function useBrotoChat() {
       if (!(err instanceof ApiError)) {
         console.error('[BrotoChat] request failed (non-ApiError)', err)
       }
-      const detail = err instanceof ApiError ? err.message : ''
-      const errorMsg = detail || 'Desculpe, tive um problema. Tente novamente.'
-      setMessages((prev) => [...prev, { role: 'assistant', content: errorMsg }])
+      setMessages((prev) => [...prev, { role: 'assistant', content: BROTO_CHAT_ERROR_TEXT }])
     } finally {
       setLoading(false)
     }
@@ -94,11 +98,24 @@ export function useBrotoChat() {
 }
 
 export function BrotoChat() {
+  const { currentClass, loading: classLoading } = useClass()
   const { messages, input, setInput, loading, endRef, handleSubmit } = useBrotoChat()
+  const chatReady = isClassAiChatReady(currentClass)
+
+  if (classLoading) {
+    return <div className="broto-chat broto-chat--loading" aria-busy="true" />
+  }
+
+  if (!chatReady) {
+    return (
+      <div className="broto-chat">
+        <BrotoChatUnavailableState />
+      </div>
+    )
+  }
 
   return (
     <div className="broto-chat">
-      <BrotoIaNotReadyBanner />
       <div className="broto-chat__scroll">
         {messages.map((msg, i) => (
           <div

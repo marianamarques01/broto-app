@@ -12,12 +12,7 @@ const NAV_ITEMS: {
   { path: '/', label: 'Inicio', icon: Home },
   { path: '/study', label: 'Área de Estudo', icon: GraduationCap },
   { path: '/routine', label: 'Rotina', icon: CalendarCheck },
-  {
-    path: '/broto',
-    label: 'Broto IA',
-    icon: MessageCircle,
-    linkTitle: 'Assistente de IA — funcionalidade ainda em desenvolvimento',
-  },
+  { path: '/broto', label: 'Broto IA', icon: MessageCircle },
 ]
 
 const FOOTER_LINKS = [{ path: '/settings', label: 'Configurações', icon: Settings }] as const

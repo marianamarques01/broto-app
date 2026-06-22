@@ -11,6 +11,13 @@ export type Class = {
   created_at: string
 }
 
+/** Chat IA disponível quando materiais da turma foram indexados no NotebookLM. */
+export function isClassAiChatReady(
+  classRow: Pick<Class, 'notebook_status'> | null | undefined,
+): boolean {
+  return classRow?.notebook_status === 'ready'
+}
+
 export type Enrollment = {
   id: string
   class_id: string

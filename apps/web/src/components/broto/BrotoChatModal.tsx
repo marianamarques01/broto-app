@@ -11,10 +11,12 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
+import { isClassAiChatReady } from '@broto/shared'
+import { useClass } from '@/hooks/useClass'
 import {
   useBrotoChat,
   BROTO_WELCOME_TEXT,
-  BrotoIaNotReadyBanner,
+  BrotoChatUnavailableState,
 } from '@/components/broto/BrotoChat'
 
 type BrotoChatModalProps = {
@@ -50,6 +52,8 @@ const SUGGESTIONS: { icon: typeof Search; label: string; prompt: string; badge?:
 export function BrotoChatModal({ onClose }: BrotoChatModalProps) {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
+  const { currentClass, loading: classLoading } = useClass()
+  const chatReady = isClassAiChatReady(currentClass)
 
   const {
     messages,
@@ -135,10 +139,12 @@ export function BrotoChatModal({ onClose }: BrotoChatModalProps) {
           </div>
         </header>
 
-        <BrotoIaNotReadyBanner className="broto-chat-modal__feature-notice" />
-
         <div className="broto-chat-modal__body">
-          {showWelcomeShell ? (
+          {classLoading ? (
+            <div className="broto-chat-modal__loading" aria-busy="true" />
+          ) : !chatReady ? (
+            <BrotoChatUnavailableState className="broto-chat-modal__unavailable" />
+          ) : showWelcomeShell ? (
             <div className="broto-chat-modal__welcome">
               <div className="broto-chat-modal__avatar" aria-hidden>
                 {'\u{1F331}'}
@@ -193,7 +199,11 @@ export function BrotoChatModal({ onClose }: BrotoChatModalProps) {
         </div>
 
         <div className="broto-chat-modal__composer-wrap">
-          <form className="broto-chat-modal__composer" onSubmit={handleSubmit}>
+          <form
+            className="broto-chat-modal__composer"
+            onSubmit={handleSubmit}
+            hidden={classLoading || !chatReady}
+          >
             <label className="broto-sr-only" htmlFor="broto-chat-modal-input">
               Mensagem para o Broto
             </label>

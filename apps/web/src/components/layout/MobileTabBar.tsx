@@ -21,13 +21,7 @@ const TAB_ITEMS: MobileTabItem[] = [
   { path: '/study/mock-exam', label: 'Sessão ENEM', shortLabel: 'Sessão', icon: ClipboardList },
   { path: '/', label: 'Início', shortLabel: 'Início', emoji: '🌱', end: true, center: true },
   { path: '/routine', label: 'Rotina', shortLabel: 'Rotina', icon: CalendarCheck },
-  {
-    path: '/broto',
-    label: 'Broto IA',
-    shortLabel: 'Broto',
-    ariaLabel: 'Broto IA — em desenvolvimento',
-    icon: MessageCircle,
-  },
+  { path: '/broto', label: 'Broto IA', shortLabel: 'Broto', icon: MessageCircle },
 ]
 
 /** Barra inferior com entalhe suave no centro (SVG) + botão Início elevado. */
