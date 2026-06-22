@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { AreaStat } from '@/hooks/useProgress'
 import { useProgress } from '@/hooks/useProgress'
-import { useDailyMissionsState } from '@/hooks/useDailyMissionsState'
+import { usePet } from '@/hooks/usePet'
 import { BookOpen, CheckCircle2, Coffee, Lock, Zap } from 'lucide-react'
 import { AREA_CONFIG } from '@/lib/area-config'
 import { buildDailyMissions } from '@/lib/build-daily-missions'
@@ -50,7 +50,7 @@ function MissionsExternalHead({
 
 export function DayCard({ dia }: DayCardProps) {
   const { progress } = useProgress()
-  const { daily, error: dailyMissionsError } = useDailyMissionsState()
+  const { pet } = usePet()
 
   if (dia.ehDescanso) {
     return (
@@ -72,18 +72,13 @@ export function DayCard({ dia }: DayCardProps) {
     )
   }
 
-  const missions = buildDailyMissions(progress?.areas, daily)
+  const missions = buildDailyMissions(progress?.areas, pet?.studyTodayByArea)
   const doneMissions = missions.filter((m) => m.done).length
   const allDone = doneMissions === 3
 
   return (
     <div className="broto-missions-stack">
       <MissionsExternalHead doneMissions={doneMissions} showBadge />
-      {dailyMissionsError ? (
-        <div className="broto-error-banner" role="alert" style={{ marginBottom: 8 }}>
-          {dailyMissionsError}
-        </div>
-      ) : null}
       <article className="broto-missions-panel" aria-labelledby="broto-missions-title">
         <ul className="broto-missions-panel__list">
           {missions.map((mission, i) => {

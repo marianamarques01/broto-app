@@ -15,7 +15,6 @@ import { getQuestionId } from '@broto/shared'
 import { getAreaColor } from '@/lib/area-config'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet } from '@/hooks/usePet'
-import { useDailyMissionsState } from '@/hooks/useDailyMissionsState'
 import { useRecentMistakes } from '@/hooks/useRecentMistakes'
 import {
   useQuestionBankAnswerStatus,
@@ -574,7 +573,6 @@ export function QuestionBankView({
 
   const { progress, loading: loadingProgress } = useProgress()
   const { pet } = usePet()
-  const { daily } = useDailyMissionsState()
   const { mistakes: recentMistakes, loading: loadingRecentMistakes } = useRecentMistakes()
 
   const [searchInput, setSearchInput] = useState(initialFilters?.search ?? '')
@@ -982,7 +980,6 @@ export function QuestionBankView({
                           selectedArea={selectedArea}
                           areaLabel={areaLabel}
                           areas={progress?.areas}
-                          daily={daily}
                           studyTodayByArea={pet?.studyTodayByArea}
                         />
                       </div>
@@ -995,7 +992,6 @@ export function QuestionBankView({
                         selectedArea={selectedArea}
                         areaLabel={areaLabel}
                         areas={progress?.areas}
-                        daily={daily}
                         studyTodayByArea={pet?.studyTodayByArea}
                       />
                     )}

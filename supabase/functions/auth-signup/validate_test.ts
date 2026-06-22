@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from 'https://deno.land/std@0.168.0/assert/mod.ts'
+import { assertEquals, assertThrows } from 'jsr:@std/assert@1'
 import { mapCreateUserError, parseSignupBody } from './validate.ts'
 
 Deno.test('parseSignupBody: aceita payload mínimo web/mobile', () => {

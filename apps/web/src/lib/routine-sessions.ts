@@ -1,5 +1,5 @@
 import type { AreaStat } from '@/hooks/useProgress'
-import { mergeByAreaWithServer, type DailyMissionsState } from '@broto/shared'
+import { sanitizeStudyTodayByArea, type StudyTodayByArea } from '@broto/shared'
 import { AREA_CONFIG } from '@/lib/area-config'
 import { buildDailyMissions } from '@/lib/build-daily-missions'
 
@@ -47,12 +47,11 @@ function pickFourthAreaKey(areas: AreaStat[] | undefined, used: string[]): strin
 
 export function buildRoutineSessions(
   areas: AreaStat[] | undefined,
-  daily: DailyMissionsState,
   horasPorDia: number,
-  studyTodayByArea?: Record<string, { answered: number; correct: number }>,
+  studyTodayByArea?: StudyTodayByArea,
 ): RoutineSession[] {
-  const missions = buildDailyMissions(areas, daily, studyTodayByArea)
-  const byArea = mergeByAreaWithServer(daily, studyTodayByArea)
+  const missions = buildDailyMissions(areas, studyTodayByArea)
+  const byArea = sanitizeStudyTodayByArea(studyTodayByArea)
   const keys = [missions[0].areaKey, missions[1].areaKey, missions[2].areaKey]
   const fourthKey = pickFourthAreaKey(areas, keys)
   const allKeys = [...keys, fourthKey]

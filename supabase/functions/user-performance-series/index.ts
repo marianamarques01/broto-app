@@ -45,10 +45,9 @@ function bucket(key: string, label: string, answered: number, correct: number): 
   }
 }
 
-function aggregateRows(
+function buildByDayMap(
   rows: { created_at: string; acertou: boolean }[],
-  period: PerformancePeriod,
-): PerformanceBucket[] {
+): Map<string, { answered: number; correct: number }> {
   const byDay = new Map<string, { answered: number; correct: number }>()
   for (const r of rows) {
     const day = r.created_at.slice(0, 10)
@@ -57,7 +56,19 @@ function aggregateRows(
     if (r.acertou) cur.correct += 1
     byDay.set(day, cur)
   }
+  return byDay
+}
 
+function daysRecord(
+  byDay: Map<string, { answered: number; correct: number }>,
+): Record<string, { answered: number; correct: number }> {
+  return Object.fromEntries(byDay.entries())
+}
+
+function aggregateRows(
+  byDay: Map<string, { answered: number; correct: number }>,
+  period: PerformancePeriod,
+): PerformanceBucket[] {
   const today = new Date()
   const todayNoon = new Date(
     Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 12, 0, 0, 0),
@@ -176,9 +187,11 @@ serve(async (req) => {
     }
 
     const list = (rows ?? []) as Pick<UserQuestionAnswerRow, 'created_at' | 'acertou'>[]
-    const buckets = aggregateRows(list, period)
+    const byDay = buildByDayMap(list)
+    const buckets = aggregateRows(byDay, period)
+    const days = daysRecord(byDay)
 
-    return json(200, { period, buckets }, cors)
+    return json(200, { period, buckets, days }, cors)
   } catch (err) {
     console.error('user-performance-series:', err)
     return json(500, { error: String(err) }, cors)

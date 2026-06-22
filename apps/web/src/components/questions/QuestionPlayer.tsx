@@ -84,6 +84,7 @@ export function QuestionPlayer({
   const [selected, setSelected] = useState<string | null>(null)
   const [answered, setAnswered] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const questionStartMs = useRef(0)
 
   useEffect(() => {
@@ -123,6 +124,7 @@ export function QuestionPlayer({
     setSelected(letter)
     setAnswered(true)
     setSubmitting(true)
+    setSubmitError(null)
 
     const isCorrect = letter === correct
     const timeSpentSec = elapsedSecondsSince(questionStartMs.current)
@@ -142,8 +144,12 @@ export function QuestionPlayer({
         selectedLetter: letter,
         correctLetter: correct,
       })
-    } catch {
-      // fail silently
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error
+          ? err.message
+          : 'Não foi possível salvar sua resposta. Tente novamente.',
+      )
     } finally {
       setSubmitting(false)
     }
@@ -317,6 +323,12 @@ export function QuestionPlayer({
           )
         })}
       </div>
+
+      {submitError ? (
+        <div className="broto-error-banner" role="alert" style={{ marginTop: 16 }}>
+          {submitError}
+        </div>
+      ) : null}
 
       {(answered || onPrevious != null) && (
         <>

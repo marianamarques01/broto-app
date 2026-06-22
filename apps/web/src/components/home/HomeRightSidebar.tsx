@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useSyncExternalStore } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { Sprout, Zap } from 'lucide-react'
 import {
@@ -10,18 +10,13 @@ import {
 } from '@broto/shared'
 import type { DiaRotina } from '@/lib/routine'
 import { buildDailyMissions } from '@/lib/build-daily-missions'
-import { useDailyMissionsState } from '@/hooks/useDailyMissionsState'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet } from '@/hooks/usePet'
+import { usePerformanceDayMap } from '@/hooks/usePerformanceSeries'
 import { AREA_CONFIG } from '@/lib/area-config'
 import { DailyStreakCard } from '@/components/progress/DailyStreakCard'
 import { AchievementsCollapsible } from '@/components/progress/AchievementsCollapsible'
 import { buildAchievementRows } from '@/lib/achievements'
-import {
-  getPerformanceDayMapSnapshot,
-  getPerformanceDayMapServerSnapshot,
-  subscribePerformanceHistory,
-} from '@/lib/performance-history'
 
 const DAILY_QUESTIONS_GOAL = 5
 
@@ -50,15 +45,9 @@ export function HomeRightSidebar({
   const [showAllMissions, setShowAllMissions] = useState(false)
   const [tick, setTick] = useState(0)
 
-  const { daily } = useDailyMissionsState()
   const { progress } = useProgress()
   const { pet, loading: loadingPet } = usePet()
-
-  const performanceDayMap = useSyncExternalStore(
-    subscribePerformanceHistory,
-    getPerformanceDayMapSnapshot,
-    getPerformanceDayMapServerSnapshot,
-  )
+  const { dayMap: performanceDayMap } = usePerformanceDayMap()
 
   const achievements = useMemo(
     () => buildAchievementRows(progress?.totalAnswered ?? 0, progress?.accuracyPct ?? 0),
@@ -73,8 +62,8 @@ export function HomeRightSidebar({
   const questoesHoje = pet?.questoesHoje ?? 0
 
   const missions = useMemo(
-    () => buildDailyMissions(progress?.areas, daily, pet?.studyTodayByArea),
-    [progress?.areas, daily, pet?.studyTodayByArea],
+    () => buildDailyMissions(progress?.areas, pet?.studyTodayByArea),
+    [progress?.areas, pet?.studyTodayByArea],
   )
 
   const review = useMemo(() => buildFlashcardReviewCopy(progress?.areas), [progress?.areas])

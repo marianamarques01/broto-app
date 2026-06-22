@@ -1,6 +1,6 @@
 import {
   DAILY_MISSION_VOLUME_QUEST_GOAL,
-  type DailyMissionsState,
+  sanitizeStudyTodayByArea,
   type QuestionBankPrimaryAction,
   type QuestionBankTrackId,
 } from '@broto/shared'
@@ -17,16 +17,6 @@ const TRACK_PILL: Record<QuestionBankTrackId, string> = {
   freeExplore: 'Catálogo',
 }
 
-function mergedAnsweredToday(
-  areaKey: string,
-  daily: DailyMissionsState,
-  serverToday?: Record<string, { answered: number; correct: number }>,
-): number {
-  const l = daily.byArea[areaKey] ?? { answered: 0, correct: 0 }
-  const s = serverToday?.[areaKey] ?? { answered: 0, correct: 0 }
-  return Math.max(l.answered, s.answered)
-}
-
 export interface QuestionBankFocusBandProps {
   primary: QuestionBankPrimaryAction | null
   loading: boolean
@@ -35,7 +25,6 @@ export interface QuestionBankFocusBandProps {
   selectedArea: string
   areaLabel: string
   areas: AreaStat[] | undefined
-  daily: DailyMissionsState
   studyTodayByArea?: Record<string, { answered: number; correct: number }>
 }
 
@@ -47,12 +36,12 @@ export function QuestionBankFocusBand({
   selectedArea,
   areaLabel: _areaLabel,
   areas,
-  daily,
   studyTodayByArea,
 }: QuestionBankFocusBandProps) {
-  const missions = buildDailyMissions(areas, daily, studyTodayByArea)
+  const missions = buildDailyMissions(areas, studyTodayByArea)
   const mission = missions.find((m) => m.areaKey === selectedArea) ?? missions[0] ?? null
-  const answered = mergedAnsweredToday(selectedArea, daily, studyTodayByArea)
+  const byArea = sanitizeStudyTodayByArea(studyTodayByArea)
+  const answered = byArea[selectedArea]?.answered ?? 0
   const parsedGoal =
     mission?.areaKey === selectedArea ? parseDailyMissionQuestionCount(mission.title) : null
   const goal = parsedGoal && parsedGoal > 0 ? parsedGoal : DEFAULT_GOAL

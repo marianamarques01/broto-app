@@ -16,7 +16,7 @@ import {
 
 export type QuestionBankSuggestionReason =
   | { kind: 'mistake'; createdAt: string }
-  | { kind: 'weak'; topicoLabel: string; accuracyPct: number }
+  | { kind: 'weak'; topicoLabel: string; accuracyPct: number; pKnow?: number }
   | { kind: 'new'; topicoLabel: string }
   | { kind: 'cold'; topicoLabel: string }
 
@@ -105,6 +105,25 @@ function distinctTopicValuesInCatalog(allInArea: QuestionBankRow[]): string[] {
   return [...s]
 }
 
+/** Limiar BKT alinhado a Q_BANK_WEAK_ACCURACY_PCT_MAX (62% → 0.62). */
+const Q_BANK_WEAK_P_KNOW_MAX = Q_BANK_WEAK_ACCURACY_PCT_MAX / 100
+
+function hasFinitePKnow(t: TopicoStat): t is TopicoStat & { pKnow: number } {
+  return typeof t.pKnow === 'number' && Number.isFinite(t.pKnow)
+}
+
+/** Critério primário: menor pKnow; fallback accuracyPct normalizada em [0, 1]. */
+function weakTopicSortScore(t: TopicoStat): number {
+  if (hasFinitePKnow(t)) return t.pKnow
+  return t.accuracyPct / 100
+}
+
+function isWeakTopicCandidate(t: TopicoStat): boolean {
+  if (t.totalAnswered < Q_BANK_WEAK_TOPIC_MIN_ANSWERS) return false
+  if (hasFinitePKnow(t)) return t.pKnow <= Q_BANK_WEAK_P_KNOW_MAX
+  return t.accuracyPct <= Q_BANK_WEAK_ACCURACY_PCT_MAX
+}
+
 export function buildQuestionBankPriority(params: {
   areaKey: string
   allInArea: QuestionBankRow[]
@@ -138,9 +157,8 @@ export function buildQuestionBankPriority(params: {
   const topicoStats = topicoStatsByValue(areaStat)
 
   const weakTopicCandidates = [...(areaStat?.topicos ?? [])]
-    .filter((t) => t.totalAnswered >= Q_BANK_WEAK_TOPIC_MIN_ANSWERS)
-    .filter((t) => t.accuracyPct <= Q_BANK_WEAK_ACCURACY_PCT_MAX)
-    .sort((a, b) => a.accuracyPct - b.accuracyPct)
+    .filter(isWeakTopicCandidate)
+    .sort((a, b) => weakTopicSortScore(a) - weakTopicSortScore(b))
     .slice(0, Q_BANK_WEAK_TOPIC_CAP)
 
   const weakRows: QuestionBankSuggestedRow[] = []
@@ -152,7 +170,12 @@ export function buildQuestionBankPriority(params: {
       usedKeys.add(rowKey(base))
       weakRows.push({
         ...base,
-        reason: { kind: 'weak', topicoLabel: t.label, accuracyPct: t.accuracyPct },
+        reason: {
+          kind: 'weak',
+          topicoLabel: t.label,
+          accuracyPct: t.accuracyPct,
+          ...(hasFinitePKnow(t) ? { pKnow: t.pKnow } : {}),
+        },
       })
     }
     if (weakRows.length >= Q_BANK_TRACK_ROW_LIMIT) break
@@ -249,7 +272,9 @@ export function buildQuestionBankPriority(params: {
     primary = {
       headline: weakReason ? `Reforço: ${weakReason.topicoLabel}` : 'Reforço no tópico mais fraco',
       subline: weakReason
-        ? `Acerto ~${Math.round(weakReason.accuracyPct)}% neste tópico.`
+        ? weakReason.pKnow != null
+          ? `Segurança ~${Math.round(weakReason.pKnow * 100)}% neste tópico (BKT).`
+          : `Acerto ~${Math.round(weakReason.accuracyPct)}% neste tópico.`
         : 'Prioridade nos tópicos com menos segurança.',
       trustLine: 'Calculado a partir do histórico por tópico.',
       trackId: 'weak',

@@ -10,12 +10,11 @@ import { RoutineBrotoTip } from '@/components/routine/RoutineBrotoTip'
 import { useUser } from '@/hooks/useUser'
 import { useProgress } from '@/hooks/useProgress'
 import { usePet } from '@/hooks/usePet'
-import { useDailyMissionsState } from '@/hooks/useDailyMissionsState'
+import { usePerformanceSeries } from '@/hooks/usePerformanceSeries'
 import { BookOpen, Plus } from 'lucide-react'
 import { getAreaColor, getAreaIcon } from '@/lib/area-config'
 import { gerarRotina, getSegundaDaSemana, formatarSemana } from '@/lib/routine'
 import { buildRoutineSessions, countCompletedSessions } from '@/lib/routine-sessions'
-import { getPerformanceBuckets } from '@/lib/performance-history'
 
 const WD_UP = [
   'DOMINGO',
@@ -58,7 +57,7 @@ export function Routine() {
   const { user, loading: loadingUser } = useUser()
   const { progress, loading: loadingProgress } = useProgress()
   const { pet, loading: loadingPet } = usePet()
-  const { daily } = useDailyMissionsState()
+  const { buckets: weekBuckets } = usePerformanceSeries('week')
 
   const [tab, setTab] = useState<RoutineTab>('hoje')
 
@@ -113,8 +112,8 @@ export function Routine() {
   )
 
   const sessions = useMemo(
-    () => (!loading ? buildRoutineSessions(areas, daily, horasPorDia, pet?.studyTodayByArea) : []),
-    [loading, areas, daily, horasPorDia, pet?.studyTodayByArea],
+    () => (!loading ? buildRoutineSessions(areas, horasPorDia, pet?.studyTodayByArea) : []),
+    [loading, areas, horasPorDia, pet?.studyTodayByArea],
   )
 
   const completed = countCompletedSessions(sessions)
@@ -122,8 +121,6 @@ export function Routine() {
 
   const semanaLabel = useMemo(() => formatarSemana(getSegundaDaSemana(new Date())), [])
   const dateLine = useMemo(() => formatRoutineDateLine(new Date()), [])
-
-  const weekBuckets = getPerformanceBuckets('week')
 
   const minutosHoje = useMemo(() => {
     if (pet?.tempoEstudoSegHoje && pet.tempoEstudoSegHoje > 0) {

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { todayUtcISO } from '@broto/shared'
 
 const MONTH_SHORT = [
   'jan',
@@ -17,24 +18,23 @@ const MONTH_SHORT = [
 
 const DOW_LEFT = ['Seg', '', 'Qua', '', 'Sex', '', 'Dom']
 
-function dateISO(d: Date): string {
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
+function dateUtcISO(d: Date): string {
+  const yyyy = d.getUTCFullYear()
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(d.getUTCDate()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd}`
 }
 
-function mondayOnOrBefore(d: Date): Date {
-  const x = new Date(d)
-  x.setHours(12, 0, 0, 0)
-  const dow = (x.getDay() + 6) % 7
-  x.setDate(x.getDate() - dow)
+function mondayOnOrBeforeUtc(d: Date): Date {
+  const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0, 0))
+  const dow = (x.getUTCDay() + 6) % 7
+  x.setUTCDate(x.getUTCDate() - dow)
   return x
 }
 
-function addDays(d: Date, n: number): Date {
+function addUtcDays(d: Date, n: number): Date {
   const x = new Date(d)
-  x.setDate(x.getDate() + n)
+  x.setUTCDate(x.getUTCDate() + n)
   return x
 }
 
@@ -61,25 +61,20 @@ export function buildYearHeatmapColumns(
   questoesHoje: number,
   todayIso: string,
 ): HeatmapCell[][] {
-  const jan1 = new Date(year, 0, 1)
-  jan1.setHours(12, 0, 0, 0)
-  const dec31 = new Date(year, 11, 31)
-  dec31.setHours(12, 0, 0, 0)
+  const jan1 = new Date(Date.UTC(year, 0, 1, 12, 0, 0, 0))
+  const dec31 = new Date(Date.UTC(year, 11, 31, 12, 0, 0, 0))
 
-  const today = new Date()
-  today.setHours(23, 59, 59, 999)
-
-  let weekMonday = mondayOnOrBefore(jan1)
-  const lastWeekMonday = mondayOnOrBefore(dec31)
+  let weekMonday = mondayOnOrBeforeUtc(jan1)
+  const lastWeekMonday = mondayOnOrBeforeUtc(dec31)
   const columns: HeatmapCell[][] = []
 
   while (weekMonday <= lastWeekMonday) {
     const col: HeatmapCell[] = []
     for (let row = 0; row < 7; row++) {
-      const d = addDays(weekMonday, row)
-      const iso = dateISO(d)
-      const inYear = d.getFullYear() === year
-      const isFuture = d > today
+      const d = addUtcDays(weekMonday, row)
+      const iso = dateUtcISO(d)
+      const inYear = d.getUTCFullYear() === year
+      const isFuture = iso > todayIso
       const isToday = iso === todayIso
       let answered = 0
       if (inYear && !isFuture) {
@@ -90,7 +85,7 @@ export function buildYearHeatmapColumns(
       col.push({ iso, inYear, isFuture, isToday, answered, level })
     }
     columns.push(col)
-    weekMonday = addDays(weekMonday, 7)
+    weekMonday = addUtcDays(weekMonday, 7)
   }
 
   return columns
@@ -103,13 +98,12 @@ function monthTicksForColumns(columns: HeatmapCell[][]): string[] {
     for (const cell of col) {
       if (cell.inYear) {
         const [y, m, day] = cell.iso.split('-').map(Number)
-        firstInYear = new Date(y, m - 1, day)
-        firstInYear.setHours(12, 0, 0, 0)
+        firstInYear = new Date(Date.UTC(y, m - 1, day, 12, 0, 0, 0))
         break
       }
     }
     if (!firstInYear) return ''
-    const m = firstInYear.getMonth()
+    const m = firstInYear.getUTCMonth()
     if (prevMonth === m) return ''
     prevMonth = m
     return MONTH_SHORT[m] ?? ''
@@ -127,10 +121,7 @@ export function HomePracticeYearHeatmap({
 }: HomePracticeYearHeatmapProps) {
   const year = new Date().getFullYear()
 
-  const todayIso = useMemo(() => {
-    const d = new Date()
-    return dateISO(d)
-  }, [])
+  const todayIso = useMemo(() => todayUtcISO(), [])
 
   const columns = useMemo(
     () => buildYearHeatmapColumns(year, performanceDayMap, questoesHoje, todayIso),

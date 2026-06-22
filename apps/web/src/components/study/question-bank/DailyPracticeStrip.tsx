@@ -1,25 +1,14 @@
 import { buildDailyMissions, parseDailyMissionQuestionCount } from '@/lib/build-daily-missions'
-import { DAILY_MISSION_VOLUME_QUEST_GOAL, type DailyMissionsState } from '@broto/shared'
+import { DAILY_MISSION_VOLUME_QUEST_GOAL, sanitizeStudyTodayByArea } from '@broto/shared'
 import type { AreaStat } from '@/hooks/useProgress'
 import { AREA_CONFIG } from '@/lib/area-config'
 
 const DEFAULT_GOAL = DAILY_MISSION_VOLUME_QUEST_GOAL
 
-function mergedAnsweredToday(
-  areaKey: string,
-  daily: DailyMissionsState,
-  serverToday?: Record<string, { answered: number; correct: number }>,
-): number {
-  const l = daily.byArea[areaKey] ?? { answered: 0, correct: 0 }
-  const s = serverToday?.[areaKey] ?? { answered: 0, correct: 0 }
-  return Math.max(l.answered, s.answered)
-}
-
 export interface DailyPracticeStripProps {
   selectedArea: string
   areaLabel: string
   areas: AreaStat[] | undefined
-  daily: DailyMissionsState
   studyTodayByArea?: Record<string, { answered: number; correct: number }>
 }
 
@@ -27,12 +16,12 @@ export function DailyPracticeStrip({
   selectedArea,
   areaLabel,
   areas,
-  daily,
   studyTodayByArea,
 }: DailyPracticeStripProps) {
-  const missions = buildDailyMissions(areas, daily, studyTodayByArea)
+  const missions = buildDailyMissions(areas, studyTodayByArea)
   const mission = missions.find((m) => m.areaKey === selectedArea) ?? missions[0] ?? null
-  const answered = mergedAnsweredToday(selectedArea, daily, studyTodayByArea)
+  const byArea = sanitizeStudyTodayByArea(studyTodayByArea)
+  const answered = byArea[selectedArea]?.answered ?? 0
   const parsedGoal =
     mission?.areaKey === selectedArea ? parseDailyMissionQuestionCount(mission.title) : null
   const goal = parsedGoal && parsedGoal > 0 ? parsedGoal : DEFAULT_GOAL

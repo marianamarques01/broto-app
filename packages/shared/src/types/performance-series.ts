@@ -12,4 +12,6 @@ export interface PerformanceBucket {
 export interface PerformanceSeriesResponse {
   period: PerformancePeriod
   buckets: PerformanceBucket[]
+  /** UTC day keys (YYYY-MM-DD) com contagens — janela da consulta no servidor. */
+  days?: Record<string, { answered: number; correct: number }>
 }

@@ -17,11 +17,13 @@ export function invalidatePerformanceSeries(): void {
 
 export function usePerformanceSeries(period: PerformancePeriod): {
   buckets: PerformanceBucket[]
+  days: Record<string, { answered: number; correct: number }>
   loading: boolean
   error: string | null
   refresh: () => void
 } {
   const [buckets, setBuckets] = useState<PerformanceBucket[]>([])
+  const [days, setDays] = useState<Record<string, { answered: number; correct: number }>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [nonce, setNonce] = useState(0)
@@ -46,10 +48,12 @@ export function usePerformanceSeries(period: PerformancePeriod): {
         const res = await fetchSeries(period)
         if (cancelled) return
         setBuckets(Array.isArray(res.buckets) ? res.buckets : [])
+        setDays(res.days ?? {})
         setError(null)
       } catch (e) {
         if (cancelled) return
         setBuckets([])
+        setDays({})
         setError(e instanceof Error ? e.message : 'Erro ao carregar desempenho')
       } finally {
         if (!cancelled) setLoading(false)
@@ -65,10 +69,22 @@ export function usePerformanceSeries(period: PerformancePeriod): {
   return useMemo(
     () => ({
       buckets,
+      days,
       loading,
       error,
       refresh,
     }),
-    [buckets, loading, error, refresh],
+    [buckets, days, loading, error, refresh],
   )
+}
+
+/** Mapa UTC dia → contagens para heatmap / streak (fonte: `user-performance-series`). */
+export function usePerformanceDayMap(): {
+  dayMap: Readonly<Record<string, { answered: number; correct: number }>>
+  loading: boolean
+  error: string | null
+} {
+  const { days, loading, error } = usePerformanceSeries('all')
+  const dayMap = useMemo(() => ({ ...days }), [days])
+  return { dayMap, loading, error }
 }

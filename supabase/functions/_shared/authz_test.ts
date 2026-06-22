@@ -1,4 +1,4 @@
-import { assertEquals } from 'https://deno.land/std@0.168.0/assert/mod.ts'
+import { assertEquals } from 'jsr:@std/assert@1'
 import type { TypedSupabaseClient } from './database.ts'
 import {
   legacyUnauthorizedMessage,

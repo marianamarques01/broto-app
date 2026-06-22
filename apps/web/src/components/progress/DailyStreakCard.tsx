@@ -1,24 +1,25 @@
 import { useMemo } from 'react'
 import { Check, Flame, Sprout } from 'lucide-react'
-import { DAILY_MISSION_VOLUME_QUEST_GOAL, todayLocalISO } from '@broto/shared'
+import { DAILY_MISSION_VOLUME_QUEST_GOAL, todayUtcISO } from '@broto/shared'
 
 /** Alinhado a HomePetBanner (meta gamificada do dia). */
 const META_QUESTOES_DIA = DAILY_MISSION_VOLUME_QUEST_GOAL
 
-function dateISO(d: Date): string {
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
+function dateUtcISO(d: Date): string {
+  const yyyy = d.getUTCFullYear()
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(d.getUTCDate()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd}`
 }
 
-/** Segunda da semana local (00:00 lógico ao meio-dia para evitar DST). */
-function mondayOfThisWeek(ref: Date): Date {
-  const d = new Date(ref)
-  d.setHours(12, 0, 0, 0)
-  const day = d.getDay()
+/** Segunda da semana UTC (meio-dia UTC para evitar bordas de DST). */
+function mondayOfThisUtcWeek(ref: Date): Date {
+  const d = new Date(
+    Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth(), ref.getUTCDate(), 12, 0, 0, 0),
+  )
+  const day = d.getUTCDay()
   const offset = day === 0 ? -6 : 1 - day
-  d.setDate(d.getDate() + offset)
+  d.setUTCDate(d.getUTCDate() + offset)
   return d
 }
 
@@ -49,23 +50,21 @@ export function DailyStreakCard({
   loading,
   performanceDayMap,
 }: DailyStreakCardProps) {
-  const todayIso = todayLocalISO()
+  const todayIso = todayUtcISO()
 
   const weekDays = useMemo(() => {
-    const mon = mondayOfThisWeek(new Date())
-    const endToday = new Date()
-    endToday.setHours(23, 59, 59, 999)
+    const mon = mondayOfThisUtcWeek(new Date())
     const days: { iso: string; label: string; state: DayState }[] = []
     for (let i = 0; i < 7; i++) {
       const d = new Date(mon)
-      d.setDate(mon.getDate() + i)
-      const iso = dateISO(d)
-      const isFuture = d > endToday
+      d.setUTCDate(mon.getUTCDate() + i)
+      const iso = dateUtcISO(d)
+      const isFuture = iso > todayIso
       const isToday = iso === todayIso
-      let localQ = performanceDayMap[iso]?.answered ?? 0
-      if (isToday) localQ = Math.max(localQ, questoesHoje)
+      let answered = performanceDayMap[iso]?.answered ?? 0
+      if (isToday) answered = Math.max(answered, questoesHoje)
 
-      const state = dayState(isFuture, isToday, localQ)
+      const state = dayState(isFuture, isToday, answered)
 
       days.push({ iso, label: DAY_SHORT[i] ?? '', state })
     }
@@ -143,6 +142,12 @@ export function DailyStreakCard({
             style={{ width: loading ? '0%' : `${missionsPct}%` }}
           />
         </div>
+        <p
+          className="broto-daily-streak__utc-hint"
+          style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 8 }}
+        >
+          Contagens seguem horário UTC.
+        </p>
       </footer>
     </section>
   )
