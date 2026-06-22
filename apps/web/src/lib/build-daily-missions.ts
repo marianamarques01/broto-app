@@ -4,10 +4,12 @@ import {
   DAILY_MISSION_VOLUME_QUEST_GOAL,
   DEFAULT_MISSION_AREAS,
   DAILY_MISSION_XP_REWARDS,
-  mergeByAreaWithServer,
-  type DailyMissionsState,
+  sanitizeStudyTodayByArea,
   type StudyTodayByArea,
 } from '@broto/shared'
+
+// Fonte de verdade para missões diárias.
+// A versão localStorage foi removida em 2026-06-21 — veja PR #XXX.
 
 /** Regras de missões/XP: manter alinhadas a `supabase/functions/_shared/daily-mission-bonus.ts`. */
 
@@ -36,11 +38,10 @@ export interface DailyMissionItem {
 
 export function buildDailyMissions(
   areas: AreaStat[] | undefined,
-  daily: DailyMissionsState,
-  /** Contagens do dia vindas do banco (`pet-me`) para alinhar missões ao servidor. */
+  /** Contagens do dia vindas do banco (`pet-me`), UTC. */
   studyTodayByArea?: StudyTodayByArea,
 ): DailyMissionItem[] {
-  const byArea = mergeByAreaWithServer(daily, studyTodayByArea)
+  const byArea = sanitizeStudyTodayByArea(studyTodayByArea)
   const sortedKeys = areas?.length
     ? [...areas]
         .filter((a) => a.totalAnswered >= 1)
