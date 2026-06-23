@@ -4,10 +4,20 @@ import { MaterialStatusBadge } from './MaterialStatusBadge'
 type Props = {
   materials: Material[]
   loading: boolean
+  ragEnabled?: boolean
+  reindexing?: boolean
   onDelete: (materialId: string) => Promise<{ error: string | null }>
+  onReindexAll?: () => void
 }
 
-export function MaterialsList({ materials, loading, onDelete }: Props) {
+export function MaterialsList({
+  materials,
+  loading,
+  ragEnabled,
+  reindexing,
+  onDelete,
+  onReindexAll,
+}: Props) {
   if (loading) return <p style={{ color: 'var(--text-muted)' }}>Carregando materiais...</p>
 
   const typeLabel: Record<string, string> = {
@@ -26,8 +36,36 @@ export function MaterialsList({ materials, loading, onDelete }: Props) {
         overflow: 'hidden',
       }}
     >
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-default)' }}>
+      <div
+        style={{
+          padding: '16px 20px',
+          borderBottom: '1px solid var(--border-default)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
         <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Materiais ({materials.length})</h3>
+        {ragEnabled && onReindexAll && materials.length > 0 && (
+          <button
+            type="button"
+            onClick={onReindexAll}
+            disabled={reindexing}
+            style={{
+              fontSize: 12,
+              padding: '6px 12px',
+              borderRadius: 6,
+              border: '1px solid var(--border-strong)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--green-400)',
+              cursor: reindexing ? 'wait' : 'pointer',
+              opacity: reindexing ? 0.7 : 1,
+            }}
+          >
+            {reindexing ? 'Indexando…' : 'Reindexar RAG'}
+          </button>
+        )}
       </div>
 
       {materials.length === 0 ? (

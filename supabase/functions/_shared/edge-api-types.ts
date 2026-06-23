@@ -7,6 +7,13 @@ export type EnemAreaKey = 'linguagens' | 'ciencias-humanas' | 'ciencias-natureza
 
 export type BrotoChatMessage = { role: 'user' | 'assistant'; content: string }
 
+export type ParsedBrotoChatBody = {
+  messages: BrotoChatMessage[]
+  sessionId?: string
+  turnIndex: number
+  classId?: string
+}
+
 export type AnswerQuestionBody = {
   questionId: string
   isCorrect?: boolean
@@ -158,7 +165,9 @@ export function parsePracticeSessionDeleteBody(raw: unknown): {
   return { sessionId, deleteAll }
 }
 
-export function parseBrotoChatBody(raw: unknown): BrotoChatMessage[] | null {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+export function parseBrotoChatBody(raw: unknown): ParsedBrotoChatBody | null {
   const o = parseJsonBody(raw)
   if (!o) return null
   const messages = o.messages
@@ -170,7 +179,22 @@ export function parseBrotoChatBody(raw: unknown): BrotoChatMessage[] | null {
     if (typeof m.content !== 'string') return null
     out.push({ role: m.role, content: m.content })
   }
-  return out
+  const sessionIdRaw = o.sessionId
+  const sessionId =
+    typeof sessionIdRaw === 'string' && UUID_RE.test(sessionIdRaw.trim())
+      ? sessionIdRaw.trim()
+      : undefined
+  const turnIndexRaw = o.turnIndex
+  const turnIndex =
+    typeof turnIndexRaw === 'number' && Number.isFinite(turnIndexRaw) && turnIndexRaw >= 0
+      ? Math.floor(turnIndexRaw)
+      : 0
+  const classIdRaw = o.classId
+  const classId =
+    typeof classIdRaw === 'string' && UUID_RE.test(classIdRaw.trim())
+      ? classIdRaw.trim()
+      : undefined
+  return { messages: out, sessionId, turnIndex, classId }
 }
 
 export function parsePetMePatchBody(raw: unknown): PetMePatchBody | null {
@@ -238,4 +262,92 @@ export function parseFlashcardReviewBody(raw: unknown): FlashcardReviewBody | nu
   const topic_key = typeof o.topic_key === 'string' ? o.topic_key.trim() : undefined
   const area_key = typeof o.area_key === 'string' ? o.area_key.trim() : undefined
   return { card_id, topic_key, area_key, rating }
+}
+
+export type MaterialChunkMetadata = {
+  page_number?: number
+  section_title?: string
+  file_name?: string
+}
+
+export type MaterialEmbedChunk = {
+  text: string
+  tokens?: number
+  metadata?: MaterialChunkMetadata
+}
+
+export type MaterialEmbedBody = {
+  material_id: string
+  class_id: string
+  chunks: MaterialEmbedChunk[]
+}
+
+const SEMANTIC_SEARCH_DEFAULT_LIMIT = 5
+const SEMANTIC_SEARCH_MAX_LIMIT = 20
+/** Corte inicial; abaixo disso ainda tentamos fallback com top-k (turmas com poucos chunks). */
+const SEMANTIC_SEARCH_DEFAULT_THRESHOLD = 0.5
+const SEMANTIC_SEARCH_FALLBACK_THRESHOLD = 0.32
+
+export {
+  SEMANTIC_SEARCH_DEFAULT_LIMIT,
+  SEMANTIC_SEARCH_DEFAULT_THRESHOLD,
+  SEMANTIC_SEARCH_FALLBACK_THRESHOLD,
+  SEMANTIC_SEARCH_MAX_LIMIT,
+}
+
+export type SemanticSearchBody = {
+  query: string
+  class_id: string
+  limit: number
+  similarity_threshold: number
+}
+
+export function parseMaterialEmbedBody(raw: unknown): MaterialEmbedBody | null {
+  const o = parseJsonBody(raw)
+  if (!o) return null
+  const material_id = typeof o.material_id === 'string' ? o.material_id.trim() : ''
+  const class_id = typeof o.class_id === 'string' ? o.class_id.trim() : ''
+  if (!material_id || !class_id) return null
+  const chunksRaw = o.chunks
+  if (!Array.isArray(chunksRaw) || chunksRaw.length === 0) return null
+  const chunks: MaterialEmbedChunk[] = []
+  for (const item of chunksRaw) {
+    if (!isRecord(item)) return null
+    const text = typeof item.text === 'string' ? item.text.trim() : ''
+    if (!text) return null
+    const tokensRaw = item.tokens
+    const tokens =
+      typeof tokensRaw === 'number' && Number.isFinite(tokensRaw)
+        ? Math.max(0, Math.floor(tokensRaw))
+        : undefined
+    const metadataRaw = item.metadata
+    const metadata =
+      metadataRaw !== null &&
+      metadataRaw !== undefined &&
+      typeof metadataRaw === 'object' &&
+      !Array.isArray(metadataRaw)
+        ? (metadataRaw as Record<string, unknown>)
+        : undefined
+    chunks.push({ text, tokens, metadata })
+  }
+  return { material_id, class_id, chunks }
+}
+
+export function parseSemanticSearchBody(raw: unknown): SemanticSearchBody | null {
+  const o = parseJsonBody(raw)
+  if (!o) return null
+  const query = typeof o.query === 'string' ? o.query.trim() : ''
+  const class_id = typeof o.class_id === 'string' ? o.class_id.trim() : ''
+  if (!query || !class_id) return null
+  const limitRaw = o.limit
+  const limit =
+    typeof limitRaw === 'number' && Number.isFinite(limitRaw)
+      ? Math.min(SEMANTIC_SEARCH_MAX_LIMIT, Math.max(1, Math.floor(limitRaw)))
+      : SEMANTIC_SEARCH_DEFAULT_LIMIT
+  const thresholdRaw = o.similarity_threshold
+  const similarity_threshold =
+    typeof thresholdRaw === 'number' && Number.isFinite(thresholdRaw)
+      ? Math.min(1, Math.max(0, thresholdRaw))
+      : SEMANTIC_SEARCH_DEFAULT_THRESHOLD
+  return { query, class_id, limit, similarity_threshold }
 }

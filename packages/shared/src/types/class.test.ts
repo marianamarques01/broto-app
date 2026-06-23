@@ -17,10 +17,20 @@ describe('isClassAiChatReady', () => {
     expect(isClassAiChatReady(null)).toBe(false)
   })
 
-  it('returns true only when notebook_status is ready', () => {
+  it('returns true when notebook_status is ready', () => {
     expect(isClassAiChatReady({ ...baseClass, notebook_status: 'ready' })).toBe(true)
     expect(isClassAiChatReady({ ...baseClass, notebook_status: 'not_configured' })).toBe(false)
     expect(isClassAiChatReady({ ...baseClass, notebook_status: 'indexing' })).toBe(false)
     expect(isClassAiChatReady({ ...baseClass, notebook_status: 'error' })).toBe(false)
+  })
+
+  it('returns true when rag_enabled is true even without notebook ready', () => {
+    expect(
+      isClassAiChatReady({
+        ...baseClass,
+        notebook_status: 'not_configured',
+        rag_enabled: true,
+      }),
+    ).toBe(true)
   })
 })

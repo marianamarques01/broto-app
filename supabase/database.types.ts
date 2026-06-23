@@ -80,6 +80,7 @@ export type Database = {
           notebook_id: string | null
           notebook_status: string
           organization_id: string
+          rag_enabled: boolean
         }
         Insert: {
           access_code: string
@@ -92,6 +93,7 @@ export type Database = {
           notebook_id?: string | null
           notebook_status?: string
           organization_id: string
+          rag_enabled?: boolean
         }
         Update: {
           access_code?: string
@@ -104,6 +106,7 @@ export type Database = {
           notebook_id?: string | null
           notebook_status?: string
           organization_id?: string
+          rag_enabled?: boolean
         }
         Relationships: [
           {
@@ -111,6 +114,62 @@ export type Database = {
             columns: ['organization_id']
             isOneToOne: false
             referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      chat_logs: {
+        Row: {
+          answer: string
+          class_id: string | null
+          created_at: string
+          id: string
+          model_used: string | null
+          question: string
+          response_time_ms: number | null
+          session_id: string
+          source: string
+          topic_key: string | null
+          turn_index: number
+          user_id: string
+          was_helpful: boolean | null
+        }
+        Insert: {
+          answer: string
+          class_id?: string | null
+          created_at?: string
+          id?: string
+          model_used?: string | null
+          question: string
+          response_time_ms?: number | null
+          session_id: string
+          source?: string
+          topic_key?: string | null
+          turn_index?: number
+          user_id: string
+          was_helpful?: boolean | null
+        }
+        Update: {
+          answer?: string
+          class_id?: string | null
+          created_at?: string
+          id?: string
+          model_used?: string | null
+          question?: string
+          response_time_ms?: number | null
+          session_id?: string
+          source?: string
+          topic_key?: string | null
+          turn_index?: number
+          user_id?: string
+          was_helpful?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'chat_logs_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
             referencedColumns: ['id']
           },
         ]
@@ -294,6 +353,67 @@ export type Database = {
           },
           {
             foreignKeyName: 'materials_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      material_embeddings: {
+        Row: {
+          chunk_index: number
+          chunk_text: string
+          chunk_tokens: number | null
+          class_id: string
+          created_at: string
+          embedding: string | null
+          id: string
+          material_id: string
+          metadata: Json
+          organization_id: string | null
+        }
+        Insert: {
+          chunk_index: number
+          chunk_text: string
+          chunk_tokens?: number | null
+          class_id: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          material_id: string
+          metadata?: Json
+          organization_id?: string | null
+        }
+        Update: {
+          chunk_index?: number
+          chunk_text?: string
+          chunk_tokens?: number | null
+          class_id?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          material_id?: string
+          metadata?: Json
+          organization_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'material_embeddings_class_id_fkey'
+            columns: ['class_id']
+            isOneToOne: false
+            referencedRelation: 'classes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'material_embeddings_material_id_fkey'
+            columns: ['material_id']
+            isOneToOne: false
+            referencedRelation: 'materials'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'material_embeddings_organization_id_fkey'
             columns: ['organization_id']
             isOneToOne: false
             referencedRelation: 'organizations'
@@ -838,6 +958,21 @@ export type Database = {
       app_rls_user_has_active_enrollment_in_class: {
         Args: { p_class_id: string }
         Returns: boolean
+      }
+      match_material_chunks: {
+        Args: {
+          match_class_id: string
+          match_count?: number
+          query_embedding: string
+          similarity_threshold?: number
+        }
+        Returns: {
+          chunk_text: string
+          id: string
+          material_id: string
+          metadata: Json
+          similarity: number
+        }[]
       }
       rpc_class_join: {
         Args: { p_access_code: string; p_user_id: string }

@@ -31,34 +31,34 @@ Serviço Python (FastAPI) que conecta o Broto ao Google NotebookLM via [notebook
 ### 1. Instalar dependências
 
 ```bash
-cd supabase/services/notebooklm-py
+cd supabase/services/notebooklm
 
-# Opção A: pip direto
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-pip install "notebooklm-py[browser]"
 playwright install chromium
-
-# Opção B: Docker
-docker build -t broto-notebooklm .
 ```
+
+Versão fixada: `notebooklm-py[browser]==0.7.2` (ver `requirements.txt`).
 
 ### 2. Autenticar no Google NotebookLM
 
-**Este passo precisa ser feito uma vez**, abrindo um browser:
+**Passo manual obrigatório** — abre o browser para login Google:
 
 ```bash
 notebooklm login
+notebooklm auth check --test   # deve passar em "Token fetch"
 ```
 
-Isso abre o Chromium, você faz login na sua conta Google, e as credenciais ficam salvas localmente. O serviço usa essas credenciais para se comunicar com o NotebookLM.
+Credenciais ficam em `~/.notebooklm/storage_state.json`.
 
-> ⚠️ **Se a sessão expirar**, o endpoint `/health` retorna `"authenticated": false` e os outros endpoints retornam 503. Basta rodar `notebooklm login` novamente.
+> Se `/health` retorna `"authenticated": false`, rode `notebooklm login` de novo. Em produção, o container faz refresh automático a cada 15 min (`docker-entrypoint.sh`), mas cookies expirados exigem novo login manual.
 
 ### 3. Configurar variáveis de ambiente
 
 ```bash
-cp .env.example .env
-# Editar .env com o SERVICE_SECRET
+export SERVICE_SECRET="seu-token-compartilhado-com-supabase"
+# Dev local (opcional — padrão usa ~/.notebooklm)
+export NOTEBOOK_MAP_PATH="./data/notebook_map.json"
 ```
 
 ### 4. Rodar
@@ -67,15 +67,48 @@ cp .env.example .env
 # Dev local
 uvicorn main:app --reload --port 8000
 
-# Docker
+# Docker (dev)
+docker build -t broto-notebooklm .
 docker run -p 8000:8000 \
-  -v $(pwd)/data:/app/data \
-  -v ~/.notebooklm:/root/.notebooklm \
-  --env-file .env \
+  -v "$(pwd)/data:/app/data" \
+  -v "$HOME/.notebooklm:/app/data/.notebooklm" \
+  -e SERVICE_SECRET="$SERVICE_SECRET" \
   broto-notebooklm
 ```
 
-O volume `~/.notebooklm` contém as credenciais do login.
+## Deploy no Railway
+
+1. Crie um serviço a partir deste diretório (`supabase/services/notebooklm/`).
+2. **Volume obrigatório:** mount em `/app/data` (guarda `notebook_map.json` + `.notebooklm/`).
+3. Secret `SERVICE_SECRET` — mesmo valor do Supabase (`supabase secrets set SERVICE_SECRET=…`).
+4. Após o primeiro deploy, **login manual uma vez** (ver abaixo).
+5. Configure `NOTEBOOKLM_SERVICE_URL` no Supabase apontando para a URL pública do Railway.
+
+`railway.toml` inclui healthcheck em `/health`.
+
+### Login manual no Railway (obrigatório na 1ª vez)
+
+Cookies Google não podem ser gerados sem browser. Opções:
+
+**A) Copiar credenciais do dev local para o volume Railway**
+
+```bash
+# Após notebooklm login local
+railway volume upload /app/data/.notebooklm   # ou copie storage_state.json via Railway CLI/dashboard
+```
+
+**B) Login via Railway shell + port forward**
+
+```bash
+railway shell
+notebooklm login --no-launch   # ou use cookies do Chrome: notebooklm login --browser-cookies chrome
+```
+
+Depois confirme: `curl https://SEU-SERVICO.railway.app/health` → `"authenticated": true`.
+
+## Payload `notebook_id` (edge functions)
+
+As edges enviam `notebook_id` de `classes.notebook_id` junto com `class_id`. Isso evita falha quando o mapa local (`notebook_map.json`) se perde após redeploy — o Postgres é a fonte de verdade.
 
 ## Uso (exemplos com curl)
 
@@ -197,10 +230,10 @@ await fetch(`${base}/notebook/chat`, {
 ## Notas importantes
 
 ### Sessão do Google
-O `notebooklm-py` usa APIs internas não-oficiais do Google. A sessão pode expirar a qualquer momento. Monitore o `/health` e tenha um processo para re-autenticar quando necessário.
+O `notebooklm-py` usa APIs internas não-oficiais do Google. O container executa `notebooklm auth refresh --quiet` a cada 15 min. Quando cookies expiram por completo, é necessário `notebooklm login` manual (local ou no volume Railway).
 
 ### Dados persistentes
-O arquivo `data/notebook_map.json` mapeia turmas para notebooks. Faça backup. Se perder esse arquivo, precisará recriar os notebooks (os materiais no NotebookLM continuam existindo, mas o mapeamento local se perde).
+Monte volume em `/app/data` (Railway/Docker). Contém `notebook_map.json` e `.notebooklm/storage_state.json`. As edge functions também enviam `notebook_id` do Postgres como fallback.
 
 ### Limites
 O NotebookLM pode ter rate limits implícitos. Para produção, considere adicionar uma fila (Redis/BullMQ) entre as Edge Functions e este serviço para evitar timeouts em uploads pesados.

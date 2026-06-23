@@ -56,29 +56,22 @@ def _save_notebook_map(mapping: dict[str, str]) -> None:
 notebook_map: dict[str, str] = {}
 
 # ---------------------------------------------------------------------------
-# Cliente NotebookLM (singleton async)
+# Cliente NotebookLM (singleton — inicializado no lifespan)
 # ---------------------------------------------------------------------------
 
 _client: Optional[NotebookLMClient] = None
 
 
 async def get_client() -> NotebookLMClient:
-    """Retorna cliente autenticado. Levanta erro claro se não autenticado."""
-    global _client
+    """Retorna cliente autenticado. Levanta 503 se startup falhou ou sessão expirou."""
     if _client is None:
-        try:
-            _client = await NotebookLMClient.from_storage()
-            await _client.__aenter__()
-        except Exception as e:
-            _client = None
-            logger.error("Falha ao criar cliente NotebookLM: %s", e)
-            raise HTTPException(
-                status_code=503,
-                detail=(
-                    "Sessão do NotebookLM não encontrada ou expirada. "
-                    "Execute 'notebooklm login' no servidor para autenticar."
-                ),
-            ) from e
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Sessão do NotebookLM não encontrada ou expirada. "
+                "Execute 'notebooklm login' no servidor para autenticar."
+            ),
+        )
     return _client
 
 
@@ -89,17 +82,21 @@ async def get_client() -> NotebookLMClient:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global notebook_map
+    global notebook_map, _client
     notebook_map = _load_notebook_map()
     logger.info("Notebook map carregado com %d entradas", len(notebook_map))
-    yield
-    # Cleanup: fechar client se existir
-    global _client
-    if _client is not None:
-        try:
-            await _client.__aexit__(None, None, None)
-        except Exception:
-            pass
+
+    try:
+        async with NotebookLMClient.from_storage() as client:
+            _client = client
+            logger.info("Cliente NotebookLM autenticado")
+            yield
+    except Exception as e:
+        _client = None
+        logger.error("Falha ao autenticar NotebookLM na startup: %s", e)
+        yield
+    finally:
+        _client = None
 
 
 app = FastAPI(
@@ -158,6 +155,10 @@ class CreateNotebookResponse(BaseModel):
 
 class AddSourceRequest(BaseModel):
     class_id: str = Field(..., description="ID da turma")
+    notebook_id: Optional[str] = Field(
+        None,
+        description="ID do notebook no NotebookLM (de classes.notebook_id; evita depender só do mapa local)",
+    )
     source_type: str = Field(
         "url",
         description="Tipo de fonte: 'url', 'text', 'file' (base64)"
@@ -176,6 +177,10 @@ class AddSourceResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     class_id: str = Field(..., description="ID da turma (para encontrar o notebook)")
+    notebook_id: Optional[str] = Field(
+        None,
+        description="ID do notebook no NotebookLM (de classes.notebook_id; evita depender só do mapa local)",
+    )
     question: str = Field(..., description="Pergunta do aluno")
     user_id: Optional[str] = Field(None, description="ID do aluno (para log)")
 
@@ -187,6 +192,10 @@ class ChatResponse(BaseModel):
 
 class RoutineRequest(BaseModel):
     class_id: str = Field(..., description="ID da turma")
+    notebook_id: Optional[str] = Field(
+        None,
+        description="ID do notebook no NotebookLM (de classes.notebook_id; evita depender só do mapa local)",
+    )
     user_id: str = Field(..., description="ID do aluno")
     hours_per_day: float = Field(..., description="Horas disponíveis por dia")
     exam_date: str = Field(..., description="Data do ENEM (YYYY-MM-DD)")
@@ -209,13 +218,22 @@ class RoutineResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _get_notebook_id(class_id: str) -> str:
-    """Busca notebook_id pelo class_id. Levanta 404 se não encontrado."""
+def _resolve_notebook_id(class_id: str, notebook_id: Optional[str] = None) -> str:
+    """Resolve notebook_id: hint do Postgres (edge) > mapa local em disco."""
+    if notebook_id:
+        if notebook_map.get(class_id) != notebook_id:
+            notebook_map[class_id] = notebook_id
+            _save_notebook_map(notebook_map)
+        return notebook_id
+
     nb_id = notebook_map.get(class_id)
     if not nb_id:
         raise HTTPException(
             status_code=404,
-            detail=f"Nenhum notebook encontrado para a turma '{class_id}'. Crie primeiro via POST /notebook/create.",
+            detail=(
+                f"Nenhum notebook encontrado para a turma '{class_id}'. "
+                "Crie primeiro via POST /notebook/create ou envie notebook_id no payload."
+            ),
         )
     return nb_id
 
@@ -304,7 +322,7 @@ async def add_source(req: AddSourceRequest, authorization: Optional[str] = Heade
     """Adiciona material (URL, texto ou arquivo) ao notebook da turma."""
     _verify_secret(authorization)
 
-    nb_id = _get_notebook_id(req.class_id)
+    nb_id = _resolve_notebook_id(req.class_id, req.notebook_id)
     client = await get_client()
 
     try:
@@ -353,7 +371,7 @@ async def chat(req: ChatRequest, authorization: Optional[str] = Header(None)):
     """Chat do aluno — faz pergunta ao NotebookLM com base nos materiais da turma."""
     _verify_secret(authorization)
 
-    nb_id = _get_notebook_id(req.class_id)
+    nb_id = _resolve_notebook_id(req.class_id, req.notebook_id)
     client = await get_client()
 
     try:
@@ -370,7 +388,7 @@ async def generate_routine(req: RoutineRequest, authorization: Optional[str] = H
     """Gera rotina de estudo semanal via chat com o NotebookLM."""
     _verify_secret(authorization)
 
-    nb_id = _get_notebook_id(req.class_id)
+    nb_id = _resolve_notebook_id(req.class_id, req.notebook_id)
     client = await get_client()
 
     prompt = ROUTINE_PROMPT_TEMPLATE.format(

@@ -1,7 +1,10 @@
 import { assertEquals } from 'jsr:@std/assert@1'
 import {
   parseAnswerQuestionBody,
+  parseBrotoChatBody,
+  parseMaterialEmbedBody,
   parsePracticeSessionProgressBody,
+  parseSemanticSearchBody,
   parseSessionIdBody,
 } from './edge-api-types.ts'
 
@@ -50,6 +53,77 @@ Deno.test('parsePracticeSessionProgressBody: rejeita currentIndex inválido', ()
       sessionId: 'sess-1',
       progress: { currentIndex: 'x' },
     }),
+    null,
+  )
+})
+
+Deno.test('parseBrotoChatBody: aceita messages com sessionId e turnIndex', () => {
+  const body = parseBrotoChatBody({
+    messages: [{ role: 'user', content: 'Oi' }],
+    sessionId: '550e8400-e29b-41d4-a716-446655440000',
+    turnIndex: 2,
+  })
+  assertEquals(body?.messages.length, 1)
+  assertEquals(body?.sessionId, '550e8400-e29b-41d4-a716-446655440000')
+  assertEquals(body?.turnIndex, 2)
+})
+
+Deno.test('parseBrotoChatBody: turnIndex padrão 0 e sessionId inválido omitido', () => {
+  const body = parseBrotoChatBody({
+    messages: [{ role: 'user', content: 'Oi' }],
+    sessionId: 'not-a-uuid',
+  })
+  assertEquals(body?.turnIndex, 0)
+  assertEquals(body?.sessionId, undefined)
+})
+
+Deno.test('parseBrotoChatBody: aceita classId UUID opcional', () => {
+  const body = parseBrotoChatBody({
+    messages: [{ role: 'user', content: 'Oi' }],
+    classId: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  assertEquals(body?.classId, '550e8400-e29b-41d4-a716-446655440000')
+})
+
+Deno.test('parseBrotoChatBody: rejeita messages ausente', () => {
+  assertEquals(parseBrotoChatBody({ sessionId: '550e8400-e29b-41d4-a716-446655440000' }), null)
+})
+
+Deno.test('parseMaterialEmbedBody: payload válido', () => {
+  const body = parseMaterialEmbedBody({
+    material_id: '550e8400-e29b-41d4-a716-446655440000',
+    class_id: '660e8400-e29b-41d4-a716-446655440001',
+    chunks: [{ text: '  Introdução  ', tokens: 12, metadata: { page_number: 1 } }],
+  })
+  assertEquals(body?.material_id, '550e8400-e29b-41d4-a716-446655440000')
+  assertEquals(body?.chunks[0].text, 'Introdução')
+  assertEquals(body?.chunks[0].tokens, 12)
+})
+
+Deno.test('parseMaterialEmbedBody: rejeita chunks vazio', () => {
+  assertEquals(
+    parseMaterialEmbedBody({
+      material_id: '550e8400-e29b-41d4-a716-446655440000',
+      class_id: '660e8400-e29b-41d4-a716-446655440001',
+      chunks: [],
+    }),
+    null,
+  )
+})
+
+Deno.test('parseSemanticSearchBody: defaults de limit e threshold', () => {
+  const body = parseSemanticSearchBody({
+    query: '  fotossíntese ',
+    class_id: '660e8400-e29b-41d4-a716-446655440001',
+  })
+  assertEquals(body?.query, 'fotossíntese')
+  assertEquals(body?.limit, 5)
+  assertEquals(body?.similarity_threshold, 0.5)
+})
+
+Deno.test('parseSemanticSearchBody: rejeita query vazia', () => {
+  assertEquals(
+    parseSemanticSearchBody({ query: '   ', class_id: '660e8400-e29b-41d4-a716-446655440001' }),
     null,
   )
 })

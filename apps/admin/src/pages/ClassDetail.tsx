@@ -25,6 +25,7 @@ export function ClassDetail() {
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [reindexing, setReindexing] = useState(false)
 
   const {
     materials,
@@ -32,6 +33,7 @@ export function ClassDetail() {
     uploadPDF,
     addURL,
     deleteMaterial,
+    reindexAllMaterials,
   } = useMaterials(classId!)
   const { indicators, loading: indicatorsLoading } = useClassIndicators(classId!)
   const { updateClass, deleteClass } = useClasses()
@@ -88,6 +90,19 @@ export function ClassDetail() {
       alert(error)
       setDeleting(false)
       setShowDeleteConfirm(false)
+    }
+  }
+
+  async function handleReindexAll() {
+    setReindexing(true)
+    const { error, indexed, failed, warnings } = await reindexAllMaterials()
+    setReindexing(false)
+    if (error) {
+      alert(`${error} (${indexed} ok, ${failed} falha)`)
+    } else if (warnings.length > 0) {
+      alert(`${indexed} material(is) indexado(s) com ressalvas:\n\n${warnings.join('\n')}`)
+    } else if (indexed > 0) {
+      alert(`${indexed} material(is) indexado(s) no RAG.`)
     }
   }
 
@@ -185,7 +200,10 @@ export function ClassDetail() {
               <MaterialsList
                 materials={materials}
                 loading={materialsLoading}
+                ragEnabled={cls?.rag_enabled === true}
+                reindexing={reindexing}
                 onDelete={deleteMaterial}
+                onReindexAll={() => void handleReindexAll()}
               />
               <MaterialUpload classId={classId!} onUploadPDF={uploadPDF} onAddURL={addURL} />
             </div>

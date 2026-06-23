@@ -3,14 +3,41 @@ import { supabase } from '@/lib/supabase'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import type { Material } from '@broto/shared'
 
-async function triggerIndex(materialId: string, classId: string, onDone?: () => void) {
+async function triggerIndex(
+  materialId: string,
+  classId: string,
+  onDone?: () => void,
+): Promise<{ ok: boolean; error?: string; indexed?: number; warning?: string }> {
   try {
-    const { error } = await supabase.functions.invoke('material-index', {
+    const { data, error } = await supabase.functions.invoke('material-index', {
       body: { material_id: materialId, class_id: classId },
     })
-    if (error) console.error('[material-index] Erro:', error)
+    if (error) {
+      console.error('[material-index] Erro:', error)
+      return { ok: false, error: error.message }
+    }
+    const body = data as {
+      error?: string
+      detail?: string
+      indexed?: number
+      partial?: boolean
+      warning?: string
+    } | null
+    if (body?.error) {
+      console.error('[material-index] Resposta de erro:', body.error, body.detail ?? '')
+      return { ok: false, error: body.detail ? `${body.error}: ${body.detail}` : body.error }
+    }
+    if (body?.partial && body.warning) {
+      console.warn('[material-index] indexação parcial:', body.warning)
+    }
+    if (body?.indexed != null) {
+      console.info('[material-index] RAG OK, chunks:', body.indexed)
+    }
+    return { ok: true, indexed: body?.indexed, warning: body?.warning }
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
     console.error('[material-index] Falha ao chamar function:', err)
+    return { ok: false, error: message }
   } finally {
     onDone?.()
   }
@@ -121,5 +148,46 @@ export function useMaterials(classId: string) {
     return { error: null }
   }
 
-  return { materials, loading, uploadPDF, addURL, deleteMaterial, refetch: fetchMaterials }
+  async function reindexAllMaterials(): Promise<{
+    error: string | null
+    indexed: number
+    failed: number
+    warnings: string[]
+  }> {
+    if (!materials.length) return { error: null, indexed: 0, failed: 0, warnings: [] }
+
+    let indexed = 0
+    let failed = 0
+    const warnings: string[] = []
+
+    for (const material of materials) {
+      await supabase.from('materials').update({ index_status: 'pending' }).eq('id', material.id)
+      const result = await triggerIndex(material.id, classId)
+      if (result.ok) {
+        indexed++
+        if (result.warning) warnings.push(`${material.title}: ${result.warning}`)
+      } else failed++
+    }
+
+    await fetchMaterials()
+    if (failed > 0) {
+      return {
+        error: `${failed} material(is) falharam na indexação RAG`,
+        indexed,
+        failed,
+        warnings,
+      }
+    }
+    return { error: null, indexed, failed: 0, warnings }
+  }
+
+  return {
+    materials,
+    loading,
+    uploadPDF,
+    addURL,
+    deleteMaterial,
+    reindexAllMaterials,
+    refetch: fetchMaterials,
+  }
 }

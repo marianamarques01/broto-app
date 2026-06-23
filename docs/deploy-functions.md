@@ -1,6 +1,6 @@
 # Deploy — Edge Functions (Supabase)
 
-Publicação das **20** Edge Functions Deno do monorepo. Auth e CORS ficam nos handlers (`requireUser`, `_shared/cors.ts`).
+Publicação das Edge Functions Deno do monorepo. Auth e CORS ficam nos handlers (`requireUser`, `_shared/cors.ts`).
 
 ---
 
@@ -36,6 +36,14 @@ Secrets necessários (nomes apenas — **nunca** commitar valores):
 | `FASTAPI_URL` | `routine-generate` — URL base do FastAPI de rotina (opcional). Se vazio, usa `NOTEBOOKLM_SERVICE_URL` (mesmo serviço Python). Sem URL = fallback local na edge |
 | `NOTEBOOKLM_SERVICE_URL` | `material-index`, `broto-chat`, **`routine-generate`** (fallback de URL) |
 | `SERVICE_SECRET` | Auth interno NotebookLM (**obrigatório** para chamadas ao Python, incl. rotina) |
+| `OPENAI_API_KEY` | `material-embed`, `semantic-search`, **`broto-chat` (RAG)** — embeddings (`text-embedding-3-small`) e chat |
+| `OPENAI_CHAT_MODEL` | Opcional — modelo de chat RAG (padrão: `gpt-4o-mini`) |
+
+Configurar a chave OpenAI (nunca commitar o valor):
+
+```bash
+supabase secrets set OPENAI_API_KEY="sk-..."
+```
 
 Atualizar origens após novo domínio (ex.: admin):
 
@@ -73,10 +81,11 @@ Apenas practice-session-* + answer-question + user-reset-practice.
 
 ```
 answer-question          auth-signup              broto-chat
-class-join               material-index           pet-me
-practice-session-* (8)   routine-generate         user-me
-user-onboarding          user-performance-series  user-progress
-user-recent-mistakes     user-reset-practice
+class-join               material-embed           material-index
+pet-me                   practice-session-* (8)   routine-generate
+semantic-search          user-me                  user-onboarding
+user-performance-series  user-progress            user-recent-mistakes
+user-reset-practice
 ```
 
 ---

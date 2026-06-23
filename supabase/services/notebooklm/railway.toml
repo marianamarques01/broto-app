@@ -1,0 +1,19 @@
+# Railway — serviço NotebookLM (FastAPI)
+# https://docs.railway.com/guides/config-as-code
+#
+# Volumes obrigatórios (Railway Dashboard → Service → Volumes):
+#   Mount path: /app/data
+#   Contém: notebook_map.json + .notebooklm/ (storage_state.json)
+#
+# Secrets:
+#   SERVICE_SECRET — Bearer token (mesmo valor do Supabase secrets)
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

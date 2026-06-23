@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
 import { requireUser, requireClassAccess, createServiceRoleClientUnsafe } from '../_shared/authz.ts'
+import { indexMaterialRag } from '../_shared/material-rag-index.ts'
+import { markIndexedIfHasEmbeddings } from '../_shared/material-index-status.ts'
+import type { MaterialSourceType } from '../_shared/material-content-extract.ts'
 import type { MaterialsRow } from '../../database.types.ts'
 
 const SERVICE_URL = Deno.env.get('NOTEBOOKLM_SERVICE_URL')!
@@ -94,15 +97,11 @@ serve(async (req) => {
       return json(403, { error: 'Material não pertence à organização da turma' }, cors)
     }
 
-    // ---- 5. Authorized — proceed with indexing ----
+    // ---- 5. Fetch class + branch RAG vs NotebookLM ----
 
-    // Mark as indexing
-    await adminClient.from('materials').update({ index_status: 'indexing' }).eq('id', material_id)
-
-    // Fetch class notebook state
     const { data: cls } = await adminClient
       .from('classes')
-      .select('notebook_id, notebook_status, name')
+      .select('notebook_id, notebook_status, name, rag_enabled')
       .eq('id', class_id)
       .single()
 
@@ -110,6 +109,84 @@ serve(async (req) => {
       await adminClient.from('materials').update({ index_status: 'failed' }).eq('id', material_id)
       return json(404, { error: 'Turma não encontrada' }, cors)
     }
+
+    // rag_enabled=true → RAG próprio (sem NotebookLM nesta fase)
+    if (cls.rag_enabled) {
+      const openAiKey = Deno.env.get('OPENAI_API_KEY')
+      if (!openAiKey) {
+        await adminClient.from('materials').update({ index_status: 'failed' }).eq('id', material_id)
+        return json(500, { error: 'OPENAI_API_KEY não configurada' }, cors)
+      }
+
+      await adminClient.from('materials').update({ index_status: 'indexing' }).eq('id', material_id)
+
+      try {
+        const ragResult = await indexMaterialRag(
+          adminClient,
+          {
+            material_id,
+            class_id,
+            organization_id: materialRow.organization_id,
+            title: materialRow.title,
+            type: materialRow.type as MaterialSourceType,
+            source_url: materialRow.source_url,
+          },
+          openAiKey,
+        )
+
+        if (!ragResult.ok) {
+          const existing = await markIndexedIfHasEmbeddings(adminClient, material_id)
+          if (existing > 0) {
+            return json(
+              200,
+              {
+                success: true,
+                indexed: existing,
+                partial: true,
+                warning: ragResult.error,
+              },
+              cors,
+            )
+          }
+          await adminClient
+            .from('materials')
+            .update({ index_status: 'failed' })
+            .eq('id', material_id)
+          return json(422, { error: ragResult.error, rag: true }, cors)
+        }
+
+        await adminClient
+          .from('materials')
+          .update({ index_status: 'indexed' })
+          .eq('id', material_id)
+        return json(200, { success: true, indexed: ragResult.indexed }, cors)
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err)
+        console.error('[material-index] RAG error:', detail)
+        const existing = await markIndexedIfHasEmbeddings(adminClient, material_id)
+        if (existing > 0) {
+          return json(
+            200,
+            {
+              success: true,
+              indexed: existing,
+              partial: true,
+              warning: detail,
+            },
+            cors,
+          )
+        }
+        await adminClient.from('materials').update({ index_status: 'failed' }).eq('id', material_id)
+        return json(500, { error: 'Erro ao indexar material no RAG', detail, rag: true }, cors)
+      }
+    }
+
+    // rag_enabled=false → fluxo NotebookLM existente
+
+    // Mark as indexing
+    await adminClient.from('materials').update({ index_status: 'indexing' }).eq('id', material_id)
+
+    // Fetch class notebook state (cls já carregada acima)
 
     // Create notebook if class doesn't have one yet
     if (!cls.notebook_id) {
@@ -125,6 +202,7 @@ serve(async (req) => {
       }
 
       const { notebook_id } = await createRes.json()
+      cls.notebook_id = notebook_id
       await adminClient
         .from('classes')
         .update({ notebook_id, notebook_status: 'indexing' })
@@ -133,6 +211,9 @@ serve(async (req) => {
 
     // Build indexing payload
     const sourcePayload: Record<string, string> = { class_id }
+    if (cls.notebook_id) {
+      sourcePayload.notebook_id = cls.notebook_id
+    }
 
     if (materialRow.type === 'text') {
       sourcePayload.source_type = 'text'

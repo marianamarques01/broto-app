@@ -7,15 +7,18 @@ export type Class = {
   is_active: boolean
   notebook_id?: string
   notebook_status: 'not_configured' | 'indexing' | 'ready' | 'error'
+  rag_enabled?: boolean
   created_by: string
   created_at: string
 }
 
-/** Chat IA disponível quando materiais da turma foram indexados no NotebookLM. */
+/** Chat IA disponível quando materiais indexados (NotebookLM ou RAG opt-in). */
 export function isClassAiChatReady(
-  classRow: Pick<Class, 'notebook_status'> | null | undefined,
+  classRow: Pick<Class, 'notebook_status' | 'rag_enabled'> | null | undefined,
 ): boolean {
-  return classRow?.notebook_status === 'ready'
+  if (!classRow) return false
+  if (classRow.rag_enabled === true) return true
+  return classRow.notebook_status === 'ready'
 }
 
 export type Enrollment = {

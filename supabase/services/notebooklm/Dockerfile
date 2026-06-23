@@ -2,24 +2,27 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Instalar dependências do Playwright (para notebooklm login, se necessário)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Instalar playwright chromium (necessário para notebooklm login)
-RUN pip install "notebooklm-py[browser]" && playwright install chromium --with-deps
+RUN pip install --no-cache-dir -r requirements.txt \
+    && playwright install chromium --with-deps
 
 COPY . .
 
-# Diretório para dados persistentes (notebook_map.json + credenciais notebooklm)
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data/.notebooklm \
+    && chmod +x docker-entrypoint.sh
 
 ENV PORT=8000
+ENV NOTEBOOK_MAP_PATH=/app/data/notebook_map.json
+ENV NOTEBOOKLM_HOME=/app/data/.notebooklm
+ENV AUTH_REFRESH_INTERVAL_SEC=900
 
 EXPOSE ${PORT}
 
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
+HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \
+  CMD curl -sf "http://127.0.0.1:${PORT}/health" | grep -q '"status":"ok"' || exit 1
+
+ENTRYPOINT ["./docker-entrypoint.sh"]

@@ -51,6 +51,9 @@ export interface BrotoChatMessage {
 
 export interface BrotoChatRequest {
   messages: BrotoChatMessage[]
+  sessionId: string
+  turnIndex?: number
+  classId?: string
 }
 
 export interface BrotoChatResponse {
@@ -80,11 +83,58 @@ export interface MaterialIndexRequest {
 
 export interface MaterialIndexSuccessResponse {
   success: true
+  /** Presente quando a turma usa RAG (rag_enabled). */
+  indexed?: number
 }
 
 export interface MaterialIndexPendingResponse {
   success: false
   error: string
+}
+
+export interface MaterialChunkMetadata {
+  page_number?: number
+  section_title?: string
+  file_name?: string
+}
+
+export interface MaterialEmbedChunk {
+  text: string
+  tokens?: number
+  metadata?: MaterialChunkMetadata
+}
+
+export interface MaterialEmbedRequest {
+  material_id: string
+  class_id: string
+  chunks: MaterialEmbedChunk[]
+}
+
+export interface MaterialEmbedResponse {
+  indexed: number
+  material_id: string
+  cost_estimate_usd: number
+}
+
+export interface SemanticSearchRequest {
+  query: string
+  class_id: string
+  limit?: number
+  similarity_threshold?: number
+}
+
+export interface SemanticSearchChunk {
+  id: string
+  chunk_text: string
+  similarity: number
+  metadata: Record<string, unknown>
+  material_id: string
+}
+
+export interface SemanticSearchResponse {
+  chunks: SemanticSearchChunk[]
+  class_id: string
+  query: string
 }
 
 export type PetMeResponse = PetData

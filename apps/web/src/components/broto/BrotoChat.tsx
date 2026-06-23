@@ -35,6 +35,8 @@ export function useBrotoChat() {
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [sessionId, setSessionId] = useState(() => crypto.randomUUID())
+  const [turnIndex, setTurnIndex] = useState(0)
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -44,24 +46,32 @@ export function useBrotoChat() {
   const resetConversation = useCallback(() => {
     setMessages([{ role: 'assistant', content: BROTO_WELCOME_TEXT }])
     setInput('')
+    setSessionId(crypto.randomUUID())
+    setTurnIndex(0)
   }, [])
 
-  const runAssistant = useCallback(async (history: BrotoChatMessage[]) => {
-    setLoading(true)
-    try {
-      const resp = await api.post<{ message: string }>('/api/broto/chat', {
-        messages: history.map((m) => ({ role: m.role, content: m.content })),
-      })
-      setMessages((prev) => [...prev, { role: 'assistant', content: resp.message }])
-    } catch (err) {
-      if (!(err instanceof ApiError)) {
-        console.error('[BrotoChat] request failed (non-ApiError)', err)
+  const runAssistant = useCallback(
+    async (history: BrotoChatMessage[], currentTurnIndex: number) => {
+      setLoading(true)
+      try {
+        const resp = await api.post<{ message: string }>('/api/broto/chat', {
+          messages: history.map((m) => ({ role: m.role, content: m.content })),
+          sessionId,
+          turnIndex: currentTurnIndex,
+        })
+        setMessages((prev) => [...prev, { role: 'assistant', content: resp.message }])
+        setTurnIndex((t) => t + 1)
+      } catch (err) {
+        if (!(err instanceof ApiError)) {
+          console.error('[BrotoChat] request failed (non-ApiError)', err)
+        }
+        setMessages((prev) => [...prev, { role: 'assistant', content: BROTO_CHAT_ERROR_TEXT }])
+      } finally {
+        setLoading(false)
       }
-      setMessages((prev) => [...prev, { role: 'assistant', content: BROTO_CHAT_ERROR_TEXT }])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    },
+    [sessionId],
+  )
 
   const sendUserText = useCallback(
     (raw: string) => {
@@ -69,15 +79,16 @@ export function useBrotoChat() {
       if (!trimmed || loading) return
 
       const userMsg: BrotoChatMessage = { role: 'user', content: trimmed }
+      const currentTurnIndex = turnIndex
 
       setMessages((prev) => {
         const history = [...prev, userMsg]
-        void runAssistant(history)
+        void runAssistant(history, currentTurnIndex)
         return history
       })
       setInput('')
     },
-    [loading, runAssistant],
+    [loading, runAssistant, turnIndex],
   )
 
   function handleSubmit(e: FormEvent) {
