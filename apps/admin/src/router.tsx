@@ -5,6 +5,7 @@ import { Dashboard } from '@/pages/Dashboard'
 import { ClassDetail } from '@/pages/ClassDetail'
 import { CreateClass } from '@/pages/CreateClass'
 import { StudentDetail } from '@/pages/StudentDetail'
+import { ClassTeacherDashboard } from '@/pages/teacher/ClassTeacherDashboard'
 import { Link } from 'react-router-dom'
 
 function NotFound() {
@@ -53,6 +54,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ClassDetail />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/classes/:classId/painel',
+    element: (
+      <ProtectedRoute>
+        <ClassTeacherDashboard />
       </ProtectedRoute>
     ),
   },

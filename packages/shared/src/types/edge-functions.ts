@@ -60,6 +60,41 @@ export interface BrotoChatResponse {
   message: string
 }
 
+export interface BrotoChatSessionSummary {
+  sessionId: string
+  preview: string
+  lastMessageAt: string
+  turnCount: number
+  classId: string | null
+}
+
+export interface BrotoChatSessionsListRequest {
+  classId?: string
+  limit?: number
+}
+
+export interface BrotoChatSessionsListResponse {
+  sessions: BrotoChatSessionSummary[]
+}
+
+export interface BrotoChatSessionGetRequest {
+  sessionId: string
+}
+
+export interface BrotoChatSessionGetResponse {
+  sessionId: string
+  messages: BrotoChatMessage[]
+  turnCount: number
+}
+
+export interface BrotoChatSessionDeleteRequest {
+  sessionId: string
+}
+
+export interface BrotoChatSessionDeleteResponse {
+  ok: true
+}
+
 export interface ClassJoinRequest {
   access_code: string
 }

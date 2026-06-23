@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { parseEnemAreaKey } from '@broto/shared'
 import { TopBar } from '@/components/layout/TopBar'
@@ -9,6 +10,14 @@ export function QuestionBankCatalog() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const areaKey = raw ? parseEnemAreaKey(raw) : undefined
+
+  const topicValues = useMemo(() => {
+    const topicsRaw = searchParams.get('topics') ?? searchParams.get('topic') ?? ''
+    return topicsRaw
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+  }, [searchParams])
 
   if (!areaKey) {
     return <Navigate to="/study" replace />
@@ -29,7 +38,8 @@ export function QuestionBankCatalog() {
           preferredArea={areaKey}
           initialFilters={{
             year: searchParams.get('year') ?? '',
-            topic: searchParams.get('topic') ?? '',
+            topic: topicValues.length === 1 ? topicValues[0] : '',
+            topicValues: topicValues.length > 1 ? topicValues : undefined,
             language: searchParams.get('lang') ?? '',
             difficulty: (searchParams.get('difficulty') ?? '') as
               | ''

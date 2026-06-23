@@ -2,6 +2,8 @@ import { assertEquals } from 'jsr:@std/assert@1'
 import {
   parseAnswerQuestionBody,
   parseBrotoChatBody,
+  parseBrotoChatSessionGetBody,
+  parseBrotoChatSessionsListBody,
   parseMaterialEmbedBody,
   parsePracticeSessionProgressBody,
   parseSemanticSearchBody,
@@ -87,6 +89,22 @@ Deno.test('parseBrotoChatBody: aceita classId UUID opcional', () => {
 
 Deno.test('parseBrotoChatBody: rejeita messages ausente', () => {
   assertEquals(parseBrotoChatBody({ sessionId: '550e8400-e29b-41d4-a716-446655440000' }), null)
+})
+
+Deno.test('parseBrotoChatSessionsListBody: limit padrão e classId opcional', () => {
+  assertEquals(parseBrotoChatSessionsListBody({}), { classId: undefined, limit: 30 })
+  assertEquals(parseBrotoChatSessionsListBody({ limit: 999 }), {
+    classId: undefined,
+    limit: 50,
+  })
+})
+
+Deno.test('parseBrotoChatSessionGetBody: exige UUID', () => {
+  assertEquals(
+    parseBrotoChatSessionGetBody({ sessionId: '550e8400-e29b-41d4-a716-446655440000' }),
+    '550e8400-e29b-41d4-a716-446655440000',
+  )
+  assertEquals(parseBrotoChatSessionGetBody({ sessionId: 'not-a-uuid' }), null)
 })
 
 Deno.test('parseMaterialEmbedBody: payload válido', () => {

@@ -70,9 +70,9 @@ Para a Area de Estudo, precisamos:
 
 A tabela `topic_performance` tem `topico_value` (string) mas **nao tem `area`**. A associacao topico→area so existe nos JSONs estaticos do Storage (`topics/{area}.json`). Para a IA saber "o aluno e fraco em Genetica (Ciencias da Natureza)", precisamos dessa relacao no banco ou resolvida no endpoint.
 
-#### 4. Historico de chat nao e persistido
+#### 4. Historico de chat persistido (implementado)
 
-Mensagens do broto-chat vivem apenas no state React. Ao recarregar a pagina, o historico e perdido. A Area de Estudo deveria manter contexto da sessao de estudo.
+Cada turno do `broto-chat` e gravado em `chat_logs` (migration `20260625120000_chat_logs.sql`) via `service_role`. O web restaura a conversa ativa ao recarregar (`useBrotoChat` + `localStorage` por turma) e lista sessoes na pagina `/broto` (sidebar + abas mobile). Endpoints: `broto-chat-sessions`, `broto-chat-session-get`.
 
 ### Incoerencias encontradas
 

@@ -1,4 +1,5 @@
 import type { Question } from '../types/question'
+import type { MockExamResultItem } from './student-model-result'
 
 export type PracticeSessionKind = 'student_mock' | 'class_assignment'
 export type MockExamAnswerFeedbackMode = 'immediate' | 'final'
@@ -66,6 +67,8 @@ export interface PracticeSessionSummary {
   porArea: Record<string, PracticeTopicStat>
   porTopico: Record<string, PracticeTopicStat>
   respostas?: PracticeSessionAnswerReviewItem[]
+  /** Resultado por questão — usado para análise BKT no pós-simulado. */
+  resultados?: MockExamResultItem[]
 }
 
 export interface MockExamAnswerResult {

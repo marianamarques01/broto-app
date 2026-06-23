@@ -85,6 +85,7 @@ type BuildParams = {
   yearFilter: string
   topicoId: string
   topicoValue: string | undefined
+  topicoValues?: string[]
   language: string
   search: string
   difficultyFilter: '' | 'facil' | 'medio' | 'dificil'
@@ -104,6 +105,7 @@ async function buildQuestionBankRows(p: BuildParams): Promise<{
     yearFilter,
     topicoId,
     topicoValue,
+    topicoValues,
     language,
     search,
     difficultyFilter,
@@ -118,7 +120,14 @@ async function buildQuestionBankRows(p: BuildParams): Promise<{
   const topicMapping = await loadTopicMapping(baseUrl)
 
   let topicQuestionSet: Set<string> | null = null
-  if (topicoId && topicoId !== IDIOMAS_TOPIC_ID && topicoValue) {
+  if (topicoValues && topicoValues.length > 0) {
+    topicQuestionSet = new Set<string>()
+    for (const tv of topicoValues) {
+      for (const qid of buildTopicQuestionSet(topicMapping, tv)) {
+        topicQuestionSet.add(qid)
+      }
+    }
+  } else if (topicoId && topicoId !== IDIOMAS_TOPIC_ID && topicoValue) {
     topicQuestionSet = buildTopicQuestionSet(topicMapping, topicoValue)
   }
 
@@ -228,6 +237,7 @@ export function useQuestionBank(params: {
   selectedArea: string
   selectedYear: string
   selectedTopico: string
+  selectedTopicValues?: string[]
   selectedLanguage: string
   topicos: Topico[]
   exams: Exam[]
@@ -243,6 +253,7 @@ export function useQuestionBank(params: {
     selectedArea,
     selectedYear,
     selectedTopico,
+    selectedTopicValues,
     selectedLanguage,
     topicos,
     exams,
@@ -286,8 +297,9 @@ export function useQuestionBank(params: {
         baseUrl,
         area: selectedArea,
         yearFilter: selectedYear,
-        topicoId: selectedTopico,
+        topicoId: selectedTopicValues?.length ? '' : selectedTopico,
         topicoValue,
+        topicoValues: selectedTopicValues,
         language: selectedLanguage,
         search,
         difficultyFilter,
@@ -313,6 +325,7 @@ export function useQuestionBank(params: {
     selectedArea,
     selectedYear,
     selectedTopico,
+    selectedTopicValues,
     topicoValue,
     selectedLanguage,
     search,

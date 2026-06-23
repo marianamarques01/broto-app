@@ -31,7 +31,7 @@ serve(async (req) => {
 
     const { data: ansRows, error: ansErr } = await supabaseAdmin
       .from('user_question_answers')
-      .select('question_id, created_at')
+      .select('question_id, created_at, mistake_type')
       .eq('user_id', user.id)
       .eq('acertou', false)
       .order('created_at', { ascending: false })
@@ -42,7 +42,10 @@ serve(async (req) => {
       return json(500, { error: ansErr.message }, cors)
     }
 
-    const rows = (ansRows ?? []) as Pick<UserQuestionAnswerRow, 'question_id' | 'created_at'>[]
+    const rows = (ansRows ?? []) as Pick<
+      UserQuestionAnswerRow,
+      'question_id' | 'created_at' | 'mistake_type'
+    >[]
     const qids = [...new Set(rows.map((r) => String(r.question_id ?? '')).filter(Boolean))]
 
     const topicoByQid = new Map<string, string | null>()
@@ -65,7 +68,12 @@ serve(async (req) => {
       }
     }
 
-    const mistakes: { questionId: string; createdAt: string; topicoValue: string | null }[] = []
+    const mistakes: {
+      questionId: string
+      createdAt: string
+      topicoValue: string | null
+      mistakeType: 'stuck' | 'guessed' | 'normal' | null
+    }[] = []
     const seen = new Set<string>()
 
     for (const r of rows) {
@@ -75,9 +83,14 @@ serve(async (req) => {
       if (seen.has(questionId)) continue
 
       const topicoValue = topicoByQid.get(questionId) ?? null
+      const rawMistakeType = r.mistake_type
+      const mistakeType =
+        rawMistakeType === 'stuck' || rawMistakeType === 'guessed' || rawMistakeType === 'normal'
+          ? rawMistakeType
+          : null
 
       seen.add(questionId)
-      mistakes.push({ questionId, createdAt, topicoValue })
+      mistakes.push({ questionId, createdAt, topicoValue, mistakeType })
     }
 
     return json(200, { mistakes }, cors)

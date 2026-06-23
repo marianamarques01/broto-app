@@ -17,6 +17,7 @@ import {
 } from '../_shared/daily-mission-bonus.ts'
 import { todayUtcISO } from '../_shared/calendar-day.ts'
 import { planStreakUpdate } from '../_shared/streak-freeze.ts'
+import { classifyMistake } from '@broto/shared/ai/student-model/mistake-classifier.ts'
 
 /** +10 XP por resposta, +5 se acertou (alinhado ao spec em docs/broto-f4-area-de-estudo.md). */
 const XP_PER_ANSWER = 10
@@ -88,6 +89,8 @@ serve(async (req) => {
 
     const studyTodayBefore = await fetchStudyTodayByArea(admin, user.id)
 
+    const mistakeType = classifyMistake(isCorrect, timeSpentSec)
+
     const insertRow: UserQuestionAnswerInsert = {
       user_id: user.id,
       question_id: questionId,
@@ -95,6 +98,7 @@ serve(async (req) => {
       tempo_resposta: timeSpentSec,
       session_id: sessionIdToStore,
       answer_area_key: validatedAnswerAreaKey,
+      mistake_type: mistakeType,
     }
 
     const { error: insErr } = await admin.from('user_question_answers').insert(insertRow)

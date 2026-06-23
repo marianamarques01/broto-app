@@ -197,6 +197,32 @@ export function parseBrotoChatBody(raw: unknown): ParsedBrotoChatBody | null {
   return { messages: out, sessionId, turnIndex, classId }
 }
 
+const BROTO_CHAT_SESSIONS_DEFAULT_LIMIT = 30
+const BROTO_CHAT_SESSIONS_MAX_LIMIT = 50
+
+export function parseBrotoChatSessionsListBody(raw: unknown): { classId?: string; limit: number } {
+  const o = parseJsonBody(raw) ?? {}
+  const classIdRaw = o.classId
+  const classId =
+    typeof classIdRaw === 'string' && UUID_RE.test(classIdRaw.trim())
+      ? classIdRaw.trim()
+      : undefined
+  const limitRaw = o.limit
+  const limit =
+    typeof limitRaw === 'number' && Number.isFinite(limitRaw)
+      ? Math.min(BROTO_CHAT_SESSIONS_MAX_LIMIT, Math.max(1, Math.floor(limitRaw)))
+      : BROTO_CHAT_SESSIONS_DEFAULT_LIMIT
+  return { classId, limit }
+}
+
+export function parseBrotoChatSessionGetBody(raw: unknown): string | null {
+  const o = parseJsonBody(raw)
+  if (!o) return null
+  const sessionId = typeof o.sessionId === 'string' ? o.sessionId.trim() : ''
+  if (!sessionId || !UUID_RE.test(sessionId)) return null
+  return sessionId
+}
+
 export function parsePetMePatchBody(raw: unknown): PetMePatchBody | null {
   const o = parseJsonBody(raw)
   if (!o) return null

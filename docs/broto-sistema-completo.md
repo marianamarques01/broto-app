@@ -92,7 +92,7 @@ Versao desktop do app mobile, adaptada para telas maiores com layout de sidebar:
 | `/progress` | Progress | Estatisticas gerais, barras por area, topicos fortes/fracos |
 | `/routine` | Routine | Calendario semanal + sessoes do dia; prioridade via edge `routine-generate` (fallback local) |
 | `/join-class` | JoinClass | Entrar em turma via codigo |
-| `/broto` | BrotoPage | Chat com IA (NotebookLM) |
+| `/broto` | BrotoPage | Chat com IA (RAG ou NotebookLM) + historico persistido |
 
 **Porta de desenvolvimento:** `5173`
 
@@ -165,6 +165,7 @@ Componentes de UI compartilhados entre admin e web (inline styles, sem Tailwind)
 | `public.user_question_answers` | Historico de respostas | Parcial |
 | `public.topic_performance` | Desempenho por topico (topico_value, total_answered, total_correct, accuracy_pct) | Parcial |
 | `public.question_topic_mapping` | Mapeamento questao-topico | Parcial |
+| `public.chat_logs` | Historico de conversas Broto (pergunta/resposta por turno; leitura via edge functions) | Sim (sem policy client — fail-closed) |
 
 **Varias turmas por aluno:** `enrollments` permite **varias** matriculas. **`current_class_id`** no usuario hoje aponta **uma** turma e e **sobrescrito** no ultimo join — chat e contexto usam esse id. **Direcao do produto:** todas as turmas do aluno devem ser **ativas** no sentido de experiencia (sem depender so de “ultima turma”); professor e admin devem **ver** matriculas em multiplas turmas. **Evolucao:** UI/API por turma (hub, `class_id` explicito em fluxos, ou revisao do papel de `current_class_id`). Nao ha restricao de “uma matricula so” no modelo de dados.
 
@@ -193,6 +194,9 @@ Componentes de UI compartilhados entre admin e web (inline styles, sem Tailwind)
 | `answer-question` | POST | Registrar resposta e atualizar pet/progresso |
 | `user-progress` | GET | Estatisticas de desempenho por area/topico |
 | `broto-chat` | POST | Chat com IA usando materiais da turma |
+| `broto-chat-sessions` | POST | Listar conversas persistidas do aluno (por turma) |
+| `broto-chat-session-get` | POST | Carregar mensagens de uma conversa (`chat_logs`) |
+| `broto-chat-session-delete` | POST | Excluir conversa persistida do aluno |
 | `routine-generate` | POST | Rotina inteligente: `topic_performance` + perfil → FastAPI ou fallback por `p_know` |
 
 Documentacao detalhada da rotina: [docs/routine-generate.md](./routine-generate.md).
@@ -287,7 +291,7 @@ Regras de `gerarRotina` (grade de 7 dias):
 
 O sistema integra com o NotebookLM do Google principalmente para:
 
-1. **Broto Chat**: O aluno conversa com uma IA com acesso aos materiais da turma. O professor faz upload → materiais indexados no NotebookLM → perguntas e respostas contextualizadas.
+1. **Broto Chat**: O aluno conversa com uma IA com acesso aos materiais da turma. Turnos sao persistidos em `chat_logs`; a pagina `/broto` restaura a conversa ativa e lista sessoes anteriores. Respostas via RAG (OpenAI + pgvector) ou NotebookLM conforme `classes.rag_enabled`.
 
 2. **Rotina inteligente:** a edge **`routine-generate`** chama o mesmo FastAPI (`NOTEBOOKLM_SERVICE_URL` ou `FASTAPI_URL` opcional) em `/routine/generate`. A UI web consome a edge em Home e `/routine`. Enquanto o contrato Python nao estiver alinhado, o fallback por **`p_know`** na edge + **`gerarRotina`** no client garantem a grade semanal. Detalhes: [docs/routine-generate.md](./routine-generate.md).
 

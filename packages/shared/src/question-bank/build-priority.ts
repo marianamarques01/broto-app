@@ -4,6 +4,9 @@ import { getQuestionId } from '../types/question'
 import type { AreaStat, TopicoStat } from '../types/dashboard-progress'
 import type { QuestionBankRow } from '../types/question-bank-row'
 import type { RecentMistakeItem } from '../types/recent-mistakes'
+import {
+  MISTAKE_PRIORITY_MULTIPLIER,
+} from '../ai/student-model/mistake-classifier'
 import { areaKeyFromTopico } from '../lib/topico-to-area'
 import {
   Q_BANK_RECENT_MISTAKE_DAYS,
@@ -113,9 +116,29 @@ function hasFinitePKnow(t: TopicoStat): t is TopicoStat & { pKnow: number } {
 }
 
 /** Critério primário: menor pKnow; fallback accuracyPct normalizada em [0, 1]. */
-function weakTopicSortScore(t: TopicoStat): number {
-  if (hasFinitePKnow(t)) return t.pKnow
-  return t.accuracyPct / 100
+function weakTopicSortScore(t: TopicoStat, mistakes: RecentMistakeItem[]): number {
+  const base = hasFinitePKnow(t) ? t.pKnow : t.accuracyPct / 100
+  const multiplier = mistakePriorityMultiplierForTopic(t.value, mistakes)
+  // Menor score = mais fraco = ordenado primeiro; stuck aumenta urgência (divide o score).
+  return base / multiplier
+}
+
+const RECENT_MISTAKES_PER_TOPIC = 5
+
+function mistakePriorityMultiplierForTopic(
+  topicoValue: string,
+  mistakes: RecentMistakeItem[],
+): number {
+  const recent = mistakes.filter((m) => m.topicoValue === topicoValue).slice(0, RECENT_MISTAKES_PER_TOPIC)
+  if (recent.some((m) => m.mistakeType === 'stuck')) {
+    return MISTAKE_PRIORITY_MULTIPLIER.stuck
+  }
+  return 1.0
+}
+
+function mistakeUrgency(m: RecentMistakeItem): number {
+  const type = m.mistakeType ?? 'normal'
+  return MISTAKE_PRIORITY_MULTIPLIER[type]
 }
 
 function isWeakTopicCandidate(t: TopicoStat): boolean {
@@ -140,7 +163,9 @@ export function buildQuestionBankPriority(params: {
     return findRowForQuestionId(allInArea, m.questionId) != null
   })
 
-  const recentDeduped = dedupeMistakesByQuestion(inAreaMistakes, cutoff)
+  const recentDeduped = dedupeMistakesByQuestion(inAreaMistakes, cutoff).sort(
+    (a, b) => mistakeUrgency(b) - mistakeUrgency(a) || b.createdAt.localeCompare(a.createdAt),
+  )
 
   const mistakeRows: QuestionBankSuggestedRow[] = []
   for (const m of recentDeduped) {
@@ -158,7 +183,7 @@ export function buildQuestionBankPriority(params: {
 
   const weakTopicCandidates = [...(areaStat?.topicos ?? [])]
     .filter(isWeakTopicCandidate)
-    .sort((a, b) => weakTopicSortScore(a) - weakTopicSortScore(b))
+    .sort((a, b) => weakTopicSortScore(a, recentDeduped) - weakTopicSortScore(b, recentDeduped))
     .slice(0, Q_BANK_WEAK_TOPIC_CAP)
 
   const weakRows: QuestionBankSuggestedRow[] = []

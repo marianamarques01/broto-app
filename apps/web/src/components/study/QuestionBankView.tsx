@@ -52,6 +52,7 @@ const GUIDED_PRACTICE_MAX = 5
 type QuestionBankInitialFilters = {
   year?: string
   topic?: string
+  topicValues?: string[]
   language?: string
   difficulty?: '' | 'facil' | 'medio' | 'dificil'
   search?: string
@@ -545,6 +546,10 @@ export function QuestionBankView({
   onOpenStudyPackageForRow,
 }: QuestionBankViewProps) {
   const navigate = useNavigate()
+  const initialTopicValues = useMemo(
+    () => initialFilters?.topicValues?.filter(Boolean) ?? [],
+    [initialFilters?.topicValues],
+  )
   const {
     areas,
     topicos,
@@ -567,7 +572,7 @@ export function QuestionBankView({
     preferredArea: embedded || bankCatalogOnly ? (preferredArea ?? null) : undefined,
     autoSelectFirstArea: !embedded && !bankCatalogOnly,
     initialYear: initialFilters?.year ?? '',
-    initialTopico: initialFilters?.topic ?? '',
+    initialTopico: initialTopicValues.length > 0 ? '' : (initialFilters?.topic ?? ''),
     initialLanguage: initialFilters?.language ?? '',
   })
 
@@ -602,6 +607,7 @@ export function QuestionBankView({
     selectedArea,
     selectedYear,
     selectedTopico,
+    selectedTopicValues: initialTopicValues.length > 0 ? initialTopicValues : undefined,
     selectedLanguage,
     topicos,
     exams,

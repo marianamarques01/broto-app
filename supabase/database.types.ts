@@ -730,6 +730,7 @@ export type Database = {
           created_at: string
           id: string
           is_correct: boolean | null
+          mistake_type: string | null
           question_id: string
           session_id: string | null
           tempo_resposta: number | null
@@ -744,6 +745,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_correct?: boolean | null
+          mistake_type?: string | null
           question_id: string
           session_id?: string | null
           tempo_resposta?: number | null
@@ -758,6 +760,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_correct?: boolean | null
+          mistake_type?: string | null
           question_id?: string
           session_id?: string | null
           tempo_resposta?: number | null

@@ -3,9 +3,16 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { api } from '@/lib/api-client'
 import type { PracticeSessionAnswerReviewItem, PracticeSessionSummary } from '@broto/shared'
-import { isPracticeSessionSummary } from '@broto/shared'
+import {
+  buildCriticalTopicsPracticeHref,
+  isPracticeSessionSummary,
+  mockExamAreaBarColor,
+  TOPICO_LABELS,
+} from '@broto/shared'
 import { AREA_CONFIG } from '@/lib/area-config'
-import { Home, Loader2, RotateCcw, History } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useMockExamStudentModel } from '@/hooks/useMockExamStudentModel'
+import { Brain, Home, Loader2, RotateCcw, History } from 'lucide-react'
 
 function statLabel(key: string): string {
   if (key === '_sem_mapeamento') return 'Sem tópico mapeado'
@@ -36,6 +43,10 @@ function scoreColor(pct: number): string {
   return 'var(--red-400)'
 }
 
+function topicLabel(topicKey: string): string {
+  return TOPICO_LABELS[topicKey] ?? statLabel(topicKey)
+}
+
 const RING_R = 58
 const RING_C = 2 * Math.PI * RING_R
 
@@ -43,6 +54,7 @@ export function MockExamResult() {
   const location = useLocation()
   const [searchParams] = useSearchParams()
   const paramSessionId = searchParams.get('sessionId')
+  const { user } = useAuth()
 
   const state = location.state as
     | {
@@ -96,6 +108,11 @@ export function MockExamResult() {
       cancelled = true
     }
   }, [paramSessionId, summary])
+
+  const { loading: loadingStudentModel, error: studentModelError, areaStats, criticalTopics } =
+    useMockExamStudentModel(summary, user?.id ?? null)
+
+  const practiceHref = buildCriticalTopicsPracticeHref(criticalTopics)
 
   if (loading) {
     return (
@@ -267,54 +284,124 @@ export function MockExamResult() {
 
         <div className="broto-card" style={{ padding: 22, marginBottom: 18 }}>
           <h3 className="broto-section-label" style={{ marginBottom: 14 }}>
-            Desempenho por área
+            Análise por área
           </h3>
-          <ul
-            style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-            }}
-          >
-            {Object.entries(summary.porArea).map(([slug, s]) => {
-              const cfg = AREA_CONFIG[slug]
-              const Icon = cfg?.icon
-              const color = cfg?.color ?? '#888'
-              return (
-                <li key={slug} className="broto-mock-exam-area-row">
-                  <div
-                    className="broto-mock-exam-area-row__icon"
-                    style={{ background: `${color}15`, color }}
-                  >
-                    {Icon ? <Icon size={18} strokeWidth={1.8} /> : null}
-                  </div>
-                  <div className="broto-mock-exam-area-row__info">
-                    <div className="broto-mock-exam-area-row__name">
-                      {cfg?.label ?? statLabel(slug)}
-                    </div>
-                    <div className="broto-mock-exam-area-row__bar">
-                      <div
-                        className="broto-mock-exam-area-row__bar-fill"
-                        style={{ width: `${s.percentual}%`, background: color }}
-                      />
-                    </div>
-                  </div>
-                  <span className="broto-mock-exam-area-row__score" style={{ color }}>
-                    {s.percentual}%
-                    <span
-                      className="broto-muted"
-                      style={{ fontWeight: 400, fontSize: '0.72rem', marginLeft: 4 }}
+          {areaStats.length === 0 ? (
+            <p className="broto-muted">Nenhuma área agregada nesta rodada.</p>
+          ) : (
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}
+            >
+              {areaStats.map((stat) => {
+                const cfg = AREA_CONFIG[stat.areaKey]
+                const Icon = cfg?.icon
+                const pctDisplay = Math.round(stat.pct * 100)
+                const barColor = mockExamAreaBarColor(stat.pct)
+                return (
+                  <li key={stat.areaKey} className="broto-mock-exam-area-row">
+                    <div
+                      className="broto-mock-exam-area-row__icon"
+                      style={{ background: `${barColor}15`, color: barColor }}
                     >
-                      ({s.corretas}/{s.total})
+                      {Icon ? <Icon size={18} strokeWidth={1.8} /> : null}
+                    </div>
+                    <div className="broto-mock-exam-area-row__info">
+                      <div className="broto-mock-exam-area-row__name">
+                        {cfg?.label ?? statLabel(stat.areaKey)}
+                      </div>
+                      <div className="broto-mock-exam-area-row__bar">
+                        <div
+                          className="broto-mock-exam-area-row__bar-fill"
+                          style={{ width: `${pctDisplay}%`, background: barColor }}
+                        />
+                      </div>
+                    </div>
+                    <span className="broto-mock-exam-area-row__score" style={{ color: barColor }}>
+                      {pctDisplay}%
+                      <span
+                        className="broto-muted"
+                        style={{ fontWeight: 400, fontSize: '0.72rem', marginLeft: 4 }}
+                      >
+                        ({stat.correct}/{stat.total})
+                      </span>
                     </span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="broto-card" style={{ padding: 22, marginBottom: 18 }}>
+          <h3 className="broto-section-label" style={{ marginBottom: 14 }}>
+            Revisar primeiro
+          </h3>
+          {loadingStudentModel ? (
+            <p className="broto-muted" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Loader2 size={16} style={{ animation: 'broto-rotate 0.7s linear infinite' }} />
+              Analisando domínio por tópico...
+            </p>
+          ) : studentModelError ? (
+            <p style={{ color: 'var(--red-400)', fontSize: 14 }}>{studentModelError}</p>
+          ) : criticalTopics.length === 0 ? (
+            <p className="broto-muted">
+              Nenhum tópico crítico identificado — erros em tópicos com domínio acima de 50%.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {criticalTopics.map((topic) => (
+                <div
+                  key={topic.topicKey}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'rgba(251, 146, 60, 0.1)',
+                    border: '1px solid rgba(251, 146, 60, 0.22)',
+                  }}
+                >
+                  <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>
+                    {topicLabel(topic.topicKey)}
                   </span>
-                </li>
-              )
-            })}
-          </ul>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: '#c2410c',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {(topic.pKnow * 100).toFixed(0)}% domínio
+                  </span>
+                </div>
+              ))}
+              {practiceHref ? (
+                <Link
+                  to={practiceHref}
+                  className="broto-btn-primary"
+                  style={{
+                    marginTop: 8,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <Brain size={16} />
+                  Praticar tópicos críticos
+                </Link>
+              ) : null}
+            </div>
+          )}
         </div>
 
         <div className="broto-card" style={{ padding: 22, marginBottom: 24 }}>

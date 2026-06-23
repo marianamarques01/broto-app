@@ -1,18 +1,12 @@
-import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { isClassAiChatReady } from '@broto/shared'
-import { api, ApiError } from '@/lib/api-client'
 import { useClass } from '@/hooks/useClass'
 import { Send } from 'lucide-react'
+import { useBrotoChat, BROTO_WELCOME_TEXT, BROTO_CHAT_ERROR_TEXT } from '@/hooks/useBrotoChat'
+import { BrotoChatSidebar } from '@/components/broto/BrotoChatSidebar'
 
-export interface BrotoChatMessage {
-  role: 'user' | 'assistant'
-  content: string
-}
-
-export const BROTO_WELCOME_TEXT =
-  'Oi! Sou o Broto, seu assistente de estudos. Como posso te ajudar?'
-
-export const BROTO_CHAT_ERROR_TEXT = 'Não consegui responder agora. Tente de novo.'
+export type { BrotoChatMessage } from '@/hooks/useBrotoChat'
+export { BROTO_WELCOME_TEXT, BROTO_CHAT_ERROR_TEXT }
 
 export function BrotoChatUnavailableState(props: { className?: string }) {
   const cls = props.className ?? 'broto-chat__unavailable'
@@ -29,88 +23,215 @@ export function BrotoChatUnavailableState(props: { className?: string }) {
   )
 }
 
-export function useBrotoChat() {
-  const [messages, setMessages] = useState<BrotoChatMessage[]>([
-    { role: 'assistant', content: BROTO_WELCOME_TEXT },
-  ])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [sessionId, setSessionId] = useState(() => crypto.randomUUID())
-  const [turnIndex, setTurnIndex] = useState(0)
-  const endRef = useRef<HTMLDivElement>(null)
+type BrotoChatProps = {
+  /** Página cheia com sidebar de conversas; modal usa layout compacto. */
+  layout?: 'page' | 'compact'
+}
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading])
-
-  const resetConversation = useCallback(() => {
-    setMessages([{ role: 'assistant', content: BROTO_WELCOME_TEXT }])
-    setInput('')
-    setSessionId(crypto.randomUUID())
-    setTurnIndex(0)
-  }, [])
-
-  const runAssistant = useCallback(
-    async (history: BrotoChatMessage[], currentTurnIndex: number) => {
-      setLoading(true)
-      try {
-        const resp = await api.post<{ message: string }>('/api/broto/chat', {
-          messages: history.map((m) => ({ role: m.role, content: m.content })),
-          sessionId,
-          turnIndex: currentTurnIndex,
-        })
-        setMessages((prev) => [...prev, { role: 'assistant', content: resp.message }])
-        setTurnIndex((t) => t + 1)
-      } catch (err) {
-        if (!(err instanceof ApiError)) {
-          console.error('[BrotoChat] request failed (non-ApiError)', err)
-        }
-        setMessages((prev) => [...prev, { role: 'assistant', content: BROTO_CHAT_ERROR_TEXT }])
-      } finally {
-        setLoading(false)
-      }
-    },
-    [sessionId],
+function BrotoChatThread(props: {
+  messages: ReturnType<typeof useBrotoChat>['messages']
+  loading: boolean
+  endRef: ReturnType<typeof useBrotoChat>['endRef']
+}) {
+  const { messages, loading, endRef } = props
+  return (
+    <>
+      {messages.map((msg, i) => (
+        <div
+          key={i}
+          className={`broto-chat__bubble ${msg.role === 'user' ? 'broto-chat__bubble--user' : 'broto-chat__bubble--assistant'}`}
+        >
+          {msg.role === 'assistant' && (
+            <span
+              style={{
+                fontSize: '0.65rem',
+                color: 'var(--green-400)',
+                fontWeight: 600,
+                display: 'block',
+                marginBottom: 4,
+              }}
+            >
+              {'\u{1F331}'} Broto
+            </span>
+          )}
+          {msg.content}
+        </div>
+      ))}
+      {loading && (
+        <div className="broto-chat__typing">
+          <span
+            style={{
+              fontSize: '0.65rem',
+              color: 'var(--green-400)',
+              fontWeight: 600,
+              display: 'block',
+              marginBottom: 4,
+            }}
+          >
+            {'\u{1F331}'} Broto
+          </span>
+          Pensando...
+        </div>
+      )}
+      <div ref={endRef} />
+    </>
   )
+}
 
-  const sendUserText = useCallback(
-    (raw: string) => {
-      const trimmed = raw.trim()
-      if (!trimmed || loading) return
+function BrotoChatComposer(props: {
+  input: string
+  setInput: (value: string) => void
+  loading: boolean
+  historyLoading: boolean
+  onSubmit: (e: FormEvent) => void
+}) {
+  const { input, setInput, loading, historyLoading, onSubmit } = props
+  const busy = loading || historyLoading
 
-      const userMsg: BrotoChatMessage = { role: 'user', content: trimmed }
-      const currentTurnIndex = turnIndex
-
-      setMessages((prev) => {
-        const history = [...prev, userMsg]
-        void runAssistant(history, currentTurnIndex)
-        return history
-      })
-      setInput('')
-    },
-    [loading, runAssistant, turnIndex],
+  return (
+    <div className="broto-chat__composer-wrap">
+      <form
+        className={`broto-chat__composer${busy ? ' broto-chat__composer--busy' : ''}`}
+        onSubmit={onSubmit}
+        aria-busy={busy}
+      >
+        <input
+          type="text"
+          className="broto-input broto-chat__composer-input"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Pergunte algo ao Broto..."
+          disabled={busy}
+        />
+        <button
+          type="submit"
+          className={`broto-chat__send ${input.trim() && !busy ? 'broto-chat__send--active' : ''}`}
+          disabled={busy || !input.trim()}
+          aria-label="Enviar mensagem"
+        >
+          <Send size={16} aria-hidden />
+        </button>
+      </form>
+    </div>
   )
+}
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    sendUserText(input)
-  }
+function BrotoChatSession({ layout }: { layout: 'page' | 'compact' }) {
+  const [mobilePanel, setMobilePanel] = useState<'list' | 'chat'>('chat')
 
-  return {
+  const {
     messages,
     input,
     setInput,
     loading,
+    historyLoading,
+    sessions,
+    sessionsLoading,
+    sessionId,
     endRef,
     handleSubmit,
-    sendUserText,
     resetConversation,
+    selectSession,
+    deleteSession,
+    deletingSessionId,
+  } = useBrotoChat()
+
+  function handleNewChat() {
+    resetConversation()
+    if (layout === 'page') setMobilePanel('chat')
   }
+
+  function handleSelectSession(id: string) {
+    selectSession(id)
+    if (layout === 'page') setMobilePanel('chat')
+  }
+
+  const sidebar = (
+    <BrotoChatSidebar
+      sessions={sessions}
+      activeSessionId={sessionId}
+      loading={sessionsLoading || historyLoading}
+      deletingSessionId={deletingSessionId}
+      onSelectSession={handleSelectSession}
+      onNewChat={handleNewChat}
+      onDeleteSession={(id) => void deleteSession(id)}
+    />
+  )
+
+  if (layout === 'compact') {
+    return (
+      <div className="broto-chat broto-chat--compact">
+        <div className="broto-chat__scroll">
+          <BrotoChatThread messages={messages} loading={loading} endRef={endRef} />
+        </div>
+        <BrotoChatComposer
+          input={input}
+          setInput={setInput}
+          loading={loading}
+          historyLoading={historyLoading}
+          onSubmit={handleSubmit}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="broto-chat broto-chat--with-sidebar">
+      <div className="broto-chat__mobile-tabs" role="tablist" aria-label="Painéis do chat">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobilePanel === 'list'}
+          className={`broto-chat__mobile-tab${mobilePanel === 'list' ? ' broto-chat__mobile-tab--active' : ''}`}
+          onClick={() => setMobilePanel('list')}
+        >
+          Conversas
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobilePanel === 'chat'}
+          className={`broto-chat__mobile-tab${mobilePanel === 'chat' ? ' broto-chat__mobile-tab--active' : ''}`}
+          onClick={() => setMobilePanel('chat')}
+        >
+          Chat
+        </button>
+      </div>
+
+      <div
+        className={`broto-chat__sidebar-panel${mobilePanel === 'list' ? ' broto-chat__sidebar-panel--visible' : ''}`}
+      >
+        {sidebar}
+      </div>
+
+      <div
+        className={`broto-chat__main-panel${mobilePanel === 'chat' ? ' broto-chat__main-panel--visible' : ''}`}
+      >
+        <div className="broto-chat__scroll">
+          {historyLoading && messages.length <= 1 ? (
+            <p className="broto-chat__history-loading" role="status">
+              Carregando conversa…
+            </p>
+          ) : (
+            <BrotoChatThread messages={messages} loading={loading} endRef={endRef} />
+          )}
+        </div>
+        <BrotoChatComposer
+          input={input}
+          setInput={setInput}
+          loading={loading}
+          historyLoading={historyLoading}
+          onSubmit={handleSubmit}
+        />
+      </div>
+
+      <div className="broto-chat__desktop-sidebar">{sidebar}</div>
+    </div>
+  )
 }
 
-export function BrotoChat() {
+export function BrotoChat({ layout = 'page' }: BrotoChatProps) {
   const { currentClass, loading: classLoading } = useClass()
-  const { messages, input, setInput, loading, endRef, handleSubmit } = useBrotoChat()
   const chatReady = isClassAiChatReady(currentClass)
 
   if (classLoading) {
@@ -125,73 +246,5 @@ export function BrotoChat() {
     )
   }
 
-  return (
-    <div className="broto-chat">
-      <div className="broto-chat__scroll">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`broto-chat__bubble ${msg.role === 'user' ? 'broto-chat__bubble--user' : 'broto-chat__bubble--assistant'}`}
-          >
-            {msg.role === 'assistant' && (
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  color: 'var(--green-400)',
-                  fontWeight: 600,
-                  display: 'block',
-                  marginBottom: 4,
-                }}
-              >
-                {'\u{1F331}'} Broto
-              </span>
-            )}
-            {msg.content}
-          </div>
-        ))}
-        {loading && (
-          <div className="broto-chat__typing">
-            <span
-              style={{
-                fontSize: '0.65rem',
-                color: 'var(--green-400)',
-                fontWeight: 600,
-                display: 'block',
-                marginBottom: 4,
-              }}
-            >
-              {'\u{1F331}'} Broto
-            </span>
-            Pensando...
-          </div>
-        )}
-        <div ref={endRef} />
-      </div>
-
-      <div className="broto-chat__composer-wrap">
-        <form
-          className={`broto-chat__composer${loading ? ' broto-chat__composer--busy' : ''}`}
-          onSubmit={handleSubmit}
-          aria-busy={loading}
-        >
-          <input
-            type="text"
-            className="broto-input broto-chat__composer-input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Pergunte algo ao Broto..."
-            disabled={loading}
-          />
-          <button
-            type="submit"
-            className={`broto-chat__send ${input.trim() && !loading ? 'broto-chat__send--active' : ''}`}
-            disabled={loading || !input.trim()}
-            aria-label="Enviar mensagem"
-          >
-            <Send size={16} aria-hidden />
-          </button>
-        </form>
-      </div>
-    </div>
-  )
+  return <BrotoChatSession key={currentClass!.id} layout={layout} />
 }

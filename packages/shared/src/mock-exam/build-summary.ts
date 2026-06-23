@@ -1,6 +1,7 @@
 import type { Question } from '../types/question'
 import { getQuestionId } from '../types/question'
 import type { MockExamAnswerResult, PracticeSessionSummary, PracticeTopicStat } from './types'
+import type { MockExamResultItem } from './student-model-result'
 
 function pct(c: number, t: number): number {
   if (t <= 0) return 0
@@ -36,6 +37,7 @@ export function buildPracticeSessionSummary(
 
   const porArea: Record<string, PracticeTopicStat> = {}
   const porTopico: Record<string, PracticeTopicStat> = {}
+  const resultados: MockExamResultItem[] = []
 
   let totalCorretas = 0
   const times: number[] = []
@@ -51,6 +53,13 @@ export function buildPracticeSessionSummary(
     } else {
       bumpStat(porTopico, '_sem_mapeamento', r.isCorrect)
     }
+
+    resultados.push({
+      questionId: r.questionId,
+      topicKey: topico && topico !== '_sem_mapeamento' ? topico : null,
+      areaKey,
+      isCorrect: r.isCorrect,
+    })
 
     if (r.isCorrect) totalCorretas += 1
     if (
@@ -75,5 +84,6 @@ export function buildPracticeSessionSummary(
     tempoTotalSeg,
     porArea,
     porTopico,
+    resultados,
   }
 }

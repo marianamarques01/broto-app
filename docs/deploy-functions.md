@@ -81,7 +81,7 @@ Apenas practice-session-* + answer-question + user-reset-practice.
 
 ```
 answer-question          auth-signup              broto-chat
-class-join               material-embed           material-index
+broto-chat-session-delete broto-chat-session-get   broto-chat-sessions      class-join               material-embed           material-index
 pet-me                   practice-session-* (8)   routine-generate
 semantic-search          user-me                  user-onboarding
 user-performance-series  user-progress            user-recent-mistakes

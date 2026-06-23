@@ -2,23 +2,18 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useMaterials } from '@/hooks/useMaterials'
-import { useClassIndicators } from '@/hooks/useClassIndicators'
 import { useClasses } from '@/hooks/useClasses'
 import { MaterialsList } from '@/components/materials/MaterialsList'
 import { MaterialUpload } from '@/components/materials/MaterialUpload'
-import { ClassIndicatorsPanel } from '@/components/indicators/ClassIndicatorsPanel'
 import { ClassCodeBadge } from '@/components/class/ClassCodeBadge'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import type { Class } from '@broto/shared'
 
-type Tab = 'materials' | 'indicators'
-
 export function ClassDetail() {
   const { classId } = useParams<{ classId: string }>()
   const navigate = useNavigate()
   const [cls, setCls] = useState<Class | null>(null)
-  const [activeTab, setActiveTab] = useState<Tab>('materials')
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -35,7 +30,6 @@ export function ClassDetail() {
     deleteMaterial,
     reindexAllMaterials,
   } = useMaterials(classId!)
-  const { indicators, loading: indicatorsLoading } = useClassIndicators(classId!)
   const { updateClass, deleteClass } = useClasses()
 
   const [prevClassId, setPrevClassId] = useState(classId)
@@ -43,7 +37,6 @@ export function ClassDetail() {
     setPrevClassId(classId)
     setEditing(false)
     setShowDeleteConfirm(false)
-    setActiveTab('materials')
   }
 
   useEffect(() => {
@@ -106,17 +99,6 @@ export function ClassDetail() {
     }
   }
 
-  const tabStyle = (tab: Tab) => ({
-    padding: '10px 20px',
-    border: 'none',
-    background: 'transparent',
-    borderBottom: activeTab === tab ? '2px solid var(--green-600)' : '2px solid transparent',
-    color: activeTab === tab ? 'var(--green-400)' : 'var(--text-muted)',
-    fontWeight: activeTab === tab ? 500 : 400,
-    cursor: 'pointer' as const,
-    fontSize: 14,
-  })
-
   return (
     <div
       style={{
@@ -135,6 +117,23 @@ export function ClassDetail() {
           action={
             <div style={{ display: 'flex', gap: 8 }}>
               <button
+                type="button"
+                onClick={() => navigate(`/classes/${classId}/painel`)}
+                style={{
+                  background: 'var(--green-glow)',
+                  border: '1px solid var(--green-600)',
+                  borderRadius: 8,
+                  padding: '8px 16px',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  color: 'var(--green-400)',
+                  fontWeight: 500,
+                }}
+              >
+                Painel da turma
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   if (cls) {
                     setEditName(cls.name)
@@ -155,6 +154,7 @@ export function ClassDetail() {
                 Editar
               </button>
               <button
+                type="button"
                 onClick={() => setShowDeleteConfirm(true)}
                 style={{
                   background: 'var(--bg-card)',
@@ -172,50 +172,25 @@ export function ClassDetail() {
           }
         />
 
-        <div
-          style={{
-            background: 'var(--bg-card)',
-            borderBottom: '1px solid var(--border-default)',
-            paddingLeft: 32,
-          }}
-        >
-          <button style={tabStyle('materials')} onClick={() => setActiveTab('materials')}>
-            Materiais
-          </button>
-          <button style={tabStyle('indicators')} onClick={() => setActiveTab('indicators')}>
-            Indicadores
-          </button>
-        </div>
-
         <main style={{ padding: '24px 32px', flex: 1 }}>
-          {activeTab === 'materials' && (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 360px',
-                gap: 24,
-                alignItems: 'start',
-              }}
-            >
-              <MaterialsList
-                materials={materials}
-                loading={materialsLoading}
-                ragEnabled={cls?.rag_enabled === true}
-                reindexing={reindexing}
-                onDelete={deleteMaterial}
-                onReindexAll={() => void handleReindexAll()}
-              />
-              <MaterialUpload classId={classId!} onUploadPDF={uploadPDF} onAddURL={addURL} />
-            </div>
-          )}
-
-          {activeTab === 'indicators' && (
-            <ClassIndicatorsPanel
-              indicators={indicators}
-              loading={indicatorsLoading}
-              classId={classId!}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 360px',
+              gap: 24,
+              alignItems: 'start',
+            }}
+          >
+            <MaterialsList
+              materials={materials}
+              loading={materialsLoading}
+              ragEnabled={cls?.rag_enabled === true}
+              reindexing={reindexing}
+              onDelete={deleteMaterial}
+              onReindexAll={() => void handleReindexAll()}
             />
-          )}
+            <MaterialUpload classId={classId!} onUploadPDF={uploadPDF} onAddURL={addURL} />
+          </div>
         </main>
       </div>
 
