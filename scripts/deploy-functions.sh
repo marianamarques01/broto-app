@@ -22,6 +22,20 @@ FN_ROOT="${ROOT}/supabase/functions"
 
 cd "${ROOT}"
 
+# Supabase CLI < ~2.100 usa edge-runtime que só lê deno.lock até v4.
+# Deno 2.2+ local gera v5 — downgrade automático antes do bundle Docker.
+LOCKFILE="${FN_ROOT}/deno.lock"
+if [[ -f "${LOCKFILE}" ]] && grep -q '"version": "5"' "${LOCKFILE}"; then
+  echo "Ajustando supabase/functions/deno.lock v5 → v4 (compatibilidade do bundler)…"
+  node -e "
+    const fs = require('fs');
+    const p = process.argv[1];
+    const raw = fs.readFileSync(p, 'utf8');
+    const next = raw.replace('\"version\": \"5\"', '\"version\": \"4\"');
+    if (next !== raw) fs.writeFileSync(p, next);
+  " "${LOCKFILE}"
+fi
+
 FUNCS=()
 for dir in "${FN_ROOT}"/*/; do
   name="$(basename "${dir}")"

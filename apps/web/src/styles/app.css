@@ -2286,7 +2286,7 @@ body::before {
   text-transform: uppercase;
   color: var(--text-muted);
   margin-bottom: 12px;
-  margin-top: 32px;
+  margin-top: 16px;
 }
 
 .study-simulado-landing {
@@ -2409,7 +2409,7 @@ body::before {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
-  margin-bottom: 40px;
+  margin-bottom: 16px;
 }
 
 .study-area-card {
@@ -23267,4 +23267,186 @@ button.broto-mock-exam-area:hover {
   justify-content: center;
   background: var(--bg-deep);
   color: var(--text-muted);
+}
+
+/* ── Redação ENEM (listagem) ───────────────────────────── */
+
+.broto-main-inner--redacao-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1280px;
+  padding: 20px 16px 56px;
+}
+
+@media (min-width: 1024px) {
+  .broto-main-inner--redacao-list {
+    padding-inline: 20px;
+  }
+
+  .broto-page--redacao .broto-topbar {
+    padding-inline: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .broto-main-inner--redacao-list {
+    padding: 16px 12px 40px;
+  }
+
+  .broto-page--redacao .broto-topbar {
+    padding-inline: 12px;
+  }
+}
+
+.broto-redacao-intro {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+}
+
+.broto-redacao-intro__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--teal-500) 15%, transparent);
+  color: var(--teal-400);
+}
+
+.broto-redacao-intro__title {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.broto-redacao-intro__text {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+
+.broto-redacao-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.broto-redacao-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.broto-redacao-filter--active {
+  border-color: var(--teal-500);
+  color: var(--teal-400);
+  background: color-mix(in srgb, var(--teal-500) 12%, var(--bg-card));
+}
+
+.broto-redacao-filter--active[data-eixo] {
+  border-color: var(--eixo-color);
+  color: var(--eixo-color);
+  background: color-mix(in srgb, var(--eixo-color) 14%, var(--bg-card));
+}
+
+.broto-redacao-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 16px;
+  color: var(--text-secondary);
+}
+
+.broto-redacao-state--error {
+  flex-direction: column;
+  color: var(--red-400);
+}
+
+.broto-redacao-state__spin {
+  animation: broto-spin 0.9s linear infinite;
+}
+
+.broto-redacao-tema-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.broto-redacao-tema-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  text-decoration: none;
+  color: inherit;
+  min-height: 100%;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.broto-redacao-tema-card:hover {
+  border-color: color-mix(in srgb, var(--eixo-color, var(--teal-500)) 45%, var(--border-subtle));
+  transform: translateY(-1px);
+}
+
+.broto-redacao-tema-card__eixo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--eixo-color, var(--teal-400));
+}
+
+.broto-redacao-tema-card__title {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.broto-redacao-tema-card__meta {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.broto-redacao-tema-card__cta {
+  margin-top: auto;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--eixo-color, var(--teal-400));
+}
+
+/* Editor premium styles → styles/redacao-editor.css */
+
+.broto-redacao-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: var(--teal-400);
+  text-decoration: none;
+  font-weight: 600;
 }

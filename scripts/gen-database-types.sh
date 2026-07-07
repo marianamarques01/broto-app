@@ -48,7 +48,32 @@ export type ClassesRow = Database['public']['Tables']['classes']['Row']
 export type EnrollmentsRow = Database['public']['Tables']['enrollments']['Row']
 export type OrganizationsRow = Database['public']['Tables']['organizations']['Row']
 export type MaterialsRow = Database['public']['Tables']['materials']['Row']
+export type EnemReferenceDocumentsRow =
+  Database['public']['Tables']['enem_reference_documents']['Row']
+export type EnemReferenceDocumentsInsert =
+  Database['public']['Tables']['enem_reference_documents']['Insert']
+export type EnemReferenceEmbeddingsRow =
+  Database['public']['Tables']['enem_reference_embeddings']['Row']
+export type EnemReferenceEmbeddingsInsert =
+  Database['public']['Tables']['enem_reference_embeddings']['Insert']
 export type QuestionTopicMappingRow = Database['public']['Tables']['question_topic_mapping']['Row']
+export type RedacaoTemasRow = Database['public']['Tables']['redacao_temas']['Row']
+export type RedacaoTemasInsert = Database['public']['Tables']['redacao_temas']['Insert']
+export type RedacoesRow = Database['public']['Tables']['redacoes']['Row']
+export type RedacoesInsert = Database['public']['Tables']['redacoes']['Insert']
+export type RedacaoCorrecoesRow = Database['public']['Tables']['redacao_correcoes']['Row']
+export type RedacaoCorrecoesInsert = Database['public']['Tables']['redacao_correcoes']['Insert']
+export type RedacaoRepertoriosRow = Database['public']['Tables']['redacao_repertorios']['Row']
+export type RedacaoRepertoriosInsert = Database['public']['Tables']['redacao_repertorios']['Insert']
+export type RedacaoRevisoesHumanasRow =
+  Database['public']['Tables']['redacao_revisoes_humanas']['Row']
+export type RedacaoCompetenceSnapshotsRow =
+  Database['public']['Tables']['redacao_competence_snapshots']['Row']
+export type FlashcardReviewsRow = Database['public']['Tables']['flashcard_reviews']['Row']
+export type FlashcardReviewsInsert = Database['public']['Tables']['flashcard_reviews']['Insert']
+export type StreakFreezeEventsRow = Database['public']['Tables']['streak_freeze_events']['Row']
+export type StreakFreezeEventsInsert =
+  Database['public']['Tables']['streak_freeze_events']['Insert']
 ALIASES_EOF
 
 echo "Tipos regenerados em ${TYPES_FILE} (aliases Row reaplicados)."

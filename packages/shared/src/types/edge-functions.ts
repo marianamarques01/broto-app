@@ -12,6 +12,23 @@ import type {
 import type { PracticeSessionAnswerSnapshot } from '../mock-exam/parse-session-state'
 import type { SubmitAnswerPayload } from './submit-answer'
 import type { EnemAreaKey } from '../enem-area-key'
+import type {
+  RedacaoCompetencia,
+  RedacaoCorrecao,
+  RedacaoEixoTematico,
+  RedacaoModo,
+  RedacaoRepertorio,
+  RedacaoRepertorioTipo,
+  RedacaoRevisaoHumana,
+  RedacaoStatus,
+  RedacaoTema,
+  Redacao,
+} from './redacao'
+import type {
+  CalibracaoComparacaoCompetencia,
+  CalibracaoMetricasCompetencia,
+  RedacaoCorrecaoBlind,
+} from '../redacao/calibracao'
 
 /** Corpo de erro padrão das edge functions. */
 export interface EdgeFunctionErrorBody {
@@ -302,3 +319,145 @@ export interface UserResetPracticeResponse {
 
 /** Re-export útil para contratos que referenciam área ENEM. */
 export type { EnemAreaKey }
+
+// ---- Redação — temas (REDA-04 parcial) ----
+
+export interface RedacaoTemaListRequest {
+  eixo_tematico?: RedacaoEixoTematico
+}
+
+export interface RedacaoTemaListResponse {
+  temas: RedacaoTema[]
+}
+
+// ---- Redação — repertórios (REDA-06) ----
+
+export interface RedacaoRepertorioListRequest {
+  eixo_tematico?: RedacaoEixoTematico
+  competencia_alvo?: RedacaoCompetencia
+  class_id?: string
+}
+
+export interface RedacaoRepertorioListResponse {
+  repertorios: RedacaoRepertorio[]
+}
+
+export interface RedacaoRepertorioCreateRequest {
+  class_id?: string | null
+  tipo: RedacaoRepertorioTipo
+  titulo: string
+  conteudo: string
+  eixo_tematico?: RedacaoEixoTematico | null
+  competencia_alvo?: RedacaoCompetencia | null
+  tags?: string[]
+}
+
+export interface RedacaoRepertorioUpdateRequest {
+  id: string
+  class_id?: string | null
+  tipo?: RedacaoRepertorioTipo
+  titulo?: string
+  conteudo?: string
+  eixo_tematico?: RedacaoEixoTematico | null
+  competencia_alvo?: RedacaoCompetencia | null
+  tags?: string[]
+  ativo?: boolean
+}
+
+export interface RedacaoRepertorioDeleteRequest {
+  id: string
+}
+
+export interface RedacaoRepertorioManageResponse {
+  ok: true
+  repertorio: RedacaoRepertorio
+}
+
+// ---- Redação — motor de correção (REDA-03) ----
+
+export interface RedacaoCorrectRequest {
+  redacao_id: string
+}
+
+export interface RedacaoCorrectResponse {
+  ok: true
+  correcao: RedacaoCorrecao
+  skipped_llm: boolean
+}
+
+// ---- Redação — submit + get (REDA-04 completo) ----
+
+export interface RedacaoSubmitRequest {
+  tema_id: string
+  texto: string
+  modo?: RedacaoModo
+  tempo_segundos?: number | null
+  redacao_id?: string | null
+  class_id?: string | null
+}
+
+export interface RedacaoSubmitResponse {
+  ok: true
+  redacao: Redacao
+  correcao: RedacaoCorrecao
+  status: RedacaoStatus
+}
+
+export interface RedacaoGetRequest {
+  redacao_id: string
+}
+
+export interface RedacaoGetResponse {
+  redacao: Redacao
+  tema: RedacaoTema
+  correcao: RedacaoCorrecao | null
+}
+
+/** Item da fila de calibração — sem notas da IA. */
+export interface RedacaoCalibracaoListItem {
+  correcao_id: string
+  redacao_id: string
+  corrigida_em: string
+  linha_count: number
+  tema_titulo: string
+  eixo_tematico: string
+  revisado: boolean
+  revisado_por_mim: boolean
+}
+
+export interface RedacaoCalibracaoListResponse {
+  items: RedacaoCalibracaoListItem[]
+}
+
+export interface RedacaoCalibracaoGetResponse {
+  redacao: Redacao
+  tema: RedacaoTema
+  correcao: RedacaoCorrecaoBlind
+  revisao: RedacaoRevisaoHumana | null
+  ia_revelada: boolean
+  comparacao?: CalibracaoComparacaoCompetencia[]
+  correcao_ia?: RedacaoCorrecao
+}
+
+export interface RedacaoCalibracaoSubmitRequest {
+  action?: 'submit'
+  correcao_id: string
+  nota_humana_i: number
+  nota_humana_ii: number
+  nota_humana_iii: number
+  nota_humana_iv: number
+  nota_humana_v: number
+  comentario?: string | null
+}
+
+export interface RedacaoCalibracaoSubmitResponse {
+  ok: true
+  revisao: RedacaoRevisaoHumana
+  comparacao: CalibracaoComparacaoCompetencia[]
+  correcao_ia: RedacaoCorrecao
+}
+
+export interface RedacaoCalibracaoMetricsResponse {
+  total_revisoes: number
+  por_competencia: CalibracaoMetricasCompetencia[]
+}

@@ -31,7 +31,7 @@ npm run test:functions
 
 | Item | Contagem / nota |
 |------|-----------------|
-| Edge functions | 19 (`supabase/functions/*/index.ts`) |
+| Edge functions | 20 (`supabase/functions/*/index.ts`) |
 | Módulos `_shared` | 9 arquivos TS + 4 `*_test.ts` em `_shared` |
 | Migrations versionadas | 26 (`supabase/migrations/`) |
 | `database.types.ts` | CLI gerado + aliases Row (script P8) |
@@ -83,7 +83,22 @@ npm run test:functions
 
 ---
 
-## Backend — decisões recentes
+## Módulo Redação ENEM (planejamento)
+
+**Status:** Wave 3 concluída · REDA-07 feito (jul/2026)
+
+| Wave | Requisitos | Entregável | Status |
+|------|------------|------------|--------|
+| W1 Fundação | REDA-01, REDA-06 | Migrations, temas, repertórios, editor | Concluída |
+| W2 Motor | REDA-02…05 | RAG Cartilha, correção, submit, feedback | Concluída |
+| W3 Calibração | REDA-07 | Revisão humana cega | **Concluída** |
+| W4 Ciclo | REDA-08 | Evolução + rotina | Pendente |
+
+**Documentos:** `docs/redacao-arquitetura-motor.md` · `.planning/phases/redacao-enem/PLAN.md`
+
+**Próxima tarefa:** REDA-08 — evolução + integração rotina (Wave 4, Tarefa 4.1)
+
+---
 
 - **`topic_performance.area_key`:** Opção A — coluna versionada (`20260619120000`), backfill SQL, upsert em `answer-question`
 - **Auth edge:** 17/19 functions com `requireUser()`; exceções: `auth-signup` (público + service role), helpers em `_shared/authz.ts`
@@ -112,7 +127,8 @@ npm run test:functions
 | `.planning/PROJECT.md` | Escopo do milestone de consolidação |
 | `docs/CHECKLIST-PR.md` | Checklist de PR |
 | `docs/deprecated/*` | ROADMAP/REQUIREMENTS antigos (histórico) |
-| `.planning/codebase/*` | Snapshot **2026-04-02** — consultar com cautela |
+| `docs/redacao-arquitetura-motor.md` | Arquitetura motor correção + RAG Cartilha INEP |
+| `.planning/phases/redacao-enem/PLAN.md` | Execução por waves REDA-01…08 |
 
 ---
 

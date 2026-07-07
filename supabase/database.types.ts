@@ -209,6 +209,77 @@ export type Database = {
           },
         ]
       }
+      enem_reference_documents: {
+        Row: {
+          created_at: string
+          id: string
+          indexed_at: string | null
+          slug: string
+          source_url: string | null
+          title: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          indexed_at?: string | null
+          slug: string
+          source_url?: string | null
+          title: string
+          version?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          indexed_at?: string | null
+          slug?: string
+          source_url?: string | null
+          title?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      enem_reference_embeddings: {
+        Row: {
+          chunk_index: number
+          chunk_text: string
+          chunk_tokens: number | null
+          created_at: string
+          document_id: string
+          embedding: string | null
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          chunk_index: number
+          chunk_text: string
+          chunk_tokens?: number | null
+          created_at?: string
+          document_id: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+        }
+        Update: {
+          chunk_index?: number
+          chunk_text?: string
+          chunk_tokens?: number | null
+          created_at?: string
+          document_id?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'enem_reference_embeddings_document_id_fkey'
+            columns: ['document_id']
+            isOneToOne: false
+            referencedRelation: 'enem_reference_documents'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       enrollments: {
         Row: {
           class_id: string
@@ -624,6 +695,377 @@ export type Database = {
         }
         Relationships: []
       }
+      redacao_competence_snapshots: {
+        Row: {
+          competencia: string
+          created_at: string
+          id: string
+          nota: number
+          redacao_id: string
+          user_id: string
+        }
+        Insert: {
+          competencia: string
+          created_at?: string
+          id?: string
+          nota: number
+          redacao_id: string
+          user_id: string
+        }
+        Update: {
+          competencia?: string
+          created_at?: string
+          id?: string
+          nota?: number
+          redacao_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'redacao_competence_snapshots_redacao_id_fkey'
+            columns: ['redacao_id']
+            isOneToOne: false
+            referencedRelation: 'redacoes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'redacao_competence_snapshots_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      redacao_correcoes: {
+        Row: {
+          created_at: string
+          fatores_zero: Json
+          id: string
+          justificativa_i: string
+          justificativa_ii: string
+          justificativa_iii: string
+          justificativa_iv: string
+          justificativa_v: string
+          marcacoes_inline: Json
+          modelo_usado: string
+          nota_competencia_i: number
+          nota_competencia_ii: number
+          nota_competencia_iii: number
+          nota_competencia_iv: number
+          nota_competencia_v: number
+          nota_total: number
+          prompt_version: string
+          rag_chunks_used: Json | null
+          redacao_id: string
+        }
+        Insert: {
+          created_at?: string
+          fatores_zero?: Json
+          id?: string
+          justificativa_i?: string
+          justificativa_ii?: string
+          justificativa_iii?: string
+          justificativa_iv?: string
+          justificativa_v?: string
+          marcacoes_inline?: Json
+          modelo_usado?: string
+          nota_competencia_i?: number
+          nota_competencia_ii?: number
+          nota_competencia_iii?: number
+          nota_competencia_iv?: number
+          nota_competencia_v?: number
+          nota_total?: number
+          prompt_version?: string
+          rag_chunks_used?: Json | null
+          redacao_id: string
+        }
+        Update: {
+          created_at?: string
+          fatores_zero?: Json
+          id?: string
+          justificativa_i?: string
+          justificativa_ii?: string
+          justificativa_iii?: string
+          justificativa_iv?: string
+          justificativa_v?: string
+          marcacoes_inline?: Json
+          modelo_usado?: string
+          nota_competencia_i?: number
+          nota_competencia_ii?: number
+          nota_competencia_iii?: number
+          nota_competencia_iv?: number
+          nota_competencia_v?: number
+          nota_total?: number
+          prompt_version?: string
+          rag_chunks_used?: Json | null
+          redacao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'redacao_correcoes_redacao_id_fkey'
+            columns: ['redacao_id']
+            isOneToOne: true
+            referencedRelation: 'redacoes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      redacao_repertorios: {
+        Row: {
+          ativo: boolean
+          class_id: string | null
+          competencia_alvo: string | null
+          conteudo: string
+          created_at: string
+          created_by: string
+          eixo_tematico: string | null
+          id: string
+          organization_id: string
+          tags: string[]
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          class_id?: string | null
+          competencia_alvo?: string | null
+          conteudo: string
+          created_at?: string
+          created_by: string
+          eixo_tematico?: string | null
+          id?: string
+          organization_id: string
+          tags?: string[]
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          class_id?: string | null
+          competencia_alvo?: string | null
+          conteudo?: string
+          created_at?: string
+          created_by?: string
+          eixo_tematico?: string | null
+          id?: string
+          organization_id?: string
+          tags?: string[]
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'redacao_repertorios_class_id_fkey'
+            columns: ['class_id']
+            isOneToOne: false
+            referencedRelation: 'classes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'redacao_repertorios_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'redacao_repertorios_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      redacao_revisoes_humanas: {
+        Row: {
+          comentario: string | null
+          correcao_id: string
+          created_at: string
+          id: string
+          nota_humana_i: number | null
+          nota_humana_ii: number | null
+          nota_humana_iii: number | null
+          nota_humana_iv: number | null
+          nota_humana_v: number | null
+          notas_ia_reveladas_em: string | null
+          revisor_id: string
+        }
+        Insert: {
+          comentario?: string | null
+          correcao_id: string
+          created_at?: string
+          id?: string
+          nota_humana_i?: number | null
+          nota_humana_ii?: number | null
+          nota_humana_iii?: number | null
+          nota_humana_iv?: number | null
+          nota_humana_v?: number | null
+          notas_ia_reveladas_em?: string | null
+          revisor_id: string
+        }
+        Update: {
+          comentario?: string | null
+          correcao_id?: string
+          created_at?: string
+          id?: string
+          nota_humana_i?: number | null
+          nota_humana_ii?: number | null
+          nota_humana_iii?: number | null
+          nota_humana_iv?: number | null
+          nota_humana_v?: number | null
+          notas_ia_reveladas_em?: string | null
+          revisor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'redacao_revisoes_humanas_correcao_id_fkey'
+            columns: ['correcao_id']
+            isOneToOne: false
+            referencedRelation: 'redacao_correcoes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'redacao_revisoes_humanas_revisor_id_fkey'
+            columns: ['revisor_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      redacao_temas: {
+        Row: {
+          ano_referencia: number | null
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          dificuldade: string
+          eixo_tematico: string
+          id: string
+          organization_id: string | null
+          textos_motivadores: Json
+          titulo: string
+        }
+        Insert: {
+          ano_referencia?: number | null
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          dificuldade?: string
+          eixo_tematico: string
+          id?: string
+          organization_id?: string | null
+          textos_motivadores?: Json
+          titulo: string
+        }
+        Update: {
+          ano_referencia?: number | null
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          dificuldade?: string
+          eixo_tematico?: string
+          id?: string
+          organization_id?: string | null
+          textos_motivadores?: Json
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'redacao_temas_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'redacao_temas_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      redacoes: {
+        Row: {
+          class_id: string | null
+          created_at: string
+          id: string
+          imagem_url: string | null
+          linha_count: number
+          modo: string
+          organization_id: string
+          status: string
+          tempo_segundos: number | null
+          tema_id: string
+          texto: string
+          user_id: string
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string
+          id?: string
+          imagem_url?: string | null
+          linha_count?: number
+          modo?: string
+          organization_id: string
+          status?: string
+          tempo_segundos?: number | null
+          tema_id: string
+          texto?: string
+          user_id: string
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string
+          id?: string
+          imagem_url?: string | null
+          linha_count?: number
+          modo?: string
+          organization_id?: string
+          status?: string
+          tempo_segundos?: number | null
+          tema_id?: string
+          texto?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'redacoes_class_id_fkey'
+            columns: ['class_id']
+            isOneToOne: false
+            referencedRelation: 'classes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'redacoes_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'redacoes_tema_id_fkey'
+            columns: ['tema_id']
+            isOneToOne: false
+            referencedRelation: 'redacao_temas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'redacoes_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       signup_defaults: {
         Row: {
           default_class_id: string
@@ -962,6 +1404,22 @@ export type Database = {
         Args: { p_class_id: string }
         Returns: boolean
       }
+      match_enem_reference_chunks: {
+        Args: {
+          match_competence?: string | null
+          match_count?: number
+          match_section?: string | null
+          query_embedding: string
+          similarity_threshold?: number
+        }
+        Returns: {
+          chunk_text: string
+          document_id: string
+          id: string
+          metadata: Json
+          similarity: number
+        }[]
+      }
       match_material_chunks: {
         Args: {
           match_class_id: string
@@ -1139,7 +1597,27 @@ export type ClassesRow = Database['public']['Tables']['classes']['Row']
 export type EnrollmentsRow = Database['public']['Tables']['enrollments']['Row']
 export type OrganizationsRow = Database['public']['Tables']['organizations']['Row']
 export type MaterialsRow = Database['public']['Tables']['materials']['Row']
+export type EnemReferenceDocumentsRow =
+  Database['public']['Tables']['enem_reference_documents']['Row']
+export type EnemReferenceDocumentsInsert =
+  Database['public']['Tables']['enem_reference_documents']['Insert']
+export type EnemReferenceEmbeddingsRow =
+  Database['public']['Tables']['enem_reference_embeddings']['Row']
+export type EnemReferenceEmbeddingsInsert =
+  Database['public']['Tables']['enem_reference_embeddings']['Insert']
 export type QuestionTopicMappingRow = Database['public']['Tables']['question_topic_mapping']['Row']
+export type RedacaoTemasRow = Database['public']['Tables']['redacao_temas']['Row']
+export type RedacaoTemasInsert = Database['public']['Tables']['redacao_temas']['Insert']
+export type RedacoesRow = Database['public']['Tables']['redacoes']['Row']
+export type RedacoesInsert = Database['public']['Tables']['redacoes']['Insert']
+export type RedacaoCorrecoesRow = Database['public']['Tables']['redacao_correcoes']['Row']
+export type RedacaoCorrecoesInsert = Database['public']['Tables']['redacao_correcoes']['Insert']
+export type RedacaoRepertoriosRow = Database['public']['Tables']['redacao_repertorios']['Row']
+export type RedacaoRepertoriosInsert = Database['public']['Tables']['redacao_repertorios']['Insert']
+export type RedacaoRevisoesHumanasRow =
+  Database['public']['Tables']['redacao_revisoes_humanas']['Row']
+export type RedacaoCompetenceSnapshotsRow =
+  Database['public']['Tables']['redacao_competence_snapshots']['Row']
 export type FlashcardReviewsRow = Database['public']['Tables']['flashcard_reviews']['Row']
 export type FlashcardReviewsInsert = Database['public']['Tables']['flashcard_reviews']['Insert']
 export type StreakFreezeEventsRow = Database['public']['Tables']['streak_freeze_events']['Row']

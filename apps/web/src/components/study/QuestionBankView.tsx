@@ -34,6 +34,9 @@ import { StudyAreaTopicsPanel } from '@/components/study/StudyAreaTopicsPanel'
 import { StudyPackageSimuladoSessionCard } from '@/components/study/StudyPackageSimuladoSessionCard'
 import type { TopicOption } from '@/lib/study-area-mock'
 import { Link, useNavigate } from 'react-router-dom'
+
+/** Oculto temporariamente — reativar quando os caminhos de início estiverem prontos. */
+const SHOW_START_PATHS_GRID = false
 import {
   ArrowLeft,
   ArrowRight,
@@ -952,21 +955,32 @@ export function QuestionBankView({
               ) : (
                 <div className="broto-qbank-start-with-performance">
                   <div className="broto-qbank-start-with-performance__main">
-                    {priorityResult ? (
-                      <StartPathsGrid
-                        tracks={priorityResult.tracks}
-                        onOpenRow={openRow}
-                        onExpandExplore={() => setExploreOpen(true)}
-                      />
-                    ) : (
-                      <div className="broto-qbank-skeletons" aria-hidden>
-                        <div className="broto-skeleton broto-qbank-skel-card" />
-                        <div className="broto-skeleton broto-qbank-skel-card" />
-                      </div>
-                    )}
+                    {SHOW_START_PATHS_GRID &&
+                      (priorityResult ? (
+                        <StartPathsGrid
+                          tracks={priorityResult.tracks}
+                          onOpenRow={openRow}
+                          onExpandExplore={() => setExploreOpen(true)}
+                        />
+                      ) : (
+                        <div className="broto-qbank-skeletons" aria-hidden>
+                          <div className="broto-skeleton broto-qbank-skel-card" />
+                          <div className="broto-skeleton broto-qbank-skel-card" />
+                        </div>
+                      ))}
 
                     {useGuidedTopicPanel ? (
                       <div className="broto-qbank-focus-banco-stack">
+                        <QuestionBankFocusBand
+                          primary={priorityResult?.primary ?? null}
+                          loading={loadingBank || loadingRecentMistakes}
+                          onStart={handleStartPrimary}
+                          areaAccent={getAreaColor(selectedArea)}
+                          selectedArea={selectedArea}
+                          areaLabel={areaLabel}
+                          areas={progress?.areas}
+                          studyTodayByArea={pet?.studyTodayByArea}
+                        />
                         <div className="broto-qbank-focus-banco-row">
                           <StudyAreaBankCard
                             areaKey={selectedArea}
@@ -978,16 +992,6 @@ export function QuestionBankView({
                             className="broto-qbank-focus-banco-row__session"
                           />
                         </div>
-                        <QuestionBankFocusBand
-                          primary={priorityResult?.primary ?? null}
-                          loading={loadingBank || loadingRecentMistakes}
-                          onStart={handleStartPrimary}
-                          areaAccent={getAreaColor(selectedArea)}
-                          selectedArea={selectedArea}
-                          areaLabel={areaLabel}
-                          areas={progress?.areas}
-                          studyTodayByArea={pet?.studyTodayByArea}
-                        />
                       </div>
                     ) : (
                       <QuestionBankFocusBand

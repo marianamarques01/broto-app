@@ -377,3 +377,34 @@ export function parseSemanticSearchBody(raw: unknown): SemanticSearchBody | null
       : SEMANTIC_SEARCH_DEFAULT_THRESHOLD
   return { query, class_id, limit, similarity_threshold }
 }
+
+export type RedacaoCorrectBody = {
+  redacao_id: string
+}
+
+export function parseRedacaoCorrectBody(raw: unknown): RedacaoCorrectBody | null {
+  const o = parseJsonBody(raw)
+  if (!o) return null
+  const redacao_id = typeof o.redacao_id === 'string' ? o.redacao_id.trim() : ''
+  if (!redacao_id) return null
+  return { redacao_id }
+}
+
+export type RedacaoSubmitBody = {
+  tema_id: string
+  texto: string
+  modo?: string
+  tempo_segundos?: number | null
+  redacao_id?: string | null
+  class_id?: string | null
+}
+
+export type RedacaoGetQuery = {
+  redacao_id: string
+}
+
+export function parseRedacaoGetQuery(params: URLSearchParams): RedacaoGetQuery | null {
+  const redacao_id = params.get('redacao_id')?.trim() ?? ''
+  if (!redacao_id) return null
+  return { redacao_id }
+}

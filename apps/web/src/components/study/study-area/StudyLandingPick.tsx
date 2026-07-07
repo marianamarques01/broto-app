@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, Timer } from 'lucide-react'
+import { ChevronRight, PenLine, Timer } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { AREA_CONFIG } from '@/lib/area-config'
@@ -98,6 +98,26 @@ export function StudyLandingPick({ progress }: { progress: ProgressData | undefi
           )
         })}
       </div>
+
+      <Link
+        to="/redacao"
+        className="study-simulado-landing"
+        aria-label="Redação ENEM — escolher tema e praticar dissertação"
+      >
+        <div className="study-simulado-landing__icon">
+          <PenLine size={22} strokeWidth={1.8} aria-hidden />
+        </div>
+        <div className="study-simulado-landing__body">
+          <h3 className="study-simulado-landing__title">Redação ENEM</h3>
+          <p className="study-simulado-landing__desc">
+            Pratique dissertação com <strong>temas no estilo da prova</strong>, contador de linhas,
+            cronômetro opcional e repertórios da sua turma.
+          </p>
+        </div>
+        <span className="study-simulado-landing__trailing-chev" aria-hidden>
+          <ChevronRight size={15} strokeWidth={2.2} />
+        </span>
+      </Link>
 
       <div className="study-simulado-label">Sessão (estilo simulado)</div>
       <Link

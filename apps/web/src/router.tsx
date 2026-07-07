@@ -63,6 +63,15 @@ const MockExamPlay = lazy(() =>
 const MockExamResult = lazy(() =>
   import('@/pages/MockExamResult').then((m) => ({ default: m.MockExamResult })),
 )
+const RedacaoListPage = lazy(() =>
+  import('@/pages/redacao/RedacaoListPage').then((m) => ({ default: m.RedacaoListPage })),
+)
+const RedacaoEditorPage = lazy(() =>
+  import('@/pages/redacao/RedacaoEditorPage').then((m) => ({ default: m.RedacaoEditorPage })),
+)
+const RedacaoResultadoPage = lazy(() =>
+  import('@/pages/redacao/RedacaoResultadoPage').then((m) => ({ default: m.RedacaoResultadoPage })),
+)
 
 export const router = createBrowserRouter([
   { path: '/inicio', element: SuspenseWrapped(<Landing />) },
@@ -101,6 +110,12 @@ export const router = createBrowserRouter([
       { path: '/broto', element: SuspenseWrapped(<BrotoPage />) },
       { path: '/settings', element: SuspenseWrapped(<Settings />) },
       { path: '/profile', element: SuspenseWrapped(<Profile />) },
+      { path: '/redacao', element: SuspenseWrapped(<RedacaoListPage />) },
+      { path: '/redacao/tema/:temaId', element: SuspenseWrapped(<RedacaoEditorPage />) },
+      {
+        path: '/redacao/resultado/:redacaoId',
+        element: SuspenseWrapped(<RedacaoResultadoPage />),
+      },
     ],
   },
   { path: '*', element: <NotFound /> },

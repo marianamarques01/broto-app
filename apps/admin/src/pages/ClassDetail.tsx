@@ -2,13 +2,18 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useMaterials } from '@/hooks/useMaterials'
+import { useRedacaoRepertorios } from '@/hooks/useRedacaoRepertorios'
 import { useClasses } from '@/hooks/useClasses'
 import { MaterialsList } from '@/components/materials/MaterialsList'
 import { MaterialUpload } from '@/components/materials/MaterialUpload'
+import { RepertoriosList } from '@/components/redacao/RepertoriosList'
+import { RepertorioForm } from '@/components/redacao/RepertorioForm'
 import { ClassCodeBadge } from '@/components/class/ClassCodeBadge'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
-import type { Class } from '@broto/shared'
+import type { Class, RedacaoRepertorio } from '@broto/shared'
+
+type ClassDetailTab = 'materiais' | 'redacao'
 
 export function ClassDetail() {
   const { classId } = useParams<{ classId: string }>()
@@ -21,6 +26,8 @@ export function ClassDetail() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [reindexing, setReindexing] = useState(false)
+  const [activeTab, setActiveTab] = useState<ClassDetailTab>('materiais')
+  const [editingRepertorio, setEditingRepertorio] = useState<RedacaoRepertorio | null>(null)
 
   const {
     materials,
@@ -30,6 +37,13 @@ export function ClassDetail() {
     deleteMaterial,
     reindexAllMaterials,
   } = useMaterials(classId!)
+  const {
+    repertorios,
+    loading: repertoriosLoading,
+    createRepertorio,
+    updateRepertorio,
+    deactivateRepertorio,
+  } = useRedacaoRepertorios(classId!)
   const { updateClass, deleteClass } = useClasses()
 
   const [prevClassId, setPrevClassId] = useState(classId)
@@ -37,6 +51,8 @@ export function ClassDetail() {
     setPrevClassId(classId)
     setEditing(false)
     setShowDeleteConfirm(false)
+    setEditingRepertorio(null)
+    setActiveTab('materiais')
   }
 
   useEffect(() => {
@@ -173,6 +189,32 @@ export function ClassDetail() {
         />
 
         <main style={{ padding: '24px 32px', flex: 1 }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+            {(['materiais', 'redacao'] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => {
+                  setActiveTab(tab)
+                  if (tab === 'materiais') setEditingRepertorio(null)
+                }}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 8,
+                  border: '1px solid',
+                  borderColor: activeTab === tab ? 'var(--green-600)' : 'var(--border-default)',
+                  background: activeTab === tab ? 'var(--green-glow)' : 'var(--bg-card)',
+                  color: activeTab === tab ? 'var(--green-400)' : 'var(--text-secondary)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                {tab === 'materiais' ? 'Materiais' : 'Redação'}
+              </button>
+            ))}
+          </div>
+
           <div
             style={{
               display: 'grid',
@@ -181,15 +223,38 @@ export function ClassDetail() {
               alignItems: 'start',
             }}
           >
-            <MaterialsList
-              materials={materials}
-              loading={materialsLoading}
-              ragEnabled={cls?.rag_enabled === true}
-              reindexing={reindexing}
-              onDelete={deleteMaterial}
-              onReindexAll={() => void handleReindexAll()}
-            />
-            <MaterialUpload classId={classId!} onUploadPDF={uploadPDF} onAddURL={addURL} />
+            {activeTab === 'materiais' ? (
+              <>
+                <MaterialsList
+                  materials={materials}
+                  loading={materialsLoading}
+                  ragEnabled={cls?.rag_enabled === true}
+                  reindexing={reindexing}
+                  onDelete={deleteMaterial}
+                  onReindexAll={() => void handleReindexAll()}
+                />
+                <MaterialUpload classId={classId!} onUploadPDF={uploadPDF} onAddURL={addURL} />
+              </>
+            ) : (
+              <>
+                <RepertoriosList
+                  repertorios={repertorios}
+                  loading={repertoriosLoading}
+                  classId={classId!}
+                  onDeactivate={deactivateRepertorio}
+                  onEdit={setEditingRepertorio}
+                  onReactivate={(item) => updateRepertorio({ id: item.id, ativo: true })}
+                />
+                <RepertorioForm
+                  key={editingRepertorio?.id ?? 'create'}
+                  classId={classId!}
+                  editing={editingRepertorio}
+                  onCreate={createRepertorio}
+                  onUpdate={updateRepertorio}
+                  onCancelEdit={() => setEditingRepertorio(null)}
+                />
+              </>
+            )}
           </div>
         </main>
       </div>

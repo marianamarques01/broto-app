@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import { useAdminTheme } from '@/hooks/useAdminTheme'
-import { LogOut, Moon, Sun, Users } from 'lucide-react'
+import { LogOut, Moon, Scale, Sun, Users } from 'lucide-react'
 
 export function Sidebar() {
   const { admin, signOut } = useAdminAuth()
@@ -25,6 +25,18 @@ export function Sidebar() {
           <Users size={20} className="broto-sidebar__link-icon" />
           Turmas
         </NavLink>
+
+        {(admin?.role === 'owner' || admin?.role === 'org_admin') && (
+          <NavLink
+            to="/calibracao"
+            className={({ isActive }) =>
+              `broto-sidebar__link${isActive ? ' broto-sidebar__link--active' : ''}`
+            }
+          >
+            <Scale size={20} className="broto-sidebar__link-icon" />
+            Calibração
+          </NavLink>
+        )}
       </nav>
 
       <div className="broto-sidebar__footer">
