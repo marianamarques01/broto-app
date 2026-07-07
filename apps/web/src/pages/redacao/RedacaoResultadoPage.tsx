@@ -8,6 +8,7 @@ import {
   RefreshCw,
   Target,
   AlertTriangle,
+  TrendingUp,
 } from 'lucide-react'
 import {
   REDACAO_COMPETENCIAS,
@@ -255,6 +256,10 @@ export function RedacaoResultadoPage() {
                 <Target size={18} aria-hidden />
                 Praticar competência mais fraca
               </button>
+              <Link to="/redacao/evolucao" className="broto-rx-result-cta broto-rx-result-cta--ghost">
+                <TrendingUp size={18} aria-hidden />
+                Ver evolução
+              </Link>
             </footer>
           </>
         ) : null}

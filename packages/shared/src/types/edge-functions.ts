@@ -29,6 +29,10 @@ import type {
   CalibracaoMetricasCompetencia,
   RedacaoCorrecaoBlind,
 } from '../redacao/calibracao'
+import type {
+  RedacaoEvolucaoSerie,
+  RedacaoRoutineHint,
+} from '../redacao/evolucao'
 
 /** Corpo de erro padrão das edge functions. */
 export interface EdgeFunctionErrorBody {
@@ -460,4 +464,27 @@ export interface RedacaoCalibracaoSubmitResponse {
 export interface RedacaoCalibracaoMetricsResponse {
   total_revisoes: number
   por_competencia: CalibracaoMetricasCompetencia[]
+}
+
+// ---- Redação — evolução + rotina (REDA-08) ----
+
+export type { RedacaoEvolucaoPoint, RedacaoEvolucaoSerie, RedacaoRoutineHint } from '../redacao/evolucao'
+
+export type RedacaoHistoryItem = {
+  redacao_id: string
+  tema_titulo: string
+  eixo_tematico: RedacaoEixoTematico
+  nota_total: number
+  created_at: string
+  notas: Record<RedacaoCompetencia, number>
+}
+
+export interface RedacaoHistoryResponse {
+  total_redacoes: number
+  meta_redacao: number | null
+  nivel_redacao: string | null
+  series: RedacaoEvolucaoSerie[]
+  weak_competences: RedacaoCompetencia[]
+  historico: RedacaoHistoryItem[]
+  recomendacoes: RedacaoRoutineHint[]
 }

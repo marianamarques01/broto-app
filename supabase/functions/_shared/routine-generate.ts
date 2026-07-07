@@ -38,6 +38,8 @@ export type FastApiPayload = {
   exam_date: string | null
   target_score: number
   performance: FastApiPerformanceItem[]
+  redacao_weak_competences?: string[]
+  meta_redacao?: number | null
 }
 
 const DEFAULT_P_KNOW = 0.3
@@ -71,8 +73,10 @@ export function buildFastApiPayload(
     hours_per_day: number | null
     exam_date: string | null
     target_score: number | null
+    meta_redacao?: number | null
   } | null,
   performance: TopicPerformanceInput[],
+  redacaoWeakCompetences: string[] = [],
 ): FastApiPayload {
   return {
     user_id: userId,
@@ -87,6 +91,10 @@ export function buildFastApiPayload(
       accuracy: t.accuracy_pct,
       practiced: (t.total_answered ?? 0) > 0,
     })),
+    ...(redacaoWeakCompetences.length > 0
+      ? { redacao_weak_competences: redacaoWeakCompetences }
+      : {}),
+    ...(profile?.meta_redacao != null ? { meta_redacao: profile.meta_redacao } : {}),
   }
 }
 
@@ -95,6 +103,7 @@ export function buildLocalFallbackRoutine(
   performance: TopicPerformanceInput[],
   hoursPerDay: number,
   generatedAt = new Date().toISOString(),
+  redacaoWeakCompetences: string[] = [],
 ): RoutineGenerateResult {
   const prioritized = [...performance]
     .sort((a, b) => (a.p_know ?? DEFAULT_P_KNOW) - (b.p_know ?? DEFAULT_P_KNOW))
@@ -102,20 +111,31 @@ export function buildLocalFallbackRoutine(
 
   const minutesPerSession = Math.round((hoursPerDay * 60) / Math.max(prioritized.length, 1))
 
+  const sessions = prioritized.map((t, i) => {
+    const pKnow = t.p_know ?? DEFAULT_P_KNOW
+    return {
+      day: i + 1,
+      topic: t.topico_value,
+      area: t.area_key ?? 'unknown',
+      duration_minutes: minutesPerSession,
+      p_know: pKnow,
+      rationale: `Domínio estimado: ${(pKnow * 100).toFixed(0)}%`,
+    }
+  })
+
+  const redacaoSessions = redacaoWeakCompetences.slice(0, 2).map((comp, index) => ({
+    day: sessions.length + index + 1,
+    topic: `redacao_competencia_${comp.toLowerCase()}`,
+    area: comp === 'I' || comp === 'IV' ? 'linguagens' : 'ciencias-humanas',
+    duration_minutes: Math.max(20, Math.round(minutesPerSession * 0.75)),
+    p_know: 0.25,
+    rationale: `Redação: competência ${comp} abaixo da meta nas últimas 3 redações`,
+  }))
+
   return {
     source: 'local_fallback',
     generated_at: generatedAt,
-    sessions: prioritized.map((t, i) => {
-      const pKnow = t.p_know ?? DEFAULT_P_KNOW
-      return {
-        day: i + 1,
-        topic: t.topico_value,
-        area: t.area_key ?? 'unknown',
-        duration_minutes: minutesPerSession,
-        p_know: pKnow,
-        rationale: `Domínio estimado: ${(pKnow * 100).toFixed(0)}%`,
-      }
-    }),
+    sessions: [...redacaoSessions, ...sessions].slice(0, 5),
   }
 }
 

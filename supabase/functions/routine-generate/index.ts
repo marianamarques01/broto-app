@@ -1,6 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { getCorsHeaders, isOriginBlocked, json } from '../_shared/cors.ts'
-import { legacyUnauthorizedMessage, requireUser } from '../_shared/authz.ts'
+import {
+  createServiceRoleClientUnsafe,
+  legacyUnauthorizedMessage,
+  requireUser,
+} from '../_shared/authz.ts'
+import { fetchRedacaoWeakCompetences } from '../_shared/redacao-evolucao.ts'
 import {
   buildFastApiPayload,
   buildLocalFallbackRoutine,
@@ -49,7 +54,9 @@ serve(async (req) => {
 
     const { data: profile, error: profileError } = await supabaseAuthed
       .from('users')
-      .select('hours_per_day, exam_date, target_score, strong_areas, weak_areas')
+      .select(
+        'hours_per_day, exam_date, target_score, strong_areas, weak_areas, meta_redacao, nivel_redacao',
+      )
       .eq('id', user.id)
       .maybeSingle()
 
@@ -58,9 +65,17 @@ serve(async (req) => {
       return json(500, { error: profileError.message }, cors)
     }
 
+    const admin = createServiceRoleClientUnsafe()
+    let redacaoWeakCompetences: string[] = []
+    try {
+      redacaoWeakCompetences = await fetchRedacaoWeakCompetences(admin, user.id)
+    } catch (redacaoError) {
+      console.warn('[routine-generate] redacao weak competences:', redacaoError)
+    }
+
     const performance = (performanceRows ?? []) as TopicPerformanceInput[]
     const hoursPerDay = profile?.hours_per_day ?? 2
-    const payload = buildFastApiPayload(user.id, profile, performance)
+    const payload = buildFastApiPayload(user.id, profile, performance, redacaoWeakCompetences)
 
     let routine = null
     let source: 'fastapi' | 'local_fallback' = 'local_fallback'
@@ -76,11 +91,25 @@ serve(async (req) => {
     }
 
     if (!routine) {
-      routine = buildLocalFallbackRoutine(performance, hoursPerDay)
+      routine = buildLocalFallbackRoutine(
+        performance,
+        hoursPerDay,
+        new Date().toISOString(),
+        redacaoWeakCompetences,
+      )
       source = 'local_fallback'
     }
 
-    return json(200, { ...routine, _source: source }, cors)
+    return json(
+      200,
+      {
+        ...routine,
+        _source: source,
+        redacao_weak_competences: redacaoWeakCompetences,
+        meta_redacao: profile?.meta_redacao ?? null,
+      },
+      cors,
+    )
   } catch (err) {
     console.error('[routine-generate]', err)
     return json(500, { error: String(err) }, cors)

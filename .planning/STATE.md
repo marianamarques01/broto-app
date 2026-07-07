@@ -1,6 +1,6 @@
 # Estado do projeto — Broto
 
-**Última atualização:** 2026-06-21  
+**Última atualização:** 2026-07-07  
 **Fonte de verdade** para status de execução. O `PRODUCTION-ROADMAP.md` descreve o plano; este arquivo descreve **onde estamos**.
 
 ---
@@ -85,18 +85,18 @@ npm run test:functions
 
 ## Módulo Redação ENEM (planejamento)
 
-**Status:** Wave 3 concluída · REDA-07 feito (jul/2026)
+**Status:** Wave 4 concluída · REDA-08 feito (jul/2026)
 
 | Wave | Requisitos | Entregável | Status |
 |------|------------|------------|--------|
 | W1 Fundação | REDA-01, REDA-06 | Migrations, temas, repertórios, editor | Concluída |
 | W2 Motor | REDA-02…05 | RAG Cartilha, correção, submit, feedback | Concluída |
-| W3 Calibração | REDA-07 | Revisão humana cega | **Concluída** |
-| W4 Ciclo | REDA-08 | Evolução + rotina | Pendente |
+| W3 Calibração | REDA-07 | Revisão humana cega | Concluída |
+| W4 Ciclo | REDA-08 | Evolução + rotina | **Concluída** |
 
 **Documentos:** `docs/redacao-arquitetura-motor.md` · `.planning/phases/redacao-enem/PLAN.md`
 
-**Próxima tarefa:** REDA-08 — evolução + integração rotina (Wave 4, Tarefa 4.1)
+**Próxima tarefa:** Backlog pós-MVP (BL-01 OCR, BL-02 painel institucional) — ver PLAN.md §Wave Backlog
 
 ---
 

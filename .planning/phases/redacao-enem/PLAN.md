@@ -317,10 +317,10 @@ Inclua seed de temas globais. Tipos em @broto/shared. RLS fail-closed.
 - Integração em `routine-generate` ou hook `useRedacaoRecommendations`
 
 **Critérios de aceite:**
-- [ ] Rota `/redacao/evolucao` com gráfico por competência
-- [ ] Gatilho: média < 120 em 3 redações → recomendação
-- [ ] Payload `redacao_weak_competences` na rotina
-- [ ] Usar `users.meta_redacao` / `nivel_redacao`
+- [x] Rota `/redacao/evolucao` com gráfico por competência
+- [x] Gatilho: média < 120 em 3 redações → recomendação
+- [x] Payload `redacao_weak_competences` na rotina
+- [x] Usar `users.meta_redacao` / `nivel_redacao`
 
 **Prompt sugerido:** ver `docs/redacao.md` Prompt 6.
 
@@ -328,12 +328,65 @@ Inclua seed de temas globais. Tipos em @broto/shared. RLS fail-closed.
 
 ## Wave Backlog (pós-MVP)
 
-| Item | Descrição |
-|------|-----------|
-| OCR manuscrito | Fase 5 — `imagem_url` + pipeline OCR |
-| Painel institucional | Fase 6 — agregação competências por turma |
-| Auditoria sensibilidade | Prompt 7 de `docs/redacao.md` |
-| Temas custom org | Professor cria temas próprios |
+Itens fora do escopo das waves REDA-01…08. Ordem sugerida após gates §11 verdes.
+
+| ID | Item | Fase | Esforço | Entregável | Dependências |
+|----|------|------|---------|------------|--------------|
+| **BL-01** | OCR manuscrito | Fase 5 | 2–3 sem | Campo `imagem_url` + pipeline OCR (Google Vision / Tesseract) + editor upload foto | REDA-04 editor, validação linhas pós-OCR |
+| **BL-02** | Painel institucional | Fase 6 | 1–2 sem | Agregação competências por turma no admin (`ClassDetail` ou dashboard org) | REDA-07 calibração estável, ≥30 redações/turma |
+| **BL-03** | Auditoria sensibilidade | — | 3–5 dias | Relatório Prompt 7: Competência V estrutural, sinalização interna sofrimento, direitos autorais | Motor REDA-03 em prod |
+| **BL-04** | Temas custom org | — | 1 sem | CRUD `redacao_temas` org-scoped no admin (teacher+) | REDA-01 schema já suporta `organization_id` |
+| **BL-05** | Correção async | v2 | 1 sem | Submit retorna imediato; polling/webhook; timeout >45s | Métricas latência REDA-03 |
+| **BL-06** | Onboarding meta redação | — | 2–3 dias | Capturar `meta_redacao` / `nivel_redacao` no onboarding web | Campos já existem em `users` |
+| **BL-07** | FastAPI rotina alinhado | — | 3–5 dias | Python aceita `redacao_weak_competences` + lista `performance` com `p_know` | `docs/routine-generate.md` contrato |
+| **BL-08** | Export PDF feedback | — | 3 dias | Aluno exporta correção + marcações para revisão offline | REDA-05 feedback |
+| **BL-09** | Simulado integrado | — | 1 sem | Redação como bloco opcional no mock exam ENEM | Mock exam + REDA-04 |
+| **BL-10** | Acessibilidade feedback | médio prazo | 1–2 sem | Fontes adaptadas, contraste, tempo de leitura configurável | Cartilha INEP referência |
+
+### BL-01 — OCR manuscrito (detalhe)
+
+```
+Entrada: foto da folha (7–30 linhas)
+Pipeline: upload Storage → OCR → normalização texto → linha_count
+Riscos: qualidade foto, caligrafia ilegível, custo API
+Gate: acurácia ≥90% em amostra interna antes de release
+```
+
+### BL-02 — Painel institucional (detalhe)
+
+```
+Métricas por turma:
+- Competência mais fraca (mediana notas últimas N redações)
+- Distribuição nota_total (histograma)
+- % alunos com fator zero detectado
+- Lista redações (teacher+ lê texto, não edita nota IA)
+
+RLS: teacher+ da turma; sem cross-tenant
+UI: aba "Redação" em ClassDetail ou página /classes/:id/redacao
+```
+
+### BL-03 — Auditoria sensibilidade (detalhe)
+
+```
+Escopo Prompt 7 (docs/redacao.md):
+1. Revisar prompt Competência V — estrutura vs. política
+2. Passo opcional detecção sofrimento pessoal → fila interna staff (sem alarme ao aluno)
+3. Verificar pipeline não reproduz redações nota 1000 INEP
+4. Entregar docs/redacao-auditoria-seguranca.md
+```
+
+### BL-07 — Integração rotina FastAPI (detalhe)
+
+```
+Edge já envia:
+- redacao_weak_competences: ('I'|'II'|...)[]
+- meta_redacao: number | null
+
+Python deve:
+- Incluir sessões de reforço (conectivos, repertório, etc.) quando competência fraca
+- Não duplicar priorização BKT de topic_performance
+- Retornar formato { sessions, source, generated_at } compatível com edge
+```
 
 ---
 

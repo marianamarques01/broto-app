@@ -72,6 +72,9 @@ const RedacaoEditorPage = lazy(() =>
 const RedacaoResultadoPage = lazy(() =>
   import('@/pages/redacao/RedacaoResultadoPage').then((m) => ({ default: m.RedacaoResultadoPage })),
 )
+const RedacaoEvolucaoPage = lazy(() =>
+  import('@/pages/redacao/RedacaoEvolucaoPage').then((m) => ({ default: m.RedacaoEvolucaoPage })),
+)
 
 export const router = createBrowserRouter([
   { path: '/inicio', element: SuspenseWrapped(<Landing />) },
@@ -111,6 +114,7 @@ export const router = createBrowserRouter([
       { path: '/settings', element: SuspenseWrapped(<Settings />) },
       { path: '/profile', element: SuspenseWrapped(<Profile />) },
       { path: '/redacao', element: SuspenseWrapped(<RedacaoListPage />) },
+      { path: '/redacao/evolucao', element: SuspenseWrapped(<RedacaoEvolucaoPage />) },
       { path: '/redacao/tema/:temaId', element: SuspenseWrapped(<RedacaoEditorPage />) },
       {
         path: '/redacao/resultado/:redacaoId',

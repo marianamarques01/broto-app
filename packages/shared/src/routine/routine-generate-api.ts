@@ -1,4 +1,5 @@
 import type { AreaStat } from '../types/dashboard-progress'
+import type { RedacaoCompetencia } from '../types/redacao'
 
 export type RoutineGenerateSession = {
   day: number
@@ -14,6 +15,8 @@ export type RoutineGenerateResponse = {
   generated_at?: string
   sessions: RoutineGenerateSession[]
   _source?: 'fastapi' | 'local_fallback'
+  redacao_weak_competences?: RedacaoCompetencia[]
+  meta_redacao?: number | null
 }
 
 export function pKnowConfidenceFromObservations(totalAnswered: number): 'high' | 'medium' | 'low' {

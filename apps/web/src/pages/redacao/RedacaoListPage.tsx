@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { PenLine, Loader2 } from 'lucide-react'
+import { PenLine, Loader2, TrendingUp } from 'lucide-react'
 import {
   REDACAO_DIFICULDADE_LABELS,
   REDACAO_EIXO_LABELS,
@@ -32,6 +32,10 @@ export function RedacaoListPage() {
               Escreva entre 7 e 30 linhas, consulte repertórios do professor e receba correção com
               feedback por competência.
             </p>
+            <Link to="/redacao/evolucao" className="broto-redacao-evolucao-link">
+              <TrendingUp size={16} aria-hidden />
+              Ver evolução por competência
+            </Link>
           </div>
         </section>
 
