@@ -65,11 +65,16 @@ npm run lint         # ESLint
 | Documento | Conteúdo |
 |-----------|----------|
 | `docs/deploy-web.md` | Deploy Vercel do web aluno |
+| `docs/deploy-admin.md` | Deploy Vercel do admin professor |
 | `docs/deploy-functions.md` | Deploy Edge Functions + CORS produção |
 | `docs/routine-generate.md` | Rotina inteligente: edge, FastAPI, fallback, testes, deploy |
 | `docs/multi-tenant/multi-tenant-ground-truth.md` | Modelo de organizações e memberships |
 | `docs/multi-tenant/multi-tenant-permissions-matrix.md` | Quem pode o quê |
 | `docs/multi-tenant/multi-tenant-implementation-pr-checklist.md` | Checklist RLS/CORS |
+| `docs/instituicoes-arquitetura.md` | Módulo Instituições — schema, RBAC, agregação |
+| `.planning/phases/instituicoes/PLAN.md` | Waves INST-01…18 (professor → escola → rede) |
+| `.planning/phases/instituicoes/PROMPTS.md` | Prompts de execução adaptados ao monorepo |
+| `docs/instituicoes-ops.md` | Deploy, cron, RLS — checklist operacional |
 | `docs/broto-f3-web-aluno.md` | Features do web aluno |
 | `docs/broto-f2-admin.md` | Features do admin |
 | `docs/db.md` | Schema e tabelas |

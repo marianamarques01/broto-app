@@ -7,7 +7,7 @@ type AuthzResult =
 /**
  * Staff Broto autorizado para calibração humana.
  * - Se BROTO_CALIBRATION_STAFF_USER_IDS estiver definido, usa allowlist.
- * - Caso contrário: owner ou org_admin em qualquer org ativa.
+ * - Caso contrário: owner, org_admin ou broto_admin em qualquer org ativa.
  */
 export async function requireRedacaoCalibrationStaff(
   admin: TypedSupabaseClient,
@@ -30,7 +30,7 @@ export async function requireRedacaoCalibrationStaff(
     .select('role')
     .eq('user_id', userId)
     .eq('status', 'active')
-    .in('role', ['owner', 'org_admin'])
+    .in('role', ['owner', 'org_admin', 'broto_admin'])
     .limit(1)
     .maybeSingle()
 

@@ -1,17 +1,32 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { AdminProfile } from '@broto/shared'
+import {
+  isBrotoAdminRole,
+  isNetworkAdminRole,
+  isOrgAdminRole,
+  STAFF_MEMBERSHIP_ROLES,
+} from '@/lib/admin-roles'
+
+export {
+  isBrotoAdminRole,
+  isNetworkAdminRole,
+  isOrgAdminRole,
+  STAFF_MEMBERSHIP_ROLES,
+} from '@/lib/admin-roles'
 
 type AdminAuthContextType = {
   admin: AdminProfile | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
+  isOrgAdmin: boolean
+  isNetworkAdmin: boolean
+  isBrotoAdmin: boolean
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | null>(null)
-
-const STAFF_MEMBERSHIP_ROLES = ['teacher', 'org_admin', 'owner'] as const
 
 type AuthUserHint = {
   email?: string | null
@@ -50,11 +65,21 @@ async function fetchAdminProfile(
     ? (memberships.find((m) => m.organization_id === storedOrgId) ?? null)
     : null
 
+  const rolePriority = (role: string) => {
+    if (role === 'broto_admin') return 0
+    if (role === 'network_admin') return 1
+    if (role === 'owner') return 2
+    if (role === 'org_admin') return 3
+    return 4
+  }
+
   const chosen =
     byStored ??
-    [...memberships].sort(
-      (a, b) => new Date(b.joined_at ?? 0).getTime() - new Date(a.joined_at ?? 0).getTime(),
-    )[0]
+    [...memberships].sort((a, b) => {
+      const byRole = rolePriority(a.role) - rolePriority(b.role)
+      if (byRole !== 0) return byRole
+      return new Date(b.joined_at ?? 0).getTime() - new Date(a.joined_at ?? 0).getTime()
+    })[0]
 
   const email = userRow?.email ?? hint?.email ?? ''
   const full_name = userRow?.nome?.trim() ? userRow.nome : (hint?.fullName ?? '')
@@ -74,7 +99,6 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
 
-  // 1. Escutar auth — so salva o userId, sem fazer queries dentro do callback
   useEffect(() => {
     const {
       data: { subscription },
@@ -91,7 +115,6 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  // 2. Quando userId muda, busca o perfil fora do lock do auth
   useEffect(() => {
     if (!userId) return
 
@@ -120,13 +143,30 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     return { error: null }
   }
 
+  async function refreshProfile() {
+    if (!userId) return
+    const profile = await fetchAdminProfile(userId)
+    setAdmin(profile)
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     setAdmin(null)
   }
 
   return (
-    <AdminAuthContext.Provider value={{ admin, loading, signIn, signOut }}>
+    <AdminAuthContext.Provider
+      value={{
+        admin,
+        loading,
+        signIn,
+        signOut,
+        refreshProfile,
+        isOrgAdmin: isOrgAdminRole(admin?.role),
+        isNetworkAdmin: isNetworkAdminRole(admin?.role),
+        isBrotoAdmin: isBrotoAdminRole(admin?.role),
+      }}
+    >
       {children}
     </AdminAuthContext.Provider>
   )

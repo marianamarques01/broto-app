@@ -68,56 +68,6 @@ export type Database = {
           },
         ]
       }
-      classes: {
-        Row: {
-          access_code: string
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          id: string
-          is_active: boolean
-          name: string
-          notebook_id: string | null
-          notebook_status: string
-          organization_id: string
-          rag_enabled: boolean
-        }
-        Insert: {
-          access_code: string
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          notebook_id?: string | null
-          notebook_status?: string
-          organization_id: string
-          rag_enabled?: boolean
-        }
-        Update: {
-          access_code?: string
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          notebook_id?: string | null
-          notebook_status?: string
-          organization_id?: string
-          rag_enabled?: boolean
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'classes_organization_id_fkey'
-            columns: ['organization_id']
-            isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       chat_logs: {
         Row: {
           answer: string
@@ -170,6 +120,56 @@ export type Database = {
             columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          access_code: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notebook_id: string | null
+          notebook_status: string
+          organization_id: string
+          rag_enabled: boolean
+        }
+        Insert: {
+          access_code: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notebook_id?: string | null
+          notebook_status?: string
+          organization_id: string
+          rag_enabled?: boolean
+        }
+        Update: {
+          access_code?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notebook_id?: string | null
+          notebook_status?: string
+          organization_id?: string
+          rag_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'classes_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
             referencedColumns: ['id']
           },
         ]
@@ -280,6 +280,116 @@ export type Database = {
           },
         ]
       }
+      engagement_snapshots_class: {
+        Row: {
+          active_7d_count: number
+          active_7d_pct: number
+          at_risk_student_ids: string[]
+          avg_p_know_by_area: Json
+          class_id: string
+          computed_at: string
+          id: string
+          missing_count: number
+          missing_days_threshold: number
+          organization_id: string
+          streak_broken_count: number
+          student_engagement: Json
+          total_students: number
+          weak_topics: Json
+        }
+        Insert: {
+          active_7d_count?: number
+          active_7d_pct?: number
+          at_risk_student_ids?: string[]
+          avg_p_know_by_area?: Json
+          class_id: string
+          computed_at?: string
+          id?: string
+          missing_count?: number
+          missing_days_threshold?: number
+          organization_id: string
+          streak_broken_count?: number
+          student_engagement?: Json
+          total_students?: number
+          weak_topics?: Json
+        }
+        Update: {
+          active_7d_count?: number
+          active_7d_pct?: number
+          at_risk_student_ids?: string[]
+          avg_p_know_by_area?: Json
+          class_id?: string
+          computed_at?: string
+          id?: string
+          missing_count?: number
+          missing_days_threshold?: number
+          organization_id?: string
+          streak_broken_count?: number
+          student_engagement?: Json
+          total_students?: number
+          weak_topics?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'engagement_snapshots_class_class_id_fkey'
+            columns: ['class_id']
+            isOneToOne: false
+            referencedRelation: 'classes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'engagement_snapshots_class_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      engagement_snapshots_org: {
+        Row: {
+          abandonment_risk_index: number
+          active_7d_pct: number
+          at_risk_alerts: Json
+          class_rankings: Json
+          computed_at: string
+          id: string
+          organization_id: string
+          total_classes: number
+          total_students: number
+        }
+        Insert: {
+          abandonment_risk_index?: number
+          active_7d_pct?: number
+          at_risk_alerts?: Json
+          class_rankings?: Json
+          computed_at?: string
+          id?: string
+          organization_id: string
+          total_classes?: number
+          total_students?: number
+        }
+        Update: {
+          abandonment_risk_index?: number
+          active_7d_pct?: number
+          at_risk_alerts?: Json
+          class_rankings?: Json
+          computed_at?: string
+          id?: string
+          organization_id?: string
+          total_classes?: number
+          total_students?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'engagement_snapshots_org_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       enrollments: {
         Row: {
           class_id: string
@@ -380,57 +490,6 @@ export type Database = {
           },
         ]
       }
-      materials: {
-        Row: {
-          class_id: string
-          created_at: string | null
-          id: string
-          index_status: string
-          organization_id: string
-          source_url: string
-          title: string
-          type: string
-          uploaded_by: string
-        }
-        Insert: {
-          class_id: string
-          created_at?: string | null
-          id?: string
-          index_status?: string
-          organization_id: string
-          source_url: string
-          title: string
-          type: string
-          uploaded_by: string
-        }
-        Update: {
-          class_id?: string
-          created_at?: string | null
-          id?: string
-          index_status?: string
-          organization_id?: string
-          source_url?: string
-          title?: string
-          type?: string
-          uploaded_by?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'materials_class_id_fkey'
-            columns: ['class_id']
-            isOneToOne: false
-            referencedRelation: 'classes'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'materials_organization_id_fkey'
-            columns: ['organization_id']
-            isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       material_embeddings: {
         Row: {
           chunk_index: number
@@ -485,6 +544,57 @@ export type Database = {
           },
           {
             foreignKeyName: 'material_embeddings_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      materials: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          id: string
+          index_status: string
+          organization_id: string
+          source_url: string
+          title: string
+          type: string
+          uploaded_by: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          id?: string
+          index_status?: string
+          organization_id: string
+          source_url: string
+          title: string
+          type: string
+          uploaded_by: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          id?: string
+          index_status?: string
+          organization_id?: string
+          source_url?: string
+          title?: string
+          type?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'materials_class_id_fkey'
+            columns: ['class_id']
+            isOneToOne: false
+            referencedRelation: 'classes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'materials_organization_id_fkey'
             columns: ['organization_id']
             isOneToOne: false
             referencedRelation: 'organizations'
@@ -1002,8 +1112,8 @@ export type Database = {
           modo: string
           organization_id: string
           status: string
-          tempo_segundos: number | null
           tema_id: string
+          tempo_segundos: number | null
           texto: string
           user_id: string
         }
@@ -1016,8 +1126,8 @@ export type Database = {
           modo?: string
           organization_id: string
           status?: string
-          tempo_segundos?: number | null
           tema_id: string
+          tempo_segundos?: number | null
           texto?: string
           user_id: string
         }
@@ -1030,8 +1140,8 @@ export type Database = {
           modo?: string
           organization_id?: string
           status?: string
-          tempo_segundos?: number | null
           tema_id?: string
+          tempo_segundos?: number | null
           texto?: string
           user_id?: string
         }
@@ -1088,6 +1198,141 @@ export type Database = {
             columns: ['default_class_id']
             isOneToOne: false
             referencedRelation: 'classes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      streak_freeze_events: {
+        Row: {
+          created_at: string
+          freeze_number: number
+          id: string
+          streak_at_time: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          freeze_number: number
+          id?: string
+          streak_at_time: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          freeze_number?: number
+          id?: string
+          streak_at_time?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'streak_freeze_events_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      school_units: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          grade_label: string | null
+          id: string
+          network_org_id: string
+          organization_id: string
+          regional_label: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          grade_label?: string | null
+          id?: string
+          network_org_id: string
+          organization_id: string
+          regional_label?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          grade_label?: string | null
+          id?: string
+          network_org_id?: string
+          organization_id?: string
+          regional_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'school_units_network_org_id_fkey'
+            columns: ['network_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'school_units_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      student_follow_ups: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          marked_by: string
+          note: string | null
+          organization_id: string
+          resolved_at: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          marked_by: string
+          note?: string | null
+          organization_id: string
+          resolved_at?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          marked_by?: string
+          note?: string | null
+          organization_id?: string
+          resolved_at?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'student_follow_ups_class_id_fkey'
+            columns: ['class_id']
+            isOneToOne: false
+            referencedRelation: 'classes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'student_follow_ups_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'student_follow_ups_student_id_fkey'
+            columns: ['student_id']
+            isOneToOne: false
+            referencedRelation: 'users'
             referencedColumns: ['id']
           },
         ]
@@ -1226,38 +1471,6 @@ export type Database = {
           },
         ]
       }
-      streak_freeze_events: {
-        Row: {
-          created_at: string
-          freeze_number: number
-          id: string
-          streak_at_time: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          freeze_number: number
-          id?: string
-          streak_at_time: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          freeze_number?: number
-          id?: string
-          streak_at_time?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'streak_freeze_events_user_id_fkey'
-            columns: ['user_id']
-            isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       users: {
         Row: {
           cidade: string | null
@@ -1271,8 +1484,10 @@ export type Database = {
           dias_disponiveis: Json | null
           email: string
           estado: string | null
+          exam_date: string | null
           faculdade_desejada: string | null
           horas_disponiveis_por_dia: number
+          hours_per_day: number
           id: string
           image: string | null
           last_study_date: string | null
@@ -1282,21 +1497,19 @@ export type Database = {
           nivel_redacao: string | null
           nome: string
           nota_enem_anterior: number | null
+          onboarding_completed_at: string | null
           onboarding_done: boolean
           onboarding_profile: Json | null
           onboarding_routine_banner_shown: boolean
-          onboarding_completed_at: string | null
           periodo_preferido: string | null
           streak: number
           streak_freezes: number
           strong_areas: string[]
           target_score: number | null
-          total_freezes_earned: number
           telefone: string | null
+          total_freezes_earned: number
           updated_at: string
           weak_areas: string[]
-          hours_per_day: number
-          exam_date: string | null
         }
         Insert: {
           cidade?: string | null
@@ -1332,8 +1545,8 @@ export type Database = {
           streak_freezes?: number
           strong_areas?: string[]
           target_score?: number | null
-          total_freezes_earned?: number
           telefone?: string | null
+          total_freezes_earned?: number
           updated_at?: string
           weak_areas?: string[]
         }
@@ -1371,8 +1584,8 @@ export type Database = {
           streak_freezes?: number
           strong_areas?: string[]
           target_score?: number | null
-          total_freezes_earned?: number
           telefone?: string | null
+          total_freezes_earned?: number
           updated_at?: string
           weak_areas?: string[]
         }
@@ -1400,15 +1613,19 @@ export type Database = {
         Args: { p_org_id: string }
         Returns: boolean
       }
+      app_rls_is_network_admin_of: {
+        Args: { p_network_org_id: string }
+        Returns: boolean
+      }
       app_rls_user_has_active_enrollment_in_class: {
         Args: { p_class_id: string }
         Returns: boolean
       }
       match_enem_reference_chunks: {
         Args: {
-          match_competence?: string | null
+          match_competence?: string
           match_count?: number
-          match_section?: string | null
+          match_section?: string
           query_embedding: string
           similarity_threshold?: number
         }
@@ -1623,3 +1840,10 @@ export type FlashcardReviewsInsert = Database['public']['Tables']['flashcard_rev
 export type StreakFreezeEventsRow = Database['public']['Tables']['streak_freeze_events']['Row']
 export type StreakFreezeEventsInsert =
   Database['public']['Tables']['streak_freeze_events']['Insert']
+export type EngagementSnapshotsClassRow =
+  Database['public']['Tables']['engagement_snapshots_class']['Row']
+export type EngagementSnapshotsOrgRow =
+  Database['public']['Tables']['engagement_snapshots_org']['Row']
+export type StudentFollowUpsRow = Database['public']['Tables']['student_follow_ups']['Row']
+export type StudentFollowUpsInsert = Database['public']['Tables']['student_follow_ups']['Insert']
+export type SchoolUnitsRow = Database['public']['Tables']['school_units']['Row']

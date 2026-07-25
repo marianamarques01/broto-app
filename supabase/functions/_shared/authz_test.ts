@@ -4,6 +4,8 @@ import {
   legacyUnauthorizedMessage,
   requireClassAccess,
   requireMembership,
+  requireNetworkAdmin,
+  requireOrgStaffOrBrotoAdmin,
   requireUser,
 } from './authz.ts'
 
@@ -12,6 +14,7 @@ type RowResult = { data: unknown; error: { message: string } | null }
 function mockQueryResult(result: RowResult) {
   const chain = {
     eq: (_column: string, _value: unknown) => chain,
+    limit: (_n: number) => chain,
     maybeSingle: () => Promise.resolve(result),
     single: () => Promise.resolve(result),
   }
@@ -20,9 +23,20 @@ function mockQueryResult(result: RowResult) {
   }
 }
 
-function createMockAdminClient(handlers: Record<string, RowResult>): TypedSupabaseClient {
+function createMockAdminClient(
+  handlers: Record<string, RowResult | RowResult[]>,
+): TypedSupabaseClient {
+  const callCount: Record<string, number> = {}
   return {
-    from: (table: string) => mockQueryResult(handlers[table] ?? { data: null, error: null }),
+    from: (table: string) => {
+      const handler = handlers[table]
+      const idx = callCount[table] ?? 0
+      callCount[table] = idx + 1
+      const result = Array.isArray(handler)
+        ? (handler[idx] ?? handler[handler.length - 1]!)
+        : (handler ?? { data: null, error: null })
+      return mockQueryResult(result)
+    },
   } as unknown as TypedSupabaseClient
 }
 
@@ -115,6 +129,52 @@ Deno.test('requireMembership: membership válida → ok', async () => {
   assertEquals(result.data?.membership.role, 'teacher')
 })
 
+Deno.test('requireNetworkAdmin: teacher → 403', async () => {
+  const admin = createMockAdminClient({
+    organization_memberships: { data: activeMembership, error: null },
+  })
+  const result = await requireNetworkAdmin(admin, 'user-1', 'org-1')
+  assertEquals(result.data, null)
+  assertEquals(result.error?.status, 403)
+  assertEquals(result.error?.message, 'Permissão insuficiente: requer network_admin')
+})
+
+Deno.test('requireNetworkAdmin: network_admin → ok', async () => {
+  const admin = createMockAdminClient({
+    organization_memberships: {
+      data: { ...activeMembership, role: 'network_admin' },
+      error: null,
+    },
+  })
+  const result = await requireNetworkAdmin(admin, 'user-1', 'org-1')
+  assertEquals(result.error, null)
+  assertEquals(result.data?.membership.role, 'network_admin')
+})
+
+Deno.test('requireNetworkAdmin: broto_admin → ok', async () => {
+  const admin = createMockAdminClient({
+    organization_memberships: {
+      data: { ...activeMembership, role: 'broto_admin' },
+      error: null,
+    },
+  })
+  const result = await requireNetworkAdmin(admin, 'user-1', 'org-1')
+  assertEquals(result.error, null)
+  assertEquals(result.data?.membership.role, 'broto_admin')
+})
+
+Deno.test('requireOrgStaffOrBrotoAdmin: broto_admin cross-org → ok', async () => {
+  const admin = createMockAdminClient({
+    organization_memberships: [
+      { data: null, error: null },
+      { data: { ...activeMembership, role: 'broto_admin' }, error: null },
+    ],
+  })
+  const result = await requireOrgStaffOrBrotoAdmin(admin, 'user-1', 'org-other', 'org_admin')
+  assertEquals(result.error, null)
+  assertEquals(result.data?.membership.role, 'broto_admin')
+})
+
 Deno.test('requireClassAccess: turma inexistente → 404', async () => {
   const admin = createMockAdminClient({
     classes: { data: null, error: null },
@@ -134,6 +194,19 @@ Deno.test('requireClassAccess: usuário fora da org → 403', async () => {
   assertEquals(result.data, null)
   assertEquals(result.error?.status, 403)
   assertEquals(result.error?.message, 'Usuário não é membro desta organização')
+})
+
+Deno.test('requireClassAccess: broto_admin cross-org → ok', async () => {
+  const admin = createMockAdminClient({
+    classes: { data: activeClass, error: null },
+    organization_memberships: [
+      { data: null, error: null },
+      { data: { ...activeMembership, role: 'broto_admin' }, error: null },
+    ],
+  })
+  const result = await requireClassAccess(admin, 'user-1', 'class-1', 'teacher')
+  assertEquals(result.error, null)
+  assertEquals(result.data?.membership.role, 'broto_admin')
 })
 
 Deno.test('requireClassAccess: acesso válido → ok', async () => {

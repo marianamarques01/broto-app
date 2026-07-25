@@ -19,7 +19,8 @@
     "test:web": "npm run test --workspace=@broto/web",
     "deploy:functions": "./scripts/deploy-functions.sh",
     "verify:cors": "./scripts/verify-production-cors.sh",
-    "test:functions": "deno test --allow-env --allow-read --config supabase/functions/deno.json supabase/functions/_shared/*_test.ts supabase/functions/auth-signup/validate_test.ts"
+    "test:functions": "deno test --allow-env --allow-read --config supabase/functions/deno.json supabase/functions/_shared/*_test.ts supabase/functions/auth-signup/validate_test.ts",
+    "smoke:network": "node scripts/smoke-network-dashboard.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

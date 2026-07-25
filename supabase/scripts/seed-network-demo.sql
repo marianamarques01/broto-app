@@ -1,0 +1,2 @@
+-- Alias legado → use seed-instituicoes-demo.sql (inclui painel rede)
+-- Rodar: supabase db query --linked -f supabase/scripts/seed-instituicoes-demo.sql

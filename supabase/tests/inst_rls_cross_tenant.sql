@@ -1,0 +1,43 @@
+-- INST: testes RLS cross-tenant — módulo Instituições
+-- Executar em staging após migration 20260707140000_inst_engagement_snapshots.sql
+--
+-- Pré-requisitos (mesmas personas do pr08_rls_matrix_manual.sql):
+--   staff_S1: teacher/org_admin ativo em org1
+--   staff_S2: teacher ativo em org2 (nunca em org1)
+--
+-- === engagement_snapshots_class ===
+--
+-- Como staff_S1 (JWT org1):
+--   SELECT * FROM engagement_snapshots_class WHERE organization_id = '<uuid_org2>';
+--   → 0 linhas
+--
+-- Como staff_S2 (JWT org2):
+--   SELECT * FROM engagement_snapshots_class WHERE organization_id = '<uuid_org1>';
+--   → 0 linhas
+--
+-- INSERT como authenticated (qualquer staff):
+--   INSERT INTO engagement_snapshots_class (class_id, organization_id) VALUES (...);
+--   → deve falhar (sem policy INSERT)
+--
+-- === engagement_snapshots_org ===
+--
+-- Como staff_S1:
+--   SELECT * FROM engagement_snapshots_org WHERE organization_id = '<uuid_org2>';
+--   → 0 linhas
+--
+-- === student_follow_ups ===
+--
+-- Como staff_S1:
+--   SELECT * FROM student_follow_ups WHERE organization_id = '<uuid_org2>';
+--   → 0 linhas
+--
+--   INSERT INTO student_follow_ups (organization_id, class_id, student_id, marked_by, status)
+--   VALUES ('<uuid_org2>', '<class_org2>', '<student>', auth.uid(), 'active');
+--   → deve falhar (RLS WITH CHECK)
+--
+-- Como staff_S1 com turma org1:
+--   INSERT com organization_id = org1, class_id turma org1, student matriculado
+--   → 1 linha (sucesso)
+--
+-- === Verificação automatizada (service_role seed + SET LOCAL role) ===
+-- Opcional: expandir com pgTAP ou script CI quando staging tiver personas fixas.

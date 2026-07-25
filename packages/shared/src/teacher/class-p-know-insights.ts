@@ -1,6 +1,6 @@
-import { BKT_DEFAULT_P_KNOW } from '../ai/student-model/bkt'
-import { isDisplayableEnemAreaKey } from '../enem-area-display'
-import type { EnemAreaKey } from '../enem-area-key'
+import { BKT_DEFAULT_P_KNOW } from '../ai/student-model/bkt.ts'
+import { isDisplayableEnemAreaKey } from '../enem-area-display.ts'
+import type { EnemAreaKey } from '../enem-area-key.ts'
 
 export const ENEM_AREA_LABELS: Record<EnemAreaKey, string> = {
   linguagens: 'Linguagens',

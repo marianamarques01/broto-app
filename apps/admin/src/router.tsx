@@ -7,6 +7,12 @@ import { CreateClass } from '@/pages/CreateClass'
 import { StudentDetail } from '@/pages/StudentDetail'
 import { ClassTeacherDashboard } from '@/pages/teacher/ClassTeacherDashboard'
 import { RedacaoCalibracaoPage } from '@/pages/RedacaoCalibracaoPage'
+import { SchoolDashboardPage } from '@/pages/school/SchoolDashboardPage'
+import { OrgAdminRoute } from '@/components/layout/OrgAdminRoute'
+import { BrotoStaffRoute } from '@/components/layout/BrotoStaffRoute'
+import { NetworkAdminRoute } from '@/components/layout/NetworkAdminRoute'
+import { NetworkDashboardPage } from '@/pages/network/NetworkDashboardPage'
+import { InstitutionalOnboarding } from '@/pages/onboarding/InstitutionalOnboarding'
 import { Link } from 'react-router-dom'
 
 function NotFound() {
@@ -80,6 +86,30 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <RedacaoCalibracaoPage />
       </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/escola',
+    element: (
+      <OrgAdminRoute>
+        <SchoolDashboardPage />
+      </OrgAdminRoute>
+    ),
+  },
+  {
+    path: '/rede',
+    element: (
+      <NetworkAdminRoute>
+        <NetworkDashboardPage />
+      </NetworkAdminRoute>
+    ),
+  },
+  {
+    path: '/onboarding',
+    element: (
+      <BrotoStaffRoute>
+        <InstitutionalOnboarding />
+      </BrotoStaffRoute>
     ),
   },
   { path: '*', element: <NotFound /> },

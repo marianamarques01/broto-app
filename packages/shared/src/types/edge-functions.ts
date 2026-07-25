@@ -29,10 +29,7 @@ import type {
   CalibracaoMetricasCompetencia,
   RedacaoCorrecaoBlind,
 } from '../redacao/calibracao'
-import type {
-  RedacaoEvolucaoSerie,
-  RedacaoRoutineHint,
-} from '../redacao/evolucao'
+import type { RedacaoEvolucaoSerie, RedacaoRoutineHint } from '../redacao/evolucao'
 
 /** Corpo de erro padrão das edge functions. */
 export interface EdgeFunctionErrorBody {
@@ -468,7 +465,11 @@ export interface RedacaoCalibracaoMetricsResponse {
 
 // ---- Redação — evolução + rotina (REDA-08) ----
 
-export type { RedacaoEvolucaoPoint, RedacaoEvolucaoSerie, RedacaoRoutineHint } from '../redacao/evolucao'
+export type {
+  RedacaoEvolucaoPoint,
+  RedacaoEvolucaoSerie,
+  RedacaoRoutineHint,
+} from '../redacao/evolucao'
 
 export type RedacaoHistoryItem = {
   redacao_id: string
@@ -488,3 +489,24 @@ export interface RedacaoHistoryResponse {
   historico: RedacaoHistoryItem[]
   recomendacoes: RedacaoRoutineHint[]
 }
+
+export type {
+  ClassEngagementSnapshot,
+  EngagementClassGetResponse,
+  EngagementOrgGetResponse,
+  EngagementSnapshotRefreshResponse,
+  OrgEngagementSnapshot,
+  OrgStudentsImportRequest,
+  OrgStudentsImportResponse,
+  StudentEngagementState,
+  StudentFollowUpSetRequest,
+  StudentFollowUpSetResponse,
+} from './engagement'
+export type {
+  InstitutionType,
+  OrgOnboardCreateRequest,
+  OrgOnboardCreateResponse,
+  OrgStudentsCsvPreviewRow,
+  OrgTeacherJoinRequest,
+  OrgTeacherJoinResponse,
+} from './institutional-onboarding'

@@ -64,3 +64,27 @@ verify_jwt = false
 
 [functions.user-reset-practice]
 verify_jwt = false
+
+[functions.engagement-snapshot-refresh]
+verify_jwt = false
+
+[functions.engagement-class-get]
+verify_jwt = false
+
+[functions.student-follow-up-set]
+verify_jwt = false
+
+[functions.engagement-org-get]
+verify_jwt = false
+
+[functions.engagement-network-get]
+verify_jwt = false
+
+[functions.org-students-import]
+verify_jwt = false
+
+[functions.org-onboard-create]
+verify_jwt = false
+
+[functions.org-teacher-join]
+verify_jwt = false

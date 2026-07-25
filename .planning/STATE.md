@@ -83,6 +83,26 @@ npm run test:functions
 
 ---
 
+## Módulo Instituições — Professor → Escola → Rede (planejamento)
+
+**Status:** W1–W3 concluídas · W2 parcial · alvo demo comercial ago–nov/2026
+
+| Wave | Requisitos | Entregável | Status |
+|------|------------|------------|--------|
+| W0 Docs | — | CONTEXT, RESEARCH, PLAN, PROMPTS, arquitetura | **Concluída** |
+| W1 Fundação | INST-01…05 | Snapshots + RLS + job agregação | **Concluída** (remoto jul/2026) |
+| W2 Professor | INST-06…09 | Lista engajamento + drill-down + acompanhamento | **Parcial** (UI admin) |
+| W3 Escola | INST-10…12 | Ranking + alertas + PDF | **Concluída** (jul/2026) |
+| W4 Onboarding | INST-13…14 | CSV + convites self-serve (equipe Broto) | **Parcial** (CSV pronto) |
+| W5 Rede demo | INST-15…17 | Painel multi-escola + fixtures | Pendente |
+| W6 LGPD | INST-18 | Audit log + LGPD-AUDIT.md | Pendente |
+
+**Documentos:** `docs/instituicoes-arquitetura.md` · `.planning/phases/instituicoes/PLAN.md` · `PROMPTS.md`
+
+**Próxima tarefa:** Completar Wave 2 (drill-down aluno) · Wave 4 onboarding institucional · configurar `ENGAGEMENT_CRON_SECRET` (ver `docs/instituicoes-ops.md`)
+
+---
+
 ## Módulo Redação ENEM (planejamento)
 
 **Status:** Wave 4 concluída · REDA-08 feito (jul/2026)
@@ -129,12 +149,14 @@ npm run test:functions
 | `docs/deprecated/*` | ROADMAP/REQUIREMENTS antigos (histórico) |
 | `docs/redacao-arquitetura-motor.md` | Arquitetura motor correção + RAG Cartilha INEP |
 | `.planning/phases/redacao-enem/PLAN.md` | Execução por waves REDA-01…08 |
+| `.planning/phases/instituicoes/PLAN.md` | Execução por waves INST-01…18 |
+| `docs/instituicoes-arquitetura.md` | Arquitetura módulo Instituições |
 
 ---
 
 ## Próximo passo recomendado
 
-1. **Redeploy** se o repo local divergir do ar (último asset Vercel ~2026-06-12): push na `main` ou promote no dashboard
-2. **`npm run deploy:functions`** após mudanças em `supabase/functions/`
-3. **Fase 3.5** — configurar `VITE_SENTRY_DSN` na Vercel + smoke `window.__brotoSentryTest?.()` (ver `docs/observability.md`)
-4. **Fase 3.2** (admin) quando houver professores em uso
+1. **Módulo Instituições W1** — executar Prompt 1–3 em `.planning/phases/instituicoes/PROMPTS.md` (schema + shared + job)
+2. **Fase 3.2** (admin) — `vercel.json` para demo comercial do painel professor
+3. **`npm run deploy:functions`** após edge functions de engajamento
+4. **Fase 3.5** — Sentry admin quando painel escola entrar em uso

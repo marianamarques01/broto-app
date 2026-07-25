@@ -124,15 +124,16 @@ describe('api-client', () => {
     )
   })
 
-  it('getWithParams: inclui _query no body', async () => {
+  it('getWithParams: envia params na query string (GET sem body)', async () => {
     fetchMock.mockResolvedValue(jsonResponse(200, { items: [] }))
 
     await api.getWithParams('/api/user/progress', { period: 'week' })
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://test.supabase.co/functions/v1/user-progress',
+      'https://test.supabase.co/functions/v1/user-progress?period=week',
       expect.objectContaining({
-        body: JSON.stringify({ _query: 'period=week' }),
+        method: 'GET',
+        body: undefined,
       }),
     )
   })

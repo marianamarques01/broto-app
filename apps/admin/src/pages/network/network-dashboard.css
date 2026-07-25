@@ -1,0 +1,141 @@
+.network-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.network-dashboard__demo-banner {
+  background: rgba(234, 179, 8, 0.12);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.network-dashboard__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.network-dashboard__filter label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.network-dashboard__filter select {
+  min-width: 160px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+.network-dashboard__hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.network-dashboard__metric {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.network-dashboard__metric-label {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.network-dashboard__metric-value {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+}
+
+.network-dashboard__metric-value--warn {
+  color: var(--red-400);
+}
+
+.network-dashboard__metric-value--good {
+  color: var(--green-400);
+}
+
+.network-dashboard__schools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.network-dashboard__school-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.network-dashboard__school-name {
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  margin: 0;
+}
+
+.network-dashboard__school-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.network-dashboard__school-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.network-dashboard__school-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.network-dashboard__school-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.network-dashboard__school-stat-value {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 700;
+}
+
+.network-dashboard__formula {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 720px;
+}
+
+@media (min-width: 1200px) {
+  .network-dashboard__hero {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

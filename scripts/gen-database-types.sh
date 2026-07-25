@@ -74,6 +74,12 @@ export type FlashcardReviewsInsert = Database['public']['Tables']['flashcard_rev
 export type StreakFreezeEventsRow = Database['public']['Tables']['streak_freeze_events']['Row']
 export type StreakFreezeEventsInsert =
   Database['public']['Tables']['streak_freeze_events']['Insert']
+export type EngagementSnapshotsClassRow =
+  Database['public']['Tables']['engagement_snapshots_class']['Row']
+export type EngagementSnapshotsOrgRow =
+  Database['public']['Tables']['engagement_snapshots_org']['Row']
+export type StudentFollowUpsRow = Database['public']['Tables']['student_follow_ups']['Row']
+export type StudentFollowUpsInsert = Database['public']['Tables']['student_follow_ups']['Insert']
 ALIASES_EOF
 
 echo "Tipos regenerados em ${TYPES_FILE} (aliases Row reaplicados)."

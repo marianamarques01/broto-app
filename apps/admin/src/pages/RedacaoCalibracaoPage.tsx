@@ -9,7 +9,7 @@ import { CalibracaoMetricsPanel } from '@/components/redacao/CalibracaoMetricsPa
 import { CalibracaoReviewForm } from '@/components/redacao/CalibracaoReviewForm'
 import { CalibracaoComparacaoPanel } from '@/components/redacao/CalibracaoComparacaoPanel'
 
-const CALIBRATION_ROLES = ['owner', 'org_admin'] as const
+const CALIBRATION_ROLES = ['owner', 'org_admin', 'broto_admin'] as const
 
 export function RedacaoCalibracaoPage() {
   const { admin } = useAdminAuth()

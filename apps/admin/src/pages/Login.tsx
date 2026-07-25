@@ -1,12 +1,18 @@
 import { useState, FormEvent } from 'react'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { useNavigate, Navigate, useSearchParams } from 'react-router-dom'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
+import type { OrgTeacherJoinResponse } from '@broto/shared'
+import { api } from '@/lib/api-client'
 
 export function Login() {
-  const { signIn, admin, loading: authLoading } = useAdminAuth()
+  const { signIn, admin, loading: authLoading, refreshProfile } = useAdminAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [inviteCode, setInviteCode] = useState(
+    () => searchParams.get('invite')?.trim().toUpperCase() ?? '',
+  )
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -19,11 +25,27 @@ export function Login() {
     setLoading(true)
     setError(null)
 
-    const { error } = await signIn(email, password)
-    if (error) {
-      setError(error)
+    const { error: signInError } = await signIn(email, password)
+    if (signInError) {
+      setError(signInError)
       setLoading(false)
       return
+    }
+
+    const code = inviteCode.trim().toUpperCase()
+    if (code) {
+      try {
+        await api.post<OrgTeacherJoinResponse>('org-teacher-join', { inviteCode: code })
+        await refreshProfile()
+      } catch (joinErr) {
+        setError(
+          joinErr instanceof Error
+            ? joinErr.message
+            : 'Login ok, mas falha ao aplicar convite de professor',
+        )
+        setLoading(false)
+        return
+      }
     }
 
     navigate('/')
@@ -56,7 +78,10 @@ export function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form
+          onSubmit={(e) => void handleSubmit(e)}
+          style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+        >
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>
               E-mail
@@ -97,6 +122,29 @@ export function Login() {
                 boxSizing: 'border-box',
                 background: 'var(--bg-deep)',
                 color: 'var(--text-primary)',
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>
+              Código de convite (professor)
+            </label>
+            <input
+              type="text"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+              placeholder="Opcional — ex.: BRT042"
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 8,
+                fontSize: 14,
+                boxSizing: 'border-box',
+                background: 'var(--bg-deep)',
+                color: 'var(--text-primary)',
+                fontFamily: 'monospace',
               }}
             />
           </div>

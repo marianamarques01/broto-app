@@ -26,7 +26,14 @@ interface AuthUser {
 }
 
 /** Known membership roles ordered by privilege level (lowest to highest). */
-const VALID_ROLES = ['student', 'teacher', 'org_admin', 'owner'] as const
+const VALID_ROLES = [
+  'student',
+  'teacher',
+  'org_admin',
+  'owner',
+  'network_admin',
+  'broto_admin',
+] as const
 type MembershipRole = (typeof VALID_ROLES)[number]
 
 /** Active membership row from organization_memberships. */
@@ -61,6 +68,8 @@ const ROLE_RANK: Record<MembershipRole, number> = {
   teacher: 1,
   org_admin: 2,
   owner: 3,
+  network_admin: 4,
+  broto_admin: 5,
 }
 
 /** Returns true only if `value` is a known, valid MembershipRole. */
@@ -204,6 +213,86 @@ export async function requireMembership(
   return { data: { membership }, error: null }
 }
 
+/** Administrador geral Broto — acesso cross-org no admin e APIs de demo. */
+async function loadActiveBrotoAdminMembership(
+  adminClient: TypedSupabaseClient,
+  userId: string,
+): Promise<Membership | null> {
+  const { data, error } = await adminClient
+    .from('organization_memberships')
+    .select('id, user_id, organization_id, role, status, joined_at')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .eq('role', 'broto_admin')
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    console.error('[authz] loadActiveBrotoAdminMembership:', error)
+    return null
+  }
+  if (!data || !isValidRole(data.role) || data.role !== 'broto_admin') return null
+
+  return {
+    id: data.id,
+    user_id: data.user_id,
+    organization_id: data.organization_id,
+    role: data.role as MembershipRole,
+    status: 'active',
+    joined_at: data.joined_at ?? null,
+  }
+}
+
+/**
+ * Verifies the user is an active network_admin of the given network organization.
+ * broto_admin (qualquer org) também passa — painel rede completo.
+ */
+export async function requireNetworkAdmin(
+  adminClient: TypedSupabaseClient,
+  userId: string,
+  networkOrgId: string,
+): Promise<AuthzResult<{ membership: Membership }>> {
+  const brotoAdmin = await loadActiveBrotoAdminMembership(adminClient, userId)
+  if (brotoAdmin) {
+    return { data: { membership: brotoAdmin }, error: null }
+  }
+
+  const membershipResult = await requireMembership(adminClient, userId, networkOrgId)
+  if (membershipResult.error) return membershipResult
+
+  if (membershipResult.data.membership.role !== 'network_admin') {
+    return {
+      data: null,
+      error: {
+        status: 403,
+        message: 'Permissão insuficiente: requer network_admin',
+      },
+    }
+  }
+
+  return membershipResult
+}
+
+/**
+ * Membership na org ou broto_admin (cross-org).
+ */
+export async function requireOrgStaffOrBrotoAdmin(
+  adminClient: TypedSupabaseClient,
+  userId: string,
+  organizationId: string,
+  minRole?: MembershipRole,
+): Promise<AuthzResult<{ membership: Membership }>> {
+  const membershipResult = await requireMembership(adminClient, userId, organizationId, minRole)
+  if (!membershipResult.error) return membershipResult
+
+  const brotoAdmin = await loadActiveBrotoAdminMembership(adminClient, userId)
+  if (brotoAdmin) {
+    return { data: { membership: brotoAdmin }, error: null }
+  }
+
+  return membershipResult
+}
+
 /**
  * Verifies the user has access to a specific class via organization membership.
  *
@@ -258,8 +347,7 @@ export async function requireClassAccess(
     return { data: null, error: { status: 500, message: 'Turma sem organização associada' } }
   }
 
-  // Membership check in the SAME organization as the class
-  const membershipResult = await requireMembership(
+  const membershipResult = await requireOrgStaffOrBrotoAdmin(
     adminClient,
     userId,
     classData.organization_id,

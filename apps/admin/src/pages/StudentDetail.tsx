@@ -1,6 +1,9 @@
 import { useParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAdminAuth } from '@/contexts/AdminAuthContext'
+import { useStudentEngagementDetail } from '@/hooks/useStudentEngagementDetail'
+import { StudentEngagementDetail } from '@/components/teacher/StudentEngagementDetail'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 
@@ -20,8 +23,19 @@ type StudentData = {
 
 export function StudentDetail() {
   const { classId, studentId } = useParams<{ classId: string; studentId: string }>()
+  const { admin } = useAdminAuth()
   const [student, setStudent] = useState<StudentData | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const {
+    studentRow,
+    sessions,
+    activity,
+    inFollowUp,
+    loading: engagementLoading,
+    error: engagementError,
+    setFollowUp,
+  } = useStudentEngagementDetail(classId, studentId)
 
   useEffect(() => {
     async function load() {
@@ -49,6 +63,9 @@ export function StudentDetail() {
 
     if (studentId) void load()
   }, [studentId])
+
+  const backTo =
+    admin?.role === 'teacher' ? `/classes/${classId}/painel` : `/classes/${classId}`
 
   const metricCard = (label: string, value: string | number) => (
     <div
@@ -79,10 +96,10 @@ export function StudentDetail() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Header
           title={loading ? 'Aluno' : (student?.nome ?? 'Aluno')}
-          backTo={`/classes/${classId}`}
+          backTo={backTo}
         />
 
-        <main style={{ padding: '24px 32px', flex: 1 }}>
+        <main style={{ padding: '24px 32px', flex: 1, maxWidth: 720 }}>
           {loading ? (
             <p style={{ color: 'var(--text-muted)' }}>Carregando...</p>
           ) : student ? (
@@ -135,6 +152,30 @@ export function StudentDetail() {
                   'Questoes',
                   student.topicPerformance.reduce((s, t) => s + t.total_answered, 0),
                 )}
+              </div>
+
+              {engagementError && (
+                <p style={{ color: 'var(--red-400)', fontSize: 13, marginBottom: 16 }}>
+                  {engagementError}
+                </p>
+              )}
+
+              <div style={{ marginBottom: 28 }}>
+                <StudentEngagementDetail
+                  classId={classId!}
+                  studentRow={studentRow}
+                  sessions={sessions}
+                  activity={activity}
+                  inFollowUp={inFollowUp}
+                  loading={engagementLoading}
+                  onFollowUp={async (action) => {
+                    await setFollowUp({
+                      classId: classId!,
+                      studentId: studentId!,
+                      action,
+                    })
+                  }}
+                />
               </div>
 
               <div

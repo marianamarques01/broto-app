@@ -1,11 +1,13 @@
 import { NavLink } from 'react-router-dom'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import { useAdminTheme } from '@/hooks/useAdminTheme'
-import { LogOut, Moon, Scale, Sun, Users } from 'lucide-react'
+import { Building2, LogOut, Moon, Scale, School, Sun, UserPlus, Users } from 'lucide-react'
+import { useBrotoOnboardingStaff } from '@/hooks/useBrotoOnboardingStaff'
 
 export function Sidebar() {
-  const { admin, signOut } = useAdminAuth()
+  const { admin, signOut, isOrgAdmin, isNetworkAdmin } = useAdminAuth()
   const { theme, toggleTheme } = useAdminTheme()
+  const { allowed: onboardingStaff } = useBrotoOnboardingStaff()
 
   return (
     <aside className="broto-sidebar">
@@ -26,7 +28,19 @@ export function Sidebar() {
           Turmas
         </NavLink>
 
-        {(admin?.role === 'owner' || admin?.role === 'org_admin') && (
+        {isOrgAdmin && (
+          <NavLink
+            to="/escola"
+            className={({ isActive }) =>
+              `broto-sidebar__link${isActive ? ' broto-sidebar__link--active' : ''}`
+            }
+          >
+            <School size={20} className="broto-sidebar__link-icon" />
+            Coordenação
+          </NavLink>
+        )}
+
+        {isOrgAdmin && (
           <NavLink
             to="/calibracao"
             className={({ isActive }) =>
@@ -35,6 +49,30 @@ export function Sidebar() {
           >
             <Scale size={20} className="broto-sidebar__link-icon" />
             Calibração
+          </NavLink>
+        )}
+
+        {isNetworkAdmin && (
+          <NavLink
+            to="/rede"
+            className={({ isActive }) =>
+              `broto-sidebar__link${isActive ? ' broto-sidebar__link--active' : ''}`
+            }
+          >
+            <Building2 size={20} className="broto-sidebar__link-icon" />
+            Rede
+          </NavLink>
+        )}
+
+        {onboardingStaff && (
+          <NavLink
+            to="/onboarding"
+            className={({ isActive }) =>
+              `broto-sidebar__link${isActive ? ' broto-sidebar__link--active' : ''}`
+            }
+          >
+            <UserPlus size={20} className="broto-sidebar__link-icon" />
+            Onboarding
           </NavLink>
         )}
       </nav>

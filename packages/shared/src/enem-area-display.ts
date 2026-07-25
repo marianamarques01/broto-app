@@ -1,5 +1,5 @@
-import { isCountablePracticeArea } from './lib/topico-to-area'
-import type { AreaStat, ProgressData } from './types/dashboard-progress'
+import { isCountablePracticeArea } from './lib/topico-to-area.ts'
+import type { AreaStat, ProgressData } from './types/dashboard-progress.ts'
 
 /** Bucket interno para respostas sem área ENEM — nunca exibir na UI. */
 export const UNMAPPED_AREA_KEY = 'outros'

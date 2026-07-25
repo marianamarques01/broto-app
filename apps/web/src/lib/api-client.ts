@@ -7,6 +7,7 @@ import {
   extractErrorMessage,
   withExponentialBackoff,
   withJwtRefreshRetry,
+  type HttpMethod,
   type InvokeOptions,
 } from '@broto/shared'
 
@@ -32,6 +33,27 @@ function functionsBaseUrl(): string {
     )
   }
   return `${u.replace(/\/$/, '')}/functions/v1`
+}
+
+function buildGetQueryString(params: Record<string, string | number | undefined> | undefined): string {
+  if (!params) return ''
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') search.set(key, String(value))
+  }
+  return search.toString()
+}
+
+function buildFunctionUrl(
+  functionsUrl: string,
+  fnName: string,
+  method: HttpMethod,
+  params: Record<string, string | number | undefined> | undefined,
+): string {
+  const base = `${functionsUrl}/${fnName}`
+  if (method !== 'GET') return base
+  const query = buildGetQueryString(params)
+  return query ? `${base}?${query}` : base
 }
 
 /** Firefox: DOMException "NetworkError"; Chrome: TypeError "Failed to fetch" — em geral rede ou CORS. */
@@ -104,9 +126,12 @@ async function invokeOnce<T>(
 
     const token = useAnonBearer ? API_KEY : await resolveAccessToken()
 
-    const body = mergeParamsIntoBody(options.body, options.params)
+    // GET com body quebra no gateway Supabase e em vários browsers — params vão na query string.
+    const requestBody =
+      method === 'GET' ? options.body : mergeParamsIntoBody(options.body, options.params)
+    const url = buildFunctionUrl(functionsUrl, fnName, method, options.params)
 
-    const res = await fetch(`${functionsUrl}/${fnName}`, {
+    const res = await fetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
@@ -114,7 +139,7 @@ async function invokeOnce<T>(
         // Never send anon key as Bearer — Edge getUser() would reject (401 on answer-question, etc.).
         Authorization: `Bearer ${token}`,
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: requestBody ? JSON.stringify(requestBody) : undefined,
     })
 
     const data = await res.json().catch(() => ({}))

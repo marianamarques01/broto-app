@@ -14,7 +14,7 @@ export type AdminProfile = {
   email: string
   full_name: string
   organization_id: string
-  role: 'owner' | 'teacher' | 'org_admin'
+  role: 'owner' | 'teacher' | 'org_admin' | 'network_admin' | 'broto_admin'
   created_at: string
 }
 
